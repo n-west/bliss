@@ -1,15 +1,15 @@
 
-// #include "spectrumsum/hit_search.hpp"
+#include "spectrumsum/hit_search.hpp"
 
 // #include <algorithm>
 // #include <iostream>
 
 // using namespace bliss;
 
-// struct hit {
-//     int64_t lower_freq_index;
-//     int64_t drift_index;
-//     float   integrated_power;
+struct hit {
+    int64_t lower_freq_index;
+    int64_t drift_index;
+    float   integrated_power;
 
 // };
 
