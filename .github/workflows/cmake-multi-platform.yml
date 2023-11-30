@@ -44,7 +44,7 @@ jobs:
       uses: awalsh128/cache-apt-pkgs-action@v1.3.1
       with:
         # Space delimited list of packages to install. Version can be specified optionally using APT command syntax of <name>=<version> (e.g. xdot=1.2-2).
-        packages: libhdf5-dev libhdf5-cpp-103 hdf5-filter-plugin bitshuffle# default is 
+        packages: libhdf5-dev libhdf5-cpp-103 bitshuffle 
         # Version of cache to load. Each version will have its own cache. Note, all characters except spaces are allowed.
         execute_install_scripts: false # optional, default is false
         # Enable debugging when there are issues with action. Minor performance penalty.
