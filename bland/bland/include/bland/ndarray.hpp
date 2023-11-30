@@ -6,6 +6,7 @@
 
 #include <memory>
 #include <vector>
+#include <string_view>
 
 namespace bland {
 
@@ -45,36 +46,115 @@ struct blandDLTensor : public DLTensor {
 
 class ndarray {
   public:
+
+  /**
+   * Syntactic sugar around dtypes
+  */
+  struct datatype : DLDataType {
+    datatype(std::string_view dtype);
+    datatype(DLDataType dtype);
+
+    static constexpr DLDataType float32 = DLDataType{.code = DLDataTypeCode::kDLFloat, .bits = 32};
+    static constexpr DLDataType float64 = DLDataType{.code = DLDataTypeCode::kDLFloat, .bits = 64};
+    static constexpr DLDataType int8    = DLDataType{.code = DLDataTypeCode::kDLInt, .bits = 8};
+    static constexpr DLDataType int16   = DLDataType{.code = DLDataTypeCode::kDLInt, .bits = 16};
+    static constexpr DLDataType int32   = DLDataType{.code = DLDataTypeCode::kDLInt, .bits = 32};
+    static constexpr DLDataType int64   = DLDataType{.code = DLDataTypeCode::kDLInt, .bits = 64};
+    static constexpr DLDataType uint8   = DLDataType{.code = DLDataTypeCode::kDLUInt, .bits = 8};
+    static constexpr DLDataType uint16  = DLDataType{.code = DLDataTypeCode::kDLUInt, .bits = 16};
+    static constexpr DLDataType uint32  = DLDataType{.code = DLDataTypeCode::kDLUInt, .bits = 32};
+    static constexpr DLDataType uint64  = DLDataType{.code = DLDataTypeCode::kDLUInt, .bits = 64};
+  };
+
+  struct dev : DLDevice {
+    dev(std::string_view dev);
+    dev(DLDevice);
+    bool operator==(const dev &other);
+
+    static constexpr DLDevice cpu          = DLDevice{.device_type = kDLCPU, .device_id = 0};
+    static constexpr DLDevice cuda         = DLDevice{.device_type = kDLCUDA, .device_id = 0};
+    static constexpr DLDevice cuda_host    = DLDevice{.device_type = kDLCUDAHost, .device_id = 0};
+    static constexpr DLDevice opencl       = DLDevice{.device_type = kDLOpenCL, .device_id = 0};
+    static constexpr DLDevice vulkan       = DLDevice{.device_type = kDLVulkan, .device_id = 0};
+    static constexpr DLDevice metal        = DLDevice{.device_type = kDLMetal, .device_id = 0};
+    static constexpr DLDevice vpi          = DLDevice{.device_type = kDLVPI, .device_id = 0};
+    static constexpr DLDevice rocm         = DLDevice{.device_type = kDLROCM, .device_id = 0};
+    static constexpr DLDevice rocm_host    = DLDevice{.device_type = kDLROCMHost, .device_id = 0};
+    static constexpr DLDevice extdev       = DLDevice{.device_type = kDLExtDev, .device_id = 0};
+    static constexpr DLDevice cuda_managed = DLDevice{.device_type = kDLCUDAManaged, .device_id = 0};
+    static constexpr DLDevice oneapi       = DLDevice{.device_type = kDLOneAPI, .device_id = 0};
+    static constexpr DLDevice webgpu       = DLDevice{.device_type = kDLWebGPU, .device_id = 0};
+    static constexpr DLDevice hexagon      = DLDevice{.device_type = kDLHexagon, .device_id = 0};
+  };
+
     // ndarray() = default; // warning: explicitly defaulted default constructor is implicitly deleted
     // note: default constructor of 'ndarray' is implicitly deleted because field '_tensor' has no default constructor
     ndarray(DLManagedTensor);
-    ndarray(std::vector<int64_t> dims, DLDataType dtype = default_dtype, DLDevice device = default_device);
-    template <typename T>
-    ndarray(std::vector<int64_t> dims, T initial_val, DLDataType dtype, DLDevice device = default_device);
+
+    /**
+     * Construct an ndarray with the given dims and uninitialized memory
+    */
+    ndarray(std::vector<int64_t> dims, datatype dtype = datatype::float32, DLDevice device = default_device);
+
+    /**
+     * Construct an ndarray with the given shape and fill every element with the given `initial_val`
+    */
+    template <typename T, typename std::enable_if<std::is_arithmetic<T>::value>::type* = nullptr>
+    ndarray(std::vector<int64_t> dims, T initial_val, datatype dtype = datatype::float32, DLDevice device = default_device);
 
     template <typename T>
     T *data_ptr() const {
         return static_cast<T *>(_tensor.data);
     }
 
+    /**
+     * Return a DLManagedTensor meant to zero-copy share data to other frameworks. This is effectively
+     * a `to_dlpack` method in the language of dlpack.
+     *
+     * \internal The DLManagedTensor holds an opaquely packaged shared_ptr as the context. That shared pointer makes
+     * sure all dynamic memory is alive as long as this DLManagedTensor is valid. When the deleter method is called, the
+     * shared_ptr is casted back, deleted (decreasing ref count) so that memory might be freed when no one needs it.
+     */
     DLManagedTensor *get_managed_tensor();
 
+    /**
+     * Return the shape (size of each dimension) of the array
+    */
     std::vector<int64_t> shape() const;
 
+    /**
+     * Return the size of the given dimension
+    */
     int64_t size(int64_t axis) const;
 
+    /**
+     * Return the strides of the array in number of items
+     * 
+     * The stride is the distance (in items) between two adjacent elements along a dimension. For example
+     * a compact 1d array will have strides {1} because items are adjacent in memory. A compact 2d array
+     * with size (10, 10) will have strides {10, 1} because we default to "C" (rather than Fortan) convention
+     * of the last dimension being the most compact (row major). The stride of 10 means to index array[1,0]
+     * the data pointer needs to be incremented 10 items (item size is determined by dtype).
+     * 
+     * A stride operation is typically the only reason this will change from row-major C-style conventions
+    */
     std::vector<int64_t> strides() const;
 
     std::vector<int64_t> offsets() const;
 
-    DLDataType dtype() const;
+    datatype dtype() const;
 
-    DLDevice device() const;
+    dev device() const;
 
     int64_t numel() const;
 
     int64_t ndim() const;
 
+    /**
+     * Return a string representation of this tensor. Format is
+     * a pretty print including the datatype, shape, device and
+     * formatted data
+    */
     std::string repr() const;
 
     template <typename T>

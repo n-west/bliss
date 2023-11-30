@@ -5,6 +5,9 @@ add_subdirectory(file_types)
 add_subdirectory(convenience)
 add_subdirectory(estimators)
 
+add_subdirectory(tests)
+add_subdirectory(python)
+
 add_executable(justrun justrun.cpp)
 target_link_libraries(justrun
     spectrumsum

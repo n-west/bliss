@@ -7,19 +7,19 @@
 #include <fmt/ranges.h>
 #include <bland/bland.hpp>
 
-
 TEST_CASE("benchmark add", "[ops][arithmetic]") {
     SECTION("addition", "addition") {
         {
             int64_t number_samples = 100000000;
+
             auto a = bland::rand_normal({number_samples}, 0.0f, 1.0f);
             auto b = bland::rand_normal({number_samples}, 0.0f, 1.0f);
+            auto c = bland::ndarray({number_samples}, DLDataType{.code = kDLFloat, .bits = 32});
 
+            auto a_data = a.data_ptr<float>();
+            auto b_data = b.data_ptr<float>();
+            auto c_data = c.data_ptr<float>();
 
-                auto c = bland::ndarray({number_samples}, DLDataType{.code = kDLFloat, .bits = 32});
-                auto a_data = a.data_ptr<float>();
-                auto b_data = b.data_ptr<float>();
-                auto c_data = c.data_ptr<float>();
             BENCHMARK("naive float addition") {
                 for (size_t n = 0; n < number_samples; ++n) {
                     c_data[n] = a_data[n] + b_data[n];
@@ -30,7 +30,6 @@ TEST_CASE("benchmark add", "[ops][arithmetic]") {
             BENCHMARK("bland float addition") {
                 return a + b;
             };
-
         }
     }
 }

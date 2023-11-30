@@ -39,12 +39,6 @@ endif()
 
 
 add_subdirectory(bland)
+add_subdirectory(python)
 add_subdirectory(tests)
 
-# export(TARGETS bland NAMESPACE bland:: FILE blandTargets.cmake)
-# set(CMAKE_EXPORT_PACKAGE_REGISTRY ON)
-# export(PACKAGE bland)
-
-
-add_executable(slicing_examples slicing_examples.cpp)
-target_link_libraries(slicing_examples bland)

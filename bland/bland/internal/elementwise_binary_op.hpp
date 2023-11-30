@@ -55,10 +55,16 @@ struct elementwise_binary_op {
             auto    items_left_in_last_dim = out_shape[ndim - 1] - nd_index[ndim - 1];
             int64_t unroll_size            = LAST_DIM_UNROLL_FACTOR;
             if (items_left_in_last_dim >= LAST_DIM_UNROLL_FACTOR) {
-                for (int j = 0; j < LAST_DIM_UNROLL_FACTOR; ++j) {
-                    out_data[out_index + j * out_ldim_stride] =
-                            Op<A, B>::call(a_data[a_index + j * a_ldim_stride], b_data[b_index + j * b_ldim_stride]);
-                }
+                // for (int j = 0; j < LAST_DIM_UNROLL_FACTOR; ++j) {
+                    out_data[out_index + 0 * out_ldim_stride] = Op<A, B>::call(a_data[a_index + 0 * a_ldim_stride], b_data[b_index + 0 * b_ldim_stride]);
+                    out_data[out_index + 1 * out_ldim_stride] = Op<A, B>::call(a_data[a_index + 1 * a_ldim_stride], b_data[b_index + 1 * b_ldim_stride]);
+                    out_data[out_index + 2 * out_ldim_stride] = Op<A, B>::call(a_data[a_index + 2 * a_ldim_stride], b_data[b_index + 2 * b_ldim_stride]);
+                    out_data[out_index + 3 * out_ldim_stride] = Op<A, B>::call(a_data[a_index + 3 * a_ldim_stride], b_data[b_index + 3 * b_ldim_stride]);
+                    out_data[out_index + 4 * out_ldim_stride] = Op<A, B>::call(a_data[a_index + 4 * a_ldim_stride], b_data[b_index + 4 * b_ldim_stride]);
+                    out_data[out_index + 5 * out_ldim_stride] = Op<A, B>::call(a_data[a_index + 5 * a_ldim_stride], b_data[b_index + 5 * b_ldim_stride]);
+                    out_data[out_index + 6 * out_ldim_stride] = Op<A, B>::call(a_data[a_index + 6 * a_ldim_stride], b_data[b_index + 6 * b_ldim_stride]);
+                    out_data[out_index + 7 * out_ldim_stride] = Op<A, B>::call(a_data[a_index + 7 * a_ldim_stride], b_data[b_index + 7 * b_ldim_stride]);
+                // }
             } else {
                 unroll_size = items_left_in_last_dim;
                 for (int j = 0; j < items_left_in_last_dim; ++j) {
@@ -135,10 +141,16 @@ struct elementwise_binary_op<A, B, Op, LAST_DIM_UNROLL_FACTOR, 1, 1, 1> {
             auto    items_left_in_last_dim = out_shape[ndim - 1] - nd_index[ndim - 1];
             int64_t unroll_size            = LAST_DIM_UNROLL_FACTOR;
             if (items_left_in_last_dim >= LAST_DIM_UNROLL_FACTOR) {
-                for (int j = 0; j < LAST_DIM_UNROLL_FACTOR; ++j) {
-                    out_data[out_index + j * out_ldim_stride] =
-                            Op<A, B>::call(a_data[a_index + j * a_ldim_stride], b_data[b_index + j * b_ldim_stride]);
-                }
+                // for (int j = 0; j < LAST_DIM_UNROLL_FACTOR; ++j) {
+                    out_data[out_index + 0 * out_ldim_stride] = Op<A, B>::call(a_data[a_index + 0 * a_ldim_stride], b_data[b_index + 0 * b_ldim_stride]);
+                    out_data[out_index + 1 * out_ldim_stride] = Op<A, B>::call(a_data[a_index + 1 * a_ldim_stride], b_data[b_index + 1 * b_ldim_stride]);
+                    out_data[out_index + 2 * out_ldim_stride] = Op<A, B>::call(a_data[a_index + 2 * a_ldim_stride], b_data[b_index + 2 * b_ldim_stride]);
+                    out_data[out_index + 3 * out_ldim_stride] = Op<A, B>::call(a_data[a_index + 3 * a_ldim_stride], b_data[b_index + 3 * b_ldim_stride]);
+                    out_data[out_index + 4 * out_ldim_stride] = Op<A, B>::call(a_data[a_index + 4 * a_ldim_stride], b_data[b_index + 4 * b_ldim_stride]);
+                    out_data[out_index + 5 * out_ldim_stride] = Op<A, B>::call(a_data[a_index + 5 * a_ldim_stride], b_data[b_index + 5 * b_ldim_stride]);
+                    out_data[out_index + 6 * out_ldim_stride] = Op<A, B>::call(a_data[a_index + 6 * a_ldim_stride], b_data[b_index + 6 * b_ldim_stride]);
+                    out_data[out_index + 7 * out_ldim_stride] = Op<A, B>::call(a_data[a_index + 7 * a_ldim_stride], b_data[b_index + 7 * b_ldim_stride]);
+                // }
             } else {
                 unroll_size = items_left_in_last_dim;
                 for (int j = 0; j < items_left_in_last_dim; ++j) {
@@ -213,7 +225,7 @@ ndarray elementwise_binary_op(const ndarray &a, const ndarray &b, ndarray &out) 
     const auto b_shape = compute_broadcast_shape(b.shape(), out_shape);
 
     if (out_strides.back() == 1 && a_strides.back() == 1 && b_strides.back() == 1) {
-        optimize_detail::elementwise_binary_op<A, B, Op, 16, 1, 1, 1>::apply(out_data,
+        optimize_detail::elementwise_binary_op<A, B, Op, 8, 1, 1, 1>::apply(out_data,
                                                                              a_data,
                                                                              b_data,
                                                                              out_shape,
@@ -227,7 +239,7 @@ ndarray elementwise_binary_op(const ndarray &a, const ndarray &b, ndarray &out) 
                                                                              b_offset,
                                                                              out.numel());
     } else {
-        optimize_detail::elementwise_binary_op<A, B, Op, 16, 0, 0, 0>::apply(out_data,
+        optimize_detail::elementwise_binary_op<A, B, Op, 8, 0, 0, 0>::apply(out_data,
                                                                              a_data,
                                                                              b_data,
                                                                              out_shape,

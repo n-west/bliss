@@ -180,12 +180,68 @@ DLManagedTensor *blandDLTensor::to_dlpack() {
  * ndarray impl
  */
 
+bland::ndarray::datatype::datatype(std::string_view dtype) {
+    if (dtype == "float" || dtype == "float32") {
+        code = kDLFloat;
+        bits = 32;
+    } else if (dtype == "double" || dtype == "float64") {
+        code = kDLFloat;
+        bits = 64;
+    } else if (dtype == "int" || dtype == "int64") {
+        code = kDLInt;
+        bits = 64;
+    } else if (dtype == "int32") {
+        code = kDLInt;
+        bits = 32;
+    } else if (dtype == "int16") {
+        code = kDLInt;
+        bits = 16;
+    } else if (dtype == "int8") {
+        code = kDLInt;
+        bits = 8;
+    } else if (dtype == "uint" || dtype == "uint64") {
+        code = kDLUInt;
+        bits = 64;
+    } else if (dtype == "uint32") {
+        code = kDLUInt;
+        bits = 32;
+    } else if (dtype == "uint16") {
+        code = kDLUInt;
+        bits = 16;
+    } else if (dtype == "uint8") {
+        code = kDLUInt;
+        bits = 8;
+    }
+}
+bland::ndarray::datatype::datatype(DLDataType dtype) : DLDataType(dtype) {
+}
+
+bland::ndarray::dev::dev(DLDevice d) : DLDevice(d) {
+}
+
+bool bland::ndarray::dev::operator==(const dev &other) {
+    return this->device_type == other.device_type && this->device_id == other.device_id;
+}
+
+bland::ndarray::dev::dev(std::string_view dev) {
+    if (dev == "cpu") {
+        device_type = DLDeviceType::kDLCPU;
+        device_id = 0;
+    } else if (dev == "cuda") {
+        // TODO: should we follow the torch concept of cuda:id
+        device_type = DLDeviceType::kDLCUDA;
+        device_id = 0;
+    } else {
+        throw std::runtime_error("Device type not supported in bland yet");
+    }
+}
+
 bland::ndarray::ndarray(DLManagedTensor tensor) : _tensor(tensor) {
     // Create a new NDArray that shares the memory with the DLManagedTensor
     // Call the deleter function when the NDArray is destroyed
 }
 
-bland::ndarray::ndarray(std::vector<int64_t> dims, DLDataType dtype, DLDevice device) :
+bland::ndarray::ndarray(std::vector<int64_t> dims, datatype dtype, DLDevice device) :
         _tensor(detail::blandDLTensor(dims, dtype, device, {})) {
     int64_t stride = 1; // Stride for the last dimension
     for (size_t i = 0; i < dims.size(); ++i) {
@@ -204,8 +260,8 @@ void initialize_memory(T *data, int64_t numel, T value) {
     }
 }
 
-template <typename T>
-bland::ndarray::ndarray(std::vector<int64_t> dims, T initial_value, DLDataType dtype, DLDevice device) :
+template <typename T, typename std::enable_if<std::is_arithmetic<T>::value>::type*>
+bland::ndarray::ndarray(std::vector<int64_t> dims, T initial_value, datatype dtype, DLDevice device) :
         _tensor(detail::blandDLTensor(dims, dtype, device, {})) {
     int64_t stride = 1; // Stride for the last dimension
     for (size_t i = 0; i < dims.size(); ++i) {
@@ -274,16 +330,16 @@ bland::ndarray::ndarray(std::vector<int64_t> dims, T initial_value, DLDataType d
     }
 }
 
-template bland::ndarray::ndarray(std::vector<int64_t> dims, float initial_value, DLDataType dtype, DLDevice device);
-template bland::ndarray::ndarray(std::vector<int64_t> dims, double initial_value, DLDataType dtype, DLDevice device);
-template bland::ndarray::ndarray(std::vector<int64_t> dims, int8_t initial_value, DLDataType dtype, DLDevice device);
-template bland::ndarray::ndarray(std::vector<int64_t> dims, int16_t initial_value, DLDataType dtype, DLDevice device);
-template bland::ndarray::ndarray(std::vector<int64_t> dims, int32_t initial_value, DLDataType dtype, DLDevice device);
-template bland::ndarray::ndarray(std::vector<int64_t> dims, int64_t initial_value, DLDataType dtype, DLDevice device);
-template bland::ndarray::ndarray(std::vector<int64_t> dims, uint8_t initial_value, DLDataType dtype, DLDevice device);
-template bland::ndarray::ndarray(std::vector<int64_t> dims, uint16_t initial_value, DLDataType dtype, DLDevice device);
-template bland::ndarray::ndarray(std::vector<int64_t> dims, uint32_t initial_value, DLDataType dtype, DLDevice device);
-template bland::ndarray::ndarray(std::vector<int64_t> dims, uint64_t initial_value, DLDataType dtype, DLDevice device);
+template bland::ndarray::ndarray(std::vector<int64_t> dims, float initial_value, datatype dtype, DLDevice device);
+template bland::ndarray::ndarray(std::vector<int64_t> dims, double initial_value, datatype dtype, DLDevice device);
+template bland::ndarray::ndarray(std::vector<int64_t> dims, int8_t initial_value, datatype dtype, DLDevice device);
+template bland::ndarray::ndarray(std::vector<int64_t> dims, int16_t initial_value, datatype dtype, DLDevice device);
+template bland::ndarray::ndarray(std::vector<int64_t> dims, int32_t initial_value, datatype dtype, DLDevice device);
+template bland::ndarray::ndarray(std::vector<int64_t> dims, int64_t initial_value, datatype dtype, DLDevice device);
+template bland::ndarray::ndarray(std::vector<int64_t> dims, uint8_t initial_value, datatype dtype, DLDevice device);
+template bland::ndarray::ndarray(std::vector<int64_t> dims, uint16_t initial_value, datatype dtype, DLDevice device);
+template bland::ndarray::ndarray(std::vector<int64_t> dims, uint32_t initial_value, datatype dtype, DLDevice device);
+template bland::ndarray::ndarray(std::vector<int64_t> dims, uint64_t initial_value, datatype dtype, DLDevice device);
 
 DLManagedTensor *bland::ndarray::get_managed_tensor() {
     return _tensor.to_dlpack();
@@ -309,11 +365,11 @@ std::vector<int64_t> bland::ndarray::offsets() const {
     return _tensor._offsets;
 }
 
-DLDataType bland::ndarray::dtype() const {
+bland::ndarray::datatype bland::ndarray::dtype() const {
     return _tensor.dtype;
 }
 
-DLDevice bland::ndarray::device() const {
+bland::ndarray::dev bland::ndarray::device() const {
     return _tensor.device;
 }
 
@@ -347,8 +403,16 @@ std::string pretty_print(const ndarray &a) {
     } else if (std::is_same<datatype, int64_t>()) {
         dtype_pp = "int64_t";
     }
+    std::string dev_pp{};
+    auto dev = a.device();
+    if (dev == bland::ndarray::dev::cpu) {
+        dev_pp = "cpu";
+    } else {
+        dev_pp = "not implemented device";
+    }
     fmt::memory_buffer output_repr;
-    fmt::format_to(output_repr, "bland {}:\n", dtype_pp);
+    fmt::format_to(output_repr, "bland shape {} with dtype {} on device {}:\n", a.shape(), dtype_pp, dev_pp);
+    // TODO: condense printing large arrays, no one needs or wants to see thousands of items
     for (int64_t n = 0; n < a.numel(); ++n) {
         // Finally... do the actual op
         int64_t linear_index = 0;
@@ -637,6 +701,8 @@ ndarray bland::ndarray::reshape(const std::vector<int64_t> &new_shape) {
         _tensor._strides_ownership = new_strides;
         _tensor.strides            = _tensor._strides_ownership.data();
         _tensor.ndim               = new_ndim;
+    } else {
+        throw std::runtime_error("This reshape would require a copy which isn't yet implemented");
     }
 
     _tensor._shape_ownership = new_shape;
