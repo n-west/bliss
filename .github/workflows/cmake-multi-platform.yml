@@ -35,6 +35,25 @@ jobs:
             cpp_compiler: clang++
 
     steps:
+
+  - name: Cache APT Packages
+  # You may pin to the exact commit or the version.
+  # uses: awalsh128/cache-apt-pkgs-action@44c33b32f808cdddd5ac0366d70595ed63661ed8
+  uses: awalsh128/cache-apt-pkgs-action@v1.3.1
+  with:
+    # Space delimited list of packages to install. Version can be specified optionally using APT command syntax of <name>=<version> (e.g. xdot=1.2-2).
+    packages: libhdf5-dev libhdf5-cpp-103 hdf5-filter-plugin bitshuffle# default is 
+    # Version of cache to load. Each version will have its own cache. Note, all characters except spaces are allowed.
+    version: # optional, default is 
+    # Execute Debian package pre and post install script upon restore. See README.md caveats for more information.
+    execute_install_scripts: # optional, default is false
+    # OBSOLETE: Refresh is not used by the action, use version instead.
+    refresh: # optional
+    # Enable debugging when there are issues with action. Minor performance penalty.
+    debug: # optional, default is false
+
+
+          
     - uses: actions/checkout@v3
 
     - name: Set reusable strings
