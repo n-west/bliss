@@ -1,0 +1,68 @@
+
+
+#include "estimators/noise_estimate.hpp"
+#include <fmt/core.h>
+#include <fmt/ranges.h>
+#include <bland/ops.hpp>
+#include <iostream>
+
+using namespace bliss;
+
+namespace detail {
+
+noise_power noise_power_estimate_turbo_seti(const bland::ndarray &x) {
+    noise_power estimated_stats;
+    auto        summed_time = bland::mean(x, {0});
+
+    estimated_stats._mean = bland::median(x);
+
+    auto summed_mean = bland::mean(summed_time);
+    estimated_stats._var = (bland::sum(bland::square(summed_time - summed_mean)) / (summed_time.numel() - 1)).data_ptr<float>()[0];
+
+    return estimated_stats;
+}
+
+noise_power noise_power_estimate_rv_transform(const bland::ndarray &x) {
+    noise_power estimated_stats;
+    return estimated_stats;
+}
+
+noise_power noise_power_estimate_mad(const bland::ndarray &x) {
+    noise_power estimated_stats;
+    return estimated_stats;
+}
+
+} // namespace detail
+
+noise_power bliss::noise_power_estimate(const bland::ndarray &x, noise_power_estimator estimator_method) {
+    noise_power estimated_stats;
+
+    switch (estimator_method) {
+    case noise_power_estimator::RV_TRANSFORM: {
+        estimated_stats = detail::noise_power_estimate_rv_transform(x);
+    } break;
+    case noise_power_estimator::MEAN_ABSOLUTE_DEVIATION: {
+        estimated_stats = detail::noise_power_estimate_mad(x);
+    } break;
+    case noise_power_estimator::TURBO_SETI:
+    default: {
+        estimated_stats = detail::noise_power_estimate_turbo_seti(x);
+    }
+    }
+    // // Using the median as an estimate of the mean is the reason this is a *rough* noise_power function. Spectrum
+    // will
+    // // often have issues such as a dc offset (shows up as higher power in the DC bin), filter roll-off (shows up as
+    // // lowering noise power at the band edges), RFI (high power spurs or spikes). With these kinds of effects
+    // present,
+    // // the median will often be a better estimate of the noise power mean by minimizing the effect of those outliers.
+    // If
+    // // those effects are not present the median will be very close to the true mean.
+    // estimated_stats.mean = median;
+
+    // // Bessel's correction for sample deviation. Likely doesn't matter given the expected millions
+    // // of bins we should have, but is good practice.
+    // auto var            = ((x - estimated_stats.mean).square().sum() / (x.size() - 1));
+    // estimated_stats.std = std::sqrt(var);
+
+    return estimated_stats;
+}

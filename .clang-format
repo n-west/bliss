@@ -1,0 +1,80 @@
+---
+Language:        Cpp
+# BasedOnStyle:  LLVM
+Standard: c++17
+AccessModifierOffset: -2
+
+AlignAfterOpenBracket: Align
+AlignConsecutiveAssignments: true #Changed
+AlignConsecutiveDeclarations: true #Changed
+AlignEscapedNewlines: Right
+AlignOperands:   true
+AlignTrailingComments: true
+AllowAllParametersOfDeclarationOnNextLine: false # Changed
+AllowAllArgumentsOnNextLine: true # Changed
+AllowShortBlocksOnASingleLine: false
+AllowShortCaseLabelsOnASingleLine: false
+AllowShortFunctionsOnASingleLine: Inline #Changed
+AllowShortIfStatementsOnASingleLine: false
+AllowShortLoopsOnASingleLine: false
+AlwaysBreakAfterDefinitionReturnType: None
+AlwaysBreakAfterReturnType: None
+AlwaysBreakBeforeMultilineStrings: false
+AlwaysBreakTemplateDeclarations: true #Changed
+BinPackArguments: false
+BinPackParameters: false
+BraceWrapping:
+  AfterClass:      false
+  AfterControlStatement: false
+  AfterEnum:       false
+  AfterFunction:   false
+  AfterNamespace:  false
+  AfterObjCDeclaration: false
+  AfterStruct:     false
+  AfterUnion:      false
+  AfterExternBlock: false
+  BeforeCatch:     false
+  BeforeElse:      false
+  IndentBraces:    false
+  SplitEmptyFunction: true
+  SplitEmptyRecord: false #Changed
+  SplitEmptyNamespace: true
+BreakBeforeBinaryOperators: None
+BreakBeforeBraces: Custom #Changed
+BreakBeforeInheritanceComma: false
+BreakBeforeTernaryOperators: true
+BreakConstructorInitializersBeforeComma: false
+BreakConstructorInitializers: AfterColon      #Changed
+BreakAfterJavaFieldAnnotations: false
+BreakStringLiterals: true
+ColumnLimit:     120 #Changed
+CommentPragmas:  '^ IWYU pragma:'
+CompactNamespaces: false
+ConstructorInitializerAllOnOneLineOrOnePerLine: true #Changed
+IndentWidth: 4
+ConstructorInitializerIndentWidth: 8 #Changed
+ContinuationIndentWidth: 8
+Cpp11BracedListStyle: true
+DerivePointerAlignment: false
+DisableFormat:   false
+ExperimentalAutoDetectBinPacking: false
+FixNamespaceComments: true
+ForEachMacros:
+  - foreach
+IncludeBlocks: Preserve # changed
+IncludeCategories: # changed
+  - Regex:           '^<(bliss|estimators|file_types|spectrumsum)/'
+    SortPriority:    1
+    Priority:        1
+    CaseSensitive:   false
+  - Regex:           '^(<\")(bland)/'
+    SortPriority:    2
+    Priority:        2
+    CaseSensitive:   false
+  - Regex:           '^((<|")(eigen3|fmt)/)|^<H5Cpp.h>'
+    SortPriority:    3
+    Priority:        3
+    CaseSensitive:   false
+  - Regex:           '.*'
+    SortPriority:    4
+    Priority:        4
