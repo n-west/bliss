@@ -10,8 +10,7 @@ struct hit {
     int64_t lower_freq_index;
     int64_t drift_index;
     float   integrated_power;
-
-// };
+};
 
 // void bliss::hitsearch(const row_major_f32array &drift_spectrum, noise_power noise_stats, float snr)
 // {
