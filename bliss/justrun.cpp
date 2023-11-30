@@ -7,7 +7,6 @@
 #include "fmt/core.h"
 #include <fmt/ranges.h>
 #include <H5Cpp.h>
-#include <eigen3/Eigen/Dense>
 
 #include <cstdint>
 #include <iostream>

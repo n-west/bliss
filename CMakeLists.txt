@@ -61,14 +61,14 @@ FetchContent_MakeAvailable(fmtlib)
 #   GIT_TAG v0.5.0)
 # FetchContent_MakeAvailable(NVIDIAMatX)
 
-## Eigen
-FetchContent_Declare(
-  libeigen
-  EXCLUDE_FROM_ALL
-  QUIET
-  GIT_REPOSITORY https://gitlab.com/libeigen/eigen
-  GIT_TAG 3.4.0)
-  FetchContent_MakeAvailable(libeigen)
+# ## Eigen
+# FetchContent_Declare(
+#   libeigen
+#   EXCLUDE_FROM_ALL
+#   QUIET
+#   GIT_REPOSITORY https://gitlab.com/libeigen/eigen
+#   GIT_TAG 3.4.0)
+#   FetchContent_MakeAvailable(libeigen)
   
 find_package(Python 3.8 COMPONENTS Interpreter Development.Module REQUIRED)
 # nanobind (for python bindings)

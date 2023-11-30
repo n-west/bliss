@@ -4,11 +4,6 @@
 
 namespace bliss {
 
-/**
- * Convenience typdef for a flexibly-sized 2d array of floats.
-*/
-// using row_major_f32array = Eigen::Array<float, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>;
-// using row_major_ui8array = Eigen::Array<uint8_t, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>;
 
 /**
  * noise_power represents estimates of the mean noise power as well as the deviation
