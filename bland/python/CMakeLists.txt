@@ -8,6 +8,14 @@
 # FetchContent_MakeAvailable(nanobind)
 
 
+add_library(pybland_header
+    INTERFACE
+)
+target_include_directories(pybland_header
+    INTERFACE
+    ${CMAKE_CURRENT_SOURCE_DIR}
+)
+
 nanobind_add_module(pybland pybland.cpp)
 target_link_libraries(pybland PUBLIC bland)
 

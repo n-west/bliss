@@ -7,9 +7,9 @@
 // using namespace bliss;
 
 struct hit {
-    int64_t lower_freq_index;
-    int64_t drift_index;
-    float   integrated_power;
+    int64_t lower_freq_index; /// index of the lowest (beginning) frequency of detected signal
+    int64_t drift_index; /// index of the drift of detected signal
+    float   integrated_power; /// integrated power of the drifting signal
 };
 
 // void bliss::hitsearch(const row_major_f32array &drift_spectrum, noise_power noise_stats, float snr)

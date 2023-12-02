@@ -8,6 +8,10 @@
 #include <string>
 #include <vector>
 
+/**
+ * \brief Where does this go?
+*/
+
 namespace bliss {
 
 /**
@@ -26,14 +30,34 @@ class h5_filterbank_file
 public:
   h5_filterbank_file(const std::string &file_path);
 
+  /**
+   * Read an HDF5 file-scoped attribute with the given key. The return type of the value is given by
+   * template parameter `T`.
+   * 
+   * WARNING: An incorrect template type will result in unexpected return value
+   * since the type is not checked to match the template parameter.
+  */
   template <typename T>
   T read_file_attr(const std::string &key);
 
+  /**
+   * Read an HDF5 dataset-scoped attribute of the `data` dataset with the given key. The return type of the value is given by
+   * template parameter `T`.
+   * 
+   * WARNING: An incorrect template type will result in unexpected return value
+   * since the type is not checked to match the template parameter.
+  */
   template <typename T>
   T read_data_attr(const std::string &key);
 
+  /**
+   * Read the `data` dataset to a new ndarray
+  */
   bland::ndarray read_data();
 
+  /**
+   * Read the `mask` dataset to a new ndarray
+  */
   bland::ndarray read_mask();
 
 private:

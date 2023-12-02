@@ -13,24 +13,47 @@
 
 using namespace bland;
 
-// Elementwise operations
+/**
+ * Template struct to allow passing an elementwise addition as a template argument
+*/
 template <typename A, typename B>
 struct elementwise_add_op {
+    /**
+     * elementwise addition between two scalars in an ndarray with type `A` and `B`
+    */
     static inline A call(const A &a, const B &b) { return a + b; }
 };
 
+/**
+ * Template struct to allow passing an elementwise subtraction as a template argument
+*/
 template <typename A, typename B>
 struct elementwise_subtract_op {
+    /**
+     * elementwise subtraction between two scalars in an ndarray with type `A` and `B`
+    */
     static inline A call(const A &a, const B &b) { return a - b; }
 };
 
+/**
+ * Template struct to allow passing an elementwise multiplication as a template argument
+*/
 template <typename A, typename B>
 struct elementwise_multiply_op {
+    /**
+     * elementwise multiplication between two scalars in an ndarray with type `A` and `B`
+    */
     static inline A call(const A &a, const B &b) { return a * b; }
 };
 
+/**
+ * Template struct to allow passing an elementwise division as a template argument
+*/
 template <typename A, typename B>
 struct elementwise_divide_op {
+    /**
+     * elementwise division between two scalars in an ndarray with type `A` and `B`
+    */
     static inline A call(const A &a, const B &b) { return a / b; }
 };
 
