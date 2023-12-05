@@ -29,10 +29,12 @@ namespace bliss
     };
 
     /**
-     * Estimate noise power statistics.
+     * Estimate noise power statistics using the given method
      * 
     */
     [[nodiscard]] noise_power noise_power_estimate(const bland::ndarray &x, noise_power_estimator estimator_method);
+
+    [[nodiscard]] noise_power noise_power_estimate(const bland::ndarray &x, const bland::ndarray &mask, noise_power_estimator estimator_method);
 
 } // namespace bliss
 

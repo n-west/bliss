@@ -14,7 +14,7 @@ struct ndarray;
  *
  * Currently the result datatype will be the same as A, but we should fix that!
  */
-template <typename A, template <typename> class Op, int UNROLL_FACTOR=1>
+template <typename A, template <typename> class Op>
 ndarray elementwise_unary_op(const ndarray &a, ndarray &out) {
     auto a_data    = a.data_ptr<A>();
     auto a_shape   = a.shape();

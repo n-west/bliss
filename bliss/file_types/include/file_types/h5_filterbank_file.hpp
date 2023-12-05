@@ -5,6 +5,7 @@
 #include <H5Cpp.h>
 #include <cstdint>
 #include <stdexcept>
+#include <string_view>
 #include <string>
 #include <vector>
 
@@ -28,7 +29,7 @@ namespace bliss {
 class h5_filterbank_file
 {
 public:
-  h5_filterbank_file(const std::string &file_path);
+  h5_filterbank_file(std::string_view file_path);
 
   /**
    * Read an HDF5 file-scoped attribute with the given key. The return type of the value is given by
@@ -59,6 +60,11 @@ public:
    * Read the `mask` dataset to a new ndarray
   */
   bland::ndarray read_mask();
+
+  /**
+   * Return a high level string representation of the file (file path, file attributes, datasets + axes...)
+  */
+  std::string repr();
 
 private:
   H5::H5File  _h5_file_handle;

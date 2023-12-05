@@ -13,4 +13,6 @@ target_link_libraries(file_types
     # datatypedefs
     bland
     HDF5::HDF5
+    PRIVATE
+    fmt::fmt-header-only
 )

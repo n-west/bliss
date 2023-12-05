@@ -1,15 +1,5 @@
 
 
-add_library(bland_internal INTERFACE
-    internal/elementwise_binary_op.hpp
-)
-
-target_include_directories(bland_internal
-    INTERFACE
-    include
-)
-
-
 add_library(bland
     ndarray.cpp
     ops/ops.cpp
@@ -35,4 +25,8 @@ target_link_libraries(bland
 
 set_target_properties(bland PROPERTIES POSITION_INDEPENDENT_CODE TRUE)
 
-
+add_library(bland_internal INTERFACE)
+target_include_directories(bland_internal
+    INTERFACE
+    ${CMAKE_CURRENT_SOURCE_DIR}/internal
+)

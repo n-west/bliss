@@ -264,3 +264,72 @@ ndarray bland::sum(const ndarray &a, std::vector<int64_t> reduced_axes) {
     ndarray out(out_shape, a.dtype(), a.device());
     return sum(a, out, reduced_axes);
 }
+
+
+
+
+template <typename A, typename B>
+struct greater_than_equals_to_op {
+    static bool call(const A &a, const B &b) {
+        return a >= b;
+    }
+};
+
+template <typename A, typename B>
+struct greater_than_op {
+    static bool call(const A &a, const B &b) {
+        return a > b;
+    }
+};
+
+template <typename A, typename B>
+struct less_than_op {
+    static bool call(const A &a, const B &b) {
+        return a < b;
+    }
+};
+
+template <typename A, typename B>
+struct less_than_equals_to_op {
+    static bool call(const A &a, const B &b) {
+        return a > b;
+    }
+};
+
+template <typename S>
+ndarray bland::operator >=(S lhs, ndarray rhs) {
+    // lhs >= rhs translates to rhs < lhs
+    ndarray out(rhs.shape());
+    return dispatch<scalar_op_impl_wrapper, S, less_than_op>(rhs, lhs);
+}
+
+template ndarray bland::operator>=(float lhs, ndarray rhs);
+template ndarray bland::operator>=(double lhs, ndarray rhs);
+// template ndarray bland::operator>=(int8_t lhs, ndarray rhs);
+// template ndarray bland::operator>=(int16_t lhs, ndarray rhs);
+// template ndarray bland::operator>=(int32_t lhs, ndarray rhs);
+// template ndarray bland::operator>=(int64_t lhs, ndarray rhs);
+// template ndarray bland::operator>=(uint8_t lhs, ndarray rhs);
+// template ndarray bland::operator>=(uint16_t lhs, ndarray rhs);
+// template ndarray bland::operator>=(uint32_t lhs, ndarray rhs);
+// template ndarray bland::operator>=(uint64_t lhs, ndarray rhs);
+
+template <typename S>
+ndarray bland::operator >(S lhs, ndarray rhs) {
+
+}
+
+template <typename S>
+ndarray bland::operator <=(S lhs, ndarray rhs) {
+
+}
+
+template <typename S>
+ndarray bland::operator <(S lhs, ndarray rhs) {
+
+}
+
+template <typename S>
+ndarray bland::operator ==(S lhs, ndarray rhs) {
+
+}

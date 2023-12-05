@@ -4,11 +4,14 @@
 #include <bland/bland.hpp>
 #include <iostream> // cerr
 #include <vector>
+#include <fmt/core.h>
+#include <fmt/ranges.h>
+#include <fmt/format.h>
 
 using namespace bliss;
 
-bliss::h5_filterbank_file::h5_filterbank_file(const std::string &file_path) {
-    _h5_file_handle = H5::H5File(file_path, H5F_ACC_RDONLY);
+bliss::h5_filterbank_file::h5_filterbank_file(std::string_view file_path) {
+    _h5_file_handle = H5::H5File(file_path.data(), H5F_ACC_RDONLY);
     _h5_data_handle = _h5_file_handle.openDataSet("data");
     _h5_mask_handle = _h5_file_handle.openDataSet("mask");
 
@@ -45,6 +48,8 @@ bland::ndarray bliss::h5_filterbank_file::read_data() {
         } else {
             // unknown dimension. If it's size 1, we're probably OK though
             if (dims[ii] != 1) {
+                // TODO, we're using fmtlib now, update this. Does fmtlib act as a proper
+                // "logging" lib?
                 std::cerr << "Got unknown " << ii << " dimension: " << dim_labels[ii]
                           << ". Continuing since it is size 1." << std::endl;
             } else {
@@ -90,4 +95,15 @@ std::vector<std::string> bliss::h5_filterbank_file::read_data_attr<std::vector<s
     } else {
         throw std::invalid_argument("H5 data does not have an attribute key");
     }
+}
+
+std::string bliss::h5_filterbank_file::repr() {
+    auto repr = fmt::format("File at {}\n    with CLASS {}, VERSION {}\n    has datasets:", _h5_file_handle.getFileName(), read_file_attr<std::string>("CLASS"), read_file_attr<std::string>("VERSION"));
+    // auto repr = fmt::format("what the fuck");
+
+    // TODO, can we just discover number of datasets and figure out their dimensions to print?
+    // _h5_file_handle.    
+    // fmt::format_to(repr, "    has datasets:\n");
+
+    return repr;
 }

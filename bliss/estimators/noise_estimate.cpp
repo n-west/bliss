@@ -17,7 +17,8 @@ noise_power noise_power_estimate_turbo_seti(const bland::ndarray &x) {
     estimated_stats._mean = bland::median(x);
 
     auto summed_mean = bland::mean(summed_time);
-    estimated_stats._var = (bland::sum(bland::square(summed_time - summed_mean)) / (summed_time.numel() - 1)).data_ptr<float>()[0];
+    estimated_stats._var = std::pow(bland::stddev(summed_time).scalarize<float>(), 2);
+            // (bland::sum(bland::square(summed_time - summed_mean)) / (summed_time.numel() - 1)).data_ptr<float>()[0];
 
     return estimated_stats;
 }
@@ -66,3 +67,12 @@ noise_power bliss::noise_power_estimate(const bland::ndarray &x, noise_power_est
 
     return estimated_stats;
 }
+
+/**
+ * This is the masked equivalent of noise power estimate
+*/
+noise_power bliss::noise_power_estimate(const bland::ndarray &x,
+                                        const bland::ndarray &mask,
+                                        noise_power_estimator estimator_method) {
+
+                                        }

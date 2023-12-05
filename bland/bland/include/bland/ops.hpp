@@ -19,6 +19,18 @@ ndarray copy(ndarray a, ndarray &out);
 ndarray square(ndarray a);
 ndarray sqrt(ndarray a);
 
+template <typename S>
+ndarray operator >=(S lhs, ndarray rhs);
+template <typename S>
+ndarray operator >(S lhs, ndarray rhs);
+template <typename S>
+ndarray operator <=(S lhs, ndarray rhs);
+template <typename S>
+ndarray operator <(S lhs, ndarray rhs);
+template <typename S>
+ndarray operator ==(S lhs, ndarray rhs);
+
+
 ndarray_slice slice(const ndarray &a, int64_t dim, int64_t start, int64_t end, int64_t stride = 1);
 struct slice_spec {
     /**

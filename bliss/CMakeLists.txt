@@ -1,9 +1,11 @@
 
 
-add_subdirectory(spectrumsum)
-add_subdirectory(file_types)
 add_subdirectory(convenience)
 add_subdirectory(estimators)
+add_subdirectory(file_types)
+add_subdirectory(flaggers)
+add_subdirectory(rfi)
+add_subdirectory(spectrumsum)
 
 add_subdirectory(tests)
 add_subdirectory(python)

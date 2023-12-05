@@ -83,11 +83,12 @@ if (DOXYGEN_FOUND)
     message("Doxygen build started")
 
     # Note the option ALL which allows to build the docs together with the application
-    add_custom_target( doc EXCLUDE_FROM_ALL
+    add_custom_target(doc
         COMMAND ${DOXYGEN_EXECUTABLE} ${DOXYGEN_OUT}
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
         COMMENT "Generating API documentation with Doxygen"
         VERBATIM )
+    set_target_properties(doc PROPERTIES EXCLUDE_FROM_ALL TRUE)
 else (DOXYGEN_FOUND)
   message("Doxygen needs to be installed to generate the doxygen documentation")
 endif (DOXYGEN_FOUND)

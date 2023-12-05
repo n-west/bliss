@@ -19,12 +19,7 @@ struct ndarray;
  * Currently the result datatype will be the same as A, but we should fix that!
  */
 template <typename A, typename B, template <typename, typename> class Op>
-ndarray elementwise_scalar_op(const ndarray &a, const B &b) {
-
-    // Create output array with appropriate shape and data type
-    // TODO: figure out type promotion for the return type
-    ndarray out(a.shape(), a.dtype(), a.device());
-
+ndarray elementwise_scalar_op(const ndarray &a, const B &b, ndarray out) {
     auto a_data = a.data_ptr<A>();
     auto a_shape = a.shape();
     auto a_strides = a.strides();
@@ -70,10 +65,21 @@ ndarray elementwise_scalar_op(const ndarray &a, const B &b) {
  * with the given template datatypes
  */
 struct scalar_op_impl_wrapper {
+
+    template <typename A_type, typename B_type, template <typename, typename> class Op>
+    static inline ndarray call(const ndarray &a, const B_type &b, ndarray out) {
+        return elementwise_scalar_op<A_type, B_type, Op>(a, b, out);
+    }
+
     template <typename A_type, typename B_type, template <typename, typename> class Op>
     static inline ndarray call(const ndarray &a, const B_type &b) {
-        return elementwise_scalar_op<A_type, B_type, Op>(a, b);
+        // Create output array with appropriate shape and data type
+        // TODO: figure out type promotion for the return type
+        ndarray out(a.shape(), a.dtype(), a.device());
+
+        return elementwise_scalar_op<A_type, B_type, Op>(a, b, out);
     }
 };
+
 
 }

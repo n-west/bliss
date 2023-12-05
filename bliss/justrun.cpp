@@ -3,9 +3,9 @@
 #include <file_types/h5_filterbank_file.hpp>
 #include <spectrumsum/hit_search.hpp>
 #include <spectrumsum/spectrumsum.hpp>
-
 #include "fmt/core.h"
 #include <fmt/ranges.h>
+
 #include <H5Cpp.h>
 
 #include <cstdint>

@@ -178,6 +178,9 @@ class ndarray {
 
     int64_t ndim() const;
 
+    template <typename T>
+    T scalarize() const;
+
     /**
      * Return a string representation of this tensor. Format is
      * a pretty print including the datatype, shape, device and
