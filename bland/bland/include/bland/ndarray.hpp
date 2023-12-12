@@ -208,6 +208,10 @@ class ndarray {
     template <typename T>
     ndarray operator/(const T &b) const;
 
+
+    // template <typename T>
+    // ndarray operator >(T lhs) const;
+
     ndarray reshape(const std::vector<int64_t> &new_shape);
     ndarray squeeze(int64_t squeeze_axis);
     ndarray unsqueeze(int64_t unsqueeze_axis);

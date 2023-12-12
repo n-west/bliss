@@ -6,7 +6,7 @@
 
 using namespace bliss;
 
-bliss::filterbank_data::filterbank_data(h5_filterbank_file fb_file) :
+filterbank_data::filterbank_data(h5_filterbank_file fb_file) :
         _data(fb_file.read_data()), _mask(fb_file.read_mask()) {
 
     // double      fch1;
@@ -42,7 +42,9 @@ bliss::filterbank_data::filterbank_data(h5_filterbank_file fb_file) :
     _za_start = fb_file.read_data_attr<double>("za_start");
 }
 
-bliss::filterbank_data::filterbank_data(std::string_view file_path) : filterbank_data(h5_filterbank_file(file_path)) {}
+filterbank_data::filterbank_data(std::string_view file_path) : filterbank_data(h5_filterbank_file(file_path)) {}
+
+filterbank_data::filterbank_data(bland::ndarray data, bland::ndarray mask, double foff) : _data(data), _mask(mask), _foff(foff) {}
 
 bland::ndarray &bliss::filterbank_data::data() {
     return _data;

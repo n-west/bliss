@@ -5,6 +5,7 @@ add_library(bland
     ops/ops.cpp
     ops/arithmetic.cpp
     ops/arithmetic_scalar.cpp
+    ops/comparison.cpp
     ops/creators.cpp
     ops/statistical.cpp
     internal/shape_helpers.cpp

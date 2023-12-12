@@ -231,22 +231,22 @@ struct less_than_equals_to_op {
 // template ndarray bland::operator>=(uint32_t lhs, ndarray rhs);
 // template ndarray bland::operator>=(uint64_t lhs, ndarray rhs);
 
-template <typename S>
-ndarray bland::operator >(S lhs, ndarray rhs) {
+// template <typename S>
+// ndarray bland::operator >(S lhs, ndarray rhs) {
 
-}
+// }
 
-template <typename S>
-ndarray bland::operator <=(S lhs, ndarray rhs) {
+// template <typename S>
+// ndarray bland::operator <=(S lhs, ndarray rhs) {
 
-}
+// }
 
-template <typename S>
-ndarray bland::operator <(S lhs, ndarray rhs) {
+// template <typename S>
+// ndarray bland::operator <(S lhs, ndarray rhs) {
 
-}
+// }
 
-template <typename S>
-ndarray bland::operator ==(S lhs, ndarray rhs) {
+// template <typename S>
+// ndarray bland::operator ==(S lhs, ndarray rhs) {
 
-}
+// }

@@ -21,19 +21,6 @@ ndarray square(ndarray a, ndarray out);
 ndarray sqrt(ndarray a);
 ndarray sqrt(ndarray a, ndarray out);
 
-
-template <typename S>
-ndarray operator >=(S lhs, ndarray rhs);
-template <typename S>
-ndarray operator >(S lhs, ndarray rhs);
-template <typename S>
-ndarray operator <=(S lhs, ndarray rhs);
-template <typename S>
-ndarray operator <(S lhs, ndarray rhs);
-template <typename S>
-ndarray operator ==(S lhs, ndarray rhs);
-
-
 ndarray_slice slice(const ndarray &a, int64_t dim, int64_t start, int64_t end, int64_t stride = 1);
 struct slice_spec {
     /**
@@ -68,6 +55,5 @@ ndarray_slice slice(const ndarray &a, slice_spec slice_dim, Args... args);
 template <typename T>
 ndarray fill(ndarray out, T value);
 
-bool approx_equal(const ndarray &a, const ndarray &b);
 
 } // namespace bland

@@ -182,52 +182,50 @@ DLManagedTensor *blandDLTensor::to_dlpack() {
 
 bland::ndarray::datatype::datatype(std::string_view dtype) {
     if (dtype == "float" || dtype == "float32") {
-        code = kDLFloat;
-        bits = 32;
+        code  = kDLFloat;
+        bits  = 32;
         lanes = 1;
     } else if (dtype == "double" || dtype == "float64") {
-        code = kDLFloat;
-        bits = 64;
+        code  = kDLFloat;
+        bits  = 64;
         lanes = 1;
     } else if (dtype == "int" || dtype == "int64") {
-        code = kDLInt;
-        bits = 64;
+        code  = kDLInt;
+        bits  = 64;
         lanes = 1;
     } else if (dtype == "int32") {
-        code = kDLInt;
-        bits = 32;
+        code  = kDLInt;
+        bits  = 32;
         lanes = 1;
     } else if (dtype == "int16") {
-        code = kDLInt;
-        bits = 16;
+        code  = kDLInt;
+        bits  = 16;
         lanes = 1;
     } else if (dtype == "int8") {
-        code = kDLInt;
-        bits = 8;
+        code  = kDLInt;
+        bits  = 8;
         lanes = 1;
     } else if (dtype == "uint" || dtype == "uint64") {
-        code = kDLUInt;
-        bits = 64;
+        code  = kDLUInt;
+        bits  = 64;
         lanes = 1;
     } else if (dtype == "uint32") {
-        code = kDLUInt;
-        bits = 32;
+        code  = kDLUInt;
+        bits  = 32;
         lanes = 1;
     } else if (dtype == "uint16") {
-        code = kDLUInt;
-        bits = 16;
+        code  = kDLUInt;
+        bits  = 16;
         lanes = 1;
     } else if (dtype == "uint8") {
-        code = kDLUInt;
-        bits = 8;
+        code  = kDLUInt;
+        bits  = 8;
         lanes = 1;
     }
 }
-bland::ndarray::datatype::datatype(DLDataType dtype) : DLDataType(dtype) {
-}
+bland::ndarray::datatype::datatype(DLDataType dtype) : DLDataType(dtype) {}
 
-bland::ndarray::dev::dev(DLDevice d) : DLDevice(d) {
-}
+bland::ndarray::dev::dev(DLDevice d) : DLDevice(d) {}
 
 bool bland::ndarray::dev::operator==(const dev &other) {
     return this->device_type == other.device_type && this->device_id == other.device_id;
@@ -236,11 +234,11 @@ bool bland::ndarray::dev::operator==(const dev &other) {
 bland::ndarray::dev::dev(std::string_view dev) {
     if (dev == "cpu") {
         device_type = DLDeviceType::kDLCPU;
-        device_id = 0;
+        device_id   = 0;
     } else if (dev == "cuda") {
         // TODO: should we follow the torch concept of cuda:id
         device_type = DLDeviceType::kDLCUDA;
-        device_id = 0;
+        device_id   = 0;
     } else {
         throw std::runtime_error("Device type not supported in bland yet");
     }
@@ -270,7 +268,7 @@ void initialize_memory(T *data, int64_t numel, T value) {
     }
 }
 
-template <typename T, typename std::enable_if<std::is_arithmetic<T>::value>::type*>
+template <typename T, typename std::enable_if<std::is_arithmetic<T>::value>::type *>
 bland::ndarray::ndarray(std::vector<int64_t> dims, T initial_value, datatype dtype, DLDevice device) :
         _tensor(detail::blandDLTensor(dims, dtype, device, {})) {
     int64_t stride = 1; // Stride for the last dimension
@@ -401,17 +399,16 @@ T bland::ndarray::scalarize() const {
     return data_ptr<T>()[0];
 }
 
-template float bland::ndarray::scalarize<float>() const;
-template double bland::ndarray::scalarize<double>() const;
-template int8_t bland::ndarray::scalarize<int8_t>() const;
-template int16_t bland::ndarray::scalarize<int16_t>() const;
-template int32_t bland::ndarray::scalarize<int32_t>() const;
-template int64_t bland::ndarray::scalarize<int64_t>() const;
-template uint8_t bland::ndarray::scalarize<uint8_t>() const;
+template float    bland::ndarray::scalarize<float>() const;
+template double   bland::ndarray::scalarize<double>() const;
+template int8_t   bland::ndarray::scalarize<int8_t>() const;
+template int16_t  bland::ndarray::scalarize<int16_t>() const;
+template int32_t  bland::ndarray::scalarize<int32_t>() const;
+template int64_t  bland::ndarray::scalarize<int64_t>() const;
+template uint8_t  bland::ndarray::scalarize<uint8_t>() const;
 template uint16_t bland::ndarray::scalarize<uint16_t>() const;
 template uint32_t bland::ndarray::scalarize<uint32_t>() const;
 template uint64_t bland::ndarray::scalarize<uint64_t>() const;
-
 
 template <typename datatype>
 std::string pretty_print(const ndarray &a) {
@@ -435,7 +432,7 @@ std::string pretty_print(const ndarray &a) {
         dtype_pp = "int64_t";
     }
     std::string dev_pp{};
-    auto dev = a.device();
+    auto        dev = a.device();
     if (dev == bland::ndarray::dev::cpu) {
         dev_pp = "cpu";
     } else {
@@ -693,6 +690,23 @@ template ndarray bland::operator/<uint8_t>(const uint8_t &lhs, const ndarray &rh
 template ndarray bland::operator/<uint16_t>(const uint16_t &lhs, const ndarray &rhs);
 template ndarray bland::operator/<uint32_t>(const uint32_t &lhs, const ndarray &rhs);
 template ndarray bland::operator/<uint64_t>(const uint64_t &lhs, const ndarray &rhs);
+
+// template <typename T>
+// ndarray bland::ndarray::operator>(T lhs) const {
+//     return greater_than(*this, lhs);
+// }
+
+// template ndarray bland::ndarray::operator><ndarray>(ndarray rhs);
+// template ndarray bland::ndarray::operator><double>(double rhs);
+// template ndarray bland::ndarray::operator><float>(float rhs);
+// template ndarray bland::ndarray::operator><uint8_t>(uint8_t rhs);
+// template ndarray bland::ndarray::operator><uint16_t>(uint16_t rhs);
+// template ndarray bland::ndarray::operator><uint32_t>(uint32_t rhs);
+// template ndarray bland::ndarray::operator><uint64_t>(uint64_t rhs);
+// template ndarray bland::ndarray::operator><int8_t>(int8_t rhs);
+// template ndarray bland::ndarray::operator><int16_t>(int16_t rhs);
+// template ndarray bland::ndarray::operator><int32_t>(int32_t rhs);
+// template ndarray bland::ndarray::operator><int64_t>(int64_t rhs);
 
 ndarray bland::ndarray::reshape(const std::vector<int64_t> &new_shape) {
     int64_t num_elements = std::accumulate(new_shape.begin(), new_shape.end(), 1, std::multiplies<int64_t>());

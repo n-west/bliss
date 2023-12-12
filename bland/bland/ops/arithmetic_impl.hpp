@@ -5,7 +5,6 @@ namespace bland
 /**
  * Template struct to allow passing an elementwise addition as a template argument
 */
-
 struct elementwise_add_op_ts {
     /**
      * elementwise addition between two scalars in an ndarray with type `A` and `B`

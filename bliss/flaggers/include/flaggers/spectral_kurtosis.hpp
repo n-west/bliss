@@ -26,6 +26,6 @@ namespace bliss {
  * The non-averaged estimator (N=1) and background derivation can be found in
  * "Radio Frequency Interference Excision Using Spectral-Domain Statistics"
 */
-filterbank_data flag_spectral_kurtosis(filterbank_data fb_data);
+filterbank_data flag_spectral_kurtosis(filterbank_data fb_data, float lower_threshold=0.05f, float upper_threshold=0.05f);
 
 } // namespace bliss

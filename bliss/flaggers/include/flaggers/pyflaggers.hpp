@@ -16,5 +16,7 @@ void bind_pyflaggers(nb::module_ m) {
     m.def("flag",
           &bliss::flag_spectral_kurtosis,
           "filterbank_data"_a,
+          "lower_threshold"_a,
+          "upper_threshold"_a,
           "return a masked copy of filterbank_data where spectral_kurtosis indicates non-gaussian samples");
 }
