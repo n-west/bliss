@@ -31,7 +31,9 @@ filterbank_data bliss::flag_spectral_kurtosis(filterbank_data fb_data, float low
     // 2. Threshold & set on channels
     auto rfi = (sk < lower_threshold) + (sk > upper_threshold);
 
-    bland::copy(rfi_flags.unsqueeze(0), rfi);
+    fmt::print("{} flagged channels\n", (float) bland::sum(rfi).scalarize<uint8_t>());
+
+    // bland::copy(rfi_flags.unsqueeze(0), rfi);
     // auto mask_above = sk > 50.0f;
     // auto mask_below = sk < .05f;
 
