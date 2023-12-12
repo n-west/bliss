@@ -31,8 +31,8 @@ filterbank_data bliss::flag_spectral_kurtosis(filterbank_data fb_data) {
     auto sk = spectral_kurtosis(spectrum_grid, N, M, 1.0);
 
     // 2. Threshold & set on channels
-    auto mask_above = sk > 50;
-    auto mask_below = sk < .05;
+    // auto mask_above = sk > 50;
+    // auto mask_below = sk < .05;
 
     return fb_data;
 }
