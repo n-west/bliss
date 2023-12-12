@@ -2,7 +2,9 @@
 # Breakthrough Listen Interesting Signal Search
 
 <p align="center">
-[![Build](https://github.com/n-west/bliss/actions/workflows/build-and-test.yml/badge.svg?branch=main)]
+
+[![Build](https://github.com/n-west/bliss/actions/workflows/build-and-test.yml/badge.svg)](https://github.com/n-west/bliss/actions/workflows/build-and-test.yml)
+
 </p>
 
 ## Dependencies:
