@@ -5,15 +5,16 @@
 
 #include "assignment_op.hpp"
 #include "dispatcher.hpp"
-#include "elementwise_binary_op.hpp"
+// #include "elementwise_binary_op.hpp"
 #include "elementwise_scalar_op.hpp"
 #include "elementwise_unary_op.hpp"
 #include "shape_helpers.hpp"
 
 #include <fmt/core.h>
 
-#include <algorithm> // std::find
-#include <numeric>   // std::accumulate
+// #include <algorithm> // std::find
+// #include <numeric>   // std::accumulate
+#include <cmath>
 
 using namespace bland;
 

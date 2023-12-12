@@ -4,7 +4,6 @@
 #include <fmt/core.h>
 #include <fmt/ranges.h>
 #include <bland/ops.hpp>
-#include <iostream>
 
 using namespace bliss;
 
@@ -71,7 +70,7 @@ noise_power bliss::noise_power_estimate(const bland::ndarray &x, noise_power_est
 /**
  * This is the masked equivalent of noise power estimate
 */
-noise_power bliss::noise_power_estimate(const bland::ndarray &x,
+noise_power bliss::masked_noise_power_estimate(const bland::ndarray &x,
                                         const bland::ndarray &mask,
                                         noise_power_estimator estimator_method) {
 

@@ -34,7 +34,7 @@ namespace bliss
     */
     [[nodiscard]] noise_power noise_power_estimate(const bland::ndarray &x, noise_power_estimator estimator_method);
 
-    [[nodiscard]] noise_power noise_power_estimate(const bland::ndarray &x, const bland::ndarray &mask, noise_power_estimator estimator_method);
+    [[nodiscard]] noise_power masked_noise_power_estimate(const bland::ndarray &x, const bland::ndarray &mask, noise_power_estimator estimator_method);
 
 } // namespace bliss
 

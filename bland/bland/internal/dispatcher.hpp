@@ -8,20 +8,24 @@ namespace bland {
 
 /**
  * Dispatch operations to implementations templated on actual datatypes
- * c = op(a, b)
- * by reading the ndarray dtype and filling in appropriate template arguments.
+ * by reading the runtime ndarray dtype and translating that to compile-time functions called with
+ * template arguments based on the dtype.
  * 
  * This is highly verbose, but conceptually simple even though the syntax is somewhat advanced
- * to get datatypes, template substitution, and perfect argument forwarding
+ * to get datatypes, template substitution, and perfect argument forwarding.
+ * 
+ * The main benefit of this is keeping the overhead of runtime dispatching pretty minimal (two switch statements
+ * per input) and the remaining work is all compile-time optimized work
  *
  */
 
 
 /**
- * Deduce the datatype of first argument of a two-argument function and template substitute
- * to deduce the second argument
+ * out = f(a, b) where a, b, and c are ndarrays.
+ * 
+ * This requires three type deductions and passes through an underlying impl function with 3 template args
 */
-template <typename F, typename Out, typename A, template <typename, typename, typename> class Op, typename ...Args>
+template <typename F, typename Out, typename A, class Op, typename ...Args>
 ndarray dispatch(ndarray &out, const ndarray &a, const ndarray &b, Args... args) {
     auto dtype = b.dtype();
 
@@ -69,7 +73,7 @@ ndarray dispatch(ndarray &out, const ndarray &a, const ndarray &b, Args... args)
     }
 }
 
-template <typename F, typename Out, template <typename, typename, typename> class Op, typename ...Args>
+template <typename F, typename Out, class Op, typename ...Args>
 ndarray dispatch(ndarray &out, const ndarray &a, const ndarray &b, Args... args) {
     auto dtype = a.dtype();
 
@@ -117,10 +121,8 @@ ndarray dispatch(ndarray &out, const ndarray &a, const ndarray &b, Args... args)
     }
 }
 
-// template <typename F, typename Out, template <typename, typename, typename> class Op, typename ...Args>
-// ndarray dispatch(ndarray &out, const ndarray &a, const ndarray &b, Args... args) {
 
-template <typename F, template <typename, typename, typename> class Op, typename ...Args>
+template <typename F, class Op, typename ...Args>
 ndarray dispatch(ndarray &out, const ndarray &a, const ndarray &b, Args... args) {
     auto dtype = out.dtype();
 
@@ -172,9 +174,11 @@ ndarray dispatch(ndarray &out, const ndarray &a, const ndarray &b, Args... args)
 
 
 /**
- * Deduce the datatype of a tensor operating with a scalar
-*/
-template <typename F, typename Out, typename S, template <typename, typename, typename> class Op, typename ...Args>
+ * out = f(a, b) where a, and c are ndarrays and b is a scalar.
+ * 
+ * This requires three type deductions and passes through an underlying impl function with 3 template args
+ **/
+template <typename F, typename Out, typename S, class Op, typename ...Args>
 ndarray dispatch_new3(ndarray &out, const ndarray &a, const S &b, Args... args) {
     auto a_dtype = a.dtype();
 
@@ -223,10 +227,8 @@ ndarray dispatch_new3(ndarray &out, const ndarray &a, const S &b, Args... args) 
     }
 }
 
-/**
- * Deduce the datatype of a tensor operating with a scalar
-*/
-template <typename F, typename S, template <typename, typename, typename> class Op, typename ...Args>
+
+template <typename F, typename S, class Op, typename ...Args>
 ndarray dispatch_new3(ndarray &out, const ndarray &a, const S &b, Args... args) {
     auto dtype = out.dtype();
 
@@ -279,9 +281,10 @@ ndarray dispatch_new3(ndarray &out, const ndarray &a, const S &b, Args... args) 
 
 
 /**
- * Deduce the datatype of a tensor operating with a scalar
- * This is used by fill, so there's no Op to call, just the wrapping function
-*/
+ * out = f(b) where c is an ndarray and b is a scalar. (think fill(b))
+ * 
+ * This requires one type deductions and passes through an underlying impl function with 2 template args
+ **/
 template <typename F, typename S, typename ...Args>
 ndarray dispatch_new(ndarray &out, const S &b, Args... args) {
     auto dtype = out.dtype();
@@ -335,15 +338,18 @@ ndarray dispatch_new(ndarray &out, const S &b, Args... args) {
 
 /**
  * Deduce the first input datatype to a reduction op
+*/
+/**
+ * out = f(a) where a and c are ndarrays.
+ * 
+ * This requires two type deductions and passes through an underlying impl function with 2 template args
+ * 
  * Used by
  * * mean
  * * stddev
  * * standardized_moment
  * * sum
-*/
-/**
- * Deduce the output datatype to a reduction op, forwarding all arguments
-*/
+ **/
 template <typename Out, class Op, typename... Args>
 ndarray dispatch_new(ndarray &out, const ndarray &a, Args... args) {
     auto dtype = a.dtype();

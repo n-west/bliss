@@ -1,6 +1,7 @@
 
 add_library(flaggers
-    kurtosis.cpp
+    magnitude.cpp
+    spectral_kurtosis.cpp
 )
 
 target_include_directories(flaggers
@@ -12,6 +13,15 @@ target_link_libraries(flaggers
     PUBLIC
     bland
     datatypedefs
+    file_types
     PRIVATE
-    fmt::fmt
+    estimators
+    fmt::fmt-header-only
 )
+
+
+set_target_properties(flaggers PROPERTIES POSITION_INDEPENDENT_CODE TRUE)
+
+add_library(pyflaggers INTERFACE)
+# target_include_directories()
+target_link_libraries(pyflaggers INTERFACE flaggers)

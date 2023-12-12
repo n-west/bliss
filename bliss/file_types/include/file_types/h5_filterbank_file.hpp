@@ -9,9 +9,6 @@
 #include <string>
 #include <vector>
 
-/**
- * \brief Where does this go?
-*/
 
 namespace bliss {
 
@@ -87,23 +84,7 @@ T bliss::h5_filterbank_file::read_file_attr(const std::string &key)
   }
 }
 
-template <typename T>
-T bliss::h5_filterbank_file::read_data_attr(const std::string &key)
-{
-
-  T val;
-  if (_h5_data_handle.attrExists(key)) {
-    auto attr  = _h5_data_handle.openAttribute(key);
-    auto dtype = attr.getDataType();
-
-    attr.read(dtype, &val);
-    return val;
-  } else {
-    throw std::invalid_argument("H5 file does not have an attribute key");
-  }
-}
-
-template <>
-std::vector<std::string> bliss::h5_filterbank_file::read_data_attr<std::vector<std::string>>(const std::string &key);
+// template <typename T>
+// T bliss::h5_filterbank_file::read_data_attr(const std::string &key);
 
 } // namespace bliss

@@ -82,16 +82,16 @@ class ndarray {
     datatype(std::string_view dtype);
     datatype(DLDataType dtype);
 
-    static constexpr DLDataType float32 = DLDataType{.code = DLDataTypeCode::kDLFloat, .bits = 32};
-    static constexpr DLDataType float64 = DLDataType{.code = DLDataTypeCode::kDLFloat, .bits = 64};
-    static constexpr DLDataType int8    = DLDataType{.code = DLDataTypeCode::kDLInt, .bits = 8};
-    static constexpr DLDataType int16   = DLDataType{.code = DLDataTypeCode::kDLInt, .bits = 16};
-    static constexpr DLDataType int32   = DLDataType{.code = DLDataTypeCode::kDLInt, .bits = 32};
-    static constexpr DLDataType int64   = DLDataType{.code = DLDataTypeCode::kDLInt, .bits = 64};
-    static constexpr DLDataType uint8   = DLDataType{.code = DLDataTypeCode::kDLUInt, .bits = 8};
-    static constexpr DLDataType uint16  = DLDataType{.code = DLDataTypeCode::kDLUInt, .bits = 16};
-    static constexpr DLDataType uint32  = DLDataType{.code = DLDataTypeCode::kDLUInt, .bits = 32};
-    static constexpr DLDataType uint64  = DLDataType{.code = DLDataTypeCode::kDLUInt, .bits = 64};
+    static constexpr DLDataType float32 = DLDataType{.code = DLDataTypeCode::kDLFloat, .bits = 32, .lanes=1};
+    static constexpr DLDataType float64 = DLDataType{.code = DLDataTypeCode::kDLFloat, .bits = 64, .lanes=1};
+    static constexpr DLDataType int8    = DLDataType{.code = DLDataTypeCode::kDLInt, .bits = 8, .lanes=1};
+    static constexpr DLDataType int16   = DLDataType{.code = DLDataTypeCode::kDLInt, .bits = 16, .lanes=1};
+    static constexpr DLDataType int32   = DLDataType{.code = DLDataTypeCode::kDLInt, .bits = 32, .lanes=1};
+    static constexpr DLDataType int64   = DLDataType{.code = DLDataTypeCode::kDLInt, .bits = 64, .lanes=1};
+    static constexpr DLDataType uint8   = DLDataType{.code = DLDataTypeCode::kDLUInt, .bits = 8, .lanes=1};
+    static constexpr DLDataType uint16  = DLDataType{.code = DLDataTypeCode::kDLUInt, .bits = 16, .lanes=1};
+    static constexpr DLDataType uint32  = DLDataType{.code = DLDataTypeCode::kDLUInt, .bits = 32, .lanes=1};
+    static constexpr DLDataType uint64  = DLDataType{.code = DLDataTypeCode::kDLUInt, .bits = 64, .lanes=1};
   };
 
   struct dev : DLDevice {

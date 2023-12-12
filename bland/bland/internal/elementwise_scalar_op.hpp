@@ -18,7 +18,7 @@ struct ndarray;
  *
  * Currently the result datatype will be the same as A, but we should fix that!
  */
-template <typename Out, typename A, typename B, template <typename, typename, typename> class Op>
+template <typename Out, typename A, typename B, class Op>
 ndarray elementwise_scalar_op(ndarray out, const ndarray &a, const B &b) {
     auto a_data = a.data_ptr<A>();
     auto a_shape = a.shape();
@@ -39,7 +39,7 @@ ndarray elementwise_scalar_op(ndarray out, const ndarray &a, const B &b) {
     auto numel = out.numel();
     for (int64_t n = 0; n < numel; ++n) {
         // Finally... do the actual op
-        out_data[out_linear_index] = Op<Out, A, B>::call(a_data[a_linear_index], b);
+        out_data[out_linear_index] = Op::template call<Out, A, B>(a_data[a_linear_index], b);
 
         // Increment the multi-dimensional index
         for (int i = out_shape.size() - 1; i >= 0; --i) {
@@ -66,7 +66,7 @@ ndarray elementwise_scalar_op(ndarray out, const ndarray &a, const B &b) {
  */
 struct scalar_op_impl_wrapper {
 
-    template <typename Out, typename A_type, typename B_type, template <typename, typename, typename> class Op>
+    template <typename Out, typename A_type, typename B_type, class Op>
     static inline ndarray call(ndarray out, const ndarray &a, const B_type &b) {
         return elementwise_scalar_op<Out, A_type, B_type, Op>(out, a, b);
     }

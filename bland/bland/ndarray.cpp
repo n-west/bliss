@@ -184,33 +184,43 @@ bland::ndarray::datatype::datatype(std::string_view dtype) {
     if (dtype == "float" || dtype == "float32") {
         code = kDLFloat;
         bits = 32;
+        lanes = 1;
     } else if (dtype == "double" || dtype == "float64") {
         code = kDLFloat;
         bits = 64;
+        lanes = 1;
     } else if (dtype == "int" || dtype == "int64") {
         code = kDLInt;
         bits = 64;
+        lanes = 1;
     } else if (dtype == "int32") {
         code = kDLInt;
         bits = 32;
+        lanes = 1;
     } else if (dtype == "int16") {
         code = kDLInt;
         bits = 16;
+        lanes = 1;
     } else if (dtype == "int8") {
         code = kDLInt;
         bits = 8;
+        lanes = 1;
     } else if (dtype == "uint" || dtype == "uint64") {
         code = kDLUInt;
         bits = 64;
+        lanes = 1;
     } else if (dtype == "uint32") {
         code = kDLUInt;
         bits = 32;
+        lanes = 1;
     } else if (dtype == "uint16") {
         code = kDLUInt;
         bits = 16;
+        lanes = 1;
     } else if (dtype == "uint8") {
         code = kDLUInt;
         bits = 8;
+        lanes = 1;
     }
 }
 bland::ndarray::datatype::datatype(DLDataType dtype) : DLDataType(dtype) {

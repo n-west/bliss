@@ -39,7 +39,7 @@ void bind_pybland(nb::module_ m) {
         return bland::arange(start, end, step);
     });
     m.def("linspace", [](float start, float end, size_t number_steps) {
-        return bland::arange(start, end, number_steps);
+        return bland::linspace(start, end, number_steps);
     });
 
     /**************
