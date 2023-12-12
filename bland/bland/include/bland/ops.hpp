@@ -17,7 +17,10 @@ ndarray copy(ndarray a);
 ndarray copy(ndarray a, ndarray &out);
 
 ndarray square(ndarray a);
+ndarray square(ndarray a, ndarray out);
 ndarray sqrt(ndarray a);
+ndarray sqrt(ndarray a, ndarray out);
+
 
 template <typename S>
 ndarray operator >=(S lhs, ndarray rhs);
@@ -63,7 +66,7 @@ template <typename... Args>
 ndarray_slice slice(const ndarray &a, slice_spec slice_dim, Args... args);
 
 template <typename T>
-ndarray fill(ndarray a, T v);
+ndarray fill(ndarray out, T value);
 
 bool approx_equal(const ndarray &a, const ndarray &b);
 

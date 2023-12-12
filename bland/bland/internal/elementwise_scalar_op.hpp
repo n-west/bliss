@@ -18,14 +18,14 @@ struct ndarray;
  *
  * Currently the result datatype will be the same as A, but we should fix that!
  */
-template <typename A, typename B, template <typename, typename> class Op>
-ndarray elementwise_scalar_op(const ndarray &a, const B &b, ndarray out) {
+template <typename Out, typename A, typename B, template <typename, typename, typename> class Op>
+ndarray elementwise_scalar_op(ndarray out, const ndarray &a, const B &b) {
     auto a_data = a.data_ptr<A>();
     auto a_shape = a.shape();
     auto a_strides = a.strides();
     const auto a_offset = a.offsets();
 
-    auto    out_data = out.data_ptr<A>();
+    auto    out_data = out.data_ptr<Out>();
     auto out_shape = out.shape();
     auto out_strides = out.strides();
     const auto out_offset = out.offsets();
@@ -39,7 +39,7 @@ ndarray elementwise_scalar_op(const ndarray &a, const B &b, ndarray out) {
     auto numel = out.numel();
     for (int64_t n = 0; n < numel; ++n) {
         // Finally... do the actual op
-        out_data[out_linear_index] = Op<A, B>::call(a_data[a_linear_index], b);
+        out_data[out_linear_index] = Op<Out, A, B>::call(a_data[a_linear_index], b);
 
         // Increment the multi-dimensional index
         for (int i = out_shape.size() - 1; i >= 0; --i) {
@@ -66,19 +66,26 @@ ndarray elementwise_scalar_op(const ndarray &a, const B &b, ndarray out) {
  */
 struct scalar_op_impl_wrapper {
 
-    template <typename A_type, typename B_type, template <typename, typename> class Op>
-    static inline ndarray call(const ndarray &a, const B_type &b, ndarray out) {
-        return elementwise_scalar_op<A_type, B_type, Op>(a, b, out);
+    template <typename Out, typename A_type, typename B_type, template <typename, typename, typename> class Op>
+    static inline ndarray call(ndarray out, const ndarray &a, const B_type &b) {
+        return elementwise_scalar_op<Out, A_type, B_type, Op>(out, a, b);
     }
 
-    template <typename A_type, typename B_type, template <typename, typename> class Op>
-    static inline ndarray call(const ndarray &a, const B_type &b) {
-        // Create output array with appropriate shape and data type
-        // TODO: figure out type promotion for the return type
-        ndarray out(a.shape(), a.dtype(), a.device());
 
-        return elementwise_scalar_op<A_type, B_type, Op>(a, b, out);
-    }
+
+    // template <typename A_type, typename B_type, template <typename, typename> class Op>
+    // static inline ndarray call(const ndarray &a, const B_type &b, ndarray out) {
+    //     return elementwise_scalar_op<A_type, B_type, Op>(a, b, out);
+    // }
+
+    // template <typename Out, typename A_type, typename B_type, template <typename, typename, typename> class Op>
+    // static inline ndarray call(const ndarray &a, const B_type &b) {
+    //     // Create output array with appropriate shape and data type
+    //     // TODO: figure out type promotion for the return type
+    //     ndarray out(a.shape(), a.dtype(), a.device());
+
+    //     return elementwise_scalar_op<Out, A_type, B_type, Op>(out, a, b);
+    // }
 };
 
 

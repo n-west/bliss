@@ -4,6 +4,7 @@ add_library(bland
     ndarray.cpp
     ops/ops.cpp
     ops/arithmetic.cpp
+    ops/arithmetic_scalar.cpp
     ops/creators.cpp
     ops/statistical.cpp
     internal/shape_helpers.cpp
@@ -14,6 +15,17 @@ target_include_directories(bland
     ${CMAKE_CURRENT_SOURCE_DIR}/include
     PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/internal
+)
+
+target_precompile_headers(bland
+  PRIVATE
+    [["bland/bland.hpp"]]
+    [["bland/ndarray.hpp"]]
+    [["bland/ops.hpp"]]
+    [["dispatcher.hpp"]]
+    [["elementwise_binary_op.hpp"]]
+    [["elementwise_scalar_op.hpp"]]
+    [["elementwise_unary_op.hpp"]]
 )
 
 target_link_libraries(bland

@@ -19,8 +19,8 @@
 using namespace bland;
 
 struct mean_impl {
-    template <typename in_datatype, typename out_datatype>
-    static inline ndarray call(const ndarray &a, ndarray &out, std::vector<int64_t> reduced_axes) {
+    template <typename out_datatype, typename in_datatype>
+    static inline ndarray call(ndarray &out, const ndarray &a, std::vector<int64_t> reduced_axes) {
         auto a_data = a.data_ptr<in_datatype>();
 
         if (reduced_axes.empty()) {
@@ -122,7 +122,7 @@ struct mean_impl {
 };
 
 ndarray bland::mean(const ndarray &a, ndarray &out, std::vector<int64_t> reduced_axes) {
-    return dispatch<mean_impl>(a, out, reduced_axes);
+    return dispatch_new<mean_impl>(out, a, reduced_axes);
 }
 
 ndarray bland::mean(const ndarray &a, std::vector<int64_t> reduced_axes) {
@@ -144,8 +144,8 @@ ndarray bland::mean(const ndarray &a, std::vector<int64_t> reduced_axes) {
 }
 
 struct stddev_impl {
-    template <typename in_datatype, typename out_datatype>
-    static inline ndarray call(const ndarray &a, ndarray &out, std::vector<int64_t> reduced_axes) {
+    template <typename out_datatype, typename in_datatype>
+    static inline ndarray call(ndarray &out, const ndarray &a, std::vector<int64_t> reduced_axes) {
 
         if (reduced_axes.empty()) {
             for (int axis = 0; axis < a.ndim(); ++axis) {
@@ -155,7 +155,7 @@ struct stddev_impl {
 
         // TODO, allow passing in means as an arg
         auto means = ndarray(out.shape(), out.dtype(), out.device());
-        mean_impl::call<in_datatype, out_datatype>(a, means, reduced_axes);
+        mean_impl::call<out_datatype, in_datatype>(means, a, reduced_axes);
 
         auto a_data = a.data_ptr<in_datatype>();
 
@@ -271,7 +271,7 @@ struct stddev_impl {
 };
 
 ndarray bland::stddev(const ndarray &a, ndarray &out, std::vector<int64_t> reduced_axes) {
-    return dispatch<stddev_impl>(a, out, reduced_axes);
+    return dispatch_new<stddev_impl>(out, a, reduced_axes);
 }
 ndarray bland::stddev(const ndarray &a, std::vector<int64_t> reduced_axes) {
     auto out_shape = std::vector<int64_t>();
@@ -292,8 +292,8 @@ ndarray bland::stddev(const ndarray &a, std::vector<int64_t> reduced_axes) {
 }
 
 struct standardized_moment_impl {
-    template <typename in_datatype, typename out_datatype>
-    static inline ndarray call(const ndarray &a, ndarray &out, std::vector<int64_t> reduced_axes, int degree) {
+    template <typename out_datatype, typename in_datatype>
+    static inline ndarray call(ndarray &out, const ndarray &a, std::vector<int64_t> reduced_axes, int degree) {
 
         if (reduced_axes.empty()) {
             for (int axis = 0; axis < a.ndim(); ++axis) {
@@ -303,7 +303,7 @@ struct standardized_moment_impl {
 
         // TODO, allow passing in means as an arg
         auto means = ndarray(out.shape(), out.dtype(), out.device());
-        mean_impl::call<in_datatype, out_datatype>(a, means, reduced_axes);
+        mean_impl::call<out_datatype, in_datatype>(means, a, reduced_axes);
 
         auto a_data = a.data_ptr<in_datatype>();
 
@@ -421,7 +421,7 @@ struct standardized_moment_impl {
 };
 
 ndarray bland::standardized_moment(const ndarray &a, int degree, ndarray &out, std::vector<int64_t> reduced_axes) {
-    return dispatch<standardized_moment_impl>(a, out, reduced_axes, degree);
+    return dispatch_new<standardized_moment_impl>(out, a, reduced_axes, degree);
 }
 ndarray bland::standardized_moment(const ndarray &a, int degree, std::vector<int64_t> reduced_axes) {
     auto out_shape = std::vector<int64_t>();
@@ -464,4 +464,124 @@ float bland::median(const ndarray &x, std::vector<int64_t> axes) {
     }
 
     return median;
+}
+
+
+/*************
+ **** Sum ****
+ ************/
+
+struct sum_impl {
+    template <typename out_datatype, typename in_datatype>
+    static inline ndarray call(ndarray &out, const ndarray &a, std::vector<int64_t> reduced_axes) {
+        auto a_data = a.data_ptr<in_datatype>();
+
+        if (reduced_axes.empty()) {
+            for (int axis = 0; axis < a.ndim(); ++axis) {
+                reduced_axes.push_back(axis);
+            }
+        }
+
+        // Number of elements that get reduced to a single output element
+        int64_t reduced_elements = 1;
+        for (auto &d : reduced_axes) {
+            reduced_elements *= a.shape()[d];
+        }
+
+        // The out array may actually be a slice! So need to respect its strides, shapes, and offsets
+        auto out_data = out.data_ptr<out_datatype>();
+
+        auto                 out_shape   = out.shape();
+        auto                 out_strides = out.strides();
+        auto                 out_offset  = out.offsets();
+        std::vector<int64_t> out_index(out_shape.size(), 0);
+
+        auto                 a_shape   = a.shape();
+        auto                 a_strides = a.strides();
+        auto                 a_offset  = a.offsets();
+        std::vector<int64_t> input_index(a_shape.size(), 0);
+
+        // Loop over the dimensions of the array and perform the reduction operation
+        auto numel = out.numel();
+        for (int i = 0; i < numel; ++i) {
+            // Make a copy of the current input index, we'll fix the non-summed dims
+            // and iterate over the reduced dims accumulating the total
+            auto        reduce_nd_index = input_index;
+            in_datatype total           = 0;
+            for (int jj = 0; jj < reduced_elements; ++jj) {
+                int64_t input_linear_index = 0;
+                for (int axis = 0; axis < a_shape.size(); ++axis) {
+                    input_linear_index += a_offset[axis] + (reduce_nd_index[axis] % a_shape[axis]) * a_strides[axis];
+                }
+                total += a_data[input_linear_index];
+                // Increment the multi-dimensional index
+                for (int i = reduced_axes.size() - 1; i >= 0; --i) {
+                    auto d = reduced_axes[i];
+                    // If we're not at the end of this dim, keep going
+                    if (++reduce_nd_index[d] != a_shape[d]) {
+                        break;
+                    } else {
+                        // Otherwise, set it to 0 and move down to the next dim
+                        reduce_nd_index[d] = 0;
+                    }
+                }
+            }
+
+            int64_t out_linear_index = 0;
+            for (int axis = 0; axis < out_shape.size(); ++axis) {
+                out_linear_index += out_offset[axis] + (out_index[axis]) * out_strides[axis];
+            }
+
+            out_data[out_linear_index] = total;
+
+            // Increment the multi-dimensional output index
+            for (int axis = out_shape.size() - 1; axis >= 0; --axis) {
+                // If we're not at the end of this dim, keep going
+                if (++out_index[axis] != out_shape[axis]) {
+                    break;
+                } else {
+                    // Otherwise, set it to 0 and move down to the next dim
+                    out_index[axis] = 0;
+                }
+            }
+            // Increment the multi-dimensional input index
+            // TODO: I think I can dedupe this with above by checking if axis is in reduce axis but that may actually be
+            // less efficient
+            for (int axis = a_shape.size() - 1; axis >= 0; --axis) {
+                if (std::find(reduced_axes.begin(), reduced_axes.end(), axis) == reduced_axes.end()) {
+                    // If we're not at the end of this dim, keep going
+                    if (++input_index[axis] != a_shape[axis]) {
+                        break;
+                    } else {
+                        // Otherwise, set it to 0 and move down to the next dim
+                        input_index[axis] = 0;
+                    }
+                }
+            }
+        }
+
+        return out;
+    }
+};
+
+ndarray bland::sum(const ndarray &a, ndarray &out, std::vector<int64_t> axes) {
+    return dispatch_new<sum_impl>(out, a, axes);
+}
+
+ndarray bland::sum(const ndarray &a, std::vector<int64_t> reduced_axes) {
+    auto out_shape = std::vector<int64_t>();
+    auto a_shape   = a.shape();
+    if (!reduced_axes.empty()) {
+        for (int64_t axis = 0; axis < a_shape.size(); ++axis) {
+            if (std::find(reduced_axes.begin(), reduced_axes.end(), axis) == reduced_axes.end()) {
+                out_shape.push_back(a_shape[axis]);
+            }
+        }
+    }
+    // output shape will be empty either because axes is empty OR is all dims
+    if (out_shape.empty()) {
+        out_shape = {1};
+    }
+    ndarray out(out_shape, a.dtype(), a.device());
+    return sum(a, out, reduced_axes);
 }

@@ -47,7 +47,7 @@ bland::ndarray bliss::flag_hot_pixels(const bland::ndarray &spectrum_grid) {
 
     // template <typename A, typename B, template <typename, typename> class Op>
     // ndarray elementwise_scalar_op(const ndarray &a, const B &b, ndarray out) {
-    bland::elementwise_scalar_op<float, float, detail::compare_threshold_op>(spectrum_grid, threshold, rfi_flags);
+    // bland::elementwise_scalar_op<float, float, detail::compare_threshold_op>(spectrum_grid, threshold, rfi_flags);
 
     return rfi_flags;
 }

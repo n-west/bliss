@@ -15,10 +15,10 @@ struct ndarray;
  *
  * Currently the result datatype will be the same as A, but we should fix that!
  */
-template <typename A>
-ndarray assignment_op(A a, ndarray &out) {
+template <typename Out, typename S>
+ndarray assignment_op(ndarray &out, const S &a) {
     // The out array may actually be a slice! So need to respect its strides, shapes, and offsets
-    auto out_data    = out.data_ptr<A>();
+    auto out_data    = out.data_ptr<Out>();
     auto out_shape   = out.shape();
     auto out_strides = out.strides();
     auto out_offset  = out.offsets();
@@ -34,7 +34,7 @@ ndarray assignment_op(A a, ndarray &out) {
             out_linear_index += out_offset[i] + (out_index[i] % out_shape[i]) * out_strides[i];
         }
         // Finally... do the actual op
-        out_data[out_linear_index] = a;
+        out_data[out_linear_index] = static_cast<Out>(a);
 
         // Increment the multi-dimensional index
         for (int i = out_shape.size() - 1; i >= 0; --i) {
@@ -56,9 +56,9 @@ ndarray assignment_op(A a, ndarray &out) {
  * with the given template datatypes
  */
 struct assignment_op_impl_wrapper {
-    template <typename A_type>
-    static inline ndarray call(const A_type a, ndarray &out) {
-        return assignment_op<A_type>(a, out);
+    template <typename Out, typename S>
+    static inline ndarray call(ndarray &out, const S &value) {
+        return assignment_op<Out, S>(out, value);
     }
 };
 

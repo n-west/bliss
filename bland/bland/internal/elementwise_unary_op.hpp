@@ -14,15 +14,15 @@ struct ndarray;
  *
  * Currently the result datatype will be the same as A, but we should fix that!
  */
-template <typename A, template <typename> class Op>
-ndarray elementwise_unary_op(const ndarray &a, ndarray &out) {
+template <typename Out, typename A, template <typename, typename> class Op>
+ndarray elementwise_unary_op(ndarray &out, const ndarray &a) {
     auto a_data    = a.data_ptr<A>();
     auto a_shape   = a.shape();
     auto a_strides = a.strides();
     auto a_offset  = a.offsets();
 
     // The out array may actually be a slice! So need to respect its strides and offsets
-    auto out_data    = out.data_ptr<A>();
+    auto out_data    = out.data_ptr<Out>();
     auto out_shape   = out.shape();
     auto out_strides = out.strides();
     auto out_offset  = out.offsets();
@@ -46,7 +46,7 @@ ndarray elementwise_unary_op(const ndarray &a, ndarray &out) {
     auto numel = out.numel();
     for (int64_t n = 0; n < numel; ++n) {
         // Finally... do the actual op
-        out_data[out_linear_index] = Op<A>::call(a_data[a_linear_index]);
+        out_data[out_linear_index] = Op<Out, A>::call(a_data[a_linear_index]);
 
         // Increment the multi-dimensional index
         for (int i = nd_index.size() - 1; i >= 0; --i) {
@@ -70,15 +70,9 @@ ndarray elementwise_unary_op(const ndarray &a, ndarray &out) {
  * with the given template datatypes
  */
 struct unary_op_impl_wrapper {
-    template <typename A_type, template <typename> class Op>
-    static inline ndarray call(const ndarray &a) {
-        ndarray out(a.shape(), a.dtype(), a.device());
-        return elementwise_unary_op<A_type, Op>(a, out);
-    }
-
-    template <typename A_type, template <typename> class Op>
-    static inline ndarray call(const ndarray &a, ndarray &out) {
-        return elementwise_unary_op<A_type, Op>(a, out);
+    template <typename Out, typename A, template <typename, typename> class Op>
+    static inline ndarray call(ndarray &out, const ndarray &a) {
+        return elementwise_unary_op<Out, A, Op>(out, a);
     }
 };
 
