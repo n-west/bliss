@@ -19,7 +19,7 @@ target_include_directories(pybland_header
 nanobind_add_module(pybland pybland.cpp)
 target_link_libraries(pybland PUBLIC bland)
 
-target_compile_options(pybland
-    PRIVATE
-        -O3
-)
+# target_compile_options(pybland
+#     PRIVATE
+#         -O3
+# )

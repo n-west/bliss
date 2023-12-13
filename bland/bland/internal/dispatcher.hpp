@@ -44,8 +44,8 @@ ndarray dispatch(ndarray &out, const ndarray &a, const ndarray &b, Args... args)
         switch (dtype.bits) {
         case 8:
             return F::template call<Out, A, int8_t, Op>(out, a, b, std::forward<Args>(args)...);
-        case 16:
-            return F::template call<Out, A, int16_t, Op>(out, a, b, std::forward<Args>(args)...);
+        // case 16:
+        //     return F::template call<Out, A, int16_t, Op>(out, a, b, std::forward<Args>(args)...);
         case 32:
             return F::template call<Out, A, int32_t, Op>(out, a, b, std::forward<Args>(args)...);
         case 64:
@@ -58,12 +58,12 @@ ndarray dispatch(ndarray &out, const ndarray &a, const ndarray &b, Args... args)
         switch (dtype.bits) {
         case 8:
             return F::template call<Out, A, uint8_t, Op>(out, a, b, std::forward<Args>(args)...);
-        case 16:
-            return F::template call<Out, A, uint16_t, Op>(out, a, b, std::forward<Args>(args)...);
+        // case 16:
+        //     return F::template call<Out, A, uint16_t, Op>(out, a, b, std::forward<Args>(args)...);
         case 32:
             return F::template call<Out, A, uint32_t, Op>(out, a, b, std::forward<Args>(args)...);
-        case 64:
-            return F::template call<Out, A, uint64_t, Op>(out, a, b, std::forward<Args>(args)...);
+        // case 64:
+        //     return F::template call<Out, A, uint64_t, Op>(out, a, b, std::forward<Args>(args)...);
         default:
             throw std::runtime_error("Unsupported uint bitwidth");
         }
@@ -92,8 +92,8 @@ ndarray dispatch(ndarray &out, const ndarray &a, const ndarray &b, Args... args)
         switch (dtype.bits) {
         case 8:
             return dispatch<F, Out, int8_t, Op>(out, a, b, std::forward<Args>(args)...);
-        case 16:
-            return dispatch<F, Out, int16_t, Op>(out, a, b, std::forward<Args>(args)...);
+        // case 16:
+        //     return dispatch<F, Out, int16_t, Op>(out, a, b, std::forward<Args>(args)...);
         case 32:
             return dispatch<F, Out, int32_t, Op>(out, a, b, std::forward<Args>(args)...);
         case 64:
@@ -106,12 +106,12 @@ ndarray dispatch(ndarray &out, const ndarray &a, const ndarray &b, Args... args)
         switch (dtype.bits) {
         case 8:
             return dispatch<F, Out, uint8_t, Op>(out, a, b, std::forward<Args>(args)...);
-        case 16:
-            return dispatch<F, Out, uint16_t, Op>(out, a, b, std::forward<Args>(args)...);
+        // case 16:
+        //     return dispatch<F, Out, uint16_t, Op>(out, a, b, std::forward<Args>(args)...);
         case 32:
             return dispatch<F, Out, uint32_t, Op>(out, a, b, std::forward<Args>(args)...);
-        case 64:
-            return dispatch<F, Out, uint64_t, Op>(out, a, b, std::forward<Args>(args)...);
+        // case 64:
+        //     return dispatch<F, Out, uint64_t, Op>(out, a, b, std::forward<Args>(args)...);
         default:
             throw std::runtime_error("Unsupported uint bitwidth");
         }
@@ -141,8 +141,8 @@ ndarray dispatch(ndarray &out, const ndarray &a, const ndarray &b, Args... args)
         switch (dtype.bits) {
         case 8:
             return dispatch<F, int8_t, Op>(out, a, b, std::forward<Args>(args)...);
-        case 16:
-            return dispatch<F, int16_t, Op>(out, a, b, std::forward<Args>(args)...);
+        // case 16:
+        //     return dispatch<F, int16_t, Op>(out, a, b, std::forward<Args>(args)...);
         case 32:
             return dispatch<F, int32_t, Op>(out, a, b, std::forward<Args>(args)...);
         case 64:
@@ -155,12 +155,12 @@ ndarray dispatch(ndarray &out, const ndarray &a, const ndarray &b, Args... args)
         switch (dtype.bits) {
         case 8:
             return dispatch<F, uint8_t, Op>(out, a, b, std::forward<Args>(args)...);
-        case 16:
-            return dispatch<F, uint16_t, Op>(out, a, b, std::forward<Args>(args)...);
+        // case 16:
+        //     return dispatch<F, uint16_t, Op>(out, a, b, std::forward<Args>(args)...);
         case 32:
             return dispatch<F, uint32_t, Op>(out, a, b, std::forward<Args>(args)...);
-        case 64:
-            return dispatch<F, uint64_t, Op>(out, a, b, std::forward<Args>(args)...);
+        // case 64:
+        //     return dispatch<F, uint64_t, Op>(out, a, b, std::forward<Args>(args)...);
         default:
             throw std::runtime_error("Unsupported uint bitwidth");
         }
@@ -198,8 +198,8 @@ ndarray dispatch_new3(ndarray &out, const ndarray &a, const S &b, Args... args) 
         switch (a_dtype.bits) {
         case 8:
             return F::template call<Out, int8_t, S, Op>(out, a, b, std::forward<Args>(args)...);
-        case 16:
-            return F::template call<Out, int16_t, S, Op>(out, a, b, std::forward<Args>(args)...);
+        // case 16:
+        //     return F::template call<Out, int16_t, S, Op>(out, a, b, std::forward<Args>(args)...);
         case 32:
             return F::template call<Out, int32_t, S, Op>(out, a, b, std::forward<Args>(args)...);
         case 64:
@@ -212,12 +212,12 @@ ndarray dispatch_new3(ndarray &out, const ndarray &a, const S &b, Args... args) 
         switch (a_dtype.bits) {
         case 8:
             return F::template call<Out, uint8_t, S, Op>(out, a, b, std::forward<Args>(args)...);
-        case 16:
-            return F::template call<Out, uint16_t, S, Op>(out, a, b, std::forward<Args>(args)...);
+        // case 16:
+        //     return F::template call<Out, uint16_t, S, Op>(out, a, b, std::forward<Args>(args)...);
         case 32:
             return F::template call<Out, uint32_t, S, Op>(out, a, b, std::forward<Args>(args)...);
-        case 64:
-            return F::template call<Out, uint64_t, S, Op>(out, a, b, std::forward<Args>(args)...);
+        // case 64:
+        //     return F::template call<Out, uint64_t, S, Op>(out, a, b, std::forward<Args>(args)...);
         default:
             throw std::runtime_error("Unsupported uint bitwidth");
         }
@@ -266,8 +266,8 @@ ndarray dispatch_new3(ndarray &out, const ndarray &a, const S &b, Args... args) 
             return dispatch_new3<F, uint16_t, S, Op>(out, a, b, std::forward<Args>(args)...);
         case 32:
             return dispatch_new3<F, uint32_t, S, Op>(out, a, b, std::forward<Args>(args)...);
-        case 64:
-            return dispatch_new3<F, uint64_t, S, Op>(out, a, b, std::forward<Args>(args)...);
+        // case 64:
+        //     return dispatch_new3<F, uint64_t, S, Op>(out, a, b, std::forward<Args>(args)...);
         default:
             throw std::runtime_error("Unsupported uint bitwidth");
         }
@@ -309,8 +309,8 @@ ndarray dispatch_new(ndarray &out, const S &b, Args... args) {
             return F::template call<int16_t, S>(out, b, std::forward<Args>(args)...);
         case 32:
             return F::template call<int32_t, S>(out, b, std::forward<Args>(args)...);
-        case 64:
-            return F::template call<int64_t, S>(out, b, std::forward<Args>(args)...);
+        // case 64:
+        //     return F::template call<int64_t, S>(out, b, std::forward<Args>(args)...);
         default:
             throw std::runtime_error("Unsupported int bitwidth");
         }
@@ -323,8 +323,8 @@ ndarray dispatch_new(ndarray &out, const S &b, Args... args) {
             return F::template call<uint16_t, S>(out, b, std::forward<Args>(args)...);
         case 32:
             return F::template call<uint32_t, S>(out, b, std::forward<Args>(args)...);
-        case 64:
-            return F::template call<uint64_t, S>(out, b, std::forward<Args>(args)...);
+        // case 64:
+        //     return F::template call<uint64_t, S>(out, b, std::forward<Args>(args)...);
         default:
             throw std::runtime_error("Unsupported uint bitwidth");
         }
@@ -388,8 +388,8 @@ ndarray dispatch_new(ndarray &out, const ndarray &a, Args... args) {
             return Op::template call<Out, uint16_t>(out, a, std::forward<Args>(args)...);
         case 32:
             return Op::template call<Out, uint32_t>(out, a, std::forward<Args>(args)...);
-        case 64:
-            return Op::template call<Out, uint64_t>(out, a, std::forward<Args>(args)...);
+        // case 64:
+        //     return Op::template call<Out, uint64_t>(out, a, std::forward<Args>(args)...);
         default:
             throw std::runtime_error("Unsupported uint bitwidth");
         }
@@ -437,8 +437,8 @@ ndarray dispatch_new(ndarray &out, const ndarray &a, Args... args) {
             return dispatch_new<uint16_t, Op>(out, a, std::forward<Args>(args)...);
         case 32:
             return dispatch_new<uint32_t, Op>(out, a, std::forward<Args>(args)...);
-        case 64:
-            return dispatch_new<uint64_t, Op>(out, a, std::forward<Args>(args)...);
+        // case 64:
+        //     return dispatch_new<uint64_t, Op>(out, a, std::forward<Args>(args)...);
         default:
             throw std::runtime_error("Unsupported uint bitwidth");
         }
@@ -493,8 +493,8 @@ ndarray dispatch_new2(ndarray &out, const ndarray &a, Args... args) {
             return F::template call<Out, uint16_t, Op>(out, a, std::forward<Args>(args)...);
         case 32:
             return F::template call<Out, uint32_t, Op>(out, a, std::forward<Args>(args)...);
-        case 64:
-            return F::template call<Out, uint64_t, Op>(out, a, std::forward<Args>(args)...);
+        // case 64:
+        //     return F::template call<Out, uint64_t, Op>(out, a, std::forward<Args>(args)...);
         default:
             throw std::runtime_error("Unsupported uint bitwidth");
         }
@@ -511,12 +511,12 @@ ndarray dispatch_new2(ndarray &out, const ndarray &a, Args... args) {
 */
 template <typename F, template <typename, typename> class Op, typename ...Args>
 ndarray dispatch_new2(ndarray &out, const ndarray &a, Args... args) {
-    auto a_dtype = a.dtype();
+    auto dtype = out.dtype();
 
-    switch (a_dtype.code) {
+    switch (dtype.code) {
 
     case kDLFloat: {
-        switch (a_dtype.bits) {
+        switch (dtype.bits) {
         case 32:
             return dispatch_new2<F, float, Op>(out, a, std::forward<Args>(args)...);
         case 64:
@@ -526,7 +526,7 @@ ndarray dispatch_new2(ndarray &out, const ndarray &a, Args... args) {
         }
     }
     case kDLInt: {
-        switch (a_dtype.bits) {
+        switch (dtype.bits) {
         case 8:
             return dispatch_new2<F, int8_t, Op>(out, a, std::forward<Args>(args)...);
         case 16:
@@ -540,15 +540,15 @@ ndarray dispatch_new2(ndarray &out, const ndarray &a, Args... args) {
         }
     }
     case kDLUInt: {
-        switch (a_dtype.bits) {
+        switch (dtype.bits) {
         case 8:
             return dispatch_new2<F, uint8_t, Op>(out, a, std::forward<Args>(args)...);
         case 16:
             return dispatch_new2<F, uint16_t, Op>(out, a, std::forward<Args>(args)...);
         case 32:
             return dispatch_new2<F, uint32_t, Op>(out, a, std::forward<Args>(args)...);
-        case 64:
-            return dispatch_new2<F, uint64_t, Op>(out, a, std::forward<Args>(args)...);
+        // case 64:
+        //     return dispatch_new2<F, uint64_t, Op>(out, a, std::forward<Args>(args)...);
         default:
             throw std::runtime_error("Unsupported uint bitwidth");
         }

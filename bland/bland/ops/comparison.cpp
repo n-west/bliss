@@ -53,17 +53,17 @@ struct approx_equal_to_impl {
 };
 
 ndarray bland::greater_than(ndarray lhs, ndarray rhs) {
-    auto out = ndarray(lhs.shape(), ndarray::datatype::uint8);
+    auto out = ndarray(lhs.shape(), ndarray::datatype::uint8, lhs.device());
     return dispatch<elementwise_binary_op_impl_wrapper, uint8_t, greater_than_impl>(out, lhs, rhs);
 }
 template <typename T>
 std::enable_if_t<std::is_arithmetic<T>::value, ndarray> bland::greater_than(T lhs, ndarray rhs) {
-    auto out = ndarray(rhs.shape(), ndarray::datatype::uint8);
+    auto out = ndarray(rhs.shape(), ndarray::datatype::uint8, rhs.device());
     return dispatch_new3<scalar_op_impl_wrapper, uint8_t, T, less_than_equal_to_impl>(out, rhs, lhs);
 }
 template <typename T> // the scalar case (explicitly instantiated below)
 std::enable_if_t<std::is_arithmetic<T>::value, ndarray> bland::greater_than(ndarray a, T b) {
-    auto out = ndarray(a.shape(), a.dtype(), a.device());
+    auto out = ndarray(a.shape(), ndarray::datatype::uint8, a.device());
     return dispatch_new3<scalar_op_impl_wrapper, uint8_t, T, greater_than_impl>(out, a, b);
 }
 
@@ -124,17 +124,17 @@ template ndarray bland::operator> <int64_t>(int64_t lhs, ndarray rhs);
  * Greater than equal to
 */
 ndarray bland::greater_than_equal_to(ndarray lhs, ndarray rhs) {
-    auto out = ndarray(lhs.shape(), ndarray::datatype::uint8);
+    auto out = ndarray(lhs.shape(), ndarray::datatype::uint8, lhs.device());
     return dispatch<elementwise_binary_op_impl_wrapper, uint8_t, greater_than_equal_to_impl>(out, lhs, rhs);
 }
 template <typename T>
 std::enable_if_t<std::is_arithmetic<T>::value, ndarray> bland::greater_than_equal_to(T lhs, ndarray rhs) {
-    auto out = ndarray(rhs.shape(), ndarray::datatype::uint8);
+    auto out = ndarray(rhs.shape(), ndarray::datatype::uint8, rhs.device());
     return dispatch_new3<scalar_op_impl_wrapper, uint8_t, T, less_than_impl>(out, rhs, lhs);
 }
 template <typename T> // the scalar case (explicitly instantiated below)
 std::enable_if_t<std::is_arithmetic<T>::value, ndarray> bland::greater_than_equal_to(ndarray a, T b) {
-    auto out = ndarray(a.shape(), a.dtype(), a.device());
+    auto out = ndarray(a.shape(), ndarray::datatype::uint8, a.device());
     return dispatch_new3<scalar_op_impl_wrapper, uint8_t, T, greater_than_equal_to_impl>(out, a, b);
 }
 
@@ -195,17 +195,17 @@ template ndarray bland::operator>= <int64_t>(int64_t lhs, ndarray rhs);
  * Less than
 */
 ndarray bland::less_than(ndarray lhs, ndarray rhs) {
-    auto out = ndarray(lhs.shape(), ndarray::datatype::uint8);
+    auto out = ndarray(lhs.shape(), ndarray::datatype::uint8, rhs.device());
     return dispatch<elementwise_binary_op_impl_wrapper, uint8_t, less_than_impl>(out, lhs, rhs);
 }
 template <typename T>
 std::enable_if_t<std::is_arithmetic<T>::value, ndarray> bland::less_than(T lhs, ndarray rhs) {
-    auto out = ndarray(rhs.shape(), ndarray::datatype::uint8);
+    auto out = ndarray(rhs.shape(), ndarray::datatype::uint8, rhs.device());
     return dispatch_new3<scalar_op_impl_wrapper, uint8_t, T, greater_than_equal_to_impl>(out, rhs, lhs);
 }
 template <typename T> // the scalar case (explicitly instantiated below)
 std::enable_if_t<std::is_arithmetic<T>::value, ndarray> bland::less_than(ndarray a, T b) {
-    auto out = ndarray(a.shape(), a.dtype(), a.device());
+    auto out = ndarray(a.shape(), ndarray::datatype::uint8, a.device());
     return dispatch_new3<scalar_op_impl_wrapper, uint8_t, T, less_than_impl>(out, a, b);
 }
 

@@ -13,6 +13,8 @@ add_executable(test_bland
     test.cpp
     benchmark_arithmetic.cpp
     test_arithmetic.cpp
+    test_comparison.cpp
+    test_copy.cpp
     test_creators.cpp
     test_ndarray.cpp
     test_strides.cpp

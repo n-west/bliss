@@ -19,8 +19,8 @@ class filterbank_data {
     filterbank_data(bland::ndarray data, bland::ndarray mask, double foff=1);
     filterbank_data(std::string_view file_path);
 
-    bland::ndarray &data();
-    bland::ndarray &mask();
+    bland::ndarray& data();
+    bland::ndarray& mask();
 
     double      fch1() const;
     double      foff() const;

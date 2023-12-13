@@ -2,6 +2,7 @@
 #include "file_types/filterbank_data.hpp"
 #include "file_types/h5_filterbank_file.hpp"
 
+#include "fmt/format.h"
 #include <bland/bland.hpp>
 
 using namespace bliss;
@@ -46,11 +47,12 @@ filterbank_data::filterbank_data(std::string_view file_path) : filterbank_data(h
 
 filterbank_data::filterbank_data(bland::ndarray data, bland::ndarray mask, double foff) : _data(data), _mask(mask), _foff(foff) {}
 
-bland::ndarray &bliss::filterbank_data::data() {
+bland::ndarray& bliss::filterbank_data::data() {
     return _data;
 }
 
-bland::ndarray &bliss::filterbank_data::mask() {
+bland::ndarray& bliss::filterbank_data::mask() {
+    fmt::print("rfi flags as read has sum {}\n", bland::sum(_mask).scalarize<uint8_t>());
     return _mask;
 }
 

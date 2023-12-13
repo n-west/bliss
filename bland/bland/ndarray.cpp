@@ -2,6 +2,7 @@
 #include "bland/ndarray.hpp"
 
 #include "bland/ops.hpp"
+#include "bland/ops_statistical.hpp"
 
 #include <fmt/core.h>
 #include <fmt/ranges.h>
@@ -430,6 +431,14 @@ std::string pretty_print(const ndarray &a) {
         dtype_pp = "int32_t";
     } else if (std::is_same<datatype, int64_t>()) {
         dtype_pp = "int64_t";
+    } else if (std::is_same<datatype, uint8_t>()) {
+        dtype_pp = "uint8_t";
+    } else if (std::is_same<datatype, uint16_t>()) {
+        dtype_pp = "uint16_t";
+    } else if (std::is_same<datatype, uint32_t>()) {
+        dtype_pp = "uint32_t";
+    } else if (std::is_same<datatype, uint64_t>()) {
+        dtype_pp = "uint64_t";
     }
     std::string dev_pp{};
     auto        dev = a.device();
@@ -440,14 +449,16 @@ std::string pretty_print(const ndarray &a) {
     }
     fmt::memory_buffer output_repr;
     fmt::format_to(output_repr, "bland shape {} with dtype {} on device {}:\n", a.shape(), dtype_pp, dev_pp);
+    int count = 0;
     // TODO: condense printing large arrays, no one needs or wants to see thousands of items
-    for (int64_t n = 0; n < a.numel(); ++n) {
+    auto numel = std::min<int64_t>(a.numel(), 25);
+    for (int64_t n = 0; n < numel; ++n) {
         // Finally... do the actual op
         int64_t linear_index = 0;
         for (int i = 0; i < a.shape().size(); ++i) {
             linear_index += a.offsets()[i] + (index[i] % a.shape()[i]) * a.strides()[i];
         }
-        fmt::format_to(output_repr, "{} ", a_data[linear_index]);
+        fmt::format_to(output_repr, "{:d} ", a_data[linear_index]);
 
         // Increment the multi-dimensional index
         for (int i = a.shape().size() - 1; i >= 0; --i) {
@@ -807,17 +818,17 @@ ndarray bland::ndarray::unsqueeze(const int64_t unsqueeze_axis) {
     auto    new_shape      = std::vector<int64_t>();
     auto    new_strides    = std::vector<int64_t>();
     auto    new_offsets    = std::vector<int64_t>();
-    int64_t current_stride = 1;
+    int offset = 0;
     for (int axis = 0; axis < _tensor.ndim + 1; ++axis) {
         if (axis == unsqueeze_axis) {
             new_shape.push_back(1);
-            new_strides.push_back(current_stride);
+            new_strides.push_back(0);
             new_offsets.push_back(0);
-            axis -= 1;
+            offset += 1;
         } else {
-            new_shape.push_back(_tensor.shape[axis]);
-            new_strides.push_back(_tensor.strides[axis]);
-            new_offsets.push_back(_tensor._offsets[axis]);
+            new_shape.push_back(_tensor.shape[axis-offset]);
+            new_strides.push_back(_tensor.strides[axis-offset]);
+            new_offsets.push_back(_tensor._offsets[axis-offset]);
         }
     }
     _tensor._shape_ownership   = new_shape;

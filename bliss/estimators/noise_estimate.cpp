@@ -4,6 +4,7 @@
 #include <fmt/core.h>
 #include <fmt/ranges.h>
 #include <bland/ops.hpp>
+#include <bland/ops_statistical.hpp>
 
 using namespace bliss;
 

@@ -2,7 +2,6 @@
 #include "spectrumsum/spectrumsum.hpp"
 
 #include <bland/bland.hpp>
-#include <iostream>
 #include <fmt/core.h>
 #include <fmt/ranges.h>
 

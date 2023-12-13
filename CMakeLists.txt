@@ -41,6 +41,13 @@ if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
 #   endif()
 endif()
 
+find_program(CCACHE_FOUND ccache)
+if(CCACHE_FOUND)
+    set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE ccache)
+    set_property(GLOBAL PROPERTY RULE_LAUNCH_LINK ccache) # Less useful to do it for linking, see edit2
+endif(CCACHE_FOUND)
+
+
 find_package(HDF5 COMPONENTS CXX REQUIRED)
 
 include(FetchContent) # CMake 3.14+

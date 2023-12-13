@@ -115,13 +115,6 @@ bland::ndarray bliss::h5_filterbank_file::read_data() {
 
     bland::ndarray spectrum_grid({std::get<0>(time_steps), std::get<0>(freq_bins)});
 
-    // if (std::get<2>(time_steps) < std::get<2>(freq_bins)) {
-    //     spectrum_grid = row_major_f32array(std::get<0>(time_steps), std::get<0>(freq_bins));
-    // } else {
-    //     spectrum_grid = row_major_f32array(std::get<0>(freq_bins), std::get<0>(time_steps));
-    //     spectrum_grid.transposeInPlace();
-    // }
-
     // The data is read such that dim0 is time and dim1 is frequencyuj i/
     _h5_data_handle.read(spectrum_grid.data_ptr<float>(), H5::PredType::NATIVE_FLOAT);
 
@@ -153,10 +146,8 @@ bland::ndarray bliss::h5_filterbank_file::read_mask() {
         } else {
             // unknown dimension. If it's size 1, we're probably OK though
             if (dims[ii] != 1) {
-                // TODO, we're using fmtlib now, update this. Does fmtlib act as a proper
-                // "logging" lib?
-                std::cerr << "Got unknown " << ii << " dimension: " << dim_labels[ii]
-                          << ". Continuing since it is size 1." << std::endl;
+                // TODO, make fmt print to cerr
+                fmt::print("Got unknown {} dimension: {}. Continuing since it is size 1.\n", ii, dim_labels[ii]);
             } else {
                 throw std::invalid_argument("Unknown dimension of non-unity size in data");
             }
@@ -169,21 +160,19 @@ bland::ndarray bliss::h5_filterbank_file::read_mask() {
         throw std::invalid_argument("Could not find a frequency dimension in dimension labels");
     }
 
-    bland::ndarray mask_grid({std::get<0>(time_steps), std::get<0>(freq_bins)});
+    bland::ndarray mask_grid({std::get<0>(time_steps), std::get<0>(freq_bins)}, bland::ndarray::datatype::uint8, bland::ndarray::dev::cpu);
 
-    // The data is read such that dim0 is time and dim1 is frequencyuj i/
-    _h5_data_handle.read(mask_grid.data_ptr<uint8_t>(), H5::PredType::NATIVE_UINT8);
+    // The data is read such that dim0 is time and dim1 is frequency
+    _h5_mask_handle.read(mask_grid.data_ptr<uint8_t>(), H5::PredType::NATIVE_UINT8);
 
     return mask_grid;
 }
 
 std::string bliss::h5_filterbank_file::repr() {
     auto repr = fmt::format("File at {}\n    with CLASS {}, VERSION {}\n    has datasets:", _h5_file_handle.getFileName(), read_file_attr<std::string>("CLASS"), read_file_attr<std::string>("VERSION"));
-    // auto repr = fmt::format("what the fuck");
 
     // TODO, can we just discover number of datasets and figure out their dimensions to print?
     // _h5_file_handle.    
     // fmt::format_to(repr, "    has datasets:\n");
-
     return repr;
 }

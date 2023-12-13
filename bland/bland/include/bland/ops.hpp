@@ -6,7 +6,6 @@
 
 #include <cstdint>
 #include <limits>
-#include <vector>
 
 namespace bland {
 

@@ -60,7 +60,7 @@ std::vector<int64_t> bland::compute_broadcast_shape(std::vector<int64_t> shape, 
 
     size_t input_shape_index = 0;
     for (size_t i = 0; i < out_shape.size(); ++i) {
-        if (shape[input_shape_index] == out_shape[i]) {
+        if (shape[input_shape_index] == out_shape[i] || shape[input_shape_index] == 1) {
             broadcast_shape[i] = out_shape[i];
             input_shape_index += 1;
         } else {

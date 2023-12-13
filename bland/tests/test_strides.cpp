@@ -4,7 +4,6 @@
 #include <catch2/matchers/catch_matchers_floating_point.hpp>
 
 #include <bland/bland.hpp>
-#include <iostream>
 
 TEST_CASE("ndarray 1d stride", "[ndarray][stride]") {
     SECTION("stride1d", "stride a 1d array and use it to store results") {

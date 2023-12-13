@@ -3,6 +3,9 @@
 #include "bland/ndarray.hpp"
 #include "shape_helpers.hpp"
 
+#include "fmt/format.h"
+#include "fmt/ranges.h"
+
 namespace bland {
 struct ndarray;
 
@@ -27,9 +30,11 @@ ndarray elementwise_unary_op(ndarray &out, const ndarray &a) {
     auto out_strides = out.strides();
     auto out_offset  = out.offsets();
 
+    a_shape = compute_broadcast_shape(a_shape, out_shape);
+    a_strides = compute_broadcast_strides(a_shape, a_strides, out_shape);
     if (a.ndim() == out.ndim()) {
         for (int dim = 0; dim < a.ndim(); ++dim) {
-            if (a_shape[dim] != out_shape[dim]) {
+            if (a_shape[dim] != out_shape[dim] && a_shape[dim] != 1) {
                 throw std::runtime_error("outshape does not equal in shape. Cannot store output in provided tensor");
             }
         }
@@ -38,7 +43,7 @@ ndarray elementwise_unary_op(ndarray &out, const ndarray &a) {
     }
 
     // Current (multi-dimensional) index for a and out
-    std::vector<int64_t> nd_index(a_shape.size(), 0);
+    std::vector<int64_t> nd_index(out_shape.size(), 0);
 
     int64_t a_linear_index = std::accumulate(a_offset.begin(), a_offset.end(), 0);
     int64_t out_linear_index = std::accumulate(out_offset.begin(), out_offset.end(), 0);

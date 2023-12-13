@@ -13,7 +13,7 @@ using namespace nb::literals;
 
 void bind_pyflaggers(nb::module_ m) {
 
-    m.def("flag",
+    m.def("flag_spectral_kurtosis",
           &bliss::flag_spectral_kurtosis,
           "filterbank_data"_a,
           "lower_threshold"_a,

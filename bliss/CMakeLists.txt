@@ -12,9 +12,10 @@ add_subdirectory(python)
 
 add_executable(justrun justrun.cpp)
 target_link_libraries(justrun
-    spectrumsum
-    file_types
     estimators
+    flaggers
+    file_types
+    spectrumsum
     HDF5::HDF5
     fmt::fmt
     )
