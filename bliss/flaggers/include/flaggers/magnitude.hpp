@@ -1,6 +1,6 @@
 #pragma once
 
-#include <file_types/filterbank_data.hpp>
+#include <core/filterbank_data.hpp>
 
 namespace bliss {
 

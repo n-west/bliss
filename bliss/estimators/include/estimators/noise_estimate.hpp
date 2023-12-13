@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include "convenience/datatypedefs.hpp"
+#include <core/noise_power.hpp>
 #include <bland/ndarray.hpp>
 
 namespace bliss

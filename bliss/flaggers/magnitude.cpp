@@ -1,6 +1,8 @@
 
 #include "flaggers/magnitude.hpp"
 
+#include <stdexcept>
+
 using namespace bliss;
 
 /**

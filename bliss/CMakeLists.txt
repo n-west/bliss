@@ -1,6 +1,6 @@
 
 
-add_subdirectory(convenience)
+add_subdirectory(core)
 add_subdirectory(estimators)
 add_subdirectory(file_types)
 add_subdirectory(flaggers)
@@ -17,7 +17,7 @@ target_link_libraries(justrun
     file_types
     spectrumsum
     HDF5::HDF5
-    fmt::fmt
+    fmt::fmt-header-only
     )
 
 

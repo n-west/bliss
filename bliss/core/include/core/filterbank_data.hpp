@@ -1,13 +1,9 @@
 #pragma once
 
-// #include "convenience/datatypedefs.hpp"
-#include <H5Cpp.h>
 #include <bland/bland.hpp>
 #include <cstdint>
-#include <stdexcept>
-#include <string>
 #include <string_view>
-#include <vector>
+#include <string>
 
 namespace bliss {
 

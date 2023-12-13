@@ -1,6 +1,5 @@
 #pragma once
 
-#include "convenience/datatypedefs.hpp"
 
 namespace bliss {
 

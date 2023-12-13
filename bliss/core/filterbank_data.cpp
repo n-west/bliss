@@ -1,5 +1,5 @@
 
-#include "file_types/filterbank_data.hpp"
+#include "core/filterbank_data.hpp"
 #include "file_types/h5_filterbank_file.hpp"
 
 #include "fmt/format.h"

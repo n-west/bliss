@@ -17,7 +17,7 @@ target_link_libraries(test_bliss
   PRIVATE
   bland
   Catch2::Catch2
-  fmt::fmt
+  fmt::fmt-header-only
   )
 
 # # Helps auto discovery of test reporting to ctest

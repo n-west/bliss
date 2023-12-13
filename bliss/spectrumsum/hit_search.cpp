@@ -1,6 +1,8 @@
 
 #include "spectrumsum/hit_search.hpp"
 
+#include <cstdint>
+
 // #include <algorithm>
 // #include <iostream>
 

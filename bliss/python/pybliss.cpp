@@ -7,6 +7,7 @@
 
 #include <pybland.hpp>
 
+#include "core/pyblisscore.hpp"
 #include "file_types/pyfile_types.hpp"
 #include "flaggers/pyflaggers.hpp"
 #include "estimators/pyestimators.hpp"
@@ -16,6 +17,7 @@ using namespace nb::literals;
 
 NB_MODULE(pybliss, m) {
 
+    bind_pycore(m);
 
     auto bland_module = m.def_submodule("bland", "Breakthrough Listen Arrays with N Dimensions. A multi-device ndarray library based on dlpack.");
     bind_pybland(bland_module);

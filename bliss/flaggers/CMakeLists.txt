@@ -12,7 +12,7 @@ target_include_directories(flaggers
 target_link_libraries(flaggers
     PUBLIC
     bland
-    datatypedefs
+    bliss_core
     file_types
     PRIVATE
     estimators

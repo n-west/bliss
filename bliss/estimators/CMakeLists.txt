@@ -12,7 +12,7 @@ target_include_directories(estimators
 target_link_libraries(estimators
     PUBLIC
     bland
-    datatypedefs
+    bliss_core
     PRIVATE
     fmt::fmt-header-only
 )

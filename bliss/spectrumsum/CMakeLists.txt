@@ -11,7 +11,6 @@ target_include_directories(spectrumsum
 
 target_link_libraries(spectrumsum
     PUBLIC
-    datatypedefs
     bland
     PRIVATE
     fmt::fmt-header-only
