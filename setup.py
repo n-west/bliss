@@ -11,6 +11,19 @@ class CMakeExtension(Extension):
         self.sourcedir = os.path.abspath(sourcedir)
 
 class CMakeBuild(build_ext):
+    user_options = build_ext.user_options + [
+        ('debug', None, 'Specify debug build')
+    ]
+
+    def initialize_options(self):
+        super().initialize_options()
+        self.debug = None
+
+    def finalize_options(self):
+        super().finalize_options()
+        if self.debug is not None:
+            self.debug = bool(self.debug)
+
     def run(self):
         for ext in self.extensions:
             self.build_extension(ext)
@@ -42,5 +55,9 @@ setup(
     version='0.0.1',
     packages=['bliss'],
     ext_modules=[CMakeExtension('bliss/bliss')],
+    package_data={
+        'bliss': ['bliss/*.so'],  # use wildcard to match any .so file
+    },
+    py_modules=['bliss.pybliss'],
     cmdclass=dict(build_ext=CMakeBuild),
 )
