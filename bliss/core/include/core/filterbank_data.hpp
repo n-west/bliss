@@ -2,8 +2,8 @@
 
 #include <bland/bland.hpp>
 #include <cstdint>
-#include <string_view>
 #include <string>
+#include <string_view>
 
 namespace bliss {
 
@@ -12,11 +12,11 @@ struct h5_filterbank_file;
 class filterbank_data {
   public:
     filterbank_data(h5_filterbank_file fb_file);
-    filterbank_data(bland::ndarray data, bland::ndarray mask, double foff=1);
+    filterbank_data(bland::ndarray data, bland::ndarray mask, double foff = 1);
     filterbank_data(std::string_view file_path);
 
-    bland::ndarray& data();
-    bland::ndarray& mask();
+    bland::ndarray &data();
+    bland::ndarray &mask();
 
     double      fch1() const;
     double      foff() const;

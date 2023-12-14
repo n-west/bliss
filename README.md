@@ -7,22 +7,44 @@
 
 </p>
 
-## Dependencies:
 
-### bland:
-#### build:
+## Building and Experimenting
 
+This project builds with cmake. Building and running depend on the following libraries/tools:
 
-#### runtime:
+### build:
 
-
-### bliss:
-
-#### build:
-
+* cmake
+* gcc / clang capable of C++17
 * libhdf5-dev
 
-#### runtime:
+
+### runtime:
+
 * libhdf5-cpp-103 (double check!)
 * hdf5-filter-plugin
 * bitshuffle
+
+
+### Building
+
+The build system uses cmake with a few dependencies listed below. I recommend building as follows (from the project source folder)
+
+```
+mkdir build
+cd build
+cmake .. # -G Ninja # if you prefer ninja
+make -j $(($(nproc)/2)) # replace with make -j CORES if you don't have nproc
+```
+
+Inside `build/bland/tests` you will have a `test_bland` executable. You can run those tests to sanity check everything works as expected.
+
+Inside `build/bliss/` you will have a `justrun` executable. You can pass a fil file to that, but right now this is a useful debugging and sanity check target, the output will be underwhelming.
+
+Inside `build/bliss/python` you should have a `pybliss.cpython-311-x86_64-linux-gnu.so` or similarly named `pybliss` shared library. This can be imported in python and exposes functions and classes for dedoppler searches. Inside the `notebooks` directory there is an `rfi mitigation visual.ipynb` jupyter notebook that walks through several of the functions with plots showing results. That is the best way to get a feel for functionality.
+
+### Optimizations
+
+The backing compute library, bland, is set up for flexibility in running different "ops" on opaquely typed and shaped `ndarray` type objects. This uses C++ templating pretty heavily to define what the operation is mostly independent of how to do broadcasting and indexing to traverse ndarrays which may have strides and arbitrary shapes. This use of templating generates a lot of code which all benefits greatly from compiler optimizations. Turning on a `RelWithDebInfo` or `Release` build will make everything run much faster than a `Debug` build, but also takes several more minutes to compile.
+
+Additionally, the cuda backend is not (yet) in place. That's a near-top priority over the next week or two once all algorithmic and API choices are beginning to settle.

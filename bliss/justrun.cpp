@@ -1,11 +1,11 @@
 
+#include <estimators/noise_estimate.hpp>
 #include <core/filterbank_data.hpp>
+#include <drift_search/hit_search.hpp>
+#include <drift_search/integrate_drifts.hpp>
 #include <flaggers/filter_rolloff.hpp>
 #include <flaggers/magnitude.hpp>
 #include <flaggers/spectral_kurtosis.hpp>
-#include <estimators/noise_estimate.hpp>
-#include <drift_search/hit_search.hpp>
-#include <drift_search/integrate_drifts.hpp>
 
 #include "fmt/core.h"
 #include <fmt/ranges.h>
@@ -14,10 +14,23 @@
 #include <string>
 #include <vector>
 
-int main() {
+int main(int argc, char **argv) {
 
-    auto fil_data = bliss::filterbank_data("/home/nathan/datasets/voyager_2020_data/"
-                                           "single_coarse_guppi_59046_80354_DIAG_VOYAGER-1_0012.rawspec.0000.h5");
+    std::string fil_path{"/home/nathan/datasets/voyager_2020_data/"
+                         "single_coarse_guppi_59046_80354_DIAG_VOYAGER-1_0012.rawspec.0000.h5"};
+    if (argc == 2) {
+        fil_path = argv[1];
+    }
+
+    // Kinda weird, but the scoping is annoying and we don't have default constructors that make sense
+    std::unique_ptr<bliss::filterbank_data> fil_holder;
+    try {
+      fil_holder = std::make_unique<bliss::filterbank_data>(fil_path);
+    } catch (std::exception) {
+      fmt::print("Bad file path provided. Couldn't open {} as hdf5 filterbank file\n", fil_path);
+      return -1;
+    }
+    auto fil_data = *fil_holder;
 
     // TODO: add support for vector of looks (a cadence dtype that holds all dwells)
 
@@ -27,16 +40,18 @@ int main() {
     // auto flagged_fil = bliss::flag_ood(flagged_fil, .01); // < 1% change belonging to predicted noise only
     // distribution
 
-    auto noise_stats = bliss::estimate_noise_power(fil_data, bliss::noise_power_estimate_options{.masked_estimate=true}); // estimate noise power of unflagged data
+    auto noise_stats = bliss::estimate_noise_power(
+            fil_data,
+            bliss::noise_power_estimate_options{.masked_estimate = true}); // estimate noise power of unflagged data
 
-    auto dedrifted_fil = bliss::integrate_drifts(flagged_fil,
-                                                bliss::integrate_drifts_options{.desmear = true,
-                                                                                .low_rate=-16,
-                                                                                .high_rate=16,
-                                                                                .rate_step_size=1}); // integrate along drift lines
+    auto dedrifted_fil = bliss::integrate_drifts(
+            flagged_fil,
+            bliss::integrate_drifts_options{.desmear        = true,
+                                            .low_rate       = -16,
+                                            .high_rate      = 16,
+                                            .rate_step_size = 1}); // integrate along drift lines
 
     // auto hits = bliss::hit_search(dedrifted_fil, noise_stats, 10.0f);
 
     // bliss::write_hits(hits);
-
 }
