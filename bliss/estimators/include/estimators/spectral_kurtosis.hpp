@@ -23,6 +23,6 @@ namespace bliss {
  *
  * TODO: should this move to estimators?
  */
-bland::ndarray spectral_kurtosis(const bland::ndarray &spectrum_grid, int64_t N, int64_t M, float d = 1.0);
+bland::ndarray estimate_spectral_kurtosis(const bland::ndarray &spectrum_grid, int64_t N, int64_t M, float d = 1.0);
 
 } // namespace bliss

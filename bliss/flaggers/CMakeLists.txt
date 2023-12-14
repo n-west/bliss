@@ -1,5 +1,6 @@
 
 add_library(flaggers
+    filter_rolloff.cpp
     magnitude.cpp
     spectral_kurtosis.cpp
 )

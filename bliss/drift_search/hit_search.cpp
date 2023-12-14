@@ -1,5 +1,5 @@
 
-#include "spectrumsum/hit_search.hpp"
+#include <drift_search/hit_search.hpp>
 
 #include <cstdint>
 
@@ -13,6 +13,8 @@ struct hit {
     int64_t drift_index; /// index of the drift of detected signal
     float   integrated_power; /// integrated power of the drifting signal
 };
+
+void bliss::hit_search(doppler_spectrum dedrifted_spectrum, noise_power noise_stats, float snr_threshold);
 
 // void bliss::hitsearch(const row_major_f32array &drift_spectrum, noise_power noise_stats, float snr)
 // {

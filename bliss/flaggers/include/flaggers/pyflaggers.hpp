@@ -1,5 +1,6 @@
 #pragma once
 
+#include "filter_rolloff.hpp"
 #include "magnitude.hpp"
 #include "spectral_kurtosis.hpp"
 
@@ -18,5 +19,17 @@ void bind_pyflaggers(nb::module_ m) {
           "filterbank_data"_a,
           "lower_threshold"_a,
           "upper_threshold"_a,
-          "return a masked copy of filterbank_data where spectral_kurtosis indicates non-gaussian samples");
+          "return a masked copy of filterbank_data where estimate_spectral_kurtosis indicates non-gaussian samples");
+
+    m.def("flag_filter_rolloff",
+          &bliss::flag_filter_rolloff,
+          "filterbank_data"_a,
+          "rolloff_width"_a,
+          "return a masked copy of filterbank_data where the frequency edges are flagged according to rolloff width");
+
+    m.def("flag_magnitude",
+          &bliss::flag_magnitude,
+          "filterbank_data"_a,
+          "sigma"_a,
+          "return a masked copy of filterbank_data where magnitude exceeds the mean by given sigma");
 }

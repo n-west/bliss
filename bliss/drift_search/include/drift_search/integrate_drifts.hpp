@@ -2,6 +2,8 @@
 #pragma once
 
 #include <bland/ndarray.hpp>
+#include <core/doppler_spectrum.hpp>
+#include <core/filterbank_data.hpp>
 
 namespace bliss {
 
@@ -34,25 +36,21 @@ namespace bliss {
  *
  * HOUSTIN: not implemented yet, but will follow Ken Houston's rules for rounding
  */
-enum class spectrum_sum_method {
-    LINEAR_ROUND,
-    TAYLOR_TREE,
-    HOUSTON,
-};
-
-struct spectrum_sum_options {
-    spectrum_sum_method method  = spectrum_sum_method::LINEAR_ROUND;
-    bool                desmear = true;
-    // TODO properly optionize drift ranges
-    int64_t drift_range=64;
-};
+// enum class spectrum_sum_method {
+//     LINEAR_ROUND,
+//     TAYLOR_TREE,
+//     HOUSTON,
+// };
 
 /**
  * Integrate energy through a track in the spectrum according to the selected method for selecting tracks
  */
-[[nodiscard]] bland::ndarray spectrum_sum(const bland::ndarray &spectrum_grid,
-                                          spectrum_sum_options  options = spectrum_sum_options{
-                                                   .method  = spectrum_sum_method::LINEAR_ROUND,
-                                                   .desmear = true});
+[[nodiscard]] bland::ndarray integrate_drifts(const bland::ndarray    &spectrum_grid,
+                                              integrate_drifts_options options = integrate_drifts_options{
+                                                      .desmear = true});
+
+[[nodiscard]] doppler_spectrum integrate_drifts(filterbank_data          fil_data,
+                                                integrate_drifts_options options = integrate_drifts_options{
+                                                        .desmear = true});
 
 } // namespace bliss

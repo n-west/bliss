@@ -5,7 +5,7 @@ add_subdirectory(estimators)
 add_subdirectory(file_types)
 add_subdirectory(flaggers)
 add_subdirectory(rfi)
-add_subdirectory(spectrumsum)
+add_subdirectory(drift_search)
 
 add_subdirectory(tests)
 add_subdirectory(python)
@@ -15,7 +15,7 @@ target_link_libraries(justrun
     estimators
     flaggers
     file_types
-    spectrumsum
+    drift_search
     HDF5::HDF5
     fmt::fmt-header-only
     )

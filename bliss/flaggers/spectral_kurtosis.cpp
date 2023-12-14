@@ -20,7 +20,7 @@ filterbank_data bliss::flag_spectral_kurtosis(filterbank_data fb_data, float low
     auto Fs = std::abs(1.0 / (1e6 * fb_data.foff()));
     auto N = std::round(fb_data.tsamp() / Fs);
 
-    auto sk = spectral_kurtosis(spectrum_grid, N, M, 1.0);
+    auto sk = estimate_spectral_kurtosis(spectrum_grid, N, M, 1.0);
 
     // 2. Threshold & set on channels
     auto rfi = (sk < lower_threshold) + (sk > upper_threshold);
