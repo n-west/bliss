@@ -12,9 +12,7 @@
 
 #include <fmt/core.h>
 
-// #include <algorithm> // std::find
-// #include <numeric>   // std::accumulate
-#include <cmath>
+#include <cstdlib>
 
 using namespace bland;
 
@@ -183,70 +181,35 @@ ndarray bland::sqrt(ndarray a) {
     return sqrt(a, out);
 }
 
-
-
-template <typename A, typename B>
-struct greater_than_equals_to_op {
-    static bool call(const A &a, const B &b) {
-        return a >= b;
-    }
+template <typename Out, typename A>
+struct elementwise_abs_op {
+    static inline Out call(const A &a) { return static_cast<Out>(std::abs(a)); }
 };
 
-template <typename A, typename B>
-struct greater_than_op {
-    static bool call(const A &a, const B &b) {
-        return a > b;
-    }
+template <typename Out>
+struct elementwise_abs_op<Out, uint8_t> {
+    static inline Out call(const uint8_t &a) { return static_cast<Out>(a); }
+};
+template <typename Out>
+struct elementwise_abs_op<Out, uint16_t> {
+    static inline Out call(const uint16_t &a) { return static_cast<Out>(a); }
+};
+template <typename Out>
+struct elementwise_abs_op<Out, uint32_t> {
+    static inline Out call(const uint32_t &a) { return static_cast<Out>(a); }
+};
+template <typename Out>
+struct elementwise_abs_op<Out, uint64_t> {
+    static inline Out call(const uint64_t &a) { return static_cast<Out>(a); }
 };
 
-template <typename A, typename B>
-struct less_than_op {
-    static bool call(const A &a, const B &b) {
-        return a < b;
-    }
-};
+ndarray bland::abs(ndarray a, ndarray out) {
+    return dispatch_new2<unary_op_impl_wrapper, elementwise_abs_op>(out, a);
+}
 
-template <typename A, typename B>
-struct less_than_equals_to_op {
-    static bool call(const A &a, const B &b) {
-        return a > b;
-    }
-};
+ndarray bland::abs(ndarray a) {
+    auto out = ndarray(a.shape(), a.dtype(), a.device());
+    return abs(a, out);
+}
 
-// template <typename S>
-// ndarray bland::operator >=(S lhs, ndarray rhs) {
-//     // lhs >= rhs translates to rhs < lhs
-//     ndarray out(rhs.shape());
-//     return dispatch<scalar_op_impl_wrapper, S, less_than_op>(rhs, lhs);
-// }
 
-// template ndarray bland::operator>=(float lhs, ndarray rhs);
-// template ndarray bland::operator>=(double lhs, ndarray rhs);
-// template ndarray bland::operator>=(int8_t lhs, ndarray rhs);
-// template ndarray bland::operator>=(int16_t lhs, ndarray rhs);
-// template ndarray bland::operator>=(int32_t lhs, ndarray rhs);
-// template ndarray bland::operator>=(int64_t lhs, ndarray rhs);
-// template ndarray bland::operator>=(uint8_t lhs, ndarray rhs);
-// template ndarray bland::operator>=(uint16_t lhs, ndarray rhs);
-// template ndarray bland::operator>=(uint32_t lhs, ndarray rhs);
-// template ndarray bland::operator>=(uint64_t lhs, ndarray rhs);
-
-// template <typename S>
-// ndarray bland::operator >(S lhs, ndarray rhs) {
-
-// }
-
-// template <typename S>
-// ndarray bland::operator <=(S lhs, ndarray rhs) {
-
-// }
-
-// template <typename S>
-// ndarray bland::operator <(S lhs, ndarray rhs) {
-
-// }
-
-// template <typename S>
-// ndarray bland::operator ==(S lhs, ndarray rhs) {
-
-// }

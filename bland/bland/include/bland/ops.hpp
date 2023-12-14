@@ -19,6 +19,8 @@ ndarray square(ndarray a);
 ndarray square(ndarray a, ndarray out);
 ndarray sqrt(ndarray a);
 ndarray sqrt(ndarray a, ndarray out);
+ndarray abs(ndarray a);
+ndarray abs(ndarray a, ndarray out);
 
 ndarray_slice slice(const ndarray &a, int64_t dim, int64_t start, int64_t end, int64_t stride = 1);
 struct slice_spec {

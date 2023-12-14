@@ -30,7 +30,10 @@ int main() {
     auto noise_stats = bliss::estimate_noise_power(fil_data, bliss::noise_power_estimate_options{.masked_estimate=true}); // estimate noise power of unflagged data
 
     auto dedrifted_fil = bliss::integrate_drifts(flagged_fil,
-                                                bliss::integrate_drifts_options{.desmear = true}); // integrate along drift lines
+                                                bliss::integrate_drifts_options{.desmear = true,
+                                                                                .low_rate=-16,
+                                                                                .high_rate=16,
+                                                                                .rate_step_size=1}); // integrate along drift lines
 
     // auto hits = bliss::hit_search(dedrifted_fil, noise_stats, 10.0f);
 

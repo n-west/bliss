@@ -37,7 +37,7 @@ namespace detail {
 
         auto m = static_cast<float>(drift_step) / static_cast<float>(maximum_drift_span);
         // fmt::print("Drift step {} translates to spectrum slope {}\n", drift_step, m);
-        auto smeared_channels = std::round(m);
+        auto smeared_channels = std::round(std::abs(m));
 
         int number_integrated_channels = 1;
         if (options.desmear) {
@@ -51,8 +51,7 @@ namespace detail {
         for (int t = 0; t < time_steps; ++t) {
             int freq_offset_at_time = std::round(m * t);
 
-            for (int channels_to_integrate = 0; channels_to_integrate < number_integrated_channels;
-                 ++channels_to_integrate) {
+            for (int channels_to_integrate = 0; channels_to_integrate < number_integrated_channels; ++channels_to_integrate) {
                 auto drift_slice = bland::slice(
                         drift_plane,
                         bland::slice_spec{0, drift_step, drift_step + 1},

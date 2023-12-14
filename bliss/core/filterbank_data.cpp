@@ -52,7 +52,6 @@ bland::ndarray& bliss::filterbank_data::data() {
 }
 
 bland::ndarray& bliss::filterbank_data::mask() {
-    fmt::print("rfi flags as read has sum {}\n", bland::sum(_mask).scalarize<uint8_t>());
     return _mask;
 }
 
