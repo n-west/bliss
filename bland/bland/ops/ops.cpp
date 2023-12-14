@@ -35,7 +35,6 @@ ndarray bland::copy(ndarray a, ndarray &out) {
 
 // Decide if this should exist or should just be the base case for those recursive calls...
 ndarray_slice bland::slice(const ndarray &a, int64_t dim, int64_t start, int64_t end, int64_t stride) {
-    // fmt::print("slice impl input data is at {}\n", a.data_ptr<void>());
 
     ndarray_slice sliced(a);
 
@@ -50,6 +49,11 @@ ndarray_slice bland::slice(const ndarray &a, int64_t dim, int64_t start, int64_t
         end = a.size(dim) + end - 1;
     } else if (end > a.size(dim)) {
         end = a.size(dim);
+    }
+
+    if (end < start) {
+        auto error_message = fmt::format("slice: end index ({}) is less than start index ({}). Invalid slice.", end, start);
+        throw std::runtime_error(error_message);
     }
 
     // The offset needs to use the current stride so it's an offset

@@ -71,7 +71,7 @@ TEST_CASE("ops", "[ndarray][ops]") {
     }
 
     {
-        auto test_array = bland::ndarray({5,5}, DLDataType{.code = DLDataTypeCode::kDLInt, .bits = 64});
+        auto test_array = bland::ndarray({5,5}, DLDataType{.code = DLDataTypeCode::kDLInt, .bits = 32});
         bland::fill(test_array, 1);
 
         auto result = bland::sum(test_array, {0,1});
