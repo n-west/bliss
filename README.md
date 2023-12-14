@@ -45,6 +45,8 @@ Inside `build/bliss/python` you should have a `pybliss.cpython-311-x86_64-linux-
 
 #### Python-only
 
+(...this is a work in progress and doesn't work super well yet... Battling the ol' setuptools.)
+
 The easiest/less path-fiddly way to get the python extensions running is to run `setup.py develop`. This will (should) build the extension module and install it in "editable mode". I suggest setting up a virtualenv for this project, then doing this. The result should be pybliss in your python path ready to run.
 
 `setup.py develop` # A normal build, will take a few minutes but run faster
