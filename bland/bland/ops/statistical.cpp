@@ -610,6 +610,8 @@ ndarray bland::masked_var(const ndarray &a, const ndarray &mask, std::vector<int
     return square(out);
 }
 
+constexpr float eps = 1e-8f;
+
 struct standardized_moment_impl {
     template <typename out_datatype, typename in_datatype>
     static inline ndarray call(ndarray &out, const ndarray &a, std::vector<int64_t> reduced_axes, int degree) {
@@ -697,7 +699,7 @@ struct standardized_moment_impl {
                 out_linear_index += out_offset[axis] + (out_index[axis] % out_shape[axis]) * out_strides[axis];
             }
 
-            out_data[out_linear_index] = moment / std::pow(squared_dev, static_cast<float>(degree) / 2.0f);
+            out_data[out_linear_index] = moment / (eps + std::pow(squared_dev, static_cast<float>(degree) / 2.0f));
             // out_data[out_linear_index] = static_cast<out_datatype>(std::sqrt(squared_dev));
 
             // Increment the multi-dimensional output index

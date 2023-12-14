@@ -108,7 +108,7 @@ TEST_CASE("statistical", "[ndarray][ops][statistical]") {
                          BlandWithinAbs(std::vector<float>{1, 4, 0, 1, 1}, .1f));
 
             REQUIRE_THAT(std::vector<float>(kurtosis.data_ptr<float>(), kurtosis.data_ptr<float>() + kurtosis.numel()),
-                         BlandWithinAbs(std::vector<float>{3, 3, 1, 3, 3}, .1f));
+                         BlandWithinAbs(std::vector<float>{3, 3, 0, 3, 3}, .1f));
 
             // Linear transform: mean and variance get scaled and translated, normalized moment should remain the same.
             test_array = test_array * 4 + 2;
@@ -124,7 +124,7 @@ TEST_CASE("statistical", "[ndarray][ops][statistical]") {
                          BlandWithinAbs(std::vector<float>{4, 16, 0, 4, 4}, .1f));
 
             REQUIRE_THAT(std::vector<float>(kurtosis.data_ptr<float>(), kurtosis.data_ptr<float>() + kurtosis.numel()),
-                         BlandWithinAbs(std::vector<float>{3, 3, 1, 3, 3}, .1f));
+                         BlandWithinAbs(std::vector<float>{3, 3, 0, 3, 3}, .1f));
         }
     }
 }
