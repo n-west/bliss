@@ -29,9 +29,9 @@ namespace bliss
      * Estimate noise power statistics using the given method
      * 
     */
-    [[nodiscard]] noise_power estimate_noise_power(const bland::ndarray &x, noise_power_estimate_options options);
+    [[nodiscard]] noise_stats estimate_noise_power(const bland::ndarray &x, noise_power_estimate_options options);
 
-    [[nodiscard]] noise_power estimate_noise_power(filterbank_data fil_data, noise_power_estimate_options options);
+    [[nodiscard]] noise_stats estimate_noise_power(filterbank_data fil_data, noise_power_estimate_options options);
 
 } // namespace bliss
 

@@ -13,21 +13,21 @@ namespace bliss {
  * mean: the expected value of noise power. This is most related to actual noise power by formal definition
  * var: the variance of noise power, i.e., how much we expect an individual sample of noise power to vary by
  */
-struct noise_power {
-    float _mean;
-    float _var;
+struct noise_stats {
+    float _noise_floor;
+    float _noise_power;
 
     public:
-    float var() const {
-        return _var;
+    float noise_power() const {
+        return _noise_power;
     }
 
-    float stddev() const {
-        return std::sqrt(_var);
+    float noise_amplitude() const {
+        return std::sqrt(_noise_power);
     }
 
-    float mean() const {
-        return _mean;
+    float noise_floor() const {
+        return _noise_floor;
     }
 
 

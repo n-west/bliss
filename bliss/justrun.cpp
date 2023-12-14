@@ -21,7 +21,7 @@ int main() {
 
     // TODO: add support for vector of looks (a cadence dtype that holds all dwells)
 
-    auto flagged_fil = bliss::flag_spectral_kurtosis(fil_data, 0.01f, 10.0f); // SK > 10 && SK < .01
+    auto flagged_fil = bliss::flag_spectral_kurtosis(fil_data, 0.01f, 10.0f); // SK < .01 && SK > 10
     // auto flagged_fil = bliss::flag_magnitude(flagged_fil, 10.0f); // mag > mean + std*10
     flagged_fil = bliss::flag_filter_rolloff(flagged_fil, .05f); // % of band edges
     // auto flagged_fil = bliss::flag_ood(flagged_fil, .01); // < 1% change belonging to predicted noise only

@@ -110,12 +110,19 @@ void bind_pybland(nb::module_ m) {
     m.def("mean", [](nb::ndarray<> a, std::vector<int64_t>axes={}) {
         return bland::mean(nb_to_bland(a), axes);
     }, "a"_a, "axes"_a=std::vector<int64_t>{});
+
     m.def("median", [](nb::ndarray<> a, std::vector<int64_t>axes={}) {
         return bland::median(nb_to_bland(a), axes);
     }, "a"_a, "axes"_a=std::vector<int64_t>{});
+
     m.def("stddev", [](nb::ndarray<> a, std::vector<int64_t>axes={}) {
         return bland::stddev(nb_to_bland(a), axes);
     }, "a"_a, "axes"_a=std::vector<int64_t>{});
+
+    m.def("var", [](nb::ndarray<> a, std::vector<int64_t>axes={}) {
+        return bland::var(nb_to_bland(a), axes);
+    }, "a"_a, "axes"_a=std::vector<int64_t>{});
+
     m.def("standardized_moment", [](nb::ndarray<> a, int degree, std::vector<int64_t>axes={}) {
         return bland::standardized_moment(nb_to_bland(a), degree, axes);
     }, "a"_a, "degree"_a, "axes"_a=std::vector<int64_t>{});

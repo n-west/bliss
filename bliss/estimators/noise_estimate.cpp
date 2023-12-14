@@ -10,56 +10,56 @@ using namespace bliss;
 
 namespace detail {
 
-noise_power noise_power_estimate_stddev(const bland::ndarray &x) {
-    noise_power estimated_stats;
+noise_stats noise_power_estimate_stddev(const bland::ndarray &x) {
+    noise_stats estimated_stats;
 
-    estimated_stats._mean = bland::mean(x).scalarize<float>();
-    estimated_stats._var  = bland::var(x).scalarize<float>();
+    estimated_stats._noise_floor = bland::mean(x).scalarize<float>();
+    estimated_stats._noise_power = bland::var(x).scalarize<float>();
 
     return estimated_stats;
 }
 
-noise_power noise_power_estimate_stddev(const bland::ndarray &x, const bland::ndarray &mask) {
-    noise_power estimated_stats;
+noise_stats noise_power_estimate_stddev(const bland::ndarray &x, const bland::ndarray &mask) {
+    noise_stats estimated_stats;
 
-    estimated_stats._mean = bland::masked_mean(x, mask).scalarize<float>();
-    estimated_stats._var  = std::pow(bland::masked_stddev(x, mask).scalarize<float>(), 2);
+    estimated_stats._noise_floor = bland::masked_mean(x, mask).scalarize<float>();
+    estimated_stats._noise_power = std::pow(bland::masked_stddev(x, mask).scalarize<float>(), 2);
     // estimated_stats._var = 0;
 
     return estimated_stats;
 }
 
-noise_power noise_power_estimate_mad(const bland::ndarray &x) {
-    noise_power estimated_stats;
+noise_stats noise_power_estimate_mad(const bland::ndarray &x) {
+    noise_stats estimated_stats;
 
     // bland needs some TLC to do this Right (TM)
-    estimated_stats._mean = bland::median(x);
+    estimated_stats._noise_floor = bland::median(x);
     // median absolute deviation is median(|Xi - median|)
-    auto stddev          = bland::median(bland::abs(x - estimated_stats._mean));
-    estimated_stats._var = std::pow(stddev, 2);
+    auto stddev                  = bland::median(bland::abs(x - estimated_stats._noise_floor));
+    estimated_stats._noise_power = std::pow(stddev, 2);
 
     return estimated_stats;
 }
 
-noise_power noise_power_estimate_mad(const bland::ndarray &x, const bland::ndarray &mask) {
+noise_stats noise_power_estimate_mad(const bland::ndarray &x, const bland::ndarray &mask) {
 
     throw std::runtime_error("masked noise power estimation with mad is not implemented yet");
-    noise_power estimated_stats;
+    noise_stats estimated_stats;
 
     // bland needs some TLC to do this Right (TM) and until then
     // it's pretty hard to do the masked_median
-    estimated_stats._mean = bland::median(x);
+    estimated_stats._noise_floor = bland::median(x);
     // median absolute deviation is median(|Xi - median|)
-    auto stddev          = bland::median(bland::abs(x - estimated_stats._mean));
-    estimated_stats._var = std::pow(stddev, 2);
+    auto stddev                  = bland::median(bland::abs(x - estimated_stats._noise_floor));
+    estimated_stats._noise_power = std::pow(stddev, 2);
 
     return estimated_stats;
 }
 
 } // namespace detail
 
-noise_power bliss::estimate_noise_power(const bland::ndarray &x, noise_power_estimate_options options) {
-    noise_power estimated_stats;
+noise_stats bliss::estimate_noise_power(const bland::ndarray &x, noise_power_estimate_options options) {
+    noise_stats estimated_stats;
 
     if (options.masked_estimate) {
         fmt::print("WARN: Requested a masked noise estimate, but calling without a mask. This may be an error in the "
@@ -84,8 +84,8 @@ noise_power bliss::estimate_noise_power(const bland::ndarray &x, noise_power_est
  * This is the masked equivalent of noise power estimate
  */
 
-noise_power bliss::estimate_noise_power(filterbank_data fil_data, noise_power_estimate_options options) {
-    noise_power estimated_stats;
+noise_stats bliss::estimate_noise_power(filterbank_data fil_data, noise_power_estimate_options options) {
+    noise_stats estimated_stats;
     if (options.masked_estimate) {
         switch (options.estimator_method) {
         case noise_power_estimator::MEAN_ABSOLUTE_DEVIATION: {

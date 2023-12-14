@@ -5,8 +5,14 @@
 
 namespace bliss {
 
-// what does hitsearch return?
-// we'll probably need a hit_search_options struct
-void hit_search(doppler_spectrum dedrifted_spectrum, noise_power noise_stats, float snr_threshold);
+struct hit {
+    int64_t start_freq_index;
+    int64_t rate_index;
+    float snr;
+    int64_t bandwidth;
+};
+
+std::vector<hit>
+hit_search(doppler_spectrum dedrifted_spectrum, noise_stats noise_stats, float snr_threshold);
 
 } // namespace bliss

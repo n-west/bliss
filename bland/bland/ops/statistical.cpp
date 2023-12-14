@@ -45,7 +45,7 @@ struct mean_impl {
         auto                 a_offset  = a.offsets();
         std::vector<int64_t> input_index(a_shape.size(), 0);
 
-        out_datatype scale = 1.0 / static_cast<out_datatype>(reduced_elements);
+        out_datatype scale = 1.0 / static_cast<out_datatype>(reduced_elements-1);
         // Loop over the dimensions of the array and perform the reduction operation
         auto numel = out.numel();
         for (int i = 0; i < numel; ++i) {
@@ -59,11 +59,11 @@ struct mean_impl {
                 for (int axis = 0; axis < a_shape.size(); ++axis) {
                     input_linear_index += a_offset[axis] + (reduce_nd_index[axis] % a_shape[axis]) * a_strides[axis];
                 }
-                if (std::is_same<out_datatype, float>() || std::is_same<out_datatype, double>()) {
-                    mean += (a_data[input_linear_index] * scale);
-                } else {
+                // if (std::is_same<out_datatype, float>() || std::is_same<out_datatype, double>()) {
+                //     mean += (a_data[input_linear_index] * scale);
+                // } else {
                     mean += a_data[input_linear_index];
-                }
+                // }
                 // Increment the multi-dimensional index
                 for (int i = reduced_axes.size() - 1; i >= 0; --i) {
                     auto d = reduced_axes[i];
@@ -83,11 +83,11 @@ struct mean_impl {
                 out_linear_index += out_offset[axis] + (out_index[axis]) * out_strides[axis];
             }
 
-            if (std::is_same<out_datatype, float>() || std::is_same<out_datatype, double>()) {
-                out_data[out_linear_index] = static_cast<out_datatype>(mean);
-            } else {
+            // if (std::is_same<out_datatype, float>() || std::is_same<out_datatype, double>()) {
+            //     out_data[out_linear_index] = static_cast<out_datatype>(mean);
+            // } else {
                 out_data[out_linear_index] = static_cast<out_datatype>(mean) / reduced_elements;
-            }
+            // }
             // Increment the multi-dimensional output index
             for (int axis = out_shape.size() - 1; axis >= 0; --axis) {
                 // If we're not at the end of this dim, keep going
@@ -179,11 +179,6 @@ struct masked_mean_impl {
                 for (int axis = 0; axis < a_shape.size(); ++axis) {
                     input_linear_index += a_offset[axis] + (reduce_nd_index[axis] % a_shape[axis]) * a_strides[axis];
                 }
-                // if (std::is_same<out_datatype, float>() || std::is_same<out_datatype, double>()) {
-                //     if (mask_data[input_linear_index] == 0) {
-                //         mean += (a_data[input_linear_index] * scale);
-                //     }
-                // } else {
                 if (mask_data[input_linear_index] == 0) {
                     mean += a_data[input_linear_index];
                     elements_in_mean += 1;
@@ -208,11 +203,7 @@ struct masked_mean_impl {
                 out_linear_index += out_offset[axis] + (out_index[axis]) * out_strides[axis];
             }
 
-            // if (std::is_same<out_datatype, float>() || std::is_same<out_datatype, double>()) {
-            //     out_data[out_linear_index] = static_cast<out_datatype>(mean);
-            // } else {
-            out_data[out_linear_index] = static_cast<out_datatype>(mean) / elements_in_mean;
-            // }
+            out_data[out_linear_index] = static_cast<out_datatype>(mean) / (elements_in_mean-1);
             // Increment the multi-dimensional output index
             for (int axis = out_shape.size() - 1; axis >= 0; --axis) {
                 // If we're not at the end of this dim, keep going
@@ -474,7 +465,7 @@ struct masked_stddev_impl {
             throw std::runtime_error("mask_mean: dims of a shape does not match dims of mask shape");
         }
 
-        // TODO, allow passing in means as an arg
+        // TODO, do E[x^2] - E[x]^2 to reduce a redundant pass through data
         auto means = ndarray(out.shape(), out.dtype(), out.device());
         masked_mean_impl::call<out_datatype, in_datatype>(means, a, mask, reduced_axes);
 
