@@ -60,5 +60,5 @@ void bind_pycore(nb::module_ m) {
     nb::class_<bliss::doppler_spectrum>(m, "doppler_spectrum")
             .def(nb::init<bliss::filterbank_data, bland::ndarray, bliss::integrate_drifts_options>())
             .def("dedrifted_spectrum", &bliss::doppler_spectrum::dedrifted_spectrum)
-            .def("drift_parameters", &bliss::doppler_spectrum::drift_parameters);
+            .def("drift_parameters", &bliss::doppler_spectrum::integration_options);
 }

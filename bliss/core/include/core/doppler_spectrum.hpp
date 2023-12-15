@@ -19,7 +19,7 @@ struct integrate_drifts_options {
     int64_t rate_step_size = 1;
 };
 
-class doppler_spectrum : public filterbank_data{
+class doppler_spectrum : public filterbank_data {
   public:
     doppler_spectrum(filterbank_data          fb_data,
                      bland::ndarray           dedrifted_spectrum,
@@ -27,10 +27,12 @@ class doppler_spectrum : public filterbank_data{
 
     bland::ndarray &dedrifted_spectrum();
 
-    integrate_drifts_options drift_parameters() const;
+    integrate_drifts_options integration_options() const;
+    int64_t integration_length() const;
 
     // should we just store the options in here...
   protected:
+    int64_t                  _integration_length;
     bland::ndarray           _dedrifted_spectrum;
     integrate_drifts_options _drift_parameters;
 };

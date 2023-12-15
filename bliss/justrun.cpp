@@ -47,11 +47,11 @@ int main(int argc, char **argv) {
     auto dedrifted_fil = bliss::integrate_drifts(
             flagged_fil,
             bliss::integrate_drifts_options{.desmear        = true,
-                                            .low_rate       = -16,
-                                            .high_rate      = 16,
+                                            .low_rate       = 0,
+                                            .high_rate      = 48,
                                             .rate_step_size = 1}); // integrate along drift lines
 
-    // auto hits = bliss::hit_search(dedrifted_fil, noise_stats, 10.0f);
+    auto hits = bliss::hit_search(dedrifted_fil, noise_stats, 10.0f);
 
     // bliss::write_hits(hits);
 }

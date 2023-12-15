@@ -24,7 +24,6 @@ namespace detail {
 
     auto time_steps      = spectrum_grid.size(0);
     auto number_channels = spectrum_grid.size(1);
-    // number_drifts = time_steps;
 
     auto maximum_drift_span = time_steps - 1;
 
@@ -79,7 +78,8 @@ namespace detail {
         }
     }
 
-    return drift_plane;
+    // normalize back by integration length
+    return drift_plane / time_steps;
 }
 
 } // namespace detail
@@ -93,6 +93,7 @@ bland::ndarray bliss::integrate_drifts(const bland::ndarray &spectrum_grid, inte
 }
 
 doppler_spectrum bliss::integrate_drifts(filterbank_data fil_data, integrate_drifts_options options) {
+
     auto drift_grid = detail::integrate_linear_rounded_bins(fil_data.data(), options);
 
     return doppler_spectrum(fil_data, drift_grid, options);
