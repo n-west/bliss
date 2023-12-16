@@ -3,6 +3,7 @@
 #include <drift_search/hit_search.hpp>
 
 #include <fmt/core.h>
+#include <fmt/format.h>
 #include <cstdint>
 #include <queue>
 
