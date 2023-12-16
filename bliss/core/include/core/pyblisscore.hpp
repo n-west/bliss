@@ -2,10 +2,12 @@
 
 #include "doppler_spectrum.hpp"
 #include "filterbank_data.hpp"
+#include "cadence.hpp"
 
 #include <nanobind/nanobind.h>
 #include <nanobind/ndarray.h>
 #include <nanobind/stl/string.h>
+#include <nanobind/stl/string_view.h>
 #include <nanobind/stl/vector.h>
 
 namespace nb = nanobind;
@@ -61,4 +63,16 @@ void bind_pycore(nb::module_ m) {
             .def(nb::init<bliss::filterbank_data, bland::ndarray, bliss::integrate_drifts_options>())
             .def("dedrifted_spectrum", &bliss::doppler_spectrum::dedrifted_spectrum)
             .def("drift_parameters", &bliss::doppler_spectrum::integration_options);
+
+    nb::class_<bliss::observation_target>(m, "observation_target")
+        .def(nb::init<std::vector<bliss::filterbank_data>>())
+        .def_rw("filterbanks", &bliss::observation_target::_filterbanks)
+        .def_rw("target_name", &bliss::observation_target::_target_name)
+        ;
+
+    nb::class_<bliss::cadence>(m, "cadence")
+        .def(nb::init<std::vector<bliss::observation_target>>())
+        .def(nb::init<std::vector<std::vector<std::string_view>>>())
+        .def_rw("observations", &bliss::cadence::_observations)
+        ;
 }
