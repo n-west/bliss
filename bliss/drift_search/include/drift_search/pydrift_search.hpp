@@ -21,11 +21,25 @@ void bind_pydrift_search(nb::module_ m) {
 
     nb::class_<bliss::component>(m, "component")
     .def_rw("locations", &bliss::component::locations)
-    .def_rw("s", &bliss::component::s);
+    .def_rw("index_max", &bliss::component::index_max)
+    .def_rw("max_integration", &bliss::component::max_integration);
 
-    m.def("find_components", &bliss::find_components);
-    m.def("find_components",
-          [](nb::ndarray<> threshold_mask) { return bliss::find_components(nb_to_bland(threshold_mask)); });
+
+    nb::class_<bliss::hit>(m, "hit")
+    .def_rw("start_freq_index", &bliss::hit::start_freq_index)
+    .def_rw("start_freq_MHz", &bliss::hit::start_freq_MHz)
+    .def_rw("drift_rate_Hz_per_sec", &bliss::hit::drift_rate_Hz_per_sec)
+    .def_rw("rate_index", &bliss::hit::rate_index)
+    .def_rw("snr", &bliss::hit::snr)
+    .def_rw("binwidth", &bliss::hit::binwidth)
+    .def_rw("bandwidth", &bliss::hit::bandwidth);
+
+
+    m.def("find_components_above_threshold", &bliss::find_components_above_threshold);
+
+    m.def("find_components_in_binary_mask", &bliss::find_components_in_binary_mask);
+    m.def("find_components_in_binary_mask",
+          [](nb::ndarray<> threshold_mask) { return bliss::find_components_in_binary_mask(nb_to_bland(threshold_mask)); });
 
     m.def("integrate_drifts", [](nb::ndarray<> spectrum, bliss::integrate_drifts_options options) {
         auto bland_spectrum  = nb_to_bland(spectrum);
@@ -35,6 +49,9 @@ void bind_pydrift_search(nb::module_ m) {
 
     m.def("integrate_drifts",
           nb::overload_cast<bliss::filterbank_data, bliss::integrate_drifts_options>(&bliss::integrate_drifts));
+
+
+    m.def("hit_search", &bliss::hit_search);
 
     // m.def("spectrum_sum", &bliss::spectrum_sum);
 }

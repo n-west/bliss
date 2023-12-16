@@ -226,6 +226,14 @@ bland::ndarray::datatype::datatype(std::string_view dtype) {
 }
 bland::ndarray::datatype::datatype(DLDataType dtype) : DLDataType(dtype) {}
 
+bool bland::ndarray::datatype::operator==(const datatype&other) {
+    return this->code && other.code && this->bits == other.bits && this->lanes && other.lanes;
+}
+
+bool bland::ndarray::datatype::operator!=(const datatype&other) {
+    return !(*this == other);
+}
+
 bland::ndarray::dev::dev(DLDevice d) : DLDevice(d) {}
 
 bool bland::ndarray::dev::operator==(const dev &other) {
