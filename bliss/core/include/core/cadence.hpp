@@ -6,11 +6,13 @@
 #include <string_view>
 
 namespace bliss {
+
 /**
  * Holds
  */
 class observation_target {
   public:
+    observation_target() = default;
     observation_target(std::vector<filterbank_data> filterbanks);
     observation_target(std::vector<std::string_view> filterbank_paths);
 
@@ -21,10 +23,11 @@ class observation_target {
 
 class cadence {
   public:
+    cadence() = default;
     cadence(std::vector<observation_target> observations);
     /**
      * Read in using file paths
-    */
+     */
     cadence(std::vector<std::vector<std::string_view>> observations);
     // TODO might be nice to be able to just give a list of filterbank_data, then look at that md to autosort targets
 

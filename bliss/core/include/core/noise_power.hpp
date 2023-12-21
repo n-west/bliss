@@ -1,7 +1,5 @@
 #pragma once
 
-#include <cmath> // std::sqrt
-
 namespace bliss {
 
 
@@ -18,18 +16,11 @@ struct noise_stats {
     float _noise_power;
 
     public:
-    float noise_power() const {
-        return _noise_power;
-    }
+    float noise_power() const;
 
-    float noise_amplitude() const {
-        return std::sqrt(_noise_power);
-    }
+    float noise_amplitude() const;
 
-    float noise_floor() const {
-        return _noise_floor;
-    }
-
+    float noise_floor() const;
 
 };
 

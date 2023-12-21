@@ -101,3 +101,19 @@ double bliss::filterbank_data::az_start() const {
 double bliss::filterbank_data::za_start() const {
     return _za_start;
 }
+
+// void bliss::filterbank_data::mask(const bland::ndarray &mask) {
+//     _mask = mask;
+// }
+
+noise_stats bliss::filterbank_data::noise_estimates() {
+    if (_noise_stats.has_value()) {
+        return _noise_stats.value();
+    } else {
+        throw std::runtime_error("Noise stats have not been calculated yet");
+    }
+}
+
+void bliss::filterbank_data::noise_estimates(noise_stats stats) {
+    _noise_stats = stats;
+}

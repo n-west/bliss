@@ -17,6 +17,7 @@ This project builds with cmake. Building and running depend on the following lib
 * cmake
 * gcc / clang capable of C++17
 * libhdf5-dev
+* libcapnp-dev
 
 
 ### runtime:

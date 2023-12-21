@@ -1,6 +1,7 @@
 #pragma once
 
 #include <bland/ndarray.hpp>
+#include <core/filterbank_data.hpp>
 
 namespace bliss {
 
@@ -24,5 +25,7 @@ namespace bliss {
  * TODO: should this move to estimators?
  */
 bland::ndarray estimate_spectral_kurtosis(const bland::ndarray &spectrum_grid, int64_t N, int64_t M, float d = 1.0);
+
+bland::ndarray estimate_spectral_kurtosis(filterbank_data &fil_data);
 
 } // namespace bliss

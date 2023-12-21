@@ -49,6 +49,11 @@ endif(CCACHE_FOUND)
 
 
 find_package(HDF5 COMPONENTS CXX REQUIRED)
+find_package(CapnProto)
+
+if(NOT CapnProto_FOUND)
+    message(FATAL "CapnProto not found, eventually will add support for in-source capnp to make things easier")
+endif()
 
 include(FetchContent) # CMake 3.14+
 

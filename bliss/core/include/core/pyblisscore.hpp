@@ -18,7 +18,8 @@ void bind_pycore(nb::module_ m) {
     nb::class_<bliss::filterbank_data>(m, "filterbank_data")
             .def(nb::init<std::string>())
             .def_prop_ro("data", &bliss::filterbank_data::data)
-            .def_prop_ro("mask", &bliss::filterbank_data::mask)
+            .def_prop_ro("mask", nb::overload_cast<>(&bliss::filterbank_data::mask))
+            // .def_prop_rw("mask", nb::overload_cast<>(&bliss::filterbank_data::mask), nb::overload_cast<const bland::ndarray&>(&bliss::filterbank_data::mask))
             .def_prop_ro("az_start", &bliss::filterbank_data::az_start)
             .def_prop_ro("data_type", &bliss::filterbank_data::data_type)
             .def_prop_ro("fch1", &bliss::filterbank_data::fch1)
@@ -32,7 +33,8 @@ void bind_pycore(nb::module_ m) {
             .def_prop_ro("telescope_id", &bliss::filterbank_data::telescope_id)
             .def_prop_ro("tsamp", &bliss::filterbank_data::tsamp)
             .def_prop_ro("tstart", &bliss::filterbank_data::tstart)
-            .def_prop_ro("za_start", &bliss::filterbank_data::za_start);
+            .def_prop_ro("za_start", &bliss::filterbank_data::za_start)
+            .def_prop_rw("noise_estimates", nb::overload_cast<>(&bliss::filterbank_data::noise_estimates), nb::overload_cast<bliss::noise_stats>(&bliss::filterbank_data::noise_estimates));
 
     //  * *DIMENSION_LABELS
     //  * *az_start

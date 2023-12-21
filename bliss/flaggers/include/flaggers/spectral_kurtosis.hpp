@@ -2,6 +2,7 @@
 #pragma once
 
 #include <core/filterbank_data.hpp>
+#include <core/cadence.hpp>
 
 namespace bliss {
 
@@ -26,6 +27,21 @@ namespace bliss {
  * The non-averaged estimator (N=1) and background derivation can be found in
  * "Radio Frequency Interference Excision Using Spectral-Domain Statistics"
 */
+bland::ndarray flag_spectral_kurtosis(const bland::ndarray &data, int64_t N, int64_t M, float d, float lower_threshold, float upper_threshold);
+
+/**
+ * Flag the filterbank data based on spectral kurtosis bounds and return the flagged filterbank
+*/
 filterbank_data flag_spectral_kurtosis(filterbank_data fb_data, float lower_threshold=0.05f, float upper_threshold=0.05f);
+
+/**
+ * Flag all filterbanks in an observation target
+*/
+observation_target flag_spectral_kurtosis(observation_target observations, float lower_threshold, float upper_threshold);
+
+/**
+ * Flag all filterbanks in the cadence with given SK estimate
+*/
+cadence flag_spectral_kurtosis(cadence fb_data, float lower_threshold=0.05f, float upper_threshold=0.05f);
 
 } // namespace bliss

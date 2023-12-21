@@ -1,7 +1,10 @@
 #pragma once
 
+#include "noise_power.hpp"
 #include <bland/bland.hpp>
+
 #include <cstdint>
+#include <optional>
 #include <string>
 #include <string_view>
 
@@ -17,6 +20,8 @@ class filterbank_data {
 
     bland::ndarray &data();
     bland::ndarray &mask();
+    // Set the mask to a new mask. A copy of underlying ndarray is not made
+    // void            mask(const bland::ndarray &new_mask);
 
     double      fch1() const;
     double      foff() const;
@@ -35,12 +40,16 @@ class filterbank_data {
     double  az_start() const;
     double  za_start() const;
 
+    noise_stats noise_estimates();
+    void        noise_estimates(noise_stats);
+
   protected:
     // <KeysViewHDF5 ['data', 'mask']>
     // <HDF5 dataset "data": shape (16, 1, 1048576), type "<f4">
     // <HDF5 dataset "mask": shape (16, 1, 1048576), type "|u1">
-    bland::ndarray _data;
-    bland::ndarray _mask;
+    bland::ndarray             _data;
+    bland::ndarray             _mask;
+    std::optional<noise_stats> _noise_stats;
 
     double      _fch1;
     double      _foff;

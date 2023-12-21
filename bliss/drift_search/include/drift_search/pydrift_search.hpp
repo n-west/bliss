@@ -6,6 +6,8 @@
 
 #include "hit_search.hpp"
 #include "integrate_drifts.hpp"
+#include "connected_components.hpp"
+#include "local_maxima.hpp"
 
 void bind_pydrift_search(nb::module_ m) {
 

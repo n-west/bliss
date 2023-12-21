@@ -1,6 +1,7 @@
 #pragma once
 
 #include <core/filterbank_data.hpp>
+#include <core/cadence.hpp>
 
 namespace bliss {
 /**
@@ -14,5 +15,9 @@ namespace bliss {
  * output mask: x x o o o o o o x x
  */
 filterbank_data flag_filter_rolloff(filterbank_data fb_data, float rolloff_width);
+
+observation_target flag_filter_rolloff(observation_target observations, float rolloff_width);
+
+cadence flag_filter_rolloff(cadence observations, float rolloff_width);
 
 } // namespace bliss

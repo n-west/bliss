@@ -1,7 +1,9 @@
 
 add_library(drift_search
+    connected_components.cpp
     integrate_drifts.cpp
     hit_search.cpp
+    local_maxima.cpp
 )
 
 target_include_directories(drift_search
