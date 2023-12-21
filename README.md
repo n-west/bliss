@@ -7,6 +7,7 @@
 
 </p>
 
+![alien teaching signals](docs/alien-teaching-signals.jpeg)
 
 ## Building and Experimenting
 
