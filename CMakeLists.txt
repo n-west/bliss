@@ -1,7 +1,9 @@
 
-cmake_minimum_required(VERSION 3.3.25.1)
+cmake_minimum_required(VERSION 3.9)
 # Future version upgrades:
 # 3.28 adds EXCLUDE_FROM_ALL to FetchContent_Declare
+# 3.9 required for check_ipo_supported
+# 3.18 has many cuda improvements
 
 
 project(
@@ -9,7 +11,17 @@ project(
     VERSION 0.0.0
     LANGUAGES CXX
 )
+include(CheckLanguage)
+check_language(CUDA)
 
+if (CMAKE_CUDA_COMPILER)
+  message("Have cuda")
+else()
+  message("Does not have cuda")
+endif()
+# enable_language(CUDA)
+
+# This is required for python modules...
 set_property(GLOBAL PROPERTY POSITION_INDEPENDENT_CODE TRUE)
 
 # Only do these if this is the main project, and not if it is included through add_subdirectory
@@ -17,8 +29,8 @@ if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
 
   # Optionally set things like CMAKE_CXX_STANDARD, CMAKE_POSITION_INDEPENDENT_CODE here
   set(CMAKE_CXX_STANDARD 17) # Cmake 3.8
-  set(CMAKE_CXX_STANDARD_REQUIRED On)
-  set(CMAKE_CXX_EXTENSIONS Off)
+  set(CMAKE_CXX_STANDARD_REQUIRED ON)
+  set(CMAKE_CXX_EXTENSIONS OFF)
 
   # Let's ensure -std=c++xx instead of -std=g++xx
   set(CMAKE_CXX_EXTENSIONS OFF)
@@ -41,19 +53,39 @@ if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
 #   endif()
 endif()
 
-find_program(CCACHE_FOUND ccache)
-if(CCACHE_FOUND)
-    set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE ccache)
-    set_property(GLOBAL PROPERTY RULE_LAUNCH_LINK ccache) # Less useful to do it for linking, see edit2
-endif(CCACHE_FOUND)
+include(CheckIPOSupported)
+check_ipo_supported(RESULT IPO_AVAILABLE)
 
-
-find_package(HDF5 COMPONENTS CXX REQUIRED)
-find_package(CapnProto)
-
-if(NOT CapnProto_FOUND)
-    message(FATAL "CapnProto not found, eventually will add support for in-source capnp to make things easier")
+if (${IPO_AVAILABLE})
+  message("Can add flto")
 endif()
+
+include(CMakeDependentOption)
+include(FeatureSummary)
+
+find_program(CCACHE_PROGRAM ccache)
+if(CCACHE_PROGRAM)
+    set(CMAKE_CXX_COMPILER_LAUNCHER "${CCACHE_PROGRAM}")
+    set(CMAKE_CUDA_COMPILER_LAUNCHER "${CCACHE_PROGRAM}") # CMake 3.9+
+endif()
+
+
+# HDF5
+find_package(HDF5 COMPONENTS CXX REQUIRED)
+set_package_properties(HDF5 PROPERTIES
+    URL "https://www.hdfgroup.org/solutions/hdf5/"
+    DESCRIPTION "Hierarchical Data Format"
+    PURPOSE "Read/write BL HDF5-wrapped filterbank data")
+
+# Cap'n proto
+find_package(CapnProto)
+set_package_properties(CapnProto PROPERTIES
+    URL "https://capnproto.org/"
+    DESCRIPTION "Serialization protocol with minimal encoding overhead"
+    PURPOSE "Publishes hits and events in a structured way")
+
+cmake_dependent_option(WITH_CAPNP "Enable Cap'n Proto to publish hits and events" ON "CapnProto_FOUND" OFF)
+add_feature_info(WITH_CAPNP CapnProto_FOUND "CAPNP serialization of hits and events")
 
 include(FetchContent) # CMake 3.14+
 
@@ -104,3 +136,9 @@ if (DOXYGEN_FOUND)
 else (DOXYGEN_FOUND)
   message("Doxygen needs to be installed to generate the doxygen documentation")
 endif (DOXYGEN_FOUND)
+
+
+if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
+    feature_summary(WHAT ENABLED_FEATURES DISABLED_FEATURES PACKAGES_FOUND)
+    feature_summary(FILENAME ${CMAKE_CURRENT_BINARY_DIR}/features.log WHAT ALL)
+endif()
