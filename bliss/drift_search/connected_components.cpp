@@ -9,8 +9,7 @@
 
 using namespace bliss;
 
-
-// Helper to abstract out incremem
+// Helper to abstract out increments (this is copied in local_maxima, TODO: factor out to bland utils)
 struct stride_helper {
 
     std::vector<int64_t> shape;
@@ -28,7 +27,18 @@ struct stride_helper {
     }
 };
 
-std::vector<component> bliss::find_components_in_binary_mask(const bland::ndarray &threshold_mask) {
+std::vector<component> bliss::find_components_in_binary_mask(const bland::ndarray  &mask,
+                                                             std::vector<nd_coords> neighborhood) {
+    // We're going to change values, so get a copy
+    auto threshold_mask = bland::copy(mask);
+    if (neighborhood.empty()) {
+        neighborhood = {
+            {-1, 0},
+            {1, 0},
+            {0, -1},
+            {0, 1},
+        };
+    }
     // Thresholded_mask holds binary information on which bins passed a threshold. Group adjacent
     // bins that passed the threshold together (connected components)
     std::vector<component> components;
@@ -47,7 +57,6 @@ std::vector<component> bliss::find_components_in_binary_mask(const bland::ndarra
         // dereference threshold_mask w/ linear offset computed from current nd_index
         auto curr_linear = strider.to_linear_offset(curr_coord);
         if (thresholded_data[curr_linear] > 0) {
-            // nd_index locations;
             coord_queue.push(curr_coord);
             component this_component;
 
@@ -55,35 +64,28 @@ std::vector<component> bliss::find_components_in_binary_mask(const bland::ndarra
                 nd_coords idx = coord_queue.front();
                 coord_queue.pop();
 
-                // if these coordinates are valid && this belongs, keep it and add every neighbor to queue
-                bool in_bounds = true;
-                for (int dim = 0; dim < thresholded_shape.size(); ++dim) {
-                    if (idx[dim] < 0 || idx[dim] >= thresholded_shape[dim]) {
-                        in_bounds = false;
-                        break;
-                    }
-                }
-                auto coord_linear = strider.to_linear_offset(idx);
-                if (in_bounds && thresholded_data[coord_linear] > 0) {
-                    // This is part of the current component
-                    this_component.locations.push_back(idx);
-                    thresholded_data[coord_linear] = 0; // Mark as visited
+                auto linear_index = strider.to_linear_offset(idx);
 
-                    for (int dim = 0; dim < thresholded_shape.size(); ++dim) {
-                        auto next_coord = idx;
-                        next_coord[dim] += 1;
-                        // check if the next coordinate is valid and not visited
-                        if (next_coord[dim] >= 0 && next_coord[dim] < thresholded_shape[dim] &&
-                            thresholded_data[strider.to_linear_offset(next_coord)] > 0) {
-                            coord_queue.push(next_coord);
+                // Assume in bounds and if above threshold, add it to the component
+                if (thresholded_data[linear_index] > 0) {
+                    this_component.locations.push_back(idx);
+                    thresholded_data[linear_index] = 0;
+
+                    // Then add all of the neighbors as candidates
+                    for (auto &neighbor_offset : neighborhood) {
+                        bool in_bounds      = true;
+                        auto neighbor_coord = idx;
+                        for (int dim = 0; dim < thresholded_shape.size(); ++dim) {
+                            neighbor_coord[dim] += neighbor_offset[dim];
+                            if (neighbor_coord[dim] < 0 || neighbor_coord[dim] >= thresholded_shape[dim]) {
+                                in_bounds = false;
+                                break;
+                            }
                         }
 
-                        auto prev_coord = idx;
-                        prev_coord[dim] -= 1;
-                        // check if the previous coordinate is valid and not visited
-                        if (prev_coord[dim] >= 0 && prev_coord[dim] < thresholded_shape[dim] &&
-                            thresholded_data[strider.to_linear_offset(prev_coord)] > 0) {
-                            coord_queue.push(prev_coord);
+                        // If this is in bounds, above threshold, not visited add it
+                        if (in_bounds) {
+                            coord_queue.push(neighbor_coord);
                         }
                     }
                 } else {
@@ -108,9 +110,19 @@ std::vector<component> bliss::find_components_in_binary_mask(const bland::ndarra
     return components;
 }
 
-std::vector<component> bliss::find_components_above_threshold(doppler_spectrum &dedrifted_spectrum,
-                                                              noise_stats       noise_stats,
-                                                              float             snr_threshold) {
+std::vector<component> bliss::find_components_above_threshold(doppler_spectrum      &dedrifted_spectrum,
+                                                              noise_stats            noise_stats,
+                                                              float                  snr_threshold,
+                                                              std::vector<nd_coords> neighborhood) {
+    if (neighborhood.empty()) {
+        neighborhood = {
+            {-1, 0},
+            {1, 0},
+            {0, -1},
+            {0, 1},
+        };
+    }
+
     auto hard_threshold = compute_signal_threshold(noise_stats, dedrifted_spectrum.integration_length(), snr_threshold);
 
     std::vector<component> components;
@@ -154,49 +166,41 @@ std::vector<component> bliss::find_components_above_threshold(doppler_spectrum &
                 nd_coords idx = coord_queue.front();
                 coord_queue.pop();
 
-                // if these coordinates are valid && this belongs, keep it and add every neighbor to queue
-                bool in_bounds = true;
-                for (int dim = 0; dim < visited_shape.size(); ++dim) {
-                    if (idx[dim] < 0 || idx[dim] >= visited_shape[dim]) {
-                        in_bounds = false;
-                        break;
-                    }
-                }
                 auto this_coord_visited_linear          = visited_strider.to_linear_offset(idx);
                 auto this_coord_doppler_spectrum_linear = doppler_spectrum_strider.to_linear_offset(idx);
                 // Test if this drift is part of the current cluster:
-                // * the coordinates are valid (probably an obsolete test)
-                // * we have not visited this yet (probably an obsolete test)
+                // * we have not visited this yet
                 // * it passes the hard threshold
                 // TODO, add some more to greedily merge clusters split by noise / minor signal power drops at off
                 // integrations by testing a distance metric We might even want to pass a callable if we can define this
                 // well (and expose to python as callable!)
-                if (in_bounds && visited_data[this_coord_visited_linear] == 0 &&
+                // Assume in bounds and if above threshold, add it to the component
+                if (visited_data[this_coord_visited_linear] == 0 &&
                     doppler_spectrum_data[this_coord_doppler_spectrum_linear] > hard_threshold) {
-                    // This is part of the current component
+
                     this_component.locations.push_back(idx);
                     ++visited_data[this_coord_visited_linear]; // Mark as visited
+
                     // Track some stats for this cluster like the maximum value and where it is
                     if (doppler_spectrum_data[this_coord_doppler_spectrum_linear] > this_component.max_integration) {
                         this_component.max_integration = doppler_spectrum_data[this_coord_doppler_spectrum_linear];
                         this_component.index_max       = idx;
                     }
-
-                    for (int dim = 0; dim < visited_shape.size(); ++dim) {
-                        auto next_coord = idx;
-                        next_coord[dim] += 1;
-                        // check if the next coordinate is valid and not visited
-                        if (next_coord[dim] >= 0 && next_coord[dim] < visited_shape[dim] &&
-                            visited_data[visited_strider.to_linear_offset(next_coord)] == 0) {
-                            coord_queue.push(next_coord);
+                    // Then add all of the neighbors as candidates
+                    for (auto &neighbor_offset : neighborhood) {
+                        bool in_bounds      = true;
+                        auto neighbor_coord = idx;
+                        for (int dim = 0; dim < visited_shape.size(); ++dim) {
+                            neighbor_coord[dim] += neighbor_offset[dim];
+                            if (neighbor_coord[dim] < 0 || neighbor_coord[dim] >= visited_shape[dim]) {
+                                in_bounds = false;
+                                break;
+                            }
                         }
 
-                        auto prev_coord = idx;
-                        prev_coord[dim] -= 1;
-                        // check if the previous coordinate is valid and not visited
-                        if (prev_coord[dim] >= 0 && prev_coord[dim] < visited_shape[dim] &&
-                            visited_data[visited_strider.to_linear_offset(prev_coord)] == 0) {
-                            coord_queue.push(prev_coord);
+                        // If this is in bounds, above threshold, not visited add it
+                        if (in_bounds) {
+                            coord_queue.push(neighbor_coord);
                         }
                     }
                 } else {

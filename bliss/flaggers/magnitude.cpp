@@ -7,7 +7,7 @@
 using namespace bliss;
 
 bland::ndarray bliss::flag_magnitude(const bland::ndarray &data, float threshold) {
-    auto magnitude_mask = (data > threshold) * flag_values::magnitude;
+    auto magnitude_mask = (data > threshold) * static_cast<uint8_t>(flag_values::magnitude);
     return magnitude_mask;
 }
 

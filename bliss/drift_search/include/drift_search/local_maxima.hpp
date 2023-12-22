@@ -4,6 +4,6 @@
 
 namespace bliss {
 
-    std::vector<component> find_local_maxima_above_threshold(doppler_spectrum &dedrifted_spectrum, noise_stats noise_stats, float snr_threshold);
+    std::vector<component> find_local_maxima_above_threshold(doppler_spectrum &dedrifted_spectrum, noise_stats noise_stats, float snr_threshold, std::vector<nd_coords> max_neighborhoods);
 
 } // namespace bliss

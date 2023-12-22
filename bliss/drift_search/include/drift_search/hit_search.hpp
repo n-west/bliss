@@ -15,12 +15,12 @@ struct component {
 
 struct hit {
     int64_t start_freq_index;
-    float start_freq_MHz;
+    float   start_freq_MHz;
     int64_t rate_index;
-    float drift_rate_Hz_per_sec;
+    float   drift_rate_Hz_per_sec;
     float   snr;
     int64_t bandwidth;
-    double binwidth;
+    double  binwidth;
 };
 
 /**
@@ -32,24 +32,51 @@ struct hit {
  * s-nf > n * sqrt(snr_threshold)
  * s > nf + sqrt(N * snr_threshold)
  * Since the noise power was estimate before integration, it also decreases by sqrt of integration length
-*/
+ */
 float compute_signal_threshold(const noise_stats &noise_stats, int64_t integration_length, float snr_threshold);
 
 /**
  * Return a binary mask (dtype uint8) when doppler spectrum values fall above
  * the given SNR threshold based on estimated noise stats.
- * 
+ *
  * 1 indicates a given drift, frequency is above the SNR threshold
  * 0 indicates given drift, frequency is below the SNR threshold
-*/
+ */
 bland::ndarray hard_threshold_drifts(const bland::ndarray &dedrifted_spectrum,
                                      const noise_stats    &noise_stats,
                                      int64_t               integration_length,
                                      float                 snr_threshold);
 
+enum class hit_search_methods { CONNECTED_COMPONENTS, LOCAL_MAXIMA };
+
+struct hit_search_options {
+    hit_search_methods method = hit_search_methods::CONNECTED_COMPONENTS;
+
+    /**
+     * threshold (linear SNR) that integrated power must be above to be considered a hit
+     */
+    float snr_threshold = 10.0f;
+
+    std::vector<nd_coords> neighborhood = {
+            {-1, -1},
+            {-1, 0},
+            {-1, 1},
+            {0, 1},
+            {1, 1},
+            {1, 0},
+            {1, -1},
+            {0, -1},
+            // {2, 0},
+            // {0, 2},
+            // {-2, 0},
+            // {0, -2}
+    };
+};
+
 /**
  * High level wrapper around finding drifting signals above a noise floor
-*/
-std::vector<hit> hit_search(doppler_spectrum dedrifted_spectrum, noise_stats noise_stats, float snr_threshold);
+ */
+std::vector<hit>
+hit_search(doppler_spectrum dedrifted_spectrum, noise_stats noise_stats, hit_search_options options = {});
 
 } // namespace bliss

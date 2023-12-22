@@ -2,6 +2,7 @@
 #include "bland/ndarray.hpp"
 #include <drift_search/hit_search.hpp>
 #include <drift_search/connected_components.hpp>
+#include <drift_search/local_maxima.hpp>
 
 #include <fmt/core.h>
 #include <fmt/format.h>
@@ -38,7 +39,7 @@ bland::ndarray bliss::hard_threshold_drifts(const bland::ndarray &dedrifted_spec
 
 
 
-std::vector<hit> bliss::hit_search(doppler_spectrum dedrifted_spectrum, noise_stats noise_stats, float snr_threshold) {
+std::vector<hit> bliss::hit_search(doppler_spectrum dedrifted_spectrum, noise_stats noise_stats, hit_search_options options) {
     std::vector<hit> hits;
 
     // auto threshold_mask = hard_threshold_drifts(dedrifted_spectrum.dedrifted_spectrum(),
@@ -48,9 +49,15 @@ std::vector<hit> bliss::hit_search(doppler_spectrum dedrifted_spectrum, noise_st
 
     // // Now run connected components....
     // auto components = find_components_in_binary_mask(threshold_mask);
-    auto components = find_components_above_threshold(dedrifted_spectrum, noise_stats, snr_threshold);
-    fmt::print("Found {} components\n", components.size());
+    std::vector<component> components;
+    if (options.method == hit_search_methods::CONNECTED_COMPONENTS) {
+        components = find_components_above_threshold(dedrifted_spectrum, noise_stats, options.snr_threshold, options.neighborhood);
+    } else if (options.method == hit_search_methods::LOCAL_MAXIMA) {
+        components = find_local_maxima_above_threshold(dedrifted_spectrum, noise_stats, options.snr_threshold, options.neighborhood);
+    }
 
+    hits.reserve(components.size());
+    // Do we need a "component to hit" for each type of search?
     for (const auto &c : components) {
         // Assume dims size 2 for now :-| (we'll get beam stuff sorted eventually)
         hit this_hit;
@@ -72,11 +79,13 @@ std::vector<hit> bliss::hit_search(doppler_spectrum dedrifted_spectrum, noise_st
         auto signal_power = std::pow((c.max_integration - noise_stats.noise_floor()), 2);
         auto noise_power = (noise_stats.noise_power()/std::sqrt(dedrifted_spectrum.integration_length()));
         this_hit.snr = signal_power/noise_power;
-        fmt::print("s = {}, n = {} ||| so S / N = {} / {} = {} ", c.max_integration, noise_stats.noise_floor(), signal_power, noise_power, this_hit.snr);
+        // fmt::print("s = {}, n = {} ||| so S / N = {} / {} = {} ", c.max_integration, noise_stats.noise_floor(), signal_power, noise_power, this_hit.snr);
 
         // At the drift rate with max SNR, find the width of this component
         // We can also integrate signal power over the entire bandwidth / noise power over bandwidth to get
         // a better picture of actual SNR rather than SNR/Hz @ peak
+        // This concept of the bandwidth currently doesn't fit well with the local maxima option, but maybe we can come up
+        // with something
         this_hit.binwidth = 1;
         int64_t lower_freq_index_at_rate = this_hit.start_freq_index;
         int64_t upper_freq_index_at_rate = this_hit.start_freq_index;
