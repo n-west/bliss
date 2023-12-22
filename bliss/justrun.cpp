@@ -1,6 +1,7 @@
 
-#include <estimators/noise_estimate.hpp>
 #include <core/filterbank_data.hpp>
+#include <core/cadence.hpp>
+#include <estimators/noise_estimate.hpp>
 #include <drift_search/hit_search.hpp>
 #include <drift_search/integrate_drifts.hpp>
 #include <flaggers/filter_rolloff.hpp>
@@ -21,6 +22,16 @@ int main(int argc, char **argv) {
     if (argc == 2) {
         fil_path = argv[1];
     }
+
+    bliss::cadence({{"/home/nathan/datasets/voyager_2020_data/"
+                         "single_coarse_guppi_59046_80354_DIAG_VOYAGER-1_0012.rawspec.0000.h5"}});
+    // cadence = pybliss.cadence([[f"{data_loc}/single_coarse_guppi_59046_80036_DIAG_VOYAGER-1_0011.rawspec.0000.h5",
+    //                 f"{data_loc}/single_coarse_guppi_59046_80672_DIAG_VOYAGER-1_0013.rawspec.0000.h5",
+    //                 f"{data_loc}/single_coarse_guppi_59046_81310_DIAG_VOYAGER-1_0015.rawspec.0000.h5"
+    //                 ],
+    //                 [f"{data_loc}/single_coarse_guppi_59046_80354_DIAG_VOYAGER-1_0012.rawspec.0000.h5"],
+    //                 [f"{data_loc}/single_coarse_guppi_59046_80989_DIAG_VOYAGER-1_0014.rawspec.0000.h5"],
+    //                 [f"{data_loc}/single_coarse_guppi_59046_81628_DIAG_VOYAGER-1_0016.rawspec.0000.h5"]])
 
     // Kinda weird, but the scoping is annoying and we don't have default constructors that make sense
     std::unique_ptr<bliss::filterbank_data> fil_holder;
@@ -51,7 +62,7 @@ int main(int argc, char **argv) {
                                             .high_rate      = 48,
                                             .rate_step_size = 1}); // integrate along drift lines
 
-    auto hits = bliss::hit_search(dedrifted_fil, noise_stats, 10.0f);
+    auto hits = bliss::hit_search(dedrifted_fil, noise_stats, {.snr_threshold=10.0f});
 
     // bliss::write_hits(hits);
 }
