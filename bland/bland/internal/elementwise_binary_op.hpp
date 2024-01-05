@@ -4,6 +4,7 @@
 #include "shape_helpers.hpp"
 
 #include <numeric> // needed for accumulate
+#include <stdexcept>
 
 namespace bland {
 
@@ -126,6 +127,18 @@ struct elementwise_binary_op_impl_wrapper {
     // An output tensor is provided
     template <typename Out, typename A_type, typename B_type, class Op>
     static inline ndarray call(ndarray out, const ndarray &a, const ndarray &b) {
+        // Check that this operation is possible
+        auto a_shape = a.shape();
+        auto b_shape = b.shape();
+        // TODO: check/validate output shape!
+        if (a.ndim() == b.ndim()) {
+            for (int64_t dim = 0; dim < a.ndim(); ++dim) {
+                if (a_shape[dim] != b_shape[dim] && a_shape[dim] != 1 && b_shape[dim] != 1) {
+                    throw std::runtime_error("elementwise_binary_op: inputs match ndim but shapes are not compatible or broadcastable");
+                }
+            }
+            // TODO: check if this can be broadcasted....
+        }
         return elementwise_binary_op<Out, A_type, B_type, Op>(out, a, b);
     }
 };

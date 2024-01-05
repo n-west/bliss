@@ -30,36 +30,78 @@ namespace detail {
     bland::ndarray drift_plane({number_drifts, number_channels}, spectrum_grid.dtype(), spectrum_grid.device());
     bland::fill(drift_plane, 0.0f);
 
+    auto first_channel = 0; // This needs to be incrememnted by the offset from the most negative drift
     int print_count = 0;
     // We use all time available inside this function
-    for (int drift_step = options.low_rate; drift_step < options.high_rate; drift_step += options.rate_step_size) {
+    for (int drift_index = 0; drift_index < number_drifts; ++drift_index) {
+        // Drift in number of channels over the entire time extent
+        auto drift_channels = options.low_rate + drift_index * options.rate_step_size;
 
-        auto m = static_cast<float>(drift_step) / static_cast<float>(maximum_drift_span);
-        // fmt::print("Drift step {} translates to spectrum slope {}\n", drift_step, m);
+        // The actual slope of that drift (number channels / time)
+        auto m = static_cast<float>(drift_channels) / static_cast<float>(maximum_drift_span);
+        // If a single time step crosses more than 1 channel, there is smearing over multiple channels
         auto smeared_channels = std::round(std::abs(m));
 
-        int number_integrated_channels = 1;
+        int desmear_bandwidth = 1;
         if (options.desmear) {
-            number_integrated_channels = std::max(1.0f, smeared_channels);
+            desmear_bandwidth = std::max(1.0f, smeared_channels);
         }
         fmt::print("drift step {} (m={})has {} smeared channels, so {} number_integrated_channels\n",
-                   drift_step,
+                   drift_channels,
                    m,
                    smeared_channels,
-                   number_integrated_channels);
+                   desmear_bandwidth);
+
+        // these don't take in to account smear
         for (int t = 0; t < time_steps; ++t) {
             int freq_offset_at_time = std::round(m * t);
 
-            for (int channels_to_integrate = 0; channels_to_integrate < number_integrated_channels; ++channels_to_integrate) {
-                auto drift_slice = bland::slice(
-                        drift_plane,
-                        bland::slice_spec{0, drift_step, drift_step + 1},
-                        bland::slice_spec{1, 0, drift_plane.size(1) - freq_offset_at_time - channels_to_integrate});
-                auto spectrum_slice = bland::slice(spectrum_grid,
-                                                   bland::slice_spec{0, t, t + 1},
-                                                   bland::slice_spec{1, freq_offset_at_time + channels_to_integrate});
+            for (int desmear_channel = 0; desmear_channel < desmear_bandwidth; ++desmear_channel) {
 
-                drift_slice = drift_slice + spectrum_slice / number_integrated_channels;
+                if (m >= 0) {
+                    // The accumulator (drift spectrum) stays fixed at 0 while the spectrum start increments
+                    auto channel_offset = freq_offset_at_time + desmear_channel;
+
+                    int64_t drift_freq_slice_start    = 0;
+                    int64_t drift_freq_slice_end      = number_channels - channel_offset;
+
+                    int64_t spectrum_freq_slice_start = channel_offset;
+                    int64_t spectrum_freq_slice_end   = number_channels;
+
+                    auto drift_slice = bland::slice(drift_plane,
+                                                    bland::slice_spec{0, drift_index, drift_index + 1},
+                                                    bland::slice_spec{1, drift_freq_slice_start, drift_freq_slice_end});
+
+                    fmt::print("Channel offset is {} so drift_slice[, {}:{}] + spectrum_slice[, {}:{}]\n", channel_offset, drift_freq_slice_start, drift_freq_slice_end, spectrum_freq_slice_start, spectrum_freq_slice_end);
+
+                    auto spectrum_slice =
+                            bland::slice(spectrum_grid,
+                                        bland::slice_spec{0, t, t + 1},
+                                        bland::slice_spec{1, spectrum_freq_slice_start, spectrum_freq_slice_end});
+
+                    drift_slice = drift_slice + spectrum_slice / desmear_bandwidth;
+                } else {
+                    // At a negative drift rate, everything needs to scooch up instead of chop down
+                    // the desmeared channel might need to be negative as well (it's the channel we're advancing towards)
+                    auto channel_offset = freq_offset_at_time - desmear_channel;
+
+                    int64_t drift_freq_slice_start    = -drift_channels;
+                    int64_t drift_freq_slice_end      = number_channels;
+
+                    int64_t spectrum_freq_slice_start = -drift_channels + channel_offset;
+                    int64_t spectrum_freq_slice_end   = number_channels + channel_offset;
+
+                    auto drift_slice = bland::slice(drift_plane,
+                                                    bland::slice_spec{0, drift_index, drift_index + 1},
+                                                    bland::slice_spec{1, drift_freq_slice_start, drift_freq_slice_end});
+                    auto spectrum_slice =
+                            bland::slice(spectrum_grid,
+                                        bland::slice_spec{0, t, t + 1},
+                                        bland::slice_spec{1, spectrum_freq_slice_start, spectrum_freq_slice_end});
+
+                    drift_slice = drift_slice + spectrum_slice / desmear_bandwidth;
+
+                }
             }
 
             // }
@@ -83,7 +125,6 @@ namespace detail {
 }
 
 } // namespace detail
-
 
 bland::ndarray bliss::integrate_drifts(const bland::ndarray &spectrum_grid, integrate_drifts_options options) {
 

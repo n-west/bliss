@@ -58,7 +58,7 @@ int main(int argc, char **argv) {
     auto dedrifted_fil = bliss::integrate_drifts(
             flagged_fil,
             bliss::integrate_drifts_options{.desmear        = true,
-                                            .low_rate       = 0,
+                                            .low_rate       = -8,
                                             .high_rate      = 48,
                                             .rate_step_size = 1}); // integrate along drift lines
 
