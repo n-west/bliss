@@ -17,6 +17,7 @@ target_link_libraries(drift_search
     bliss_core
     PRIVATE
     fmt::fmt-header-only
+    flaggers
 )
 
 set_target_properties(drift_search PROPERTIES POSITION_INDEPENDENT_CODE TRUE)

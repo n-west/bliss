@@ -1,8 +1,8 @@
 #pragma once
 
+#include "cadence.hpp"
 #include "doppler_spectrum.hpp"
 #include "filterbank_data.hpp"
-#include "cadence.hpp"
 
 #include <nanobind/nanobind.h>
 #include <nanobind/ndarray.h>
@@ -19,7 +19,8 @@ void bind_pycore(nb::module_ m) {
             .def(nb::init<std::string>())
             .def_prop_ro("data", &bliss::filterbank_data::data)
             .def_prop_ro("mask", nb::overload_cast<>(&bliss::filterbank_data::mask))
-            // .def_prop_rw("mask", nb::overload_cast<>(&bliss::filterbank_data::mask), nb::overload_cast<const bland::ndarray&>(&bliss::filterbank_data::mask))
+            // .def_prop_rw("mask", nb::overload_cast<>(&bliss::filterbank_data::mask), nb::overload_cast<const
+            // bland::ndarray&>(&bliss::filterbank_data::mask))
             .def_prop_ro("az_start", &bliss::filterbank_data::az_start)
             .def_prop_ro("data_type", &bliss::filterbank_data::data_type)
             .def_prop_ro("fch1", &bliss::filterbank_data::fch1)
@@ -34,7 +35,9 @@ void bind_pycore(nb::module_ m) {
             .def_prop_ro("tsamp", &bliss::filterbank_data::tsamp)
             .def_prop_ro("tstart", &bliss::filterbank_data::tstart)
             .def_prop_ro("za_start", &bliss::filterbank_data::za_start)
-            .def_prop_rw("noise_estimates", nb::overload_cast<>(&bliss::filterbank_data::noise_estimates), nb::overload_cast<bliss::noise_stats>(&bliss::filterbank_data::noise_estimates));
+            .def_prop_rw("noise_estimates",
+                         nb::overload_cast<>(&bliss::filterbank_data::noise_estimates),
+                         nb::overload_cast<bliss::noise_stats>(&bliss::filterbank_data::noise_estimates));
 
     //  * *DIMENSION_LABELS
     //  * *az_start
@@ -61,20 +64,30 @@ void bind_pycore(nb::module_ m) {
             .def_rw("high_rate", &bliss::integrate_drifts_options::high_rate)
             .def_rw("rate_step_size", &bliss::integrate_drifts_options::rate_step_size);
 
+    nb::class_<bliss::integrated_rfi>(m, "integrated_rfi")
+            .def(nb::init<int64_t /*drifts*/, int64_t /*channels*/, bland::ndarray::dev /*device*/>())
+            .def_rw("filter_rolloff", &bliss::integrated_rfi::filter_rolloff)
+            .def_rw("filter_rolloff", &bliss::integrated_rfi::low_spectral_kurtosis)
+            .def_rw("filter_rolloff", &bliss::integrated_rfi::high_spectral_kurtosis)
+            .def_rw("magnitude", &bliss::integrated_rfi::magnitude)
+            .def_rw("sigma_clip", &bliss::integrated_rfi::sigma_clip);
+
     nb::class_<bliss::doppler_spectrum>(m, "doppler_spectrum")
-            .def(nb::init<bliss::filterbank_data, bland::ndarray, bliss::integrate_drifts_options>())
+            .def(nb::init<bliss::filterbank_data,
+                          bland::ndarray,
+                          bliss::integrated_rfi,
+                          bliss::integrate_drifts_options>())
             .def("dedrifted_spectrum", &bliss::doppler_spectrum::dedrifted_spectrum)
+            .def("dedrifted_rfi", &bliss::doppler_spectrum::dedrifted_rfi)
             .def("drift_parameters", &bliss::doppler_spectrum::integration_options);
 
     nb::class_<bliss::observation_target>(m, "observation_target")
-        .def(nb::init<std::vector<bliss::filterbank_data>>())
-        .def_rw("filterbanks", &bliss::observation_target::_filterbanks)
-        .def_rw("target_name", &bliss::observation_target::_target_name)
-        ;
+            .def(nb::init<std::vector<bliss::filterbank_data>>())
+            .def_rw("filterbanks", &bliss::observation_target::_filterbanks)
+            .def_rw("target_name", &bliss::observation_target::_target_name);
 
     nb::class_<bliss::cadence>(m, "cadence")
-        .def(nb::init<std::vector<bliss::observation_target>>())
-        .def(nb::init<std::vector<std::vector<std::string_view>>>())
-        .def_rw("observations", &bliss::cadence::_observations)
-        ;
+            .def(nb::init<std::vector<bliss::observation_target>>())
+            .def(nb::init<std::vector<std::vector<std::string_view>>>())
+            .def_rw("observations", &bliss::cadence::_observations);
 }
