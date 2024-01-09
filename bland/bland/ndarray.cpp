@@ -419,6 +419,33 @@ template uint16_t bland::ndarray::scalarize<uint16_t>() const;
 template uint32_t bland::ndarray::scalarize<uint32_t>() const;
 template uint64_t bland::ndarray::scalarize<uint64_t>() const;
 
+template <typename T>
+T bland::ndarray::scalarize(const std::vector<int64_t> &nd_index) const {
+
+    if (nd_index.size() != ndim()) {
+        throw std::runtime_error("scalarize: wrong number of dimensions indexing to array");
+    }
+
+    auto linear_offset = 0;
+    for (int dim = 0; dim < nd_index.size(); ++dim) {
+        linear_offset +=  _tensor._offsets[dim] +  nd_index[dim] * _tensor.strides[dim]; // TODO: also add offset
+    }
+    // TODO also check datatype makes sense to scalarize
+    return data_ptr<T>()[linear_offset];
+}
+
+template float    bland::ndarray::scalarize<float>(const std::vector<int64_t> &) const;
+template double   bland::ndarray::scalarize<double>(const std::vector<int64_t> &) const;
+template int8_t   bland::ndarray::scalarize<int8_t>(const std::vector<int64_t> &) const;
+template int16_t  bland::ndarray::scalarize<int16_t>(const std::vector<int64_t> &) const;
+template int32_t  bland::ndarray::scalarize<int32_t>(const std::vector<int64_t> &) const;
+template int64_t  bland::ndarray::scalarize<int64_t>(const std::vector<int64_t> &) const;
+template uint8_t  bland::ndarray::scalarize<uint8_t>(const std::vector<int64_t> &) const;
+template uint16_t bland::ndarray::scalarize<uint16_t>(const std::vector<int64_t> &) const;
+template uint32_t bland::ndarray::scalarize<uint32_t>(const std::vector<int64_t> &) const;
+template uint64_t bland::ndarray::scalarize<uint64_t>(const std::vector<int64_t> &) const;
+
+
 template <typename datatype>
 std::string pretty_print(const ndarray &a) {
     auto a_data = a.data_ptr<datatype>();

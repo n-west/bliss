@@ -67,8 +67,8 @@ void bind_pycore(nb::module_ m) {
     nb::class_<bliss::integrated_rfi>(m, "integrated_rfi")
             .def(nb::init<int64_t /*drifts*/, int64_t /*channels*/, bland::ndarray::dev /*device*/>())
             .def_rw("filter_rolloff", &bliss::integrated_rfi::filter_rolloff)
-            .def_rw("filter_rolloff", &bliss::integrated_rfi::low_spectral_kurtosis)
-            .def_rw("filter_rolloff", &bliss::integrated_rfi::high_spectral_kurtosis)
+            .def_rw("low_spectral_kurtosis", &bliss::integrated_rfi::low_spectral_kurtosis)
+            .def_rw("high_spectral_kurtosis", &bliss::integrated_rfi::high_spectral_kurtosis)
             .def_rw("magnitude", &bliss::integrated_rfi::magnitude)
             .def_rw("sigma_clip", &bliss::integrated_rfi::sigma_clip);
 

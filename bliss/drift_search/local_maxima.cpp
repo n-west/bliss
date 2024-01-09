@@ -37,8 +37,6 @@ std::vector<component> bliss::find_local_maxima_above_threshold(doppler_spectrum
 
     std::vector<component> maxima;
 
-    // TODO: we also want to keep track of which flags contributed to *this* dedrifted spectrum so we can throw away
-    // "hits" with too many (or the wrong kind) of flags
     auto &doppler_spectrum = dedrifted_spectrum.dedrifted_spectrum();
     if (doppler_spectrum.dtype() != bland::ndarray::datatype::float32) {
         throw std::runtime_error(
@@ -64,7 +62,7 @@ std::vector<component> bliss::find_local_maxima_above_threshold(doppler_spectrum
 
     auto numel = visited.numel();
 
-    fmt::print("Looking through {} candidates with threshold {}\n", numel, hard_threshold);
+    fmt::print("local_maxima looking through {} candidates with threshold {}\n", numel, hard_threshold);
     for (int64_t n = 0; n < numel; ++n) {
         // 1. Check if this is not visited & above threshold
         auto linear_visited_index          = visited_strider.to_linear_offset(curr_coord);
@@ -109,6 +107,11 @@ std::vector<component> bliss::find_local_maxima_above_threshold(doppler_spectrum
                     c.index_max       = curr_coord;
                     c.locations.push_back(curr_coord);
                     c.max_integration = candidate_maxima_val;
+                    c.rfi_counts[flag_values::low_spectral_kurtosis] = dedrifted_spectrum.dedrifted_rfi().low_spectral_kurtosis.scalarize<uint8_t>(curr_coord);
+                    c.rfi_counts[flag_values::high_spectral_kurtosis] = dedrifted_spectrum.dedrifted_rfi().high_spectral_kurtosis.scalarize<uint8_t>(curr_coord);
+                    c.rfi_counts[flag_values::filter_rolloff] = dedrifted_spectrum.dedrifted_rfi().filter_rolloff.scalarize<uint8_t>(curr_coord);
+                    c.rfi_counts[flag_values::magnitude] = dedrifted_spectrum.dedrifted_rfi().magnitude.scalarize<uint8_t>(curr_coord);
+                    c.rfi_counts[flag_values::sigma_clip] = dedrifted_spectrum.dedrifted_rfi().sigma_clip.scalarize<uint8_t>(curr_coord);
                     // TODO: this doesn't have the concept of a "component" the same way connected_components does... do
                     // we care?
                     maxima.push_back(c);

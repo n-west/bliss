@@ -140,6 +140,41 @@ integrate_linear_rounded_bins(const bland::ndarray    &spectrum_grid,
                                          bland::slice_spec{0, t, t + 1},
                                          bland::slice_spec{1, spectrum_freq_slice_start, spectrum_freq_slice_end});
 
+                    if (collect_rfi) {
+                        // Keep track of how much each type of RFI is present along the drift track
+                        // The slicing is there because at the edges we just need to trim the out of bounds cases
+                        auto rfi_mask_slice =
+                                bland::slice(rfi_mask,
+                                             bland::slice_spec{0, t, t + 1},
+                                             bland::slice_spec{1, spectrum_freq_slice_start, spectrum_freq_slice_end});
+
+                        // TODO: think through bitshifting and underflow to see if this can just be a bitshift
+                        auto filter_rolloff_slice = bland::slice(rfi_in_drift.filter_rolloff,
+                                                    bland::slice_spec{0, drift_index, drift_index + 1},
+                                                    bland::slice_spec{1, drift_freq_slice_start, drift_freq_slice_end});
+                        filter_rolloff_slice = filter_rolloff_slice + (rfi_mask_slice & static_cast<uint8_t>(flag_values::filter_rolloff)) / static_cast<uint8_t>(flag_values::filter_rolloff);
+
+                        auto low_spectral_kurtosis_slice = bland::slice(rfi_in_drift.low_spectral_kurtosis,
+                                                    bland::slice_spec{0, drift_index, drift_index + 1},
+                                                    bland::slice_spec{1, drift_freq_slice_start, drift_freq_slice_end});
+                        low_spectral_kurtosis_slice = low_spectral_kurtosis_slice + (rfi_mask_slice & static_cast<uint8_t>(flag_values::low_spectral_kurtosis)) / static_cast<uint8_t>(flag_values::low_spectral_kurtosis);
+
+                        auto high_spectral_kurtosis_slice = bland::slice(rfi_in_drift.high_spectral_kurtosis,
+                                                    bland::slice_spec{0, drift_index, drift_index + 1},
+                                                    bland::slice_spec{1, drift_freq_slice_start, drift_freq_slice_end});
+                        high_spectral_kurtosis_slice = high_spectral_kurtosis_slice + (rfi_mask_slice & static_cast<uint8_t>(flag_values::high_spectral_kurtosis)) / static_cast<uint8_t>(flag_values::high_spectral_kurtosis);
+
+                        auto magnitude_slice = bland::slice(rfi_in_drift.magnitude,
+                                                    bland::slice_spec{0, drift_index, drift_index + 1},
+                                                    bland::slice_spec{1, drift_freq_slice_start, drift_freq_slice_end});
+                        magnitude_slice = magnitude_slice + (rfi_mask_slice & static_cast<uint8_t>(flag_values::magnitude)) / static_cast<uint8_t>(flag_values::magnitude);
+
+                        auto sigma_clip_slice = bland::slice(rfi_in_drift.sigma_clip,
+                                                    bland::slice_spec{0, drift_index, drift_index + 1},
+                                                    bland::slice_spec{1, drift_freq_slice_start, drift_freq_slice_end});
+                        sigma_clip_slice = sigma_clip_slice + (rfi_mask_slice & static_cast<uint8_t>(flag_values::sigma_clip)) / static_cast<uint8_t>(flag_values::sigma_clip);
+                    }
+
                     drift_slice = drift_slice + spectrum_slice / desmear_bandwidth;
                 }
             }
@@ -172,3 +207,10 @@ doppler_spectrum bliss::integrate_drifts(filterbank_data fil_data, integrate_dri
 
     return doppler_spectrum(fil_data, drift_grid, drift_rfi, options);
 }
+
+// doppler_spectrum bliss::integrate_drifts(observation_target observations, integrate_drifts_options options) {
+
+//     auto [drift_grid, drift_rfi] = detail::integrate_linear_rounded_bins(fil_data.data(), fil_data.mask(), options);
+
+//     return doppler_spectrum(fil_data, drift_grid, drift_rfi, options);
+// }

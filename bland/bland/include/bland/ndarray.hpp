@@ -185,8 +185,21 @@ class ndarray {
 
     int64_t ndim() const;
 
+    /**
+     * Assume that the ndarray represents a scalar (numel is 1) and return the scalar
+     * by casting to the given type
+    */
     template <typename T>
     T scalarize() const;
+
+    /**
+     * Index in to the ndarray and return the indexed element as the given type
+    */
+    template <typename T>
+    T scalarize(const std::vector<int64_t> &nd_index) const;
+
+    // template <typename T, typename ...Args>
+    // T scalarize(Args... args) const;
 
     /**
      * Return a string representation of this tensor. Format is

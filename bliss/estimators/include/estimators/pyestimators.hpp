@@ -35,6 +35,18 @@ void bind_pyestimators(nb::module_ m) {
             .def_rw("estimator_method", &bliss::noise_power_estimate_options::estimator_method)
             .def_rw("masked_estimate", &bliss::noise_power_estimate_options::masked_estimate);
 
+    m.def("add", [](nb::ndarray<> a, nb::ndarray<> b) {
+        return bland::add(nb_to_bland(a), nb_to_bland(b));
+    });
+
+    m.def("estimate_noise_power_dbg", [](nb::ndarray<> arr) {
+        auto opts = bliss::noise_power_estimate_options();
+        return bliss::estimate_noise_power(nb_to_bland(arr), opts);
+    });
+
+    m.def("estimate_noise_power", [](nb::ndarray<> arr, bliss::noise_power_estimate_options opts) {
+        return bliss::estimate_noise_power(nb_to_bland(arr), opts);
+    });
     m.def("estimate_noise_power",
           nb::overload_cast<const bland::ndarray &, bliss::noise_power_estimate_options>(&bliss::estimate_noise_power));
     m.def("estimate_noise_power",
@@ -44,9 +56,6 @@ void bind_pyestimators(nb::module_ m) {
                   &bliss::estimate_noise_power));
     m.def("estimate_noise_power",
           nb::overload_cast<bliss::cadence, bliss::noise_power_estimate_options>(&bliss::estimate_noise_power));
-    m.def("estimate_noise_power", [](nb::ndarray<> arr, bliss::noise_power_estimate_options opts) {
-        return bliss::estimate_noise_power(nb_to_bland(arr), opts);
-    });
 
     nb::class_<bliss::noise_stats>(m, "noise_power")
             .def_prop_ro("noise_floor", &bliss::noise_stats::noise_floor)

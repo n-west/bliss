@@ -3,14 +3,20 @@
 #include <core/doppler_spectrum.hpp>
 #include <core/noise_power.hpp>
 
+#include <flaggers/flag_values.hpp>
+
+#include <map>
+
 namespace bliss {
 
 using nd_coords = std::vector<int64_t>;
+using rfi = std::map<flag_values, uint8_t>; // TODO: not so elegant, but OKish?
 
 struct component {
-    std::vector<nd_coords> locations;
-    float                  max_integration = std::numeric_limits<float>::lowest();
-    nd_coords              index_max;
+    std::vector<nd_coords>         locations;
+    float                          max_integration = std::numeric_limits<float>::lowest();
+    rfi rfi_counts;
+    nd_coords                      index_max;
 };
 
 struct hit {
@@ -21,6 +27,7 @@ struct hit {
     float   snr;
     int64_t bandwidth;
     double  binwidth;
+    rfi rfi_counts;
 };
 
 /**
@@ -58,18 +65,15 @@ struct hit_search_options {
     float snr_threshold = 10.0f;
 
     std::vector<nd_coords> neighborhood = {
-            {-1, -1},
-            {-1, 0},
-            {-1, 1},
-            {0, 1},
-            {1, 1},
-            {1, 0},
-            {1, -1},
-            {0, -1},
+            // clang-format off
+            {-1, 1},  {1, 0},  {1, 1},
+            {0, -1},  /* X  */ {0, 1},
+            {-1, -1}, {-1, 0}, {1, -1},
             // {2, 0},
             // {0, 2},
             // {-2, 0},
             // {0, -2}
+            // clang-format on
     };
 };
 

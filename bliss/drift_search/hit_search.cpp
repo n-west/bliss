@@ -42,13 +42,6 @@ bland::ndarray bliss::hard_threshold_drifts(const bland::ndarray &dedrifted_spec
 std::vector<hit> bliss::hit_search(doppler_spectrum dedrifted_spectrum, noise_stats noise_stats, hit_search_options options) {
     std::vector<hit> hits;
 
-    // auto threshold_mask = hard_threshold_drifts(dedrifted_spectrum.dedrifted_spectrum(),
-    //                                             noise_stats,
-    //                                             dedrifted_spectrum.integration_length(),
-    //                                             snr_threshold);
-
-    // // Now run connected components....
-    // auto components = find_components_in_binary_mask(threshold_mask);
     std::vector<component> components;
     if (options.method == hit_search_methods::CONNECTED_COMPONENTS) {
         components = find_components_above_threshold(dedrifted_spectrum, noise_stats, options.snr_threshold, options.neighborhood);
@@ -62,6 +55,7 @@ std::vector<hit> bliss::hit_search(doppler_spectrum dedrifted_spectrum, noise_st
         // Assume dims size 2 for now :-| (we'll get beam stuff sorted eventually)
         hit this_hit;
         this_hit.rate_index = c.index_max[0];
+        this_hit.rfi_counts = c.rfi_counts;
         this_hit.start_freq_index = c.index_max[1];
 
         // Start frequency in Hz is bin * Hz/bin
@@ -79,7 +73,6 @@ std::vector<hit> bliss::hit_search(doppler_spectrum dedrifted_spectrum, noise_st
         auto signal_power = std::pow((c.max_integration - noise_stats.noise_floor()), 2);
         auto noise_power = (noise_stats.noise_power()/std::sqrt(dedrifted_spectrum.integration_length()));
         this_hit.snr = signal_power/noise_power;
-        // fmt::print("s = {}, n = {} ||| so S / N = {} / {} = {} ", c.max_integration, noise_stats.noise_floor(), signal_power, noise_power, this_hit.snr);
 
         // At the drift rate with max SNR, find the width of this component
         // We can also integrate signal power over the entire bandwidth / noise power over bandwidth to get

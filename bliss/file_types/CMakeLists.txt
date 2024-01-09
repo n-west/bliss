@@ -18,6 +18,7 @@ fmt::fmt-header-only
 
 # This is optional and only makes sense if capnp is available
 if (WITH_CAPNP)
+    target_compile_definitions(file_types PUBLIC -DBLISS_USE_CAPNP=1)
     # TODO: condition out some includes so actual usage of capnp is disabled as well
     target_sources(file_types
         PRIVATE

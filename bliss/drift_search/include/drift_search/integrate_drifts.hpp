@@ -53,4 +53,11 @@ namespace bliss {
                                                 integrate_drifts_options options = integrate_drifts_options{
                                                         .desmear = true});
 
+// [[nodiscard]] doppler_spectrum integrate_drifts(observation_target       observations,
+//                                                 integrate_drifts_options options = integrate_drifts_options{
+//                                                         .desmear = true});
+
+// [[nodiscard]] doppler_spectrum
+// integrate_drifts(cadence observations, integrate_drifts_options options = integrate_drifts_options{.desmear = true});
+
 } // namespace bliss

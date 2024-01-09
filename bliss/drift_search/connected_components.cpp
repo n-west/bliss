@@ -127,8 +127,6 @@ std::vector<component> bliss::find_components_above_threshold(doppler_spectrum  
 
     std::vector<component> components;
 
-    // TODO: we also want to keep track of which flags contributed to *this* dedrifted spectrum so we can throw away
-    // "hits" with too many (or the wrong kind) of flags
     auto &doppler_spectrum = dedrifted_spectrum.dedrifted_spectrum();
     if (doppler_spectrum.dtype() != bland::ndarray::datatype::float32) {
         throw std::runtime_error("find_components_above_threshold: dedrifted doppler spectrum was not float. Only cpu "
@@ -152,6 +150,7 @@ std::vector<component> bliss::find_components_above_threshold(doppler_spectrum  
 
     std::queue<nd_coords> coord_queue;
 
+    fmt::print("connected_components looking through {} candidates with threshold {}\n", numel, hard_threshold);
     for (int64_t n = 0; n < numel; ++n) {
         // Compute linear offsets for current location to search
         auto visited_linear          = visited_strider.to_linear_offset(curr_coord);

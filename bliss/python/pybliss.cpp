@@ -4,7 +4,6 @@
 #include <nanobind/stl/string.h>
 #include <nanobind/stl/vector.h>
 
-
 #include <pybland.hpp>
 
 #include "core/pyblisscore.hpp"
