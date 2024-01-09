@@ -18,7 +18,9 @@ using namespace bland;
 // Adds...
 template <> // Specialize for adding an array
 ndarray bland::add<ndarray>(ndarray a, ndarray b) {
-    auto out = ndarray(a.shape(), a.dtype(), a.device());
+    auto out_shape = expand_shapes_to_broadcast(a.shape(), b.shape());
+    // fmt::print("In this add... a_shape={} + b_shape={} = out_shape {}\n", a.shape(), b.shape(), out_shape);
+    auto out = ndarray(out_shape, a.dtype(), a.device());
     return dispatch<elementwise_binary_op_impl_wrapper, elementwise_add_op_ts>(out, a, b);
 }
 
