@@ -1,6 +1,6 @@
 #pragma once
 
-#include <core/doppler_spectrum.hpp>
+#include <core/scan.hpp>
 #include <core/noise_power.hpp>
 
 #include <flaggers/flag_values.hpp>
@@ -81,6 +81,6 @@ struct hit_search_options {
  * High level wrapper around finding drifting signals above a noise floor
  */
 std::vector<hit>
-hit_search(doppler_spectrum dedrifted_spectrum, noise_stats noise_stats, hit_search_options options = {});
+hit_search(scan dedrifted_spectrum, noise_stats noise_stats, hit_search_options options = {});
 
 } // namespace bliss

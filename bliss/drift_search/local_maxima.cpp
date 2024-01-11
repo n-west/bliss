@@ -27,7 +27,7 @@ struct stride_helper {
     }
 };
 
-std::vector<component> bliss::find_local_maxima_above_threshold(doppler_spectrum &dedrifted_spectrum,
+std::vector<component> bliss::find_local_maxima_above_threshold(scan &dedrifted_spectrum,
                                                                 noise_stats       noise_stats,
                                                                 float             snr_threshold,
                                                                 std::vector<nd_coords> max_neighborhood) {

@@ -39,7 +39,7 @@ bland::ndarray bliss::hard_threshold_drifts(const bland::ndarray &dedrifted_spec
 
 
 
-std::vector<hit> bliss::hit_search(doppler_spectrum dedrifted_spectrum, noise_stats noise_stats, hit_search_options options) {
+std::vector<hit> bliss::hit_search(scan dedrifted_spectrum, noise_stats noise_stats, hit_search_options options) {
     std::vector<hit> hits;
 
     std::vector<component> components;

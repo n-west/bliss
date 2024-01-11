@@ -19,7 +19,7 @@ filterbank_data bliss::flag_filter_rolloff(filterbank_data fb_data, float rollof
 }
 
 observation_target bliss::flag_filter_rolloff(observation_target observations, float rolloff_width) {
-    for (auto &filterbank : observations._filterbanks) {
+    for (auto &filterbank : observations._scans) {
         filterbank = flag_filter_rolloff(filterbank, rolloff_width);
     }
     return observations;

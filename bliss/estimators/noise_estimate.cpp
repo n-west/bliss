@@ -44,11 +44,11 @@ noise_stats noise_power_estimate_stddev(const bland::ndarray &x, const bland::nd
 observation_target noise_power_estimate_stddev(observation_target &observations, bool use_mask = true) {
     auto updated_observations = observations;
 
-    for (size_t nn = 0; nn < observations._filterbanks.size(); ++nn) {
-        auto        x = observations._filterbanks[nn].data();
+    for (size_t nn = 0; nn < observations._scans.size(); ++nn) {
+        auto        x = observations._scans[nn].data();
         noise_stats estimated_stats;
         if (use_mask) {
-            auto mask         = observations._filterbanks[nn].mask();
+            auto mask         = observations._scans[nn].mask();
             auto mean         = bland::masked_mean(x, mask).scalarize<float>();
             auto squared_mean = bland::masked_mean(bland::square(x), mask).scalarize<float>();
 
@@ -61,7 +61,7 @@ observation_target noise_power_estimate_stddev(observation_target &observations,
             estimated_stats._noise_floor = mean;
             estimated_stats._noise_power = squared_mean - mean * mean;
         }
-        updated_observations._filterbanks[nn].noise_estimates(estimated_stats);
+        updated_observations._scans[nn].noise_estimates(estimated_stats);
     }
 
     return updated_observations;
@@ -108,8 +108,8 @@ noise_stats noise_power_estimate_mad(const bland::ndarray &x, const bland::ndarr
 observation_target noise_power_estimate_mad(observation_target &observations, bool use_mask = true) {
     auto updated_observations = observations;
 
-    for (size_t nn = 0; nn < observations._filterbanks.size(); ++nn) {
-        auto        x = observations._filterbanks[nn].data();
+    for (size_t nn = 0; nn < observations._scans.size(); ++nn) {
+        auto        x = observations._scans[nn].data();
         noise_stats estimated_stats;
         if (use_mask) {
             throw std::runtime_error("masked noise power estimation with mad is not implemented yet");
@@ -118,7 +118,7 @@ observation_target noise_power_estimate_mad(observation_target &observations, bo
             auto dev                     = bland::median(bland::abs(x - estimated_stats._noise_floor));
             estimated_stats._noise_power = std::pow(dev, 2);
         }
-        updated_observations._filterbanks[nn].noise_estimates(estimated_stats);
+        updated_observations._scans[nn].noise_estimates(estimated_stats);
     }
 
     return updated_observations;

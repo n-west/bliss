@@ -201,11 +201,11 @@ bland::ndarray bliss::integrate_drifts(const bland::ndarray &spectrum_grid, inte
     return drift_grid;
 }
 
-doppler_spectrum bliss::integrate_drifts(filterbank_data fil_data, integrate_drifts_options options) {
+scan bliss::integrate_drifts(filterbank_data fil_data, integrate_drifts_options options) {
 
     auto [drift_grid, drift_rfi] = detail::integrate_linear_rounded_bins(fil_data.data(), fil_data.mask(), options);
 
-    return doppler_spectrum(fil_data, drift_grid, drift_rfi, options);
+    return scan(fil_data, drift_grid, drift_rfi, options);
 }
 
 // doppler_spectrum bliss::integrate_drifts(observation_target observations, integrate_drifts_options options) {

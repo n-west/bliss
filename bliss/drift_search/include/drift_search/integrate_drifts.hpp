@@ -2,7 +2,7 @@
 #pragma once
 
 #include <bland/ndarray.hpp>
-#include <core/doppler_spectrum.hpp>
+#include <core/scan.hpp>
 #include <core/filterbank_data.hpp>
 
 namespace bliss {
@@ -49,7 +49,7 @@ namespace bliss {
                                               integrate_drifts_options options = integrate_drifts_options{
                                                       .desmear = true});
 
-[[nodiscard]] doppler_spectrum integrate_drifts(filterbank_data          fil_data,
+[[nodiscard]] scan integrate_drifts(filterbank_data          fil_data,
                                                 integrate_drifts_options options = integrate_drifts_options{
                                                         .desmear = true});
 

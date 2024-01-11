@@ -36,12 +36,21 @@ struct integrated_rfi {
             sigma_clip(bland::ndarray({drifts, channels}, 0, bland::ndarray::datatype::uint8, device)) {}
 };
 
-class doppler_spectrum : public filterbank_data {
+/**
+ * scan holds the original filterbank_data and directly derived products that are only useful when attached to the underlying filterbank
+ * 
+ * These derived products are:
+ * * dedrifted_spectrum
+ * * dedrifted_flags
+*/
+class scan : public filterbank_data {
   public:
-    doppler_spectrum(filterbank_data          fb_data,
+    scan(filterbank_data          fb_data,
                      bland::ndarray           dedrifted_spectrum,
                      integrated_rfi           dedrifted_rfi,
                      integrate_drifts_options drift_parameters);
+
+    scan(const filterbank_data &fb_data);
 
     bland::ndarray &dedrifted_spectrum();
     integrated_rfi &dedrifted_rfi();
@@ -49,12 +58,12 @@ class doppler_spectrum : public filterbank_data {
     integrate_drifts_options integration_options() const;
     int64_t                  integration_length() const;
 
-    // should we just store the options in here...
   protected:
-    int64_t                  _integration_length;
-    bland::ndarray           _dedrifted_spectrum;
-    integrated_rfi           _dedrifted_rfi;
-    integrate_drifts_options _drift_parameters;
+    // TODO: think through if we should wrap this up in another class that's optional rather than each one being optional
+    std::optional<int64_t>                  _integration_length;
+    std::optional<bland::ndarray>           _dedrifted_spectrum;
+    std::optional<integrated_rfi>           _dedrifted_rfi;
+    std::optional<integrate_drifts_options> _drift_parameters;
 };
 
 } // namespace bliss

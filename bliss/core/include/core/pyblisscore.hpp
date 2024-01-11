@@ -1,7 +1,7 @@
 #pragma once
 
 #include "cadence.hpp"
-#include "doppler_spectrum.hpp"
+#include "scan.hpp"
 #include "filterbank_data.hpp"
 
 #include <nanobind/nanobind.h>
@@ -72,18 +72,18 @@ void bind_pycore(nb::module_ m) {
             .def_rw("magnitude", &bliss::integrated_rfi::magnitude)
             .def_rw("sigma_clip", &bliss::integrated_rfi::sigma_clip);
 
-    nb::class_<bliss::doppler_spectrum>(m, "doppler_spectrum")
+    nb::class_<bliss::scan>(m, "doppler_spectrum")
             .def(nb::init<bliss::filterbank_data,
                           bland::ndarray,
                           bliss::integrated_rfi,
                           bliss::integrate_drifts_options>())
-            .def("dedrifted_spectrum", &bliss::doppler_spectrum::dedrifted_spectrum)
-            .def("dedrifted_rfi", &bliss::doppler_spectrum::dedrifted_rfi)
-            .def("drift_parameters", &bliss::doppler_spectrum::integration_options);
+            .def("dedrifted_spectrum", &bliss::scan::dedrifted_spectrum)
+            .def("dedrifted_rfi", &bliss::scan::dedrifted_rfi)
+            .def("drift_parameters", &bliss::scan::integration_options);
 
     nb::class_<bliss::observation_target>(m, "observation_target")
             .def(nb::init<std::vector<bliss::filterbank_data>>())
-            .def_rw("filterbanks", &bliss::observation_target::_filterbanks)
+            .def_rw("filterbanks", &bliss::observation_target::_scans)
             .def_rw("target_name", &bliss::observation_target::_target_name);
 
     nb::class_<bliss::cadence>(m, "cadence")

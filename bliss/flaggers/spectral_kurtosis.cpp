@@ -46,7 +46,7 @@ filterbank_data bliss::flag_spectral_kurtosis(filterbank_data fb_data, float low
 
 observation_target
 bliss::flag_spectral_kurtosis(observation_target observations, float lower_threshold, float upper_threshold) {
-    for (auto &filterbank : observations._filterbanks) {
+    for (auto &filterbank : observations._scans) {
         filterbank = flag_spectral_kurtosis(filterbank, lower_threshold, upper_threshold);
     }
     return observations;

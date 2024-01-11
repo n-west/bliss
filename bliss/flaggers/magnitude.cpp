@@ -33,14 +33,14 @@ filterbank_data bliss::flag_magnitude(filterbank_data fb_data) {
 }
 
 observation_target bliss::flag_magnitude(observation_target observations, float threshold) {
-    for (auto &filterbank : observations._filterbanks) {
+    for (auto &filterbank : observations._scans) {
         filterbank = flag_magnitude(filterbank, threshold);
     }
     return observations;
 }
 
 observation_target bliss::flag_magnitude(observation_target observations) {
-    for (auto &filterbank : observations._filterbanks) {
+    for (auto &filterbank : observations._scans) {
         filterbank = flag_magnitude(filterbank);
     }
     return observations;

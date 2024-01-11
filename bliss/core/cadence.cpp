@@ -2,11 +2,17 @@
 
 using namespace bliss;
 
-bliss::observation_target::observation_target(std::vector<filterbank_data> filterbanks) : _filterbanks(filterbanks) {}
+bliss::observation_target::observation_target(std::vector<filterbank_data> filterbanks) {
+    for (const auto &fb : filterbanks) {
+        _scans.push_back(fb);
+    }
+}
+
+bliss::observation_target::observation_target(std::vector<scan> scans) : _scans(scans) {}
 
 bliss::observation_target::observation_target(std::vector<std::string_view> filterbank_paths) {
     for (const auto &filterbank_path : filterbank_paths) {
-        _filterbanks.emplace_back(filterbank_path);
+        _scans.emplace_back(filterbank_path);
     }
 }
 

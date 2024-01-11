@@ -110,7 +110,7 @@ std::vector<component> bliss::find_components_in_binary_mask(const bland::ndarra
     return components;
 }
 
-std::vector<component> bliss::find_components_above_threshold(doppler_spectrum      &dedrifted_spectrum,
+std::vector<component> bliss::find_components_above_threshold(scan      &dedrifted_spectrum,
                                                               noise_stats            noise_stats,
                                                               float                  snr_threshold,
                                                               std::vector<nd_coords> neighborhood) {

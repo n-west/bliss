@@ -1,7 +1,7 @@
 
 add_library(bliss_core
     cadence.cpp
-    doppler_spectrum.cpp
+    scan.cpp
     filterbank_data.cpp
     noise_power.cpp
 )
