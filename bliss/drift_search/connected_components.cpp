@@ -33,10 +33,10 @@ std::vector<component> bliss::find_components_in_binary_mask(const bland::ndarra
     auto threshold_mask = bland::copy(mask);
     if (neighborhood.empty()) {
         neighborhood = {
-            {-1, 0},
-            {1, 0},
-            {0, -1},
-            {0, 1},
+                {-1, 0},
+                {1, 0},
+                {0, -1},
+                {0, 1},
         };
     }
     // Thresholded_mask holds binary information on which bins passed a threshold. Group adjacent
@@ -110,16 +110,17 @@ std::vector<component> bliss::find_components_in_binary_mask(const bland::ndarra
     return components;
 }
 
-std::vector<component> bliss::find_components_above_threshold(scan      &dedrifted_spectrum,
-                                                              noise_stats            noise_stats,
+std::vector<component> bliss::find_components_above_threshold(scan                  &dedrifted_spectrum,
                                                               float                  snr_threshold,
                                                               std::vector<nd_coords> neighborhood) {
+    auto noise_stats = dedrifted_spectrum.noise_estimate();
+
     if (neighborhood.empty()) {
         neighborhood = {
-            {-1, 0},
-            {1, 0},
-            {0, -1},
-            {0, 1},
+                {-1, 0},
+                {1, 0},
+                {0, -1},
+                {0, 1},
         };
     }
 

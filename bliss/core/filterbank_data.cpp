@@ -106,14 +106,14 @@ double bliss::filterbank_data::za_start() const {
 //     _mask = mask;
 // }
 
-noise_stats bliss::filterbank_data::noise_estimates() {
-    if (_noise_stats.has_value()) {
-        return _noise_stats.value();
-    } else {
-        throw std::runtime_error("Noise stats have not been calculated yet");
-    }
-}
+// noise_stats bliss::filterbank_data::noise_estimates() {
+//     if (_noise_stats.has_value()) {
+//         return _noise_stats.value();
+//     } else {
+//         throw std::runtime_error("Noise stats have not been calculated yet");
+//     }
+// }
 
-void bliss::filterbank_data::noise_estimates(noise_stats stats) {
-    _noise_stats = stats;
-}
+// void bliss::filterbank_data::noise_estimates(noise_stats stats) {
+//     _noise_stats = stats;
+// }

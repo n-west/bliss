@@ -75,5 +75,7 @@ void bind_pydrift_search(nb::module_ m) {
             .def_rw("snr_threshold", &bliss::hit_search_options::snr_threshold);
 
     // High-level "hit search" implementation
-    m.def("hit_search", &bliss::hit_search);
+    m.def("hit_search", nb::overload_cast<bliss::scan, bliss::hit_search_options>(&bliss::hit_search));
+
+    m.def("hit_search", nb::overload_cast<bliss::cadence, bliss::hit_search_options>(&bliss::hit_search));
 }

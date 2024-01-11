@@ -1,6 +1,7 @@
 #pragma once
 
 #include <core/scan.hpp>
+#include <core/cadence.hpp>
 #include <core/noise_power.hpp>
 
 #include <flaggers/flag_values.hpp>
@@ -20,6 +21,7 @@ struct component {
 };
 
 struct hit {
+    // we need a start time
     int64_t start_freq_index;
     float   start_freq_MHz;
     int64_t rate_index;
@@ -81,6 +83,20 @@ struct hit_search_options {
  * High level wrapper around finding drifting signals above a noise floor
  */
 std::vector<hit>
-hit_search(scan dedrifted_spectrum, noise_stats noise_stats, hit_search_options options = {});
+hit_search(scan dedrifted_spectrum, hit_search_options options = {});
+
+std::vector<hit>
+hit_search(cadence, hit_search_options options = {});
+
+struct event {
+    std::vector<hit> hits; // hits that contribute to this event
+};
+
+/**
+ * Find *events* which are hits correlated across time
+ * // TODO: there's a better way to structure this so we can make more sense of time / on/off by reusing the cadence/observation_target structure/hierarchy
+*/
+std::vector<event>
+event_search(cadence);
 
 } // namespace bliss

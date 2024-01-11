@@ -28,9 +28,9 @@ struct stride_helper {
 };
 
 std::vector<component> bliss::find_local_maxima_above_threshold(scan &dedrifted_spectrum,
-                                                                noise_stats       noise_stats,
                                                                 float             snr_threshold,
                                                                 std::vector<nd_coords> max_neighborhood) {
+    auto noise_stats = dedrifted_spectrum.noise_estimate();
     // run through a max filter, what's the best way to establish neighborhood?
 
     auto hard_threshold = compute_signal_threshold(noise_stats, dedrifted_spectrum.integration_length(), snr_threshold);

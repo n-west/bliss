@@ -61,7 +61,7 @@ observation_target noise_power_estimate_stddev(observation_target &observations,
             estimated_stats._noise_floor = mean;
             estimated_stats._noise_power = squared_mean - mean * mean;
         }
-        updated_observations._scans[nn].noise_estimates(estimated_stats);
+        updated_observations._scans[nn].noise_estimate(estimated_stats);
     }
 
     return updated_observations;
@@ -118,7 +118,7 @@ observation_target noise_power_estimate_mad(observation_target &observations, bo
             auto dev                     = bland::median(bland::abs(x - estimated_stats._noise_floor));
             estimated_stats._noise_power = std::pow(dev, 2);
         }
-        updated_observations._scans[nn].noise_estimates(estimated_stats);
+        updated_observations._scans[nn].noise_estimate(estimated_stats);
     }
 
     return updated_observations;

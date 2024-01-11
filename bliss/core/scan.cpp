@@ -5,9 +5,9 @@
 using namespace bliss;
 
 bliss::scan::scan(filterbank_data          fb_data,
-                                          bland::ndarray           dedrifted_spectrum,
-                                          integrated_rfi           dedrifted_rfi,
-                                          integrate_drifts_options drift_parameters) :
+                  bland::ndarray           dedrifted_spectrum,
+                  integrated_rfi           dedrifted_rfi,
+                  integrate_drifts_options drift_parameters) :
         filterbank_data(fb_data),
         _dedrifted_spectrum(dedrifted_spectrum),
         _dedrifted_rfi(dedrifted_rfi),
@@ -16,8 +16,7 @@ bliss::scan::scan(filterbank_data          fb_data,
     _integration_length = fb_data.data().size(0);
 }
 
-bliss::scan::scan(const filterbank_data &fb_data) : filterbank_data(fb_data) {
-}
+bliss::scan::scan(const filterbank_data &fb_data) : filterbank_data(fb_data) {}
 
 bland::ndarray &bliss::scan::dedrifted_spectrum() {
     if (_dedrifted_spectrum.has_value()) {
@@ -49,4 +48,16 @@ int64_t bliss::scan::integration_length() const {
     } else {
         throw std::runtime_error("_integration_length: have not computed dedrifted spectrum yet");
     }
+}
+
+noise_stats bliss::scan::noise_estimate() {
+    if (_noise_stats.has_value()) {
+        return _noise_stats.value();
+    } else {
+        throw std::runtime_error("noise_estimate: have not computed a noise estimate yet");
+    }
+}
+
+void bliss::scan::noise_estimate(noise_stats estimate) {
+    _noise_stats = estimate;
 }

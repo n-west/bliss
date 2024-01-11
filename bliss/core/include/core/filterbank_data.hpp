@@ -40,16 +40,12 @@ class filterbank_data {
     double  az_start() const;
     double  za_start() const;
 
-    noise_stats noise_estimates();
-    void        noise_estimates(noise_stats);
-
   protected:
     // <KeysViewHDF5 ['data', 'mask']>
     // <HDF5 dataset "data": shape (16, 1, 1048576), type "<f4">
     // <HDF5 dataset "mask": shape (16, 1, 1048576), type "|u1">
     bland::ndarray             _data;
     bland::ndarray             _mask;
-    std::optional<noise_stats> _noise_stats;
 
     double      _fch1;
     double      _foff;

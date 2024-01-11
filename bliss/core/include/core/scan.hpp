@@ -37,18 +37,19 @@ struct integrated_rfi {
 };
 
 /**
- * scan holds the original filterbank_data and directly derived products that are only useful when attached to the underlying filterbank
- * 
+ * scan holds the original filterbank_data and directly derived products that are only useful when attached to the
+ * underlying filterbank
+ *
  * These derived products are:
  * * dedrifted_spectrum
  * * dedrifted_flags
-*/
+ */
 class scan : public filterbank_data {
   public:
     scan(filterbank_data          fb_data,
-                     bland::ndarray           dedrifted_spectrum,
-                     integrated_rfi           dedrifted_rfi,
-                     integrate_drifts_options drift_parameters);
+         bland::ndarray           dedrifted_spectrum,
+         integrated_rfi           dedrifted_rfi,
+         integrate_drifts_options drift_parameters);
 
     scan(const filterbank_data &fb_data);
 
@@ -58,8 +59,20 @@ class scan : public filterbank_data {
     integrate_drifts_options integration_options() const;
     int64_t                  integration_length() const;
 
+    /**
+     * Get the noise estimate from this scan
+     */
+    noise_stats noise_estimate();
+    /**
+     * Set a noise estimate to associate with this scan
+     */
+    void noise_estimate(noise_stats estimate);
+
   protected:
-    // TODO: think through if we should wrap this up in another class that's optional rather than each one being optional
+    std::optional<noise_stats> _noise_stats;
+
+    // TODO: think through if we should wrap this up in another class that's optional rather than each one being
+    // optional
     std::optional<int64_t>                  _integration_length;
     std::optional<bland::ndarray>           _dedrifted_spectrum;
     std::optional<integrated_rfi>           _dedrifted_rfi;

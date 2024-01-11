@@ -1,8 +1,8 @@
 #pragma once
 
 #include "cadence.hpp"
-#include "scan.hpp"
 #include "filterbank_data.hpp"
+#include "scan.hpp"
 
 #include <nanobind/nanobind.h>
 #include <nanobind/ndarray.h>
@@ -34,10 +34,7 @@ void bind_pycore(nb::module_ m) {
             .def_prop_ro("telescope_id", &bliss::filterbank_data::telescope_id)
             .def_prop_ro("tsamp", &bliss::filterbank_data::tsamp)
             .def_prop_ro("tstart", &bliss::filterbank_data::tstart)
-            .def_prop_ro("za_start", &bliss::filterbank_data::za_start)
-            .def_prop_rw("noise_estimates",
-                         nb::overload_cast<>(&bliss::filterbank_data::noise_estimates),
-                         nb::overload_cast<bliss::noise_stats>(&bliss::filterbank_data::noise_estimates));
+            .def_prop_ro("za_start", &bliss::filterbank_data::za_start);
 
     //  * *DIMENSION_LABELS
     //  * *az_start
@@ -72,14 +69,18 @@ void bind_pycore(nb::module_ m) {
             .def_rw("magnitude", &bliss::integrated_rfi::magnitude)
             .def_rw("sigma_clip", &bliss::integrated_rfi::sigma_clip);
 
-    nb::class_<bliss::scan>(m, "doppler_spectrum")
+    nb::class_<bliss::scan>(m, "scan")
             .def(nb::init<bliss::filterbank_data,
                           bland::ndarray,
                           bliss::integrated_rfi,
                           bliss::integrate_drifts_options>())
             .def("dedrifted_spectrum", &bliss::scan::dedrifted_spectrum)
             .def("dedrifted_rfi", &bliss::scan::dedrifted_rfi)
-            .def("drift_parameters", &bliss::scan::integration_options);
+            .def("drift_parameters", &bliss::scan::integration_options)
+            .def_prop_rw("noise_estimate",
+                         nb::overload_cast<>(&bliss::scan::noise_estimate),
+                         nb::overload_cast<bliss::noise_stats>(&bliss::scan::noise_estimate));
+    ;
 
     nb::class_<bliss::observation_target>(m, "observation_target")
             .def(nb::init<std::vector<bliss::filterbank_data>>())

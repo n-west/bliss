@@ -1,7 +1,7 @@
 
 #include "bland/ndarray.hpp"
-#include <drift_search/hit_search.hpp>
 #include <drift_search/connected_components.hpp>
+#include <drift_search/hit_search.hpp>
 #include <drift_search/local_maxima.hpp>
 
 #include <fmt/core.h>
@@ -37,49 +37,49 @@ bland::ndarray bliss::hard_threshold_drifts(const bland::ndarray &dedrifted_spec
     return threshold_mask;
 }
 
-
-
-std::vector<hit> bliss::hit_search(scan dedrifted_spectrum, noise_stats noise_stats, hit_search_options options) {
+std::vector<hit> bliss::hit_search(scan dedrifted_spectrum, hit_search_options options) {
     std::vector<hit> hits;
 
     std::vector<component> components;
     if (options.method == hit_search_methods::CONNECTED_COMPONENTS) {
-        components = find_components_above_threshold(dedrifted_spectrum, noise_stats, options.snr_threshold, options.neighborhood);
+        components = find_components_above_threshold(dedrifted_spectrum, options.snr_threshold, options.neighborhood);
     } else if (options.method == hit_search_methods::LOCAL_MAXIMA) {
-        components = find_local_maxima_above_threshold(dedrifted_spectrum, noise_stats, options.snr_threshold, options.neighborhood);
+        components = find_local_maxima_above_threshold(dedrifted_spectrum, options.snr_threshold, options.neighborhood);
     }
+    auto noise_stats = dedrifted_spectrum.noise_estimate();
 
     hits.reserve(components.size());
     // Do we need a "component to hit" for each type of search?
     for (const auto &c : components) {
         // Assume dims size 2 for now :-| (we'll get beam stuff sorted eventually)
         hit this_hit;
-        this_hit.rate_index = c.index_max[0];
-        this_hit.rfi_counts = c.rfi_counts;
+        this_hit.rate_index       = c.index_max[0];
+        this_hit.rfi_counts       = c.rfi_counts;
         this_hit.start_freq_index = c.index_max[1];
 
         // Start frequency in Hz is bin * Hz/bin
         this_hit.start_freq_MHz = dedrifted_spectrum.fch1() + dedrifted_spectrum.foff() * this_hit.start_freq_index;
 
         // TODO: sort out better names for these things as we go to whole-cadence integration
-        auto drift_freq_span_bins = dedrifted_spectrum.integration_options().low_rate + this_hit.rate_index * dedrifted_spectrum.integration_options().rate_step_size;
+        auto drift_freq_span_bins = dedrifted_spectrum.integration_options().low_rate +
+                                    this_hit.rate_index * dedrifted_spectrum.integration_options().rate_step_size;
         float drift_span_freq_Hz = drift_freq_span_bins * 1e6 * dedrifted_spectrum.foff();
 
         auto drift_span_time_bins = dedrifted_spectrum.integration_length();
-        auto drift_span_time_sec = drift_span_time_bins * dedrifted_spectrum.tsamp();
+        auto drift_span_time_sec  = drift_span_time_bins * dedrifted_spectrum.tsamp();
 
         this_hit.drift_rate_Hz_per_sec = drift_span_freq_Hz / drift_span_time_sec;
 
         auto signal_power = std::pow((c.max_integration - noise_stats.noise_floor()), 2);
-        auto noise_power = (noise_stats.noise_power()/std::sqrt(dedrifted_spectrum.integration_length()));
-        this_hit.snr = signal_power/noise_power;
+        auto noise_power  = (noise_stats.noise_power() / std::sqrt(dedrifted_spectrum.integration_length()));
+        this_hit.snr      = signal_power / noise_power;
 
         // At the drift rate with max SNR, find the width of this component
         // We can also integrate signal power over the entire bandwidth / noise power over bandwidth to get
         // a better picture of actual SNR rather than SNR/Hz @ peak
-        // This concept of the bandwidth currently doesn't fit well with the local maxima option, but maybe we can come up
-        // with something
-        this_hit.binwidth = 1;
+        // This concept of the bandwidth currently doesn't fit well with the local maxima option, but maybe we can come
+        // up with something
+        this_hit.binwidth                = 1;
         int64_t lower_freq_index_at_rate = this_hit.start_freq_index;
         int64_t upper_freq_index_at_rate = this_hit.start_freq_index;
         for (const auto &l : c.locations) {
@@ -91,10 +91,19 @@ std::vector<hit> bliss::hit_search(scan dedrifted_spectrum, noise_stats noise_st
                 }
             }
         }
-        this_hit.binwidth = upper_freq_index_at_rate - lower_freq_index_at_rate;
+        this_hit.binwidth  = upper_freq_index_at_rate - lower_freq_index_at_rate;
         this_hit.bandwidth = this_hit.binwidth * std::abs(1e6 * dedrifted_spectrum.foff());
         hits.push_back(this_hit);
     }
 
     return hits;
 }
+
+// std::vector<event>
+// bliss::event_search(std::vector<std::vector<hit>> on_hits, std::vector<std::vector<hit>> off_hits) {
+
+//     std::vector<event> detected_events;
+
+//     std::vector<int64_t> on_index{on_hits.size(), 0};
+
+// }

@@ -62,7 +62,7 @@ int main(int argc, char **argv) {
                                             .high_rate      = 48,
                                             .rate_step_size = 1}); // integrate along drift lines
 
-    auto hits = bliss::hit_search(dedrifted_fil, noise_stats, {.snr_threshold=10.0f});
+    auto hits = bliss::hit_search(dedrifted_fil, {.snr_threshold=10.0f});
 
     // bliss::write_hits(hits);
 }
