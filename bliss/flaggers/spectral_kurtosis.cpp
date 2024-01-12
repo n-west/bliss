@@ -1,7 +1,7 @@
 
-#include "flaggers/spectral_kurtosis.hpp"
+#include <core/flag_values.hpp>
+#include <flaggers/spectral_kurtosis.hpp>
 #include <estimators/spectral_kurtosis.hpp>
-#include <flaggers/flag_values.hpp>
 
 #include <bland/ops.hpp>
 

@@ -1,6 +1,6 @@
 
+#include <core/flag_values.hpp>
 #include <flaggers/magnitude.hpp>
-#include <flaggers/flag_values.hpp>
 
 #include <bland/ops.hpp>
 

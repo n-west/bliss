@@ -1,9 +1,10 @@
 #pragma once
 
 #include "filter_rolloff.hpp"
-#include "flag_values.hpp"
 #include "magnitude.hpp"
 #include "spectral_kurtosis.hpp"
+
+#include <core/flag_values.hpp>
 
 #include <nanobind/nanobind.h>
 #include <nanobind/ndarray.h>

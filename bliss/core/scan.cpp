@@ -61,3 +61,16 @@ noise_stats bliss::scan::noise_estimate() {
 void bliss::scan::noise_estimate(noise_stats estimate) {
     _noise_stats = estimate;
 }
+
+std::vector<hit> bliss::scan::hits() {
+    if (_hits.has_value()) {
+        return _hits.value();
+    } else {
+        throw std::runtime_error("hits: have not computed hits yet");
+    }
+}
+
+void bliss::scan::hits(std::vector<hit> new_hits) {
+    _hits = new_hits;
+}
+

@@ -1,7 +1,10 @@
 #pragma once
 
 #include "filterbank_data.hpp"
+#include "hit.hpp"
+
 #include <bland/bland.hpp>
+
 #include <cstdint>
 #include <string>
 #include <string_view>
@@ -68,6 +71,9 @@ class scan : public filterbank_data {
      */
     void noise_estimate(noise_stats estimate);
 
+    std::vector<hit> hits();
+    void hits(std::vector<hit> new_hits);
+
   protected:
     std::optional<noise_stats> _noise_stats;
 
@@ -77,6 +83,8 @@ class scan : public filterbank_data {
     std::optional<bland::ndarray>           _dedrifted_spectrum;
     std::optional<integrated_rfi>           _dedrifted_rfi;
     std::optional<integrate_drifts_options> _drift_parameters;
+
+    std::optional<std::vector<hit>> _hits;
 };
 
 } // namespace bliss

@@ -3,10 +3,9 @@
 #include <core/scan.hpp>
 #include <core/cadence.hpp>
 #include <core/noise_power.hpp>
+#include <core/hit.hpp>
+#include <core/flag_values.hpp>
 
-#include <flaggers/flag_values.hpp>
-
-#include <map>
 
 namespace bliss {
 
@@ -18,18 +17,6 @@ struct component {
     float                          max_integration = std::numeric_limits<float>::lowest();
     rfi rfi_counts;
     nd_coords                      index_max;
-};
-
-struct hit {
-    // we need a start time
-    int64_t start_freq_index;
-    float   start_freq_MHz;
-    int64_t rate_index;
-    float   drift_rate_Hz_per_sec;
-    float   snr;
-    int64_t bandwidth;
-    double  binwidth;
-    rfi rfi_counts;
 };
 
 /**
@@ -80,13 +67,34 @@ struct hit_search_options {
 };
 
 /**
- * High level wrapper around finding drifting signals above a noise floor
- */
-std::vector<hit>
-hit_search(scan dedrifted_spectrum, hit_search_options options = {});
+ * Probably makes some sense to output this for quick hacking
+*/
+// std::vector<hit>
+// hit_search(bland::ndarray dedrifted_spectrum, hit_search_options options = {});
 
-std::vector<hit>
-hit_search(cadence, hit_search_options options = {});
+/**
+ * High level wrapper around finding drifting signals above a noise floor
+ * 
+ * The returned scan is a copy of the given scan with the hits field set
+ */
+scan
+hit_search(scan dedrifted_scan, hit_search_options options = {});
+
+/**
+ * High-level hit search over scans within an observation target
+ * 
+ * The returned observation_target is a copy of the given observation_target with hits set for all scans of the target
+*/
+observation_target
+hit_search(observation_target dedrifted_target, hit_search_options options = {});
+
+/**
+ * High-level hit search over an entire cadence
+ * 
+ * The returned cadence is a copy of the given cadence with hits set inside each scan
+*/
+cadence
+hit_search(cadence dedrifted_cadence, hit_search_options options = {});
 
 struct event {
     std::vector<hit> hits; // hits that contribute to this event
@@ -97,6 +105,6 @@ struct event {
  * // TODO: there's a better way to structure this so we can make more sense of time / on/off by reusing the cadence/observation_target structure/hierarchy
 */
 std::vector<event>
-event_search(cadence);
+event_search(cadence cadence_with_hits);
 
 } // namespace bliss
