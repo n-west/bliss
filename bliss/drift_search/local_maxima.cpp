@@ -37,7 +37,7 @@ std::vector<component> bliss::find_local_maxima_above_threshold(scan &dedrifted_
 
     std::vector<component> maxima;
 
-    auto &doppler_spectrum = dedrifted_spectrum.dedrifted_spectrum();
+    auto &doppler_spectrum = dedrifted_spectrum.doppler_spectrum();
     if (doppler_spectrum.dtype() != bland::ndarray::datatype::float32) {
         throw std::runtime_error(
                 "find_local_maxima_above_threshold: dedrifted doppler spectrum was not float. Only cpu "
@@ -49,7 +49,7 @@ std::vector<component> bliss::find_local_maxima_above_threshold(scan &dedrifted_
 
     // Use 1 to mark visited, then we can potentially replace this creation with a mask of above thresh to speed things
     // up a bit
-    auto visited = bland::ndarray(dedrifted_spectrum.dedrifted_spectrum().shape(),
+    auto visited = bland::ndarray(dedrifted_spectrum.doppler_spectrum().shape(),
                                   1,
                                   bland::ndarray::datatype::uint8,
                                   bland::ndarray::dev::cpu);
@@ -107,11 +107,11 @@ std::vector<component> bliss::find_local_maxima_above_threshold(scan &dedrifted_
                     c.index_max       = curr_coord;
                     c.locations.push_back(curr_coord);
                     c.max_integration = candidate_maxima_val;
-                    c.rfi_counts[flag_values::low_spectral_kurtosis] = dedrifted_spectrum.dedrifted_rfi().low_spectral_kurtosis.scalarize<uint8_t>(curr_coord);
-                    c.rfi_counts[flag_values::high_spectral_kurtosis] = dedrifted_spectrum.dedrifted_rfi().high_spectral_kurtosis.scalarize<uint8_t>(curr_coord);
-                    c.rfi_counts[flag_values::filter_rolloff] = dedrifted_spectrum.dedrifted_rfi().filter_rolloff.scalarize<uint8_t>(curr_coord);
-                    c.rfi_counts[flag_values::magnitude] = dedrifted_spectrum.dedrifted_rfi().magnitude.scalarize<uint8_t>(curr_coord);
-                    c.rfi_counts[flag_values::sigma_clip] = dedrifted_spectrum.dedrifted_rfi().sigma_clip.scalarize<uint8_t>(curr_coord);
+                    c.rfi_counts[flag_values::low_spectral_kurtosis] = dedrifted_spectrum.doppler_flags().low_spectral_kurtosis.scalarize<uint8_t>(curr_coord);
+                    c.rfi_counts[flag_values::high_spectral_kurtosis] = dedrifted_spectrum.doppler_flags().high_spectral_kurtosis.scalarize<uint8_t>(curr_coord);
+                    c.rfi_counts[flag_values::filter_rolloff] = dedrifted_spectrum.doppler_flags().filter_rolloff.scalarize<uint8_t>(curr_coord);
+                    c.rfi_counts[flag_values::magnitude] = dedrifted_spectrum.doppler_flags().magnitude.scalarize<uint8_t>(curr_coord);
+                    c.rfi_counts[flag_values::sigma_clip] = dedrifted_spectrum.doppler_flags().sigma_clip.scalarize<uint8_t>(curr_coord);
                     // TODO: this doesn't have the concept of a "component" the same way connected_components does... do
                     // we care?
                     maxima.push_back(c);

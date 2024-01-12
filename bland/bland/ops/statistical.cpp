@@ -45,7 +45,7 @@ struct mean_impl {
         auto                 a_offset  = a.offsets();
         std::vector<int64_t> input_index(a_shape.size(), 0);
 
-        out_datatype scale = 1.0 / static_cast<out_datatype>(reduced_elements-1);
+        out_datatype scale = 1.0 / static_cast<out_datatype>(reduced_elements - 1);
         // Loop over the dimensions of the array and perform the reduction operation
         auto numel = out.numel();
         for (int i = 0; i < numel; ++i) {
@@ -62,7 +62,7 @@ struct mean_impl {
                 // if (std::is_same<out_datatype, float>() || std::is_same<out_datatype, double>()) {
                 //     mean += (a_data[input_linear_index] * scale);
                 // } else {
-                    mean += a_data[input_linear_index];
+                mean += a_data[input_linear_index];
                 // }
                 // Increment the multi-dimensional index
                 for (int i = reduced_axes.size() - 1; i >= 0; --i) {
@@ -86,7 +86,7 @@ struct mean_impl {
             // if (std::is_same<out_datatype, float>() || std::is_same<out_datatype, double>()) {
             //     out_data[out_linear_index] = static_cast<out_datatype>(mean);
             // } else {
-                out_data[out_linear_index] = static_cast<out_datatype>(mean) / reduced_elements;
+            out_data[out_linear_index] = static_cast<out_datatype>(mean) / reduced_elements;
             // }
             // Increment the multi-dimensional output index
             for (int axis = out_shape.size() - 1; axis >= 0; --axis) {
@@ -171,7 +171,7 @@ struct masked_mean_impl {
             // Make a copy of the current input index, we'll fix the non-summed dims
             // and iterate over the reduced dims accumulating the total
             auto         reduce_nd_index  = input_index;
-            out_datatype mean             = 0;
+            out_datatype mean             = 0; // For large values, this dtype makes a big difference
             int64_t      elements_in_mean = 0;
             for (int jj = 0; jj < reduced_elements; ++jj) {
                 int64_t input_linear_index = 0;
@@ -183,7 +183,6 @@ struct masked_mean_impl {
                     mean += a_data[input_linear_index];
                     elements_in_mean += 1;
                 }
-                // }
                 // Increment the multi-dimensional index
                 for (int i = reduced_axes.size() - 1; i >= 0; --i) {
                     auto d = reduced_axes[i];
@@ -203,7 +202,10 @@ struct masked_mean_impl {
                 out_linear_index += out_offset[axis] + (out_index[axis]) * out_strides[axis];
             }
 
-            out_data[out_linear_index] = static_cast<out_datatype>(mean) / (elements_in_mean-1);
+            if (elements_in_mean == 0) {
+                throw std::runtime_error("masked_mean: there are no non-masked elements to take the mean of");
+            }
+            out_data[out_linear_index] = static_cast<out_datatype>(mean) / (elements_in_mean - 1);
             // Increment the multi-dimensional output index
             for (int axis = out_shape.size() - 1; axis >= 0; --axis) {
                 // If we're not at the end of this dim, keep going
@@ -288,10 +290,6 @@ struct stddev_impl {
             }
         }
 
-        // TODO, allow passing in means as an arg
-        auto means = ndarray(out.shape(), out.dtype(), out.device());
-        mean_impl::call<out_datatype, in_datatype>(means, a, reduced_axes);
-
         // The out array may actually be a slice! So need to respect its strides, shapes, and offsets
         auto                 out_data    = out.data_ptr<out_datatype>();
         auto                 out_shape   = out.shape();
@@ -299,17 +297,21 @@ struct stddev_impl {
         auto                 out_offset  = out.offsets();
         std::vector<int64_t> out_index(out_shape.size(), 0);
 
-        auto                 mean_data    = means.data_ptr<out_datatype>();
-        auto                 mean_shape   = means.shape();
-        auto                 mean_strides = means.strides();
-        auto                 mean_offsets = means.offsets();
-        std::vector<int64_t> mean_index(mean_shape.size(), 0);
-
         auto                 a_data    = a.data_ptr<in_datatype>();
         auto                 a_shape   = a.shape();
         auto                 a_strides = a.strides();
         auto                 a_offset  = a.offsets();
         std::vector<int64_t> input_index(a_shape.size(), 0);
+
+        // TODO, do E[x^2] - E[x]^2 to reduce a redundant pass through data
+        auto means = ndarray(out.shape(), out.dtype(), out.device());
+        mean_impl::call<out_datatype, in_datatype>(means, a, reduced_axes);
+
+        auto                 mean_data    = means.data_ptr<out_datatype>();
+        auto                 mean_shape   = means.shape();
+        auto                 mean_strides = means.strides();
+        auto                 mean_offsets = means.offsets();
+        std::vector<int64_t> mean_index(mean_shape.size(), 0);
 
         // Number of elements that get reduced to a single output element
         int64_t reduced_elements = 1;
@@ -334,7 +336,6 @@ struct stddev_impl {
             }
 
             auto this_reduction_mean = mean_data[mean_linear_index];
-            // fmt::print("We think this reduction mean is \n", this_reduction_mean);
             for (int jj = 0; jj < reduced_elements; ++jj) {
                 int64_t input_linear_index = 0;
                 // TODO (perf): move this inside the nd_index increment similar to the elementwise binary ops
@@ -424,7 +425,6 @@ ndarray bland::stddev(const ndarray &a, std::vector<int64_t> reduced_axes) {
     return stddev(a, out, reduced_axes);
 }
 
-
 struct masked_stddev_impl {
     template <typename out_datatype, typename in_datatype>
     static inline ndarray call(ndarray &out, const ndarray &a, const ndarray &mask, std::vector<int64_t> reduced_axes) {
@@ -482,13 +482,14 @@ struct masked_stddev_impl {
         }
 
         // TODO (flexibility): add correction option (noff in torch)
+        out_datatype scale = 1.0 / static_cast<out_datatype>(reduced_elements - 1);
         // Loop over the dimensions of the array and perform the reduction operation
         auto numel = out.numel();
         for (int i = 0; i < numel; ++i) {
             // Make a copy of the current input index, we'll fix the non-summed dims
             // and iterate over the reduced dims accumulating the total
-            auto   reduce_nd_index = input_index;
-            double dev             = 0;
+            auto    reduce_nd_index = input_index;
+            double  dev             = 0;
             int64_t elements_in_dev = 0;
 
             // TODO (perf): move this inside the nd_index increment similar to the elementwise binary ops
@@ -498,7 +499,6 @@ struct masked_stddev_impl {
             }
 
             auto this_reduction_mean = mean_data[mean_linear_index];
-            // fmt::print("We think this reduction mean is \n", this_reduction_mean);
             for (int jj = 0; jj < reduced_elements; ++jj) {
                 int64_t input_linear_index = 0;
                 // TODO (perf): move this inside the nd_index increment similar to the elementwise binary ops
@@ -529,7 +529,10 @@ struct masked_stddev_impl {
                 out_linear_index += out_offset[axis] + (out_index[axis] % out_shape[axis]) * out_strides[axis];
             }
 
-            out_data[out_linear_index] = static_cast<out_datatype>(std::sqrt(dev/elements_in_dev));
+            if (elements_in_dev == 0) {
+                throw std::runtime_error("masked_stddev: there are no non-masked elements to take the mean of");
+            }
+            out_data[out_linear_index] = static_cast<out_datatype>(std::sqrt(dev / elements_in_dev));
 
             // Increment the multi-dimensional output index
             for (int axis = out_shape.size() - 1; axis >= 0; --axis) {

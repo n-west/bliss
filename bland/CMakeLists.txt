@@ -5,6 +5,15 @@ project(
     VERSION 0.0.0
     LANGUAGES CXX
 )
+include(CheckLanguage)
+check_language(CUDA)
+
+if (CMAKE_CUDA_COMPILER)
+  message("BLAND:: enabling cuda")
+  enable_language(CUDA)
+else()
+  message("BLAND:: CUDA not found, building without it")
+endif()
 
 # Only do these if this is the main project, and not if it is included through add_subdirectory
 if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)

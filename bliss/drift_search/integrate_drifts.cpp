@@ -21,7 +21,7 @@ namespace detail {
  * value 0/7, 1/7, 2/7, 3/7, 4/7, 5/7, 6/7, 7/7.
  */
 template <bool collect_rfi = true>
-[[nodiscard]] std::tuple<bland::ndarray, integrated_rfi>
+[[nodiscard]] std::tuple<bland::ndarray, integrated_flags>
 integrate_linear_rounded_bins(const bland::ndarray    &spectrum_grid,
                               const bland::ndarray    &rfi_mask,
                               integrate_drifts_options options) {
@@ -33,7 +33,7 @@ integrate_linear_rounded_bins(const bland::ndarray    &spectrum_grid,
     auto maximum_drift_span = time_steps - 1;
 
     bland::ndarray drift_plane({number_drifts, number_channels}, spectrum_grid.dtype(), spectrum_grid.device());
-    auto           rfi_in_drift = integrated_rfi(number_drifts, number_channels, rfi_mask.device());
+    auto           rfi_in_drift = integrated_flags(number_drifts, number_channels, rfi_mask.device());
 
     bland::fill(drift_plane, 0.0f);
 
@@ -235,11 +235,13 @@ bland::ndarray bliss::integrate_drifts(const bland::ndarray &spectrum_grid, inte
     return drift_grid;
 }
 
-scan bliss::integrate_drifts(filterbank_data fil_data, integrate_drifts_options options) {
-
+scan bliss::integrate_drifts(scan fil_data, integrate_drifts_options options) {
     auto [drift_grid, drift_rfi] = detail::integrate_linear_rounded_bins(fil_data.data(), fil_data.mask(), options);
-
-    return scan(fil_data, drift_grid, drift_rfi, options);
+    fil_data.integration_length(fil_data.data().size(0)); // length is just the amount of time
+    fil_data.doppler_flags(drift_rfi);
+    fil_data.doppler_spectrum(drift_grid);
+    fil_data.dedoppler_options(options);
+    return fil_data;
 }
 
 observation_target bliss::integrate_drifts(observation_target target, integrate_drifts_options options) {

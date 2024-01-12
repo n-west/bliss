@@ -25,13 +25,13 @@ struct integrate_drifts_options {
 /**
  * a container to track how much rfi of each kind was involved in each drift integration
  */
-struct integrated_rfi {
+struct integrated_flags {
     bland::ndarray filter_rolloff;
     bland::ndarray low_spectral_kurtosis;
     bland::ndarray high_spectral_kurtosis;
     bland::ndarray magnitude;
     bland::ndarray sigma_clip;
-    integrated_rfi(int64_t drifts, int64_t channels, bland::ndarray::dev device = default_device) :
+    integrated_flags(int64_t drifts, int64_t channels, bland::ndarray::dev device = default_device) :
             filter_rolloff(bland::ndarray({drifts, channels}, 0, bland::ndarray::datatype::uint8, device)),
             low_spectral_kurtosis(bland::ndarray({drifts, channels}, 0, bland::ndarray::datatype::uint8, device)),
             high_spectral_kurtosis(bland::ndarray({drifts, channels}, 0, bland::ndarray::datatype::uint8, device)),
@@ -51,16 +51,19 @@ class scan : public filterbank_data {
   public:
     scan(filterbank_data          fb_data,
          bland::ndarray           dedrifted_spectrum,
-         integrated_rfi           dedrifted_rfi,
+         integrated_flags         dedrifted_rfi,
          integrate_drifts_options drift_parameters);
 
     scan(const filterbank_data &fb_data);
 
-    bland::ndarray &dedrifted_spectrum();
-    integrated_rfi &dedrifted_rfi();
-
-    integrate_drifts_options integration_options() const;
-    int64_t                  integration_length() const;
+    bland::ndarray          &doppler_spectrum();
+    void                     doppler_spectrum(bland::ndarray doppler_spectrum);
+    integrated_flags        &doppler_flags();
+    void                     doppler_flags(integrated_flags doppler_flags);
+    integrate_drifts_options dedoppler_options();
+    void                     dedoppler_options(integrate_drifts_options dedoppler_options);
+    int64_t                  integration_length();
+    void                     integration_length(int64_t);
 
     /**
      * Get the noise estimate from this scan
@@ -72,7 +75,7 @@ class scan : public filterbank_data {
     void noise_estimate(noise_stats estimate);
 
     std::vector<hit> hits();
-    void hits(std::vector<hit> new_hits);
+    void             hits(std::vector<hit> new_hits);
 
   protected:
     std::optional<noise_stats> _noise_stats;
@@ -81,7 +84,7 @@ class scan : public filterbank_data {
     // optional
     std::optional<int64_t>                  _integration_length;
     std::optional<bland::ndarray>           _dedrifted_spectrum;
-    std::optional<integrated_rfi>           _dedrifted_rfi;
+    std::optional<integrated_flags>         _dedrifted_rfi;
     std::optional<integrate_drifts_options> _drift_parameters;
 
     std::optional<std::vector<hit>> _hits;

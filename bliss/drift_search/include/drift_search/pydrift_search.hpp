@@ -20,7 +20,13 @@ void bind_pydrift_search(nb::module_ m) {
     });
 
     m.def("integrate_drifts",
-          nb::overload_cast<bliss::filterbank_data, bliss::integrate_drifts_options>(&bliss::integrate_drifts));
+          nb::overload_cast<bliss::scan, bliss::integrate_drifts_options>(&bliss::integrate_drifts));
+
+    m.def("integrate_drifts",
+          nb::overload_cast<bliss::observation_target, bliss::integrate_drifts_options>(&bliss::integrate_drifts));
+
+    m.def("integrate_drifts",
+          nb::overload_cast<bliss::cadence, bliss::integrate_drifts_options>(&bliss::integrate_drifts));
 
     // General "component" class as intermediate between dedrifted clusters of prehits and hits
     nb::class_<bliss::component>(m, "component")

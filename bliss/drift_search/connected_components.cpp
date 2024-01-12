@@ -128,7 +128,7 @@ std::vector<component> bliss::find_components_above_threshold(scan              
 
     std::vector<component> components;
 
-    auto &doppler_spectrum = dedrifted_spectrum.dedrifted_spectrum();
+    auto &doppler_spectrum = dedrifted_spectrum.doppler_spectrum();
     if (doppler_spectrum.dtype() != bland::ndarray::datatype::float32) {
         throw std::runtime_error("find_components_above_threshold: dedrifted doppler spectrum was not float. Only cpu "
                                  "float is supported right now");
@@ -137,7 +137,7 @@ std::vector<component> bliss::find_components_above_threshold(scan              
     auto          doppler_spectrum_strides = doppler_spectrum.strides();
     stride_helper doppler_spectrum_strider(doppler_spectrum.shape(), doppler_spectrum_strides);
 
-    auto          visited         = bland::ndarray(dedrifted_spectrum.dedrifted_spectrum().shape(),
+    auto          visited         = bland::ndarray(dedrifted_spectrum.doppler_spectrum().shape(),
                                   0,
                                   bland::ndarray::datatype::uint8,
                                   bland::ndarray::dev::cpu);

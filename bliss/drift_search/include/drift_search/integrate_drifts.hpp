@@ -50,7 +50,7 @@ namespace bliss {
                                               integrate_drifts_options options = integrate_drifts_options{
                                                       .desmear = true});
 
-[[nodiscard]] scan integrate_drifts(filterbank_data          fil_data,
+[[nodiscard]] scan integrate_drifts(scan                     fil_data,
                                     integrate_drifts_options options = integrate_drifts_options{.desmear = true});
 
 /**

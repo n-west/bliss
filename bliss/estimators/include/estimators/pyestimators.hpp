@@ -9,6 +9,8 @@
 #include <nanobind/stl/string.h>
 #include <nanobind/stl/vector.h>
 
+#include <fmt/format.h>
+
 namespace nb = nanobind;
 using namespace nb::literals;
 
@@ -21,6 +23,7 @@ void bind_pyestimators(nb::module_ m) {
           "M"_a,
           "d"_a = 1,
           "Compute spectral kurtosis of the given spectra");
+
     m.def("estimate_spectral_kurtosis",
           nb::overload_cast<bliss::filterbank_data &>(&bliss::estimate_spectral_kurtosis),
           "fil_data"_a,
@@ -34,15 +37,6 @@ void bind_pyestimators(nb::module_ m) {
             .def(nb::init<>())
             .def_rw("estimator_method", &bliss::noise_power_estimate_options::estimator_method)
             .def_rw("masked_estimate", &bliss::noise_power_estimate_options::masked_estimate);
-
-    m.def("add", [](nb::ndarray<> a, nb::ndarray<> b) {
-        return bland::add(nb_to_bland(a), nb_to_bland(b));
-    });
-
-    m.def("estimate_noise_power_dbg", [](nb::ndarray<> arr) {
-        auto opts = bliss::noise_power_estimate_options();
-        return bliss::estimate_noise_power(nb_to_bland(arr), opts);
-    });
 
     m.def("estimate_noise_power", [](nb::ndarray<> arr, bliss::noise_power_estimate_options opts) {
         return bliss::estimate_noise_power(nb_to_bland(arr), opts);
@@ -60,5 +54,11 @@ void bind_pyestimators(nb::module_ m) {
     nb::class_<bliss::noise_stats>(m, "noise_power")
             .def_prop_ro("noise_floor", &bliss::noise_stats::noise_floor)
             .def_prop_ro("noise_amplitude", &bliss::noise_stats::noise_amplitude)
-            .def_prop_ro("noise_power", &bliss::noise_stats::noise_power);
+            .def_prop_ro("noise_power", &bliss::noise_stats::noise_power)
+            .def("__repr__", [](bliss::noise_stats &self) {
+                return fmt::format("noise floor: {}\nnoise amplitude: {}\nnoise power: {}\n",
+                                   self.noise_floor(),
+                                   self.noise_amplitude(),
+                                   self.noise_power());
+            });
 }

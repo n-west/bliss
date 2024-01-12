@@ -61,8 +61,8 @@ scan bliss::hit_search(scan dedrifted_scan, hit_search_options options) {
         this_hit.start_freq_MHz = dedrifted_scan.fch1() + dedrifted_scan.foff() * this_hit.start_freq_index;
 
         // TODO: sort out better names for these things as we go to whole-cadence integration
-        auto drift_freq_span_bins = dedrifted_scan.integration_options().low_rate +
-                                    this_hit.rate_index * dedrifted_scan.integration_options().rate_step_size;
+        auto drift_freq_span_bins = dedrifted_scan.dedoppler_options().low_rate +
+                                    this_hit.rate_index * dedrifted_scan.dedoppler_options().rate_step_size;
         float drift_span_freq_Hz = drift_freq_span_bins * 1e6 * dedrifted_scan.foff();
 
         auto drift_span_time_bins = dedrifted_scan.integration_length();

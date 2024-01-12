@@ -20,4 +20,4 @@ target_link_libraries(estimators
 set_target_properties(estimators PROPERTIES POSITION_INDEPENDENT_CODE TRUE)
 
 add_library(pyestimators INTERFACE)
-target_link_libraries(pyestimators INTERFACE estimators)
+target_link_libraries(pyestimators INTERFACE estimators fmt::fmt-header-only)

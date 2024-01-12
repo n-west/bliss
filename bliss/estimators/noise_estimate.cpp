@@ -37,37 +37,6 @@ noise_stats noise_power_estimate_stddev(const bland::ndarray &x, const bland::nd
 }
 
 /**
- * Compute noise floor over all observations of a target where the mask == 0 using population mean as the noise floor
- * Compute noise power over all observations of a target where the mask == 0 using population variance as the noise
- * power
- */
-observation_target noise_power_estimate_stddev(observation_target &observations, bool use_mask = true) {
-    auto updated_observations = observations;
-
-    for (size_t nn = 0; nn < observations._scans.size(); ++nn) {
-        auto        x = observations._scans[nn].data();
-        noise_stats estimated_stats;
-        if (use_mask) {
-            auto mask         = observations._scans[nn].mask();
-            auto mean         = bland::masked_mean(x, mask).scalarize<float>();
-            auto squared_mean = bland::masked_mean(bland::square(x), mask).scalarize<float>();
-
-            estimated_stats._noise_floor = mean;
-            estimated_stats._noise_power = squared_mean - mean * mean;
-        } else {
-            auto mean         = bland::mean(x).scalarize<float>();
-            auto squared_mean = bland::mean(bland::square(x)).scalarize<float>();
-
-            estimated_stats._noise_floor = mean;
-            estimated_stats._noise_power = squared_mean - mean * mean;
-        }
-        updated_observations._scans[nn].noise_estimate(estimated_stats);
-    }
-
-    return updated_observations;
-}
-
-/**
  * Compute noise floor using the median over the population
  * Compute noise power using the Median Absolute Deviation (MAD) over the population
  */
@@ -77,8 +46,8 @@ noise_stats noise_power_estimate_mad(const bland::ndarray &x) {
     // bland needs some TLC to do this Right (TM)
     estimated_stats._noise_floor = bland::median(x);
     // median absolute deviation is median(|Xi - median|)
-    auto stddev                  = bland::median(bland::abs(x - estimated_stats._noise_floor));
-    estimated_stats._noise_power = std::pow(stddev, 2);
+    auto median_absolute_deviation = bland::median(bland::abs(x - estimated_stats._noise_floor));
+    estimated_stats._noise_power   = std::pow(median_absolute_deviation, 2);
 
     return estimated_stats;
 }
@@ -100,28 +69,6 @@ noise_stats noise_power_estimate_mad(const bland::ndarray &x, const bland::ndarr
     estimated_stats._noise_power = std::pow(stddev, 2);
 
     return estimated_stats;
-}
-
-/**
- * TODO: think about a concat type of operation to make this work
- */
-observation_target noise_power_estimate_mad(observation_target &observations, bool use_mask = true) {
-    auto updated_observations = observations;
-
-    for (size_t nn = 0; nn < observations._scans.size(); ++nn) {
-        auto        x = observations._scans[nn].data();
-        noise_stats estimated_stats;
-        if (use_mask) {
-            throw std::runtime_error("masked noise power estimation with mad is not implemented yet");
-        } else {
-            estimated_stats._noise_floor = bland::median(x);
-            auto dev                     = bland::median(bland::abs(x - estimated_stats._noise_floor));
-            estimated_stats._noise_power = std::pow(dev, 2);
-        }
-        updated_observations._scans[nn].noise_estimate(estimated_stats);
-    }
-
-    return updated_observations;
 }
 
 } // namespace detail
@@ -149,12 +96,23 @@ noise_stats bliss::estimate_noise_power(const bland::ndarray &x, noise_power_est
 }
 
 /**
+ * validate & correct a flag mask
+ * 
+ * If the mask has no free flags
+*/
+bland::ndarray correct_mask(bland::ndarray mask) {
+    auto corrected_mask = bland::copy(mask);
+    return corrected_mask;
+}
+
+/**
  * This is the masked equivalent of noise power estimate
  */
 
 noise_stats bliss::estimate_noise_power(filterbank_data fil_data, noise_power_estimate_options options) {
     noise_stats estimated_stats;
     if (options.masked_estimate) {
+        // Check the mask will give us something valid
         switch (options.estimator_method) {
         case noise_power_estimator::MEAN_ABSOLUTE_DEVIATION: {
             estimated_stats = detail::noise_power_estimate_mad(fil_data.data(), fil_data.mask());
@@ -179,32 +137,21 @@ noise_stats bliss::estimate_noise_power(filterbank_data fil_data, noise_power_es
         }
         }
     }
-
     return estimated_stats;
 }
 
 observation_target bliss::estimate_noise_power(observation_target observations, noise_power_estimate_options options) {
-    auto updated_observations = observation_target();
-    switch (options.estimator_method) {
-    case noise_power_estimator::MEAN_ABSOLUTE_DEVIATION: {
-        updated_observations = detail::noise_power_estimate_mad(observations, options.masked_estimate);
-    } break;
-    case noise_power_estimator::STDDEV: {
-        updated_observations = detail::noise_power_estimate_stddev(observations, options.masked_estimate);
-    } break;
-    default: {
-        updated_observations = detail::noise_power_estimate_stddev(observations, options.masked_estimate);
+    for (auto &target_scan : observations._scans) {
+        auto scan_noise_estimate = estimate_noise_power(target_scan, options);
+        target_scan.noise_estimate(scan_noise_estimate);
     }
-    }
-
-    return updated_observations;
+    return observations;
 }
 
 cadence bliss::estimate_noise_power(cadence observations, noise_power_estimate_options options) {
-    auto updated_cadence = cadence();
-    for (auto &observation : observations._observations) {
+    for (auto &obs_target : observations._observations) {
         // cadence_noise_stats.push_back(estimate_noise_power(observation, options));
-        updated_cadence._observations.push_back(estimate_noise_power(observation, options));
+        obs_target = estimate_noise_power(obs_target, options);
     }
-    return updated_cadence;
+    return observations;
 }

@@ -61,22 +61,26 @@ void bind_pycore(nb::module_ m) {
             .def_rw("high_rate", &bliss::integrate_drifts_options::high_rate)
             .def_rw("rate_step_size", &bliss::integrate_drifts_options::rate_step_size);
 
-    nb::class_<bliss::integrated_rfi>(m, "integrated_rfi")
+    nb::class_<bliss::integrated_flags>(m, "integrated_flags")
             .def(nb::init<int64_t /*drifts*/, int64_t /*channels*/, bland::ndarray::dev /*device*/>())
-            .def_rw("filter_rolloff", &bliss::integrated_rfi::filter_rolloff)
-            .def_rw("low_spectral_kurtosis", &bliss::integrated_rfi::low_spectral_kurtosis)
-            .def_rw("high_spectral_kurtosis", &bliss::integrated_rfi::high_spectral_kurtosis)
-            .def_rw("magnitude", &bliss::integrated_rfi::magnitude)
-            .def_rw("sigma_clip", &bliss::integrated_rfi::sigma_clip);
+            .def_rw("filter_rolloff", &bliss::integrated_flags::filter_rolloff)
+            .def_rw("low_spectral_kurtosis", &bliss::integrated_flags::low_spectral_kurtosis)
+            .def_rw("high_spectral_kurtosis", &bliss::integrated_flags::high_spectral_kurtosis)
+            .def_rw("magnitude", &bliss::integrated_flags::magnitude)
+            .def_rw("sigma_clip", &bliss::integrated_flags::sigma_clip);
 
-    nb::class_<bliss::scan>(m, "scan")
-            .def(nb::init<bliss::filterbank_data,
-                          bland::ndarray,
-                          bliss::integrated_rfi,
-                          bliss::integrate_drifts_options>())
-            .def("dedrifted_spectrum", &bliss::scan::dedrifted_spectrum)
-            .def("dedrifted_rfi", &bliss::scan::dedrifted_rfi)
-            .def("drift_parameters", &bliss::scan::integration_options)
+    nb::class_<bliss::scan, bliss::filterbank_data>(m, "scan")
+            .def(nb::init<bliss::filterbank_data /* fb_data */,
+                          bland::ndarray /* doppler_spectrum */,
+                          bliss::integrated_flags /* doppler_flags */,
+                          bliss::integrate_drifts_options /* drift_parameters */>())
+            .def(nb::init<const bliss::filterbank_data&>())
+            .def("doppler_spectrum", nb::overload_cast<>(&bliss::scan::doppler_spectrum))
+            .def("doppler_spectrum", nb::overload_cast<bland::ndarray>(&bliss::scan::doppler_spectrum))
+            .def("doppler_flags", nb::overload_cast<>(&bliss::scan::doppler_flags))
+            .def("doppler_flags", nb::overload_cast<bliss::integrated_flags>(&bliss::scan::doppler_flags))
+            .def("drift_parameters", nb::overload_cast<>(&bliss::scan::dedoppler_options))
+            .def("drift_parameters", nb::overload_cast<bliss::integrate_drifts_options>(&bliss::scan::dedoppler_options))
             .def_prop_rw("noise_estimate",
                          nb::overload_cast<>(&bliss::scan::noise_estimate),
                          nb::overload_cast<bliss::noise_stats>(&bliss::scan::noise_estimate));
@@ -84,7 +88,7 @@ void bind_pycore(nb::module_ m) {
 
     nb::class_<bliss::observation_target>(m, "observation_target")
             .def(nb::init<std::vector<bliss::filterbank_data>>())
-            .def_rw("filterbanks", &bliss::observation_target::_scans)
+            .def_rw("scans", &bliss::observation_target::_scans)
             .def_rw("target_name", &bliss::observation_target::_target_name);
 
     nb::class_<bliss::cadence>(m, "cadence")
