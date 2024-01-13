@@ -101,8 +101,13 @@ noise_stats bliss::estimate_noise_power(const bland::ndarray &x, noise_power_est
  * If the mask has no free flags
 */
 bland::ndarray correct_mask(bland::ndarray mask) {
-    auto corrected_mask = bland::copy(mask);
-    return corrected_mask;
+    auto unmasked_samples = bland::count_true(mask == 0);
+    if (unmasked_samples == 0) {
+        // TODO: issue warning & "correct" the mask in some intelligent way
+        throw std::runtime_error("correct_mask: the mask is completely flagged");
+    }
+    // auto corrected_mask = bland::copy(mask);
+    return mask;
 }
 
 /**
@@ -113,15 +118,17 @@ noise_stats bliss::estimate_noise_power(filterbank_data fil_data, noise_power_es
     noise_stats estimated_stats;
     if (options.masked_estimate) {
         // Check the mask will give us something valid
+        auto &mask = fil_data.mask();
+        mask = correct_mask(mask);
         switch (options.estimator_method) {
         case noise_power_estimator::MEAN_ABSOLUTE_DEVIATION: {
-            estimated_stats = detail::noise_power_estimate_mad(fil_data.data(), fil_data.mask());
+            estimated_stats = detail::noise_power_estimate_mad(fil_data.data(), mask);
         } break;
         case noise_power_estimator::STDDEV: {
-            estimated_stats = detail::noise_power_estimate_stddev(fil_data.data(), fil_data.mask());
+            estimated_stats = detail::noise_power_estimate_stddev(fil_data.data(), mask);
         } break;
         default: {
-            estimated_stats = detail::noise_power_estimate_stddev(fil_data.data(), fil_data.mask());
+            estimated_stats = detail::noise_power_estimate_stddev(fil_data.data(), mask);
         }
         }
     } else {

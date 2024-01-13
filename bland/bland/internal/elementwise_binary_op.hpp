@@ -91,28 +91,28 @@ ndarray elementwise_binary_op(ndarray &out, const ndarray &a, const ndarray &b) 
         // and at best its just confusing
         // ***********************
         // ***********************
-        for (int i = ndim - 1; i >= 0; --i) {
-            if (i == ndim - 1) {
+        for (int dim = ndim - 1; dim >= 0; --dim) {
+            if (dim == ndim - 1) {
                 // This is unrolled
-                nd_index[i] += unroll_size;
-                a_index += unroll_size * a_strides[i];
-                b_index += unroll_size * b_strides[i];
-                out_index += unroll_size * out_strides[i];
+                nd_index[dim] += unroll_size;
+                a_index += unroll_size * a_strides[dim];
+                b_index += unroll_size * b_strides[dim];
+                out_index += unroll_size * out_strides[dim];
             } else {
                 // This is the standard not-unrolled case
-                nd_index[i] += 1;
-                a_index += a_strides[i];
-                b_index += b_strides[i];
-                out_index += out_strides[i];
+                nd_index[dim] += 1;
+                a_index += a_strides[dim];
+                b_index += b_strides[dim];
+                out_index += out_strides[dim];
             }
-            if (nd_index[i] < out_shape[i]) {
+            if (nd_index[dim] < out_shape[dim]) {
                 break;
             } else {
                 // We've gone beyond the boundary, we'll already have done the work... so just reset
-                a_index -= (a_shape[i]) * a_strides[i];
-                b_index -= (b_shape[i]) * b_strides[i];
-                out_index -= (out_shape[i]) * out_strides[i];
-                nd_index[i] = 0;
+                a_index -= (a_shape[dim]) * a_strides[dim];
+                b_index -= (b_shape[dim]) * b_strides[dim];
+                out_index -= (out_shape[dim]) * out_strides[dim];
+                nd_index[dim] = 0;
             }
         }
     }

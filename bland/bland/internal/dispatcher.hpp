@@ -121,7 +121,9 @@ ndarray dispatch(ndarray &out, const ndarray &a, const ndarray &b, Args... args)
     }
 }
 
-
+/**
+ * out = f(a, b) where a and b are ndarray
+*/
 template <typename F, class Op, typename ...Args>
 ndarray dispatch(ndarray &out, const ndarray &a, const ndarray &b, Args... args) {
     auto dtype = out.dtype();
@@ -174,7 +176,7 @@ ndarray dispatch(ndarray &out, const ndarray &a, const ndarray &b, Args... args)
 
 
 /**
- * out = f(a, b) where a, and c are ndarrays and b is a scalar.
+ * out = f(a, b) where a is ndarray and b is a scalar that outputs an ndarray
  * 
  * This requires three type deductions and passes through an underlying impl function with 3 template args
  **/
@@ -399,6 +401,9 @@ ndarray dispatch_new(ndarray &out, const ndarray &a, Args... args) {
     }
 }
 
+/**
+ * out = f(a) where out and a are ndarray
+*/
 template <class Op, typename... Args>
 ndarray dispatch_new(ndarray &out, const ndarray &a, Args... args) {
     auto dtype = out.dtype();
@@ -449,7 +454,60 @@ ndarray dispatch_new(ndarray &out, const ndarray &a, Args... args) {
 }
 
 
+/**
+ * out = f(a) where a is ndarray, out = int64_t
+ * 
+ * used by
+ * * count
+*/
+template <class Op, typename... Args>
+int64_t dispatch_summary(const ndarray &a, Args... args) {
+    auto dtype = a.dtype();
 
+    switch (dtype.code) {
+
+    case kDLFloat: {
+        switch (dtype.bits) {
+        case 32:
+            return Op::template call<float>(a, std::forward<Args>(args)...);
+        case 64:
+            return Op::template call<double>(a, std::forward<Args>(args)...);
+        default:
+            throw std::runtime_error("Unsupported float bitwidth");
+        }
+    }
+    case kDLInt: {
+        switch (dtype.bits) {
+        case 8:
+            return Op::template call<int8_t>(a, std::forward<Args>(args)...);
+        case 16:
+            return Op::template call<int16_t>(a, std::forward<Args>(args)...);
+        case 32:
+            return Op::template call<int32_t>(a, std::forward<Args>(args)...);
+        case 64:
+            return Op::template call<int64_t>(a, std::forward<Args>(args)...);
+        default:
+            throw std::runtime_error("Unsupported int bitwidth");
+        }
+    }
+    case kDLUInt: {
+        switch (dtype.bits) {
+        case 8:
+            return Op::template call<uint8_t>(a, std::forward<Args>(args)...);
+        case 16:
+            return Op::template call<uint16_t>(a, std::forward<Args>(args)...);
+        case 32:
+            return Op::template call<uint32_t>(a, std::forward<Args>(args)...);
+        // case 64:
+        //     return Op::template call<uint64_t>(a, std::forward<Args>(args)...);
+        default:
+            throw std::runtime_error("Unsupported uint bitwidth");
+        }
+    }
+    default:
+        throw std::runtime_error("Unsupported datatype code");
+    }
+}
 
 
 /**
