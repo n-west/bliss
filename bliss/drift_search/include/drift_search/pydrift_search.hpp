@@ -2,13 +2,15 @@
 
 #include <nanobind/nanobind.h>
 #include <nanobind/ndarray.h>
-#include <nanobind/stl/vector.h>
 #include <nanobind/stl/map.h>
+#include <nanobind/stl/tuple.h>
+#include <nanobind/stl/vector.h>
 
 #include "connected_components.hpp"
 #include "hit_search.hpp"
 #include "integrate_drifts.hpp"
 #include "local_maxima.hpp"
+#include "event_search.hpp"
 
 void bind_pydrift_search(nb::module_ m) {
 
@@ -44,7 +46,35 @@ void bind_pydrift_search(nb::module_ m) {
             .def_rw("snr", &bliss::hit::snr)
             .def_rw("rfi_counts", &bliss::hit::rfi_counts)
             .def_rw("binwidth", &bliss::hit::binwidth)
-            .def_rw("bandwidth", &bliss::hit::bandwidth);
+            .def_rw("bandwidth", &bliss::hit::bandwidth)
+            .def("__getstate__",
+                 [](const bliss::hit &self) {
+                     return std::make_tuple(self.start_freq_index,
+                                            self.start_freq_MHz,
+                                            self.rate_index,
+                                            self.drift_rate_Hz_per_sec,
+                                            self.snr,
+                                            self.bandwidth,
+                                            self.binwidth,
+                                            self.rfi_counts);
+                 })
+            .def("__setstate__",
+                 [](bliss::hit &self,
+                    const std::tuple<int64_t, float, int64_t, float, float, double, int64_t, bliss::rfi>
+                            &state) {
+                        bliss::rfi rfi_counts;
+                        for (const auto& [key, value] : std::get<7>(state)) {
+                                rfi_counts[static_cast<bliss::flag_values>(key)] = value;
+                        }
+                     new (&self) bliss::hit{.start_freq_index      = std::get<0>(state),
+                                            .start_freq_MHz        = std::get<1>(state),
+                                            .rate_index            = std::get<2>(state),
+                                            .drift_rate_Hz_per_sec = std::get<3>(state),
+                                            .snr                   = std::get<4>(state),
+                                            .bandwidth             = std::get<5>(state),
+                                            .binwidth              = std::get<6>(state),
+                                            .rfi_counts            = rfi_counts};
+                 });
 
     // Generic thresholding methods
     m.def("hard_threshold_drifts", &bliss::hard_threshold_drifts);
@@ -78,10 +108,20 @@ void bind_pydrift_search(nb::module_ m) {
     nb::class_<bliss::hit_search_options>(m, "hit_search_options")
             .def(nb::init<>())
             .def_rw("method", &bliss::hit_search_options::method)
-            .def_rw("snr_threshold", &bliss::hit_search_options::snr_threshold);
+            .def_rw("snr_threshold", &bliss::hit_search_options::snr_threshold)
+            .def_rw("neighborhood", &bliss::hit_search_options::neighborhood);
 
     // High-level "hit search" implementation
     m.def("hit_search", nb::overload_cast<bliss::scan, bliss::hit_search_options>(&bliss::hit_search));
 
     m.def("hit_search", nb::overload_cast<bliss::cadence, bliss::hit_search_options>(&bliss::hit_search));
+
+    nb::class_<bliss::event>(m, "event")
+            .def_rw("hits", &bliss::event::hits)
+            .def("__getstate__", [](const bliss::event &self) { return self.hits; })
+            .def("__setstate__", [](bliss::event &self, const std::vector<bliss::hit> &state) {
+                new (&self) bliss::event{.hits = state};
+            });
+
+    m.def("event_search", &bliss::event_search);
 }

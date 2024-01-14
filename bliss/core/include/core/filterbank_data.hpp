@@ -16,6 +16,23 @@ class filterbank_data {
   public:
     filterbank_data(h5_filterbank_file fb_file);
     filterbank_data(bland::ndarray data, bland::ndarray mask, double foff = 1);
+    filterbank_data(bland::ndarray data,
+                    bland::ndarray mask,
+                    double         fch1,
+                    double         foff,
+                    int64_t        machine_id,
+                    int64_t        nbits,
+                    int64_t        nchans,
+                    int64_t        nifs,
+                    std::string    source_name,
+                    double         src_dej,
+                    double         src_raj,
+                    int64_t        telescope_id,
+                    double         tsamp,
+                    double         tstart,
+                    int64_t        data_type,
+                    double         az_start,
+                    double         za_start);
     filterbank_data(std::string_view file_path);
 
     bland::ndarray &data();
@@ -44,8 +61,8 @@ class filterbank_data {
     // <KeysViewHDF5 ['data', 'mask']>
     // <HDF5 dataset "data": shape (16, 1, 1048576), type "<f4">
     // <HDF5 dataset "mask": shape (16, 1, 1048576), type "|u1">
-    bland::ndarray             _data;
-    bland::ndarray             _mask;
+    bland::ndarray _data;
+    bland::ndarray _mask;
 
     double      _fch1;
     double      _foff;

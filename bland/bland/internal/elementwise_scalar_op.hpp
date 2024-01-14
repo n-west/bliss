@@ -71,8 +71,6 @@ struct scalar_op_impl_wrapper {
         return elementwise_scalar_op<Out, A_type, B_type, Op>(out, a, b);
     }
 
-
-
     // template <typename A_type, typename B_type, template <typename, typename> class Op>
     // static inline ndarray call(const ndarray &a, const B_type &b, ndarray out) {
     //     return elementwise_scalar_op<A_type, B_type, Op>(a, b, out);

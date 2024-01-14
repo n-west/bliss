@@ -7,8 +7,7 @@
 
 using namespace bliss;
 
-filterbank_data::filterbank_data(h5_filterbank_file fb_file) :
-        _data(fb_file.read_data()), _mask(fb_file.read_mask()) {
+filterbank_data::filterbank_data(h5_filterbank_file fb_file) : _data(fb_file.read_data()), _mask(fb_file.read_mask()) {
 
     // double      fch1;
     _fch1 = fb_file.read_data_attr<double>("fch1");
@@ -45,13 +44,49 @@ filterbank_data::filterbank_data(h5_filterbank_file fb_file) :
 
 filterbank_data::filterbank_data(std::string_view file_path) : filterbank_data(h5_filterbank_file(file_path)) {}
 
-filterbank_data::filterbank_data(bland::ndarray data, bland::ndarray mask, double foff) : _data(data), _mask(mask), _foff(foff) {}
+filterbank_data::filterbank_data(bland::ndarray data, bland::ndarray mask, double foff) :
+        _data(data), _mask(mask), _foff(foff) {}
 
-bland::ndarray& bliss::filterbank_data::data() {
+filterbank_data::filterbank_data(bland::ndarray data,
+                                 bland::ndarray mask,
+                                 double         fch1,
+                                 double         foff,
+                                 int64_t        machine_id,
+                                 int64_t        nbits,
+                                 int64_t        nchans,
+                                 int64_t        nifs,
+                                 std::string    source_name,
+                                 double         src_dej,
+                                 double         src_raj,
+                                 int64_t        telescope_id,
+                                 double         tsamp,
+                                 double         tstart,
+                                 int64_t        data_type,
+                                 double         az_start,
+                                 double         za_start) :
+        _data(data),
+        _mask(mask),
+        _fch1(fch1),
+        _foff(foff),
+        _machine_id(machine_id),
+        _nbits(nbits),
+        _nchans(nchans),
+        _nifs(nifs),
+        _source_name(source_name),
+        _src_dej(src_dej),
+        _src_raj(src_raj),
+        _telescope_id(telescope_id),
+        _tsamp(tsamp),
+        _tstart(tstart),
+        _data_type(data_type),
+        _az_start(az_start),
+        _za_start(za_start) {}
+
+bland::ndarray &bliss::filterbank_data::data() {
     return _data;
 }
 
-bland::ndarray& bliss::filterbank_data::mask() {
+bland::ndarray &bliss::filterbank_data::mask() {
     return _mask;
 }
 

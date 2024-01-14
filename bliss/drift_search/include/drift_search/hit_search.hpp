@@ -77,7 +77,7 @@ struct hit_search_options {
  * 
  * The returned scan is a copy of the given scan with the hits field set
  */
-scan
+std::vector<hit>
 hit_search(scan dedrifted_scan, hit_search_options options = {});
 
 /**
@@ -96,15 +96,5 @@ hit_search(observation_target dedrifted_target, hit_search_options options = {})
 cadence
 hit_search(cadence dedrifted_cadence, hit_search_options options = {});
 
-struct event {
-    std::vector<hit> hits; // hits that contribute to this event
-};
-
-/**
- * Find *events* which are hits correlated across time
- * // TODO: there's a better way to structure this so we can make more sense of time / on/off by reusing the cadence/observation_target structure/hierarchy
-*/
-std::vector<event>
-event_search(cadence cadence_with_hits);
 
 } // namespace bliss

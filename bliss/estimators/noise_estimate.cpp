@@ -97,13 +97,29 @@ noise_stats bliss::estimate_noise_power(const bland::ndarray &x, noise_power_est
 
 /**
  * validate & correct a flag mask
- * 
+ *
  * If the mask has no free flags
-*/
-bland::ndarray correct_mask(bland::ndarray mask) {
+ */
+bland::ndarray correct_mask(const bland::ndarray &mask) {
     auto unmasked_samples = bland::count_true(mask == 0);
     if (unmasked_samples == 0) {
         // TODO: issue warning & "correct" the mask in some intelligent way
+        fmt::format("correct_mask: the mask is completely flagged, so a flagged noise estimate is not possible.");
+        /*
+         * This is a pretty strange condition where the entire scan is flagged which makes estimating noise using
+         * unflagged samples pretty awkward... There's not an obviously right way to handle this and anyone caring
+         * about this pipeline output should probably be made aware of it, but it's also not fatal.
+         * Known instances of this condition occurring:
+         * * Voyager 2020 data from GBT experiences a sudden increase in noise floor/power of ~ 3dB in the B target scan
+         *   which generates high spectral kurtosis across the entire band
+         *   filename w/in BL: single_coarse_guppi_59046_80354_DIAG_VOYAGER-1_0012.rawspec.0000.h5
+         */
+        // TODO: we can attempt to correct this, since it's only been known to occur based on SK with high thresholds of ~5
+        // that threshold can be increased. Some ideas:
+        // * have an "auto" mode for SK that starts with threshold of 5 and iteratively increases until the whole channel
+        //   is not falled
+        // * ignore high SK here (or try to identify what flag is causing issues and ignore it)
+        // * warn earlier in flagging step
         throw std::runtime_error("correct_mask: the mask is completely flagged");
     }
     // auto corrected_mask = bland::copy(mask);
@@ -119,7 +135,7 @@ noise_stats bliss::estimate_noise_power(filterbank_data fil_data, noise_power_es
     if (options.masked_estimate) {
         // Check the mask will give us something valid
         auto &mask = fil_data.mask();
-        mask = correct_mask(mask);
+        mask       = correct_mask(mask);
         switch (options.estimator_method) {
         case noise_power_estimator::MEAN_ABSOLUTE_DEVIATION: {
             estimated_stats = detail::noise_power_estimate_mad(fil_data.data(), mask);

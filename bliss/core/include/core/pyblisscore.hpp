@@ -34,7 +34,49 @@ void bind_pycore(nb::module_ m) {
             .def_prop_ro("telescope_id", &bliss::filterbank_data::telescope_id)
             .def_prop_ro("tsamp", &bliss::filterbank_data::tsamp)
             .def_prop_ro("tstart", &bliss::filterbank_data::tstart)
-            .def_prop_ro("za_start", &bliss::filterbank_data::za_start);
+            .def_prop_ro("za_start", &bliss::filterbank_data::za_start)
+        .def("__getstate__", [](bliss::filterbank_data &self) {
+                //     filterbank_data(bland::ndarray data,
+                //     bland::ndarray mask,
+                //     double         fch1,
+                //     double         foff,
+                //     int64_t        machine_id,
+                //     int64_t        nbits,
+                //     int64_t        nchans,
+                //     int64_t        nifs,
+                //     std::string    source_name,
+                //     double         src_dej,
+                //     double         src_raj,
+                //     int64_t        telescope_id,
+                //     double         tsamp,
+                //     double         tstart);
+                auto state = std::make_tuple(self.data(), self.mask(),
+                self.fch1(), self.foff(), self.machine_id(), self.nbits(),
+                self.nchans(), self.nifs(), self.source_name(), self.src_dej(), self.src_raj(),
+                self.telescope_id(), self.tsamp(), self.tstart(),
+                self.data_type(), self.az_start(), self.za_start());
+                return state;
+        })
+        .def("__setstate__", [](bliss::filterbank_data &self, const std::tuple<bland::ndarray, bland::ndarray, double, double, int64_t, int64_t, int64_t, int64_t, std::string, double, double, int64_t, double, double, int64_t, double, double> &state) {
+                new (&self) bliss::filterbank_data(std::get<0>(state),
+                                        std::get<1>(state),
+                                        std::get<2>(state),
+                                        std::get<3>(state),
+                                        std::get<4>(state),
+                                        std::get<5>(state),
+                                        std::get<6>(state),
+                                        std::get<7>(state),
+                                        std::get<8>(state),
+                                        std::get<9>(state),
+                                        std::get<10>(state),
+                                        std::get<11>(state),
+                                        std::get<12>(state),
+                                        std::get<13>(state),
+                                        std::get<14>(state),
+                                        std::get<15>(state),
+                                        std::get<16>(state));
+        })
+        ;
 
     //  * *DIMENSION_LABELS
     //  * *az_start
@@ -81,10 +123,19 @@ void bind_pycore(nb::module_ m) {
             .def("doppler_flags", nb::overload_cast<bliss::integrated_flags>(&bliss::scan::doppler_flags))
             .def("drift_parameters", nb::overload_cast<>(&bliss::scan::dedoppler_options))
             .def("drift_parameters", nb::overload_cast<bliss::integrate_drifts_options>(&bliss::scan::dedoppler_options))
+            .def_prop_rw("hits", nb::overload_cast<>(&bliss::scan::hits),
+                                nb::overload_cast<std::vector<bliss::hit>>(&bliss::scan::hits))
             .def_prop_rw("noise_estimate",
                          nb::overload_cast<>(&bliss::scan::noise_estimate),
-                         nb::overload_cast<bliss::noise_stats>(&bliss::scan::noise_estimate));
-    ;
+                         nb::overload_cast<bliss::noise_stats>(&bliss::scan::noise_estimate))
+           .def("__getstate__", [](bliss::scan &self) {
+                auto state_tuple = std::make_tuple(self.noise_estimate(), self.doppler_spectrum(), self.hits(), self.integration_length());
+                return state_tuple;
+           })
+           .def("__setstate__", [](bliss::scan &self, const std::tuple<bliss::noise_stats, bland::ndarray, std::vector<bliss::hit>, int64_t> &state_tuple) {
+                // new (&self) bliss::scan();
+           })
+            ;
 
     nb::class_<bliss::observation_target>(m, "observation_target")
             .def(nb::init<std::vector<bliss::filterbank_data>>())

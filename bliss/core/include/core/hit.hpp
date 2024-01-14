@@ -14,8 +14,8 @@ struct hit {
     int64_t rate_index;
     float   drift_rate_Hz_per_sec;
     float   snr;
-    int64_t bandwidth;
-    double  binwidth;
+    double  bandwidth;
+    int64_t binwidth;
     rfi     rfi_counts;
 };
 
