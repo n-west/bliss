@@ -32,4 +32,28 @@ TEST_CASE("benchmark add", "[ops][arithmetic]") {
             };
         }
     }
+
+    SECTION("add scalar", "add scalar") {
+        {
+            int64_t number_samples = 100000000;
+
+            auto a = bland::rand_normal({number_samples}, 0.0f, 1.0f);
+            float b = 42.0f;
+
+            BENCHMARK("naive float addition") {
+                auto c = bland::ndarray({number_samples}, DLDataType{.code = kDLFloat, .bits = 32});
+
+                auto a_data = a.data_ptr<float>();
+                auto c_data = c.data_ptr<float>();
+                for (size_t n = 0; n < number_samples; ++n) {
+                    c_data[n] = a_data[n] + b;
+                }
+                return c;
+            };
+
+            BENCHMARK("bland float addition") {
+                return a + b;
+            };
+        }
+    }
 }

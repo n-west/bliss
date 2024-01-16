@@ -39,8 +39,6 @@ ndarray elementwise_binary_op(ndarray &out, const ndarray &a, const ndarray &b) 
     const auto a_shape = compute_broadcast_shape(a.shape(), out_shape);
     const auto b_shape = compute_broadcast_shape(b.shape(), out_shape);
 
-    auto numel = out.numel();
-
     constexpr int64_t    LAST_DIM_UNROLL_FACTOR = 8;
     std::vector<int64_t> nd_index(out_shape.size(), 0);
 
@@ -48,16 +46,17 @@ ndarray elementwise_binary_op(ndarray &out, const ndarray &a, const ndarray &b) 
     int64_t b_index   = std::accumulate(b_offset.begin(), b_offset.end(), 0);
     int64_t out_index = std::accumulate(out_offset.begin(), out_offset.end(), 0);
 
-    int64_t       n               = 0;
     const auto    ndim            = out_shape.size();
-    const int64_t out_ldim_stride = out_strides[ndim - 1];
-    const int64_t a_ldim_stride   = a_strides[ndim - 1];
-    const int64_t b_ldim_stride   = b_strides[ndim - 1];
+    int64_t       unroll_dim      = ndim - 1;
+    int64_t       unroll_size     = LAST_DIM_UNROLL_FACTOR;
+    const int64_t out_ldim_stride = out_strides[unroll_dim];
+    const int64_t a_ldim_stride   = a_strides[unroll_dim];
+    const int64_t b_ldim_stride   = b_strides[unroll_dim];
 
     // Main loop
-    int64_t unroll_size = LAST_DIM_UNROLL_FACTOR;
-    for (; n < numel; n += unroll_size) {
-        auto items_left_in_last_dim = (out_shape[ndim - 1]-1) - nd_index[ndim - 1];
+    auto numel = out.numel();
+    for (int64_t n = 0; n < numel; n += unroll_size) {
+        auto items_left_in_last_dim = (out_shape[unroll_dim] - 1) - nd_index[unroll_dim];
         unroll_size                 = LAST_DIM_UNROLL_FACTOR;
         if (items_left_in_last_dim >= LAST_DIM_UNROLL_FACTOR) {
             out_data[out_index + 0 * out_ldim_stride] = Op::template call<Out, A, B>(
@@ -77,22 +76,15 @@ ndarray elementwise_binary_op(ndarray &out, const ndarray &a, const ndarray &b) 
             out_data[out_index + 7 * out_ldim_stride] = Op::template call<Out, A, B>(
                     a_data[a_index + 7 * a_ldim_stride], b_data[b_index + 7 * b_ldim_stride]);
         } else {
-            unroll_size = 1+items_left_in_last_dim;
+            unroll_size = 1 + items_left_in_last_dim;
             for (int j = 0; j < unroll_size; ++j) {
                 out_data[out_index + j * out_ldim_stride] = Op::template call<Out, A, B>(
                         a_data[a_index + j * a_ldim_stride], b_data[b_index + j * b_ldim_stride]);
             }
         }
 
-        // ***********************
-        // ***********************
-        // NOTE TO SELF
-        // I think this indexing is wrong because it mismatches with the UNROLL_FACTOR loop increment
-        // and at best its just confusing
-        // ***********************
-        // ***********************
         for (int dim = ndim - 1; dim >= 0; --dim) {
-            if (dim == ndim - 1) {
+            if (dim == unroll_dim) {
                 // This is unrolled
                 nd_index[dim] += unroll_size;
                 a_index += unroll_size * a_strides[dim];
