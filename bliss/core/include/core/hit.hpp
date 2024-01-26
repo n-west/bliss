@@ -13,6 +13,8 @@ struct hit {
     float   start_freq_MHz;
     int64_t rate_index;
     float   drift_rate_Hz_per_sec;
+    float   power;
+    float   time_span_steps;
     float   snr;
     double  bandwidth;
     int64_t binwidth;

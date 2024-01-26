@@ -91,3 +91,10 @@ struct Hit {
 struct Event {
   hits @0 :List(Hit);
 }
+
+# This is a filterbank file with detected signals (hits)
+# in bliss we call this a scan with 
+struct ScanDetections {
+  scan @0: Filterbank;
+  detections @1 :List(Signal);
+}

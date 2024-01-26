@@ -52,13 +52,23 @@ void bind_pyestimators(nb::module_ m) {
           nb::overload_cast<bliss::cadence, bliss::noise_power_estimate_options>(&bliss::estimate_noise_power));
 
     nb::class_<bliss::noise_stats>(m, "noise_power")
-            .def_prop_ro("noise_floor", &bliss::noise_stats::noise_floor)
+            .def(nb::init<>())
+            .def_rw("noise_floor", &bliss::noise_stats::_noise_floor)
             .def_prop_ro("noise_amplitude", &bliss::noise_stats::noise_amplitude)
-            .def_prop_ro("noise_power", &bliss::noise_stats::noise_power)
+            .def_rw("noise_power", &bliss::noise_stats::_noise_power)
             .def("__repr__", [](bliss::noise_stats &self) {
                 return fmt::format("noise floor: {}\nnoise amplitude: {}\nnoise power: {}\n",
                                    self.noise_floor(),
                                    self.noise_amplitude(),
                                    self.noise_power());
-            });
+            })
+            .def("__getstate__", [](bliss::noise_stats &self) {
+                  return std::make_tuple(self._noise_floor, self._noise_power);
+            })
+            .def("__setstate__", [](bliss::noise_stats &self, const std::tuple<float, float> &state_tuple) {
+                  new (&self) bliss::noise_stats;
+                  self._noise_floor = std::get<0>(state_tuple);
+                  self._noise_power = std::get<1>(state_tuple);
+            })
+            ;
 }

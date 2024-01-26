@@ -6,7 +6,7 @@ namespace bliss {
 /**
  * flag values are used to indicate further downstream what kind of flag some sample was flagged with
  */
-enum class flag_values : uint8_t {
+enum flag_values {
     unflagged              = 0,
     filter_rolloff         = 1 << 0,
     low_spectral_kurtosis  = 1 << 1,

@@ -21,20 +21,20 @@ void bind_pycore(nb::module_ m) {
             .def_prop_ro("mask", nb::overload_cast<>(&bliss::filterbank_data::mask))
             // .def_prop_rw("mask", nb::overload_cast<>(&bliss::filterbank_data::mask), nb::overload_cast<const
             // bland::ndarray&>(&bliss::filterbank_data::mask))
-            .def_prop_ro("az_start", &bliss::filterbank_data::az_start)
-            .def_prop_ro("data_type", &bliss::filterbank_data::data_type)
-            .def_prop_ro("fch1", &bliss::filterbank_data::fch1)
-            .def_prop_ro("foff", &bliss::filterbank_data::foff)
-            .def_prop_ro("machine_id", &bliss::filterbank_data::machine_id)
-            .def_prop_ro("nbits", &bliss::filterbank_data::nbits)
-            .def_prop_ro("nchans", &bliss::filterbank_data::nchans)
-            .def_prop_ro("source_name", &bliss::filterbank_data::source_name)
-            .def_prop_ro("src_dej", &bliss::filterbank_data::src_dej)
-            .def_prop_ro("src_raj", &bliss::filterbank_data::src_raj)
-            .def_prop_ro("telescope_id", &bliss::filterbank_data::telescope_id)
-            .def_prop_ro("tsamp", &bliss::filterbank_data::tsamp)
-            .def_prop_ro("tstart", &bliss::filterbank_data::tstart)
-            .def_prop_ro("za_start", &bliss::filterbank_data::za_start)
+            .def_prop_ro("az_start", nb::overload_cast<>(&bliss::filterbank_data::az_start))
+            .def_prop_ro("data_type", nb::overload_cast<>(&bliss::filterbank_data::data_type))
+            .def_prop_ro("fch1", nb::overload_cast<>(&bliss::filterbank_data::fch1))
+            .def_prop_ro("foff", nb::overload_cast<>(&bliss::filterbank_data::foff))
+            .def_prop_ro("machine_id", nb::overload_cast<>(&bliss::filterbank_data::machine_id))
+            .def_prop_ro("nbits", nb::overload_cast<>(&bliss::filterbank_data::nbits))
+            .def_prop_ro("nchans", nb::overload_cast<>(&bliss::filterbank_data::nchans))
+            .def_prop_ro("source_name", nb::overload_cast<>(&bliss::filterbank_data::source_name))
+            .def_prop_ro("src_dej", nb::overload_cast<>(&bliss::filterbank_data::src_dej))
+            .def_prop_ro("src_raj", nb::overload_cast<>(&bliss::filterbank_data::src_raj))
+            .def_prop_ro("telescope_id", nb::overload_cast<>(&bliss::filterbank_data::telescope_id))
+            .def_prop_ro("tsamp", nb::overload_cast<>(&bliss::filterbank_data::tsamp))
+            .def_prop_ro("tstart", nb::overload_cast<>(&bliss::filterbank_data::tstart))
+            .def_prop_ro("za_start", nb::overload_cast<>(&bliss::filterbank_data::za_start))
         .def("__getstate__", [](bliss::filterbank_data &self) {
                 //     filterbank_data(bland::ndarray data,
                 //     bland::ndarray mask,
@@ -129,12 +129,28 @@ void bind_pycore(nb::module_ m) {
                          nb::overload_cast<>(&bliss::scan::noise_estimate),
                          nb::overload_cast<bliss::noise_stats>(&bliss::scan::noise_estimate))
            .def("__getstate__", [](bliss::scan &self) {
-                auto state_tuple = std::make_tuple(self.noise_estimate(), self.doppler_spectrum(), self.hits(), self.integration_length());
-                return state_tuple;
+                int dummy_value = 15;
+                // auto state = std::tuple<bliss::noise_stats, bland::ndarray /*doppler_spectrum*/, int64_t /* integration_length */, std::vector<bliss::hit> /* hits */>;
+                if (self.has_doppler_spectrum()) {
+                        if (self.has_hits()) {                        
+                                auto state_tuple = std::make_tuple(self.noise_estimate(), dummy_value, self.integration_length(), self.hits());
+                                return state_tuple;
+                        } else {
+                                auto state_tuple = std::make_tuple(self.noise_estimate(), dummy_value, self.integration_length(), std::vector<bliss::hit>{});
+                                return state_tuple;
+                        }
+                } else {
+                        auto state_tuple = std::make_tuple(self.noise_estimate(), dummy_value, self.integration_length(), std::vector<bliss::hit>{});
+                        return state_tuple;
+                        // throw std::runtime_error("cannot pickle this without a good 'empty' ndarray solution");
+                        // auto state_tuple = std::make_tuple(self.noise_estimate(), bland::ndarray(), self.integration_length(), std::vector<bliss::hit>{});
+                        // return state_tuple;
+                }
            })
-           .def("__setstate__", [](bliss::scan &self, const std::tuple<bliss::noise_stats, bland::ndarray, std::vector<bliss::hit>, int64_t> &state_tuple) {
-                // new (&self) bliss::scan();
-           })
+        //    .def("__setstate__", [](bliss::scan &self, const std::tuple<bliss::noise_stats, int, std::vector<bliss::hit>, int64_t> &state_tuple) {
+        //         new (&self) bliss::scan();
+                
+        //    })
             ;
 
     nb::class_<bliss::observation_target>(m, "observation_target")

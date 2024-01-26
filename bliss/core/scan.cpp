@@ -4,6 +4,10 @@
 
 using namespace bliss;
 
+// bliss::scan::scan() {}
+
+bliss::scan::scan(const filterbank_data &fb_data) : filterbank_data(fb_data) {}
+
 bliss::scan::scan(filterbank_data          fb_data,
                   bland::ndarray           dedrifted_spectrum,
                   integrated_flags         dedrifted_rfi,
@@ -16,7 +20,9 @@ bliss::scan::scan(filterbank_data          fb_data,
     _integration_length = fb_data.data().size(0);
 }
 
-bliss::scan::scan(const filterbank_data &fb_data) : filterbank_data(fb_data) {}
+bool bliss::scan::has_doppler_spectrum() {
+    return _dedrifted_spectrum.has_value();
+}
 
 bland::ndarray &bliss::scan::doppler_spectrum() {
     if (_dedrifted_spectrum.has_value()) {
@@ -76,6 +82,10 @@ noise_stats bliss::scan::noise_estimate() {
 
 void bliss::scan::noise_estimate(noise_stats estimate) {
     _noise_stats = estimate;
+}
+
+bool bliss::scan::has_hits() {
+    return _hits.has_value();
 }
 
 std::vector<hit> bliss::scan::hits() {

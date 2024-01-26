@@ -79,6 +79,13 @@ set_package_properties(HDF5 PROPERTIES
 
 # Cap'n proto
 find_package(CapnProto)
+# Example usage:
+#   find_package(CapnProto)
+#   capnp_generate_cpp(CAPNP_SRCS CAPNP_HDRS schema.capnp)
+#   add_executable(foo main.cpp ${CAPNP_SRCS})
+#   target_link_libraries(foo PRIVATE CapnProto::capnp)
+#   target_include_directories(foo PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
+
 set_package_properties(CapnProto PROPERTIES
     URL "https://capnproto.org/"
     DESCRIPTION "Serialization protocol with minimal encoding overhead"

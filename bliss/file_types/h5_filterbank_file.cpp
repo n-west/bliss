@@ -115,7 +115,21 @@ bland::ndarray bliss::h5_filterbank_file::read_data() {
 
     bland::ndarray spectrum_grid({std::get<0>(time_steps), std::get<0>(freq_bins)});
 
-    // The data is read such that dim0 is time and dim1 is frequencyuj i/
+    // copilot example reading a subset of a dataspace
+    // // Define the subset size and offset
+    // hsize_t offset[3] = {0, 0, 20000};  // Start position of the subset
+    // hsize_t count[3] = {16, 1, 40000};  // Block size of the subset
+
+    // // Select the subset in the dataspace
+    // H5::DataSpace dataspace = dataset.getSpace();
+    // dataspace.selectHyperslab(H5S_SELECT_SET, count, offset);
+
+    // // Define the memory dataspace to receive the read data
+    // H5::DataSpace memspace(3, count);
+    // // Read the data
+    // dataset.read(data, H5::PredType::NATIVE_FLOAT, memspace, dataspace);
+
+    // The data is read such that dim0 is time and dim1 is frequency
     _h5_data_handle.read(spectrum_grid.data_ptr<float>(), H5::PredType::NATIVE_FLOAT);
 
     return spectrum_grid;

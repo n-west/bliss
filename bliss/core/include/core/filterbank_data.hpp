@@ -14,6 +14,7 @@ struct h5_filterbank_file;
 
 class filterbank_data {
   public:
+    filterbank_data() = default;
     filterbank_data(h5_filterbank_file fb_file);
     filterbank_data(bland::ndarray data, bland::ndarray mask, double foff = 1);
     filterbank_data(bland::ndarray data,
@@ -33,6 +34,21 @@ class filterbank_data {
                     int64_t        data_type,
                     double         az_start,
                     double         za_start);
+    filterbank_data(double      fch1,
+                    double      foff,
+                    int64_t     machine_id,
+                    int64_t     nbits,
+                    int64_t     nchans,
+                    int64_t     nifs,
+                    std::string source_name,
+                    double      src_dej,
+                    double      src_raj,
+                    int64_t     telescope_id,
+                    double      tsamp,
+                    double      tstart,
+                    int64_t     data_type,
+                    double      az_start,
+                    double      za_start);
     filterbank_data(std::string_view file_path);
 
     bland::ndarray &data();
@@ -40,22 +56,37 @@ class filterbank_data {
     // Set the mask to a new mask. A copy of underlying ndarray is not made
     // void            mask(const bland::ndarray &new_mask);
 
-    double      fch1() const;
-    double      foff() const;
-    int64_t     machine_id() const;
-    int64_t     nbits() const;
-    int64_t     nchans() const;
-    int64_t     nifs() const;
-    std::string source_name() const;
-    double      src_dej() const;
-    double      src_raj() const;
-    int64_t     telescope_id() const;
-    double      tsamp() const;
-    double      tstart() const;
+    double      fch1();
+    void        fch1(double);
+    double      foff();
+    void        foff(double);
+    int64_t     machine_id();
+    void        machine_id(int64_t);
+    int64_t     nbits();
+    void        nbits(int64_t);
+    int64_t     nchans();
+    void        nchans(int64_t);
+    int64_t     nifs();
+    void        nifs(int64_t);
+    std::string source_name();
+    void        source_name(std::string);
+    double      src_dej();
+    void        src_dej(double);
+    double      src_raj();
+    void        src_raj(double);
+    int64_t     telescope_id();
+    void        telescope_id(int64_t);
+    double      tsamp();
+    void        tsamp(double);
+    double      tstart();
+    void        tstart(double);
 
-    int64_t data_type() const;
-    double  az_start() const;
-    double  za_start() const;
+    int64_t data_type();
+    void    data_type(int64_t);
+    double  az_start();
+    void    az_start(double);
+    double  za_start();
+    void    za_start(double);
 
   protected:
     // <KeysViewHDF5 ['data', 'mask']>

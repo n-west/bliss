@@ -1,6 +1,7 @@
 
 
 add_library(bland
+    bland_tensor_internals.cpp
     ndarray.cpp
     ops/ops.cpp
     ops/arithmetic.cpp

@@ -39,6 +39,8 @@ std::vector<event> bliss::event_search(cadence cadence_with_hits) {
     //     }
     // }
 
+    // TODO: should we find "matches" between same-scan 
+
     for (size_t on_scan_index = 0; on_scan_index < on_target_obs._scans.size(); ++on_scan_index) {
         auto starting_scan = on_target_obs._scans[on_scan_index];
         auto candidate_starting_hits = starting_scan.hits();
@@ -68,6 +70,7 @@ std::vector<event> bliss::event_search(cadence cadence_with_hits) {
                 }
             }
         }
+        // If we have a valid event, erase all of the matching hits
     }
 
     return detected_events;

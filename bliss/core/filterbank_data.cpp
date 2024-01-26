@@ -82,6 +82,37 @@ filterbank_data::filterbank_data(bland::ndarray data,
         _az_start(az_start),
         _za_start(za_start) {}
 
+filterbank_data::filterbank_data(double      fch1,
+                                 double      foff,
+                                 int64_t     machine_id,
+                                 int64_t     nbits,
+                                 int64_t     nchans,
+                                 int64_t     nifs,
+                                 std::string source_name,
+                                 double      src_dej,
+                                 double      src_raj,
+                                 int64_t     telescope_id,
+                                 double      tsamp,
+                                 double      tstart,
+                                 int64_t     data_type,
+                                 double      az_start,
+                                 double      za_start) :
+        _fch1(fch1),
+        _foff(foff),
+        _machine_id(machine_id),
+        _nbits(nbits),
+        _nchans(nchans),
+        _nifs(nifs),
+        _source_name(source_name),
+        _src_dej(src_dej),
+        _src_raj(src_raj),
+        _telescope_id(telescope_id),
+        _tsamp(tsamp),
+        _tstart(tstart),
+        _data_type(data_type),
+        _az_start(az_start),
+        _za_start(za_start) {}
+
 bland::ndarray &bliss::filterbank_data::data() {
     return _data;
 }
@@ -90,51 +121,109 @@ bland::ndarray &bliss::filterbank_data::mask() {
     return _mask;
 }
 
-double bliss::filterbank_data::fch1() const {
+double bliss::filterbank_data::fch1() {
     return _fch1;
 }
-double bliss::filterbank_data::foff() const {
-    return _foff;
-}
-int64_t bliss::filterbank_data::machine_id() const {
-    return _machine_id;
-}
-int64_t bliss::filterbank_data::nbits() const {
-    return _nbits;
-}
-int64_t bliss::filterbank_data::nchans() const {
-    return _nchans;
-}
-int64_t bliss::filterbank_data::nifs() const {
-    return _nifs;
-}
-std::string bliss::filterbank_data::source_name() const {
-    return _source_name;
-}
-double bliss::filterbank_data::src_dej() const {
-    return _src_dej;
-}
-double bliss::filterbank_data::src_raj() const {
-    return _src_raj;
-}
-int64_t bliss::filterbank_data::telescope_id() const {
-    return _telescope_id;
-}
-double bliss::filterbank_data::tsamp() const {
-    return _tsamp;
-}
-double bliss::filterbank_data::tstart() const {
-    return _tstart;
+void bliss::filterbank_data::fch1(double fch1) {
+    _fch1 = fch1;
 }
 
-int64_t bliss::filterbank_data::data_type() const {
+double bliss::filterbank_data::foff() {
+    return _foff;
+}
+void bliss::filterbank_data::foff(double foff) {
+     _foff = foff;
+}
+
+int64_t bliss::filterbank_data::machine_id() {
+    return _machine_id;
+}
+void bliss::filterbank_data::machine_id(int64_t machine_id) {
+    _machine_id = machine_id;
+}
+
+int64_t bliss::filterbank_data::nbits() {
+    return _nbits;
+}
+void bliss::filterbank_data::nbits(int64_t nbits) {
+    _nbits = nbits;
+}
+
+int64_t bliss::filterbank_data::nchans() {
+    return _nchans;
+}
+void bliss::filterbank_data::nchans(int64_t nchans) {
+     _nchans = nchans;
+}
+
+int64_t bliss::filterbank_data::nifs() {
+    return _nifs;
+}
+void bliss::filterbank_data::nifs(int64_t nifs) {
+     _nifs = nifs;
+}
+
+std::string bliss::filterbank_data::source_name() {
+    return _source_name;
+}
+void bliss::filterbank_data::source_name(std::string source_name) {
+     _source_name = source_name;
+}
+
+double bliss::filterbank_data::src_dej() {
+    return _src_dej;
+}
+void bliss::filterbank_data::src_dej(double src_dej) {
+     _src_dej = src_dej;
+}
+
+double bliss::filterbank_data::src_raj() {
+    return _src_raj;
+}
+void bliss::filterbank_data::src_raj(double src_raj) {
+     _src_raj = src_raj;
+}
+
+int64_t bliss::filterbank_data::telescope_id() {
+    return _telescope_id;
+}
+void bliss::filterbank_data::telescope_id(int64_t telescope_id) {
+     _telescope_id = telescope_id;
+}
+
+double bliss::filterbank_data::tsamp() {
+    return _tsamp;
+}
+void bliss::filterbank_data::tsamp(double tsamp) {
+     _tsamp = tsamp;
+}
+
+double bliss::filterbank_data::tstart() {
+    return _tstart;
+}
+void bliss::filterbank_data::tstart(double tstart) {
+     _tstart = tstart;
+}
+
+int64_t bliss::filterbank_data::data_type() {
     return _data_type;
 }
-double bliss::filterbank_data::az_start() const {
+void bliss::filterbank_data::data_type(int64_t data_type) {
+    _data_type = data_type;
+}
+
+double bliss::filterbank_data::az_start() {
     return _az_start;
 }
-double bliss::filterbank_data::za_start() const {
+void bliss::filterbank_data::az_start(double az_start) {
+     _az_start = az_start;
+}
+
+double bliss::filterbank_data::za_start() {
     return _za_start;
+}
+void bliss::filterbank_data::za_start(double za_start) {
+     _za_start = za_start;
 }
 
 // void bliss::filterbank_data::mask(const bland::ndarray &mask) {

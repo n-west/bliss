@@ -49,13 +49,17 @@ struct integrated_flags {
  */
 class scan : public filterbank_data {
   public:
+    scan() = default;
+    
+    scan(const filterbank_data &fb_data);
+
     scan(filterbank_data          fb_data,
          bland::ndarray           dedrifted_spectrum,
          integrated_flags         dedrifted_rfi,
          integrate_drifts_options drift_parameters);
 
-    scan(const filterbank_data &fb_data);
 
+    bool                    has_doppler_spectrum();
     bland::ndarray          &doppler_spectrum();
     void                     doppler_spectrum(bland::ndarray doppler_spectrum);
     integrated_flags        &doppler_flags();
@@ -74,6 +78,7 @@ class scan : public filterbank_data {
      */
     void noise_estimate(noise_stats estimate);
 
+    bool             has_hits();
     std::vector<hit> hits();
     void             hits(std::vector<hit> new_hits);
 

@@ -33,6 +33,27 @@ void bind_pybland(nb::module_ m) {
     .def("dtype", &bland::ndarray::dtype)
     .def("device", &bland::ndarray::device)
     .def("size", &bland::ndarray::size)
+    .def("__getstate__", [](bland::ndarray &self) {
+        auto dtype = self.dtype();
+        auto device = self.device();
+        size_t bytes_per_elem = self.dtype().bits / 8;
+        auto state_tuple = std::make_tuple(
+            std::vector<int8_t>{
+                self.data_ptr<int8_t>(),
+                self.data_ptr<int8_t>() + self.numel() * bytes_per_elem
+            },
+            std::make_tuple(dtype.bits, dtype.code),
+            std::make_tuple(device.device_type, device.device_id),
+            self.shape(),
+            self.strides(),
+            self.offsets()
+        );
+        return state_tuple;
+    })
+    .def("__setstate__", [](bland::ndarray &self, std::tuple<std::vector<int8_t>, std::tuple<uint8_t, uint8_t>, std::tuple<DLDeviceType, int>, std::vector<int64_t>, std::vector<int64_t>, std::vector<int64_t>> state_tuple) {
+        // new (&self) bland::ndarray();
+    }
+    )
     ;
 
     m.def("arange", [](float start, float end, float step) {

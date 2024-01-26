@@ -25,9 +25,16 @@ if (WITH_CAPNP)
         hits_file.cpp
     )
     target_link_libraries(file_types
+        PUBLIC
+        bliss_core
         PRIVATE
-        ${CapnProto_LIBRARIES}
+        CapnProto::capnp
     )
+    capnp_generate_cpp(CAPNP_SRCS CAPNP_HDRS hit.capnp)
+    message("** Generated CAPNP_SRCS: ${CAPNP_SRCS}")
+    target_sources(file_types PRIVATE ${CAPNP_SRCS})
+    target_include_directories(file_types PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
+
     # Add a target eventually to do this:
     # capnp compile hit.capnp --output=c++:include/file_types/
     # Generates

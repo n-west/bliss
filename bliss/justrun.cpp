@@ -7,6 +7,7 @@
 #include <flaggers/filter_rolloff.hpp>
 #include <flaggers/magnitude.hpp>
 #include <flaggers/spectral_kurtosis.hpp>
+#include <file_types/hits_file.hpp>
 
 #include "fmt/core.h"
 #include <fmt/ranges.h>
@@ -44,20 +45,30 @@ int main(int argc, char **argv) {
     // auto fil_data = *fil_holder;
 
     cadence = bliss::flag_filter_rolloff(cadence, 0.2);
-    cadence = bliss::flag_spectral_kurtosis(cadence, 0.02, 5);
+    cadence = bliss::flag_spectral_kurtosis(cadence, 0.02, 15);
 
-    auto noise_stats = bliss::estimate_noise_power(
+    cadence = bliss::estimate_noise_power(
             cadence,
             bliss::noise_power_estimate_options{.masked_estimate = true}); // estimate noise power of unflagged data
 
-    // auto dedrifted_fil = bliss::integrate_drifts(
-    //         flagged_fil,
-    //         bliss::integrate_drifts_options{.desmear        = true,
-    //                                         .low_rate       = -8,
-    //                                         .high_rate      = 48,
-    //                                         .rate_step_size = 1}); // integrate along drift lines
+    cadence = bliss::integrate_drifts(
+            cadence,
+            bliss::integrate_drifts_options{.desmear        = false,
+                                            .low_rate       = -48,
+                                            .high_rate      = 48,
+                                            .rate_step_size = 1}); // integrate along drift lines
 
-    // auto hits = bliss::hit_search(dedrifted_fil, {.snr_threshold=10.0f});
+    cadence = bliss::hit_search(cadence, {.snr_threshold=10.0f});
 
-    // bliss::write_hits(hits);
+    for (auto &obs : cadence._observations) {
+        for (auto &scan : obs._scans) {
+            fmt::print("{} hits\n", scan.hits().size());
+        }
+    }
+    // bliss::write_scan_hits_to_file(cadence._observations[0]._scans[0], "on0.cp");
+    // bliss::write_scan_hits_to_file(cadence._observations[0]._scans[1], "on1.cp");
+    // bliss::write_scan_hits_to_file(cadence._observations[0]._scans[2], "on2.cp");
+
+    bliss::write_cadence_hits_to_files(cadence, "testing_hits");
+
 }

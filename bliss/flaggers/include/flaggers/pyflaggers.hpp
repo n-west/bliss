@@ -102,16 +102,19 @@ void bind_pyflaggers(nb::module_ m) {
             .value("high_spectral_kurtosis", bliss::flag_values::high_spectral_kurtosis)
             .value("magnitude", bliss::flag_values::magnitude)
             .value("sigma_clip", bliss::flag_values::sigma_clip)
-            // .def("__getstate__", [](const bliss::flag_values &self) { return std::make_tuple(static_cast<uint8_t>(self)); })
+            .def("__getstate__", [](const bliss::flag_values &self) { 
+                  std::cout << "get state is " << static_cast<int>(self) << std::endl;
+                  return std::make_tuple(static_cast<uint8_t>(self)); })
             // .def("__setstate__", [](bliss::flag_values &self, const std::tuple<uint8_t> &state) {
             //       std::cout << "called setstate" << std::endl;
             //       self = static_cast<bliss::flag_values>(std::get<0>(state));
             // })
 
             // .def("__getstate__", [](const bliss::flag_values &self) { return std::string("filter_rolloff"); })
-            // .def("__setstate__", [](bliss::flag_values &self, const std::string &state) {
-            //       std::cout << "called setstate" << std::endl;
-            // })
+            .def("__setstate__", [](bliss::flag_values &self, const std::tuple<uint8_t> &state) {
+                  std::cout << "called setstate" << std::endl;
+                  self = static_cast<bliss::flag_values>(std::get<0>(state));
+            })
             ;
 
  // This is the format of pickling nb enum expects:

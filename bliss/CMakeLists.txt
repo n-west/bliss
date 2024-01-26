@@ -20,4 +20,9 @@ target_link_libraries(justrun
     fmt::fmt-header-only
     )
 
-
+    add_executable(read_hits read_hits.cpp)
+    target_link_libraries(read_hits
+        file_types
+        fmt::fmt-header-only
+        )
+    

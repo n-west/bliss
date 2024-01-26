@@ -119,21 +119,21 @@ integrate_linear_rounded_bins(const bland::ndarray    &spectrum_grid,
                                 (rfi_mask_slice & static_cast<uint8_t>(flag_values::high_spectral_kurtosis)) /
                                         static_cast<uint8_t>(flag_values::high_spectral_kurtosis);
 
-                        auto magnitude_slice =
-                                bland::slice(rfi_in_drift.magnitude,
-                                             bland::slice_spec{0, drift_index, drift_index + 1},
-                                             bland::slice_spec{1, drift_freq_slice_start, drift_freq_slice_end});
-                        magnitude_slice =
-                                magnitude_slice + (rfi_mask_slice & static_cast<uint8_t>(flag_values::magnitude)) /
-                                                          static_cast<uint8_t>(flag_values::magnitude);
+                        // auto magnitude_slice =
+                        //         bland::slice(rfi_in_drift.magnitude,
+                        //                      bland::slice_spec{0, drift_index, drift_index + 1},
+                        //                      bland::slice_spec{1, drift_freq_slice_start, drift_freq_slice_end});
+                        // magnitude_slice =
+                        //         magnitude_slice + (rfi_mask_slice & static_cast<uint8_t>(flag_values::magnitude)) /
+                        //                                   static_cast<uint8_t>(flag_values::magnitude);
 
-                        auto sigma_clip_slice =
-                                bland::slice(rfi_in_drift.sigma_clip,
-                                             bland::slice_spec{0, drift_index, drift_index + 1},
-                                             bland::slice_spec{1, drift_freq_slice_start, drift_freq_slice_end});
-                        sigma_clip_slice =
-                                sigma_clip_slice + (rfi_mask_slice & static_cast<uint8_t>(flag_values::sigma_clip)) /
-                                                           static_cast<uint8_t>(flag_values::sigma_clip);
+                        // auto sigma_clip_slice =
+                        //         bland::slice(rfi_in_drift.sigma_clip,
+                        //                      bland::slice_spec{0, drift_index, drift_index + 1},
+                        //                      bland::slice_spec{1, drift_freq_slice_start, drift_freq_slice_end});
+                        // sigma_clip_slice =
+                        //         sigma_clip_slice + (rfi_mask_slice & static_cast<uint8_t>(flag_values::sigma_clip)) /
+                        //                                    static_cast<uint8_t>(flag_values::sigma_clip);
                     }
 
                     drift_slice = drift_slice + spectrum_slice / desmear_bandwidth;
@@ -192,21 +192,21 @@ integrate_linear_rounded_bins(const bland::ndarray    &spectrum_grid,
                                 (rfi_mask_slice & static_cast<uint8_t>(flag_values::high_spectral_kurtosis)) /
                                         static_cast<uint8_t>(flag_values::high_spectral_kurtosis);
 
-                        auto magnitude_slice =
-                                bland::slice(rfi_in_drift.magnitude,
-                                             bland::slice_spec{0, drift_index, drift_index + 1},
-                                             bland::slice_spec{1, drift_freq_slice_start, drift_freq_slice_end});
-                        magnitude_slice =
-                                magnitude_slice + (rfi_mask_slice & static_cast<uint8_t>(flag_values::magnitude)) /
-                                                          static_cast<uint8_t>(flag_values::magnitude);
+                        // auto magnitude_slice =
+                        //         bland::slice(rfi_in_drift.magnitude,
+                        //                      bland::slice_spec{0, drift_index, drift_index + 1},
+                        //                      bland::slice_spec{1, drift_freq_slice_start, drift_freq_slice_end});
+                        // magnitude_slice =
+                        //         magnitude_slice + (rfi_mask_slice & static_cast<uint8_t>(flag_values::magnitude)) /
+                        //                                   static_cast<uint8_t>(flag_values::magnitude);
 
-                        auto sigma_clip_slice =
-                                bland::slice(rfi_in_drift.sigma_clip,
-                                             bland::slice_spec{0, drift_index, drift_index + 1},
-                                             bland::slice_spec{1, drift_freq_slice_start, drift_freq_slice_end});
-                        sigma_clip_slice =
-                                sigma_clip_slice + (rfi_mask_slice & static_cast<uint8_t>(flag_values::sigma_clip)) /
-                                                           static_cast<uint8_t>(flag_values::sigma_clip);
+                        // auto sigma_clip_slice =
+                        //         bland::slice(rfi_in_drift.sigma_clip,
+                        //                      bland::slice_spec{0, drift_index, drift_index + 1},
+                        //                      bland::slice_spec{1, drift_freq_slice_start, drift_freq_slice_end});
+                        // sigma_clip_slice =
+                        //         sigma_clip_slice + (rfi_mask_slice & static_cast<uint8_t>(flag_values::sigma_clip)) /
+                        //                                    static_cast<uint8_t>(flag_values::sigma_clip);
                     }
 
                     drift_slice = drift_slice + spectrum_slice / desmear_bandwidth;
