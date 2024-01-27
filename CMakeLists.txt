@@ -90,6 +90,7 @@ if (NOT CapnProto_FOUND)
   # capn proto requires CXX extensions
   # https://github.com/capnproto/capnproto/blob/a12c15a7cd0ae5121dca6216f529fb15fdee238c/c%2B%2B/CMakeLists.txt#L152C43-L152C63
   set(CMAKE_CXX_EXTENSIONS ON)
+  set(CMAKE_POSITION_INDEPENDENT_CODE ON CACHE BOOL "Enable position independent code")
   message("**BLISS: capn proto not found. Attempting to pull in as an external project (and enabling CXX extensions)")
   # Formatting library
   FetchContent_Declare(
@@ -99,8 +100,6 @@ if (NOT CapnProto_FOUND)
     GIT_TAG v1.0.2)
   FetchContent_MakeAvailable(external_capnproto)
   set(CapnProto_FOUND TRUE)
-  set_property(GLOBAL PROPERTY CMAKE_POSITION_INDEPENDENT_CODE TRUE)
-  # Adds fmt::fmt
 endif ()
 set_package_properties(CapnProto PROPERTIES
     URL "https://capnproto.org/"
