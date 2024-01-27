@@ -113,7 +113,7 @@ void bind_pydrift_search(nb::module_ m) {
 
     // High-level "hit search" implementation
     m.def("hit_search", nb::overload_cast<bliss::scan, bliss::hit_search_options>(&bliss::hit_search));
-
+    m.def("hit_search", nb::overload_cast<bliss::observation_target, bliss::hit_search_options>(&bliss::hit_search));
     m.def("hit_search", nb::overload_cast<bliss::cadence, bliss::hit_search_options>(&bliss::hit_search));
 
     nb::class_<bliss::event>(m, "event")

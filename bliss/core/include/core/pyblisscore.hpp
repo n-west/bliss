@@ -155,6 +155,7 @@ void bind_pycore(nb::module_ m) {
 
     nb::class_<bliss::observation_target>(m, "observation_target")
             .def(nb::init<std::vector<bliss::filterbank_data>>())
+            .def(nb::init<std::vector<std::string_view>>())
             .def_rw("scans", &bliss::observation_target::_scans)
             .def_rw("target_name", &bliss::observation_target::_target_name);
 

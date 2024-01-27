@@ -36,7 +36,7 @@ scan read_scan_hits_from_file(std::string_view file_path);
  * the file_path
  * the result will be one file per scan of the observation target
 */
-void write_observation_target_hits_to_files(observation_target scan_with_hits, std::string_view file_path);
+void write_observation_target_hits_to_files(observation_target scan_with_hits, std::string_view base_filename);
 
 /**
  * read cap'n proto serialized scan from file as written by `write_scan_hits_to_file`
@@ -48,7 +48,7 @@ observation_target read_observation_target_hits_from_files(std::vector<std::stri
  * the file_path
  * the result will be one file per scan for each observation target with filenames matching the pattern
 */
-void write_cadence_hits_to_files(cadence scan_with_hits, std::string_view file_path);
+void write_cadence_hits_to_files(cadence cadence_with_hits, std::string_view base_filename);
 
 /**
  * read cap'n proto serialized scan from file as written by `write_scan_hits_to_file`
