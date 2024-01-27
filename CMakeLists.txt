@@ -11,6 +11,15 @@ project(
     VERSION 0.0.0
     LANGUAGES CXX
 )
+
+# We don't actually need C, but there's an issue with debian packaging of cap'n proto
+# that causes gcc to fail
+# https://github.com/chaincodelabs/libmultiprocess/issues/68
+# The 2 solutions:
+# * enable C
+# * hard code that libatomic was found
+enable_language(C)
+
 include(CheckLanguage)
 check_language(CUDA)
 
@@ -30,8 +39,6 @@ if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
   # Optionally set things like CMAKE_CXX_STANDARD, CMAKE_POSITION_INDEPENDENT_CODE here
   set(CMAKE_CXX_STANDARD 17) # Cmake 3.8
   set(CMAKE_CXX_STANDARD_REQUIRED ON)
-  set(CMAKE_CXX_EXTENSIONS OFF)
-
   # Let's ensure -std=c++xx instead of -std=g++xx
   set(CMAKE_CXX_EXTENSIONS OFF)
 
@@ -52,7 +59,7 @@ if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)
 #     message(STATUS "Doxygen not found, not building docs")
 #   endif()
 endif()
-
+include(FetchContent) # CMake 3.14+
 include(CheckIPOSupported)
 check_ipo_supported(RESULT IPO_AVAILABLE)
 
@@ -79,13 +86,21 @@ set_package_properties(HDF5 PROPERTIES
 
 # Cap'n proto
 find_package(CapnProto)
-# Example usage:
-#   find_package(CapnProto)
-#   capnp_generate_cpp(CAPNP_SRCS CAPNP_HDRS schema.capnp)
-#   add_executable(foo main.cpp ${CAPNP_SRCS})
-#   target_link_libraries(foo PRIVATE CapnProto::capnp)
-#   target_include_directories(foo PRIVATE ${CMAKE_CURRENT_BINARY_DIR})
-
+if (NOT CapnProto_FOUND)
+  # capn proto requires CXX extensions
+  # https://github.com/capnproto/capnproto/blob/a12c15a7cd0ae5121dca6216f529fb15fdee238c/c%2B%2B/CMakeLists.txt#L152C43-L152C63
+  set(CMAKE_CXX_EXTENSIONS ON)
+  message("**BLISS: capn proto not found. Attempting to pull in as an external project (and enabling CXX extensions)")
+  # Formatting library
+  FetchContent_Declare(
+    external_capnproto
+    EXCLUDE_FROM_ALL
+    GIT_REPOSITORY https://github.com/capnproto/capnproto
+    GIT_TAG v1.0.2)
+  FetchContent_MakeAvailable(external_capnproto)
+  set(CapnProto_FOUND TRUE)
+  # Adds fmt::fmt
+endif ()
 set_package_properties(CapnProto PROPERTIES
     URL "https://capnproto.org/"
     DESCRIPTION "Serialization protocol with minimal encoding overhead"
@@ -93,8 +108,6 @@ set_package_properties(CapnProto PROPERTIES
 
 cmake_dependent_option(WITH_CAPNP "Enable Cap'n Proto to publish hits and events" ON "CapnProto_FOUND" OFF)
 add_feature_info(WITH_CAPNP CapnProto_FOUND "CAPNP serialization of hits and events")
-
-include(FetchContent) # CMake 3.14+
 
 # Formatting library
 FetchContent_Declare(

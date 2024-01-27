@@ -1,0 +1,3 @@
+[submodule "bliss/external/capnproto"]
+	path = bliss/external/capnproto
+	url = https://github.com/capnproto/capnproto
