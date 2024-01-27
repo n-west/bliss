@@ -99,7 +99,7 @@ if (NOT CapnProto_FOUND)
     GIT_TAG v1.0.2)
   FetchContent_MakeAvailable(external_capnproto)
   set(CapnProto_FOUND TRUE)
-  set_directory_properties(Cap'n Proto Root_SOURCE_DIR CMAKE_POSITION_INDEPENDENT_CODE TRUE)
+  set_property(GLOBAL CMAKE_POSITION_INDEPENDENT_CODE TRUE)
   # Adds fmt::fmt
 endif ()
 set_package_properties(CapnProto PROPERTIES
