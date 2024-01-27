@@ -89,6 +89,7 @@ find_package(CapnProto)
 if (NOT CapnProto_FOUND)
   # capn proto requires CXX extensions
   # https://github.com/capnproto/capnproto/blob/a12c15a7cd0ae5121dca6216f529fb15fdee238c/c%2B%2B/CMakeLists.txt#L152C43-L152C63
+  # TODO: try to scope these better
   set(CMAKE_CXX_EXTENSIONS ON)
   set(CMAKE_POSITION_INDEPENDENT_CODE ON CACHE BOOL "Enable position independent code")
   message("**BLISS: capn proto not found. Attempting to pull in as an external project (and enabling CXX extensions)")
