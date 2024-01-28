@@ -51,17 +51,15 @@ struct hit_search_options {
     /**
      * threshold (linear SNR) that integrated power must be above to be considered a hit
      */
-    float snr_threshold = 10.0f;
+    float snr_threshold = 20.0f;
 
     std::vector<nd_coords> neighborhood = {
             // clang-format off
-            {-1, 1},  {1, 0},  {1, 1},
-            {0, -1},  /* X  */ {0, 1},
-            {-1, -1}, {-1, 0}, {1, -1},
-            // {2, 0},
-            // {0, 2},
-            // {-2, 0},
-            // {0, -2}
+   {-2, 2},  {-1, 2},  {0, 2},  {1, 2},  {2, 2},
+   {-2, 1},  {-1, 1},  {0, 1},  {1, 1},  {2, 1},
+   {-2, 0},  {-1, 0},  /* X  */ {1, 0},  {2, 0},
+   {-2, -1}, {-1, -1}, {0, -1}, {1, -1}, {2, -1},
+   {-2, -2}, {-1, -2}, {0, -2}, {1, -2}, {2, -2},
             // clang-format on
     };
 };

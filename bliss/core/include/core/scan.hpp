@@ -58,6 +58,13 @@ class scan : public filterbank_data {
          integrated_flags         dedrifted_rfi,
          integrate_drifts_options drift_parameters);
 
+    using state_tuple = std::tuple<filterbank_data::state_tuple /*filterbank_data*/,
+                                  bland::ndarray /*doppler_spectrum*/,
+                                  int64_t /*integration_length*/,
+                                  std::vector<hit>,
+                                  noise_stats::state_tuple>;
+
+    state_tuple get_state();
 
     bool                    has_doppler_spectrum();
     bland::ndarray          &doppler_spectrum();

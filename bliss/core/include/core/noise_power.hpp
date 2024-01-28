@@ -1,7 +1,8 @@
 #pragma once
 
-namespace bliss {
+#include <tuple>
 
+namespace bliss {
 
 /**
  * noise_power represents estimates of the mean noise power as well as the deviation
@@ -21,6 +22,12 @@ struct noise_stats {
     float noise_amplitude() const;
 
     float noise_floor() const;
+
+    using state_tuple = std::tuple<float, float>;
+
+    state_tuple get_state() const;
+
+    void set_state(state_tuple);
 
 };
 

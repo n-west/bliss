@@ -7,10 +7,10 @@
 #include <nanobind/stl/vector.h>
 
 #include "connected_components.hpp"
+#include "event_search.hpp"
 #include "hit_search.hpp"
 #include "integrate_drifts.hpp"
 #include "local_maxima.hpp"
-#include "event_search.hpp"
 
 void bind_pydrift_search(nb::module_ m) {
 
@@ -47,34 +47,11 @@ void bind_pydrift_search(nb::module_ m) {
             .def_rw("rfi_counts", &bliss::hit::rfi_counts)
             .def_rw("binwidth", &bliss::hit::binwidth)
             .def_rw("bandwidth", &bliss::hit::bandwidth)
-            .def("__getstate__",
-                 [](const bliss::hit &self) {
-                     return std::make_tuple(self.start_freq_index,
-                                            self.start_freq_MHz,
-                                            self.rate_index,
-                                            self.drift_rate_Hz_per_sec,
-                                            self.snr,
-                                            self.bandwidth,
-                                            self.binwidth,
-                                            self.rfi_counts);
-                 })
-            .def("__setstate__",
-                 [](bliss::hit &self,
-                    const std::tuple<int64_t, float, int64_t, float, float, double, int64_t, bliss::rfi>
-                            &state) {
-                        bliss::rfi rfi_counts;
-                        for (const auto& [key, value] : std::get<7>(state)) {
-                                rfi_counts[static_cast<bliss::flag_values>(key)] = value;
-                        }
-                     new (&self) bliss::hit{.start_freq_index      = std::get<0>(state),
-                                            .start_freq_MHz        = std::get<1>(state),
-                                            .rate_index            = std::get<2>(state),
-                                            .drift_rate_Hz_per_sec = std::get<3>(state),
-                                            .snr                   = std::get<4>(state),
-                                            .bandwidth             = std::get<5>(state),
-                                            .binwidth              = std::get<6>(state),
-                                            .rfi_counts            = rfi_counts};
-                 });
+            .def("__getstate__", &bliss::hit::get_state)
+            .def("__setstate__", [](bliss::hit &self, const bliss::hit::state_tuple &state) {
+                new (&self) bliss::hit;
+                self.set_state(state);
+            });
 
     // Generic thresholding methods
     m.def("hard_threshold_drifts", &bliss::hard_threshold_drifts);

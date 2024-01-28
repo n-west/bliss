@@ -1,9 +1,10 @@
 
 add_library(bliss_core
     cadence.cpp
-    scan.cpp
+    hit.cpp
     filterbank_data.cpp
     noise_power.cpp
+    scan.cpp
 )
 
 target_include_directories(bliss_core PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)

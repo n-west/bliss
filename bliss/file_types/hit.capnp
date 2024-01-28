@@ -23,6 +23,9 @@ struct Signal {
   # The drift rate in Hz/s
   driftRate @3 :Float64;
 
+  # The index of drift rate in doppler spectrum
+  driftIndex @10 :Int32;
+
   # The signal-to-noise ratio for the hit
   snr @4 :Float32;
 

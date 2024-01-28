@@ -51,6 +51,27 @@ class filterbank_data {
                     double      za_start);
     filterbank_data(std::string_view file_path);
 
+    using state_tuple = std::tuple<bland::ndarray,
+                                   bland::ndarray,
+                                   double,
+                                   double,
+                                   int64_t,
+                                   int64_t,
+                                   int64_t,
+                                   int64_t,
+                                   std::string,
+                                   double,
+                                   double,
+                                   int64_t,
+                                   double,
+                                   double,
+                                   int64_t,
+                                   double,
+                                   double>;
+
+    template <bool POPULATE_DATA_AND_MASK = false>
+    state_tuple get_state();
+
     bland::ndarray &data();
     bland::ndarray &mask();
     // Set the mask to a new mask. A copy of underlying ndarray is not made

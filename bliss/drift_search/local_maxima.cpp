@@ -61,6 +61,9 @@ std::vector<component> bliss::find_local_maxima_above_threshold(scan &dedrifted_
     nd_coords     curr_coord(visited_shape.size(), 0);
 
     auto numel = visited.numel();
+    // how much greater must the local max be above the neighborhood (2%)
+    // TODO: might be worth thinking through a distance that drops with L1/L2 increase
+    constexpr float rtol = 1.02;
 
     fmt::print("local_maxima looking through {} candidates with threshold {}\n", numel, hard_threshold);
     for (int64_t n = 0; n < numel; ++n) {
@@ -91,7 +94,7 @@ std::vector<component> bliss::find_local_maxima_above_threshold(scan &dedrifted_
                     // check if the next coordinate is valid and not visited
                     if (in_bounds) {
                         auto linear_neighbor_index = doppler_spectrum_strider.to_linear_offset(neighbor_coord);
-                        if (candidate_maxima_val > doppler_spectrum_data[linear_neighbor_index]) {
+                        if (candidate_maxima_val > rtol * doppler_spectrum_data[linear_neighbor_index]) {
                             // we know this neighbor can't be a candidate maxima...
                             visited_data[visited_strider.to_linear_offset(neighbor_coord)] = 0;
                         } else {
