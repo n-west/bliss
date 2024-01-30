@@ -37,8 +37,8 @@ bland::ndarray bliss::hard_threshold_drifts(const bland::ndarray &dedrifted_spec
     return threshold_mask;
 }
 
-std::vector<hit> bliss::hit_search(scan dedrifted_scan, hit_search_options options) {
-    std::vector<hit> hits;
+std::list<hit> bliss::hit_search(scan dedrifted_scan, hit_search_options options) {
+    std::list<hit> hits;
 
     std::vector<component> components;
     if (options.method == hit_search_methods::CONNECTED_COMPONENTS) {
@@ -48,7 +48,7 @@ std::vector<hit> bliss::hit_search(scan dedrifted_scan, hit_search_options optio
     }
     auto noise_stats = dedrifted_scan.noise_estimate();
 
-    hits.reserve(components.size());
+    // hits.reserve(components.size());
     // Do we need a "component to hit" for each type of search?
     for (const auto &c : components) {
         // Assume dims size 2 for now :-| (we'll get beam stuff sorted eventually)

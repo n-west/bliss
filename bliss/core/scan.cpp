@@ -21,7 +21,7 @@ bliss::scan::scan(filterbank_data          fb_data,
 }
 
 scan::state_tuple bliss::scan::get_state() {
-    std::vector<hit> hits_state = _hits.value_or(std::vector<hit>{});
+    std::list<hit> hits_state = _hits.value_or(std::list<hit>{});
     noise_stats::state_tuple noise_state;
     if (_noise_stats.has_value()) {
         noise_state = _noise_stats.value().get_state();
@@ -104,7 +104,7 @@ bool bliss::scan::has_hits() {
     return _hits.has_value();
 }
 
-std::vector<hit> bliss::scan::hits() {
+std::list<hit> bliss::scan::hits() {
     if (_hits.has_value()) {
         return _hits.value();
     } else {
@@ -112,6 +112,6 @@ std::vector<hit> bliss::scan::hits() {
     }
 }
 
-void bliss::scan::hits(std::vector<hit> new_hits) {
+void bliss::scan::hits(std::list<hit> new_hits) {
     _hits = new_hits;
 }

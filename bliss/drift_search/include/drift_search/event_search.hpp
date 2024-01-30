@@ -11,6 +11,10 @@ struct event {
     // event() = default;
     // event(std::vector<hit> hits) : hits(hits) {}
     std::vector<hit> hits; // hits that contribute to this event
+    float starting_frequency = 0;
+    float average_power = 0;
+    float average_snr = 0;
+    float average_drift_rate_Hz_per_sec = 0;
 };
 
 /**

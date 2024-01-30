@@ -95,6 +95,10 @@ void bind_pydrift_search(nb::module_ m) {
 
     nb::class_<bliss::event>(m, "event")
             .def_rw("hits", &bliss::event::hits)
+            .def_rw("average_drift_rate_Hz_per_sec", &bliss::event::average_drift_rate_Hz_per_sec)
+            .def_rw("average_power", &bliss::event::average_power)
+            .def_rw("average_snr", &bliss::event::average_snr)
+            .def_rw("starting_frequency", &bliss::event::starting_frequency)
             .def("__getstate__", [](const bliss::event &self) { return self.hits; })
             .def("__setstate__", [](bliss::event &self, const std::vector<bliss::hit> &state) {
                 new (&self) bliss::event{.hits = state};

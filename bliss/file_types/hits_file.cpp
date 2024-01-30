@@ -158,10 +158,12 @@ void bliss::write_scan_hits_to_file(scan scan_with_hits, std::string_view file_p
     auto hits           = scan_with_hits.hits();
     auto number_hits    = hits.size();
     auto signal_builder = hit_builder.initDetections(number_hits);
-    for (size_t hit_index = 0; hit_index < number_hits; ++hit_index) {
-        auto this_hit    = hits[hit_index];
+    size_t hit_index = 0;
+    for (const auto &hit : hits) {
+        // auto this_hit    = hits[hit_index];
         auto this_signal = signal_builder[hit_index];
-        detail::bliss_hit_to_capnp_signal_message(this_signal, this_hit);
+        detail::bliss_hit_to_capnp_signal_message(this_signal, hit);
+        ++hit_index;
     }
     auto out_file = detail::raii_file_for_write(file_path);
     capnp::writeMessageToFd(out_file._fd, message);
@@ -184,7 +186,7 @@ scan bliss::read_scan_hits_from_file(std::string_view file_path) {
         scan_with_hits.src_dej(deserialized_scan.getDec());
         scan_with_hits.src_raj(deserialized_scan.getRa());
 
-        std::vector<hit> hits;
+        std::list<hit> hits;
 
         auto detections  = hit_reader.getDetections();
         auto number_hits = detections.size();

@@ -9,6 +9,7 @@
 #include <nanobind/stl/string.h>
 #include <nanobind/stl/string_view.h>
 #include <nanobind/stl/vector.h>
+#include <nanobind/stl/list.h>
 
 namespace nb = nanobind;
 using namespace nb::literals;
@@ -122,7 +123,7 @@ void bind_pycore(nb::module_ m) {
                  nb::overload_cast<bliss::integrate_drifts_options>(&bliss::scan::dedoppler_options))
             .def_prop_rw("hits",
                          nb::overload_cast<>(&bliss::scan::hits),
-                         nb::overload_cast<std::vector<bliss::hit>>(&bliss::scan::hits))
+                         nb::overload_cast<std::list<bliss::hit>>(&bliss::scan::hits))
             .def_prop_rw("noise_estimate",
                          nb::overload_cast<>(&bliss::scan::noise_estimate),
                          nb::overload_cast<bliss::noise_stats>(&bliss::scan::noise_estimate))

@@ -7,6 +7,7 @@
 
 #include <cstdint>
 #include <string>
+#include <list>
 #include <string_view>
 
 namespace bliss {
@@ -61,7 +62,7 @@ class scan : public filterbank_data {
     using state_tuple = std::tuple<filterbank_data::state_tuple /*filterbank_data*/,
                                   bland::ndarray /*doppler_spectrum*/,
                                   int64_t /*integration_length*/,
-                                  std::vector<hit>,
+                                  std::list<hit>,
                                   noise_stats::state_tuple>;
 
     state_tuple get_state();
@@ -86,8 +87,8 @@ class scan : public filterbank_data {
     void noise_estimate(noise_stats estimate);
 
     bool             has_hits();
-    std::vector<hit> hits();
-    void             hits(std::vector<hit> new_hits);
+    std::list<hit> hits();
+    void             hits(std::list<hit> new_hits);
 
   protected:
     std::optional<noise_stats> _noise_stats;
@@ -99,7 +100,7 @@ class scan : public filterbank_data {
     std::optional<integrated_flags>         _dedrifted_rfi;
     std::optional<integrate_drifts_options> _drift_parameters;
 
-    std::optional<std::vector<hit>> _hits;
+    std::optional<std::list<hit>> _hits;
 };
 
 } // namespace bliss

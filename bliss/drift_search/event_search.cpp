@@ -45,29 +45,48 @@ std::vector<event> bliss::event_search(cadence cadence_with_hits) {
         auto starting_scan = on_target_obs._scans[on_scan_index];
         auto candidate_starting_hits = starting_scan.hits();
         // For every hit, look through hits in subsequent scans trying to match them
-        for (size_t starting_hit_index = 0; starting_hit_index < candidate_starting_hits.size(); ++starting_hit_index) {
-            auto starting_hit = candidate_starting_hits[starting_hit_index];
+        for (const auto &starting_hit : candidate_starting_hits) {
+        // for (size_t starting_hit_index = 0; starting_hit_index < candidate_starting_hits.size(); ++starting_hit_index) {
+            // auto starting_hit = candidate_starting_hits[starting_hit_index];
             event candidate_event;
             candidate_event.hits.push_back(starting_hit);
             for (size_t matching_scan_index = on_scan_index; matching_scan_index < on_target_obs._scans.size(); ++matching_scan_index) {
                 auto candidate_scan = on_target_obs._scans[matching_scan_index];
                 auto hits_to_check = candidate_scan.hits();
                 auto time_between_scans = starting_scan.tstart() - candidate_scan.tstart();
-                for (size_t candidate_hit_index = 0; candidate_hit_index < hits_to_check.size(); ++candidate_hit_index) {
-                    auto candidate_matching_hit = hits_to_check[candidate_hit_index];
+                for (const auto &candidate_matching_hit : hits_to_check) {
+                // for (size_t candidate_hit_index = 0; candidate_hit_index < hits_to_check.size(); ++candidate_hit_index) {
+                    // auto candidate_matching_hit = hits_to_check[candidate_hit_index];
 
                     auto extrapolated_start_frequency = candidate_matching_hit.start_freq_MHz + candidate_matching_hit.drift_rate_Hz_per_sec * time_between_scans;
-                    float max_drift_rate_error = starting_hit.drift_rate_Hz_per_sec * 0.1f; // 10% drift rate error, is there a better error bound?
+                    float max_drift_rate_error = starting_hit.drift_rate_Hz_per_sec * 0.05f; // 10% drift rate error, is there a better error bound?
                     // allow being off by 2 channel widths + the min/max drift error
                     auto channel_frequency_match_error = std::abs(starting_scan.foff()) + std::abs(candidate_scan.foff()) + std::abs(max_drift_rate_error * time_between_scans);
 
                     if (std::abs(starting_hit.start_freq_MHz - extrapolated_start_frequency) < channel_frequency_match_error &&
                         std::abs(starting_hit.drift_rate_Hz_per_sec - candidate_matching_hit.drift_rate_Hz_per_sec) < max_drift_rate_error) {
                         // We're going to assume these are the same signal, which means we have a candidate hit
-                        fmt::print("Building an event between [{}, {}] and [{}][{}]\n", on_scan_index, starting_hit_index, matching_scan_index, candidate_hit_index);
+                        fmt::print("Building an event between scan {} and scan {}\n", on_scan_index, matching_scan_index);
                         candidate_event.hits.push_back(candidate_matching_hit);
+                        break;
                     }
                 }
+            }
+            if (candidate_event.hits.size() > 1) {
+                // TODO: check if the candidate event seems like a good event (so far, making sure > 1 hit matches)
+                // I can do some of this when adding hits to the candidate event
+                for (auto &hit_in_event : candidate_event.hits) {
+                    candidate_event.average_drift_rate_Hz_per_sec += hit_in_event.drift_rate_Hz_per_sec;
+                    candidate_event.average_power += hit_in_event.power;
+                    candidate_event.average_snr += hit_in_event.snr;
+                }
+                candidate_event.average_drift_rate_Hz_per_sec = candidate_event.average_drift_rate_Hz_per_sec / candidate_event.hits.size();
+                candidate_event.average_power = candidate_event.average_power / candidate_event.hits.size();
+                candidate_event.average_snr = candidate_event.average_snr / candidate_event.hits.size();
+                fmt::print("Average SNR of this candidate event is {} and drift is {}\n", candidate_event.average_snr, candidate_event.average_drift_rate_Hz_per_sec);
+
+                // candidate_event.starting_frequency = candidate_event.average_drift; // I don't have a good way to compute this right now
+                detected_events.emplace_back(candidate_event);
             }
         }
         // If we have a valid event, erase all of the matching hits

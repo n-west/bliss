@@ -58,7 +58,7 @@ int main(int argc, char **argv) {
                                             .high_rate      = 48,
                                             .rate_step_size = 1}); // integrate along drift lines
 
-    cadence = bliss::hit_search(cadence, {.method=bliss::hit_search_methods::LOCAL_MAXIMA, .snr_threshold=10.0f});
+    cadence = bliss::hit_search(cadence, {.method=bliss::hit_search_methods::LOCAL_MAXIMA, .snr_threshold=500.0f});
 
     for (auto &obs : cadence._observations) {
         for (auto &scan : obs._scans) {

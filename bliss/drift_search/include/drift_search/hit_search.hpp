@@ -6,6 +6,8 @@
 #include <core/hit.hpp>
 #include <core/flag_values.hpp>
 
+#include <list>
+
 
 namespace bliss {
 
@@ -75,7 +77,7 @@ struct hit_search_options {
  * 
  * The returned scan is a copy of the given scan with the hits field set
  */
-std::vector<hit>
+std::list<hit>
 hit_search(scan dedrifted_scan, hit_search_options options = {});
 
 /**
