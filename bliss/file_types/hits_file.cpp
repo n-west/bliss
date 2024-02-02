@@ -73,6 +73,8 @@ void bliss_hit_to_capnp_signal_message(Signal::Builder &signal_builder, hit this
     // the seticore power was normalized for computing an SNR, the incoherentpower was just the integrated power
     signal_builder.setPower(this_hit.power);
     signal_builder.setIncoherentPower(this_hit.power);
+    signal_builder.setStartTime(this_hit.start_time_sec);
+    signal_builder.setDurationSeconds(this_hit.duration_sec);
 
     // These currently aren't in the capn proto definition to be serialized
     // double  bandwidth;
@@ -91,6 +93,9 @@ hit capnp_signal_message_to_bliss_hit(const Signal::Reader &signal_reader) {
     // rounded up power-of-2 value
     this_hit.time_span_steps = signal_reader.getNumTimesteps();
     this_hit.snr             = signal_reader.getSnr();
+
+    this_hit.start_time_sec = signal_reader.getStartTime();
+    this_hit.duration_sec = signal_reader.getDurationSeconds();
     // The following are not (currently) in the capn proto definition
     // this_hit.bandwidth;
     // this_hit.binwidth;
@@ -154,6 +159,8 @@ void bliss::write_scan_hits_to_file(scan scan_with_hits, std::string_view file_p
     fil_builder.setTelescopeId(scan_with_hits.telescope_id());
     fil_builder.setTsamp(scan_with_hits.tsamp());
     fil_builder.setTstart(scan_with_hits.tstart());
+    fil_builder.setNumTimesteps(scan_with_hits.integration_length());
+    fil_builder.setNumChannels(scan_with_hits.nchans());
 
     auto hits           = scan_with_hits.hits();
     auto number_hits    = hits.size();
@@ -185,6 +192,8 @@ scan bliss::read_scan_hits_from_file(std::string_view file_path) {
         scan_with_hits.telescope_id(deserialized_scan.getTelescopeId());
         scan_with_hits.src_dej(deserialized_scan.getDec());
         scan_with_hits.src_raj(deserialized_scan.getRa());
+        scan_with_hits.nchans(deserialized_scan.getNumChannels());
+        scan_with_hits.integration_length(deserialized_scan.getNumTimesteps());
 
         std::list<hit> hits;
 

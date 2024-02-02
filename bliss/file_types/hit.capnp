@@ -46,6 +46,9 @@ struct Signal {
   # The total power for the same signal, calculated incoherently.
   # This is available in the stamps files, but not in the hits files.
   incoherentPower @9 :Float32;
+
+  startTime @11 :Float32; # MJ in seconds
+  durationSeconds @12 :Float32; # duration of hit in seconds
 }
 
 # The Filterbank contains a smaller slice of the larger filterbank that we originally

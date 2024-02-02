@@ -20,9 +20,17 @@ target_link_libraries(justrun
     fmt::fmt-header-only
     )
 
-    add_executable(read_hits read_hits.cpp)
-    target_link_libraries(read_hits
-        file_types
-        fmt::fmt-header-only
-        )
+add_executable(read_hits read_hits.cpp)
+target_link_libraries(read_hits
+    file_types
+    fmt::fmt-header-only
+    )
+    
+add_executable(event_search event_search.cpp)
+target_link_libraries(event_search
+    file_types
+    drift_search
+    HDF5::HDF5
+    fmt::fmt-header-only
+    )
     

@@ -7,6 +7,7 @@
 #include <flaggers/filter_rolloff.hpp>
 #include <flaggers/magnitude.hpp>
 #include <flaggers/spectral_kurtosis.hpp>
+#include <drift_search/filter_hits.hpp>
 #include <file_types/hits_file.hpp>
 
 #include "fmt/core.h"
@@ -58,13 +59,24 @@ int main(int argc, char **argv) {
                                             .high_rate      = 48,
                                             .rate_step_size = 1}); // integrate along drift lines
 
-    cadence = bliss::hit_search(cadence, {.method=bliss::hit_search_methods::LOCAL_MAXIMA, .snr_threshold=500.0f});
+    cadence = bliss::hit_search(cadence, {.method=bliss::hit_search_methods::CONNECTED_COMPONENTS, .snr_threshold=50.0f});
 
+    fmt::print("Before filtering:\n");
     for (auto &obs : cadence._observations) {
         for (auto &scan : obs._scans) {
             fmt::print("{} hits\n", scan.hits().size());
         }
     }
+
+    cadence = bliss::filter_hits(cadence, {});
+
+    fmt::print("After filtering:\n");
+    for (auto &obs : cadence._observations) {
+        for (auto &scan : obs._scans) {
+            fmt::print("{} hits\n", scan.hits().size());
+        }
+    }
+
     // bliss::write_scan_hits_to_file(cadence._observations[0]._scans[0], "on0.cp");
     // bliss::write_scan_hits_to_file(cadence._observations[0]._scans[1], "on1.cp");
     // bliss::write_scan_hits_to_file(cadence._observations[0]._scans[2], "on2.cp");

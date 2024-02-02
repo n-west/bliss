@@ -1,7 +1,15 @@
 
 #include <core/hit.hpp>
 
+#include <fmt/core.h>
+#include <fmt/format.h>
+
 using namespace bliss;
+
+std::string bliss::hit::repr() const {
+    auto r = fmt::format("Hit with start_freq_MHz={:6f} (index={}), drift_rate_Hz_per_second={:3f} (index={}) and SNR {:1f}", start_freq_MHz, start_freq_index, drift_rate_Hz_per_sec, rate_index, snr);
+    return r;
+}
 
 hit::state_tuple bliss::hit::get_state() const {
     return std::make_tuple(start_freq_index,

@@ -93,6 +93,8 @@ std::list<hit> bliss::hit_search(scan dedrifted_scan, hit_search_options options
         }
         this_hit.binwidth  = upper_freq_index_at_rate - lower_freq_index_at_rate;
         this_hit.bandwidth = this_hit.binwidth * std::abs(1e6 * dedrifted_scan.foff());
+        this_hit.start_time_sec = dedrifted_scan.tstart() * 24*60*60; // convert MJD to seconds since MJ
+        this_hit.duration_sec = dedrifted_scan.tsamp() * dedrifted_scan.integration_length();
         hits.push_back(this_hit);
     }
 

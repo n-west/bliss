@@ -27,8 +27,8 @@ struct stride_helper {
     }
 };
 
-std::vector<component> bliss::find_local_maxima_above_threshold(scan &dedrifted_spectrum,
-                                                                float             snr_threshold,
+std::vector<component> bliss::find_local_maxima_above_threshold(scan                  &dedrifted_spectrum,
+                                                                float                  snr_threshold,
                                                                 std::vector<nd_coords> max_neighborhood) {
     auto noise_stats = dedrifted_spectrum.noise_estimate();
     // run through a max filter, what's the best way to establish neighborhood?
@@ -81,16 +81,16 @@ std::vector<component> bliss::find_local_maxima_above_threshold(scan &dedrifted_
                 // 4. Check if it is greater than surrounding neighborhood
                 bool neighborhood_max = true;
                 for (auto &neighbor_offset : max_neighborhood) {
-                    bool in_bounds = true;
+                    bool in_bounds      = true;
                     auto neighbor_coord = curr_coord;
-                    for (int dim=0; dim < visited_shape.size(); ++dim) {
+                    for (int dim = 0; dim < visited_shape.size(); ++dim) {
                         neighbor_coord[dim] += neighbor_offset[dim];
                         if (neighbor_coord[dim] < 0 || neighbor_coord[dim] >= visited_shape[dim]) {
                             in_bounds = false;
                             break;
                         }
                     }
-                    
+
                     // check if the next coordinate is valid and not visited
                     if (in_bounds) {
                         auto linear_neighbor_index = doppler_spectrum_strider.to_linear_offset(neighbor_coord);
@@ -107,14 +107,101 @@ std::vector<component> bliss::find_local_maxima_above_threshold(scan &dedrifted_
                 // 3. Add to list of local maxima
                 if (neighborhood_max) {
                     component c;
-                    c.index_max       = curr_coord;
+                    c.index_max = curr_coord;
                     c.locations.push_back(curr_coord);
                     c.max_integration = candidate_maxima_val;
-                    c.rfi_counts[flag_values::low_spectral_kurtosis] = dedrifted_spectrum.doppler_flags().low_spectral_kurtosis.scalarize<uint8_t>(curr_coord);
-                    c.rfi_counts[flag_values::high_spectral_kurtosis] = dedrifted_spectrum.doppler_flags().high_spectral_kurtosis.scalarize<uint8_t>(curr_coord);
-                    c.rfi_counts[flag_values::filter_rolloff] = dedrifted_spectrum.doppler_flags().filter_rolloff.scalarize<uint8_t>(curr_coord);
-                    c.rfi_counts[flag_values::magnitude] = dedrifted_spectrum.doppler_flags().magnitude.scalarize<uint8_t>(curr_coord);
-                    c.rfi_counts[flag_values::sigma_clip] = dedrifted_spectrum.doppler_flags().sigma_clip.scalarize<uint8_t>(curr_coord);
+                    c.rfi_counts[flag_values::low_spectral_kurtosis] =
+                            dedrifted_spectrum.doppler_flags().low_spectral_kurtosis.scalarize<uint8_t>(curr_coord);
+                    c.rfi_counts[flag_values::high_spectral_kurtosis] =
+                            dedrifted_spectrum.doppler_flags().high_spectral_kurtosis.scalarize<uint8_t>(curr_coord);
+                    c.rfi_counts[flag_values::filter_rolloff] =
+                            dedrifted_spectrum.doppler_flags().filter_rolloff.scalarize<uint8_t>(curr_coord);
+                    c.rfi_counts[flag_values::magnitude] =
+                            dedrifted_spectrum.doppler_flags().magnitude.scalarize<uint8_t>(curr_coord);
+                    c.rfi_counts[flag_values::sigma_clip] =
+                            dedrifted_spectrum.doppler_flags().sigma_clip.scalarize<uint8_t>(curr_coord);
+
+
+                    // Wow, this very conceptually simple thing of adding a bandwidth estimate to local maxima hits
+                    // wound up being some ugly code... rethink it
+
+                    // At the local max drift rate, look up and down in frequency channel adding locations that are
+                    // above the SNR threshold AND continuing to decrease
+                    auto max_lower_edge   = curr_coord;
+                    auto lower_edge_value = candidate_maxima_val;
+                    bool expand_band_down = true;
+                    do {
+                        // WARN: this is the first time in this file we make an assumption about drift index position
+                        max_lower_edge[1] -= 1;
+
+                        bool lower_extension_in_bounds = true;
+                        // This chunk is copypasta from above, consider refactoring to reduce
+                        for (int dim = 0; dim < visited_shape.size(); ++dim) {
+                            if (max_lower_edge[dim] < 0 || max_lower_edge[dim] >= visited_shape[dim]) {
+                                lower_extension_in_bounds = false;
+                                break;
+                            }
+                        }
+
+                        // check if the next coordinate is valid
+                        if (lower_extension_in_bounds) {
+                            auto linear_visited_index = visited_strider.to_linear_offset(max_lower_edge);
+                            auto linear_doppler_spectrum_index =
+                                    doppler_spectrum_strider.to_linear_offset(max_lower_edge);
+                            auto new_lower_edge_value = doppler_spectrum_data[linear_doppler_spectrum_index];
+                            // Keep expanding "bandwidth" at the drift of local max as long as extended bandwidth
+                            // continues to decrease in magnitude and it's still a "hit" above SNR threshold
+                            if (new_lower_edge_value > snr_threshold && new_lower_edge_value < lower_edge_value) {
+                                // It's tempting to mark this as "visited" so it won't be added to a different local maxima hit
+                                // or used for its consideration, but to keep things reproducible (it doesn't matter which local
+                                // maxima was looked at first), we'll not mark it as visited
+                                lower_edge_value = new_lower_edge_value;
+                                c.locations.push_back(max_lower_edge);
+                            } else {
+                                expand_band_down = false;
+                            }
+                        } else {
+                            expand_band_down = false; // we reached the edge of our spectra
+                        }
+
+                    } while (expand_band_down);
+
+                    bool expand_band_up   = true;
+                    auto max_upper_edge   = curr_coord;
+                    auto upper_edge_value = candidate_maxima_val;
+                    do {
+                        // WARN: this is the first time in this file we make an assumption about drift index position
+                        max_upper_edge[1] += 1;
+
+                        bool upper_extension_in_bounds = true;
+                        // This chunk is copypasta from above, consider refactoring to reduce
+                        for (int dim = 0; dim < visited_shape.size(); ++dim) {
+                            if (max_upper_edge[dim] < 0 || max_upper_edge[dim] >= visited_shape[dim]) {
+                                upper_extension_in_bounds = false;
+                                break;
+                            }
+                        }
+
+                        // check if the next coordinate is valid and not visited
+                        if (upper_extension_in_bounds) {
+                            auto linear_visited_index = visited_strider.to_linear_offset(max_upper_edge);
+                            auto linear_doppler_spectrum_index =
+                                    doppler_spectrum_strider.to_linear_offset(max_upper_edge);
+                            auto new_upper_edge_value = doppler_spectrum_data[linear_doppler_spectrum_index];
+                            // Keep expanding "bandwidth" at the drift of local max as long as extended bandwidth
+                            // continues to decrease in magnitude and it's still a "hit" above SNR threshold
+                            if (new_upper_edge_value > snr_threshold && new_upper_edge_value < upper_edge_value) {
+                                upper_edge_value = new_upper_edge_value;
+                                c.locations.push_back(max_upper_edge);
+                            } else {
+                                expand_band_up = false;
+                            }
+                        } else {
+                            expand_band_up = false; // we reached the edge of our spectra
+                        }
+
+                    } while (expand_band_up);
+
                     // TODO: this doesn't have the concept of a "component" the same way connected_components does... do
                     // we care?
                     maxima.push_back(c);

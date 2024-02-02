@@ -3,6 +3,7 @@ add_library(drift_search
     connected_components.cpp
     integrate_drifts.cpp
     event_search.cpp
+    filter_hits.cpp
     hit_search.cpp
     local_maxima.cpp
 )

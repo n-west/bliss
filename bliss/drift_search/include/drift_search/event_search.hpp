@@ -1,20 +1,20 @@
 #pragma once
 
-#include <core/hit.hpp>
 #include <core/cadence.hpp>
+#include <core/hit.hpp>
 
-#include <vector>
+#include <list>
 
 namespace bliss {
 
 struct event {
-    // event() = default;
-    // event(std::vector<hit> hits) : hits(hits) {}
-    std::vector<hit> hits; // hits that contribute to this event
-    float starting_frequency = 0;
-    float average_power = 0;
-    float average_snr = 0;
-    float average_drift_rate_Hz_per_sec = 0;
+    std::list<hit> hits; // hits that contribute to this event
+    float          starting_frequency_Hz         = 0;
+    float          average_power                 = 0;
+    float          average_snr                   = 0;
+    float          average_drift_rate_Hz_per_sec = 0;
+    double         event_start_seconds           = 0;
+    double         event_end_seconds             = 0;
 };
 
 /**
