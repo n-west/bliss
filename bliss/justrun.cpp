@@ -8,6 +8,7 @@
 #include <flaggers/magnitude.hpp>
 #include <flaggers/spectral_kurtosis.hpp>
 #include <drift_search/filter_hits.hpp>
+#include <drift_search/event_search.hpp>
 #include <file_types/hits_file.hpp>
 
 #include "fmt/core.h"
@@ -27,6 +28,7 @@ int main(int argc, char **argv) {
 
     // bliss::cadence({{"/home/nathan/datasets/voyager_2020_data/"
     //                      "single_coarse_guppi_59046_80354_DIAG_VOYAGER-1_0012.rawspec.0000.h5"}});
+
     auto cadence = bliss::cadence({{"/home/nathan/datasets/voyager_2020_data/single_coarse_guppi_59046_80036_DIAG_VOYAGER-1_0011.rawspec.0000.h5",
                     "/home/nathan/datasets/voyager_2020_data/single_coarse_guppi_59046_80672_DIAG_VOYAGER-1_0013.rawspec.0000.h5",
                     "/home/nathan/datasets/voyager_2020_data/single_coarse_guppi_59046_81310_DIAG_VOYAGER-1_0015.rawspec.0000.h5"
@@ -34,16 +36,6 @@ int main(int argc, char **argv) {
                     {"/home/nathan/datasets/voyager_2020_data/single_coarse_guppi_59046_80354_DIAG_VOYAGER-1_0012.rawspec.0000.h5"},
                     {"/home/nathan/datasets/voyager_2020_data/single_coarse_guppi_59046_80989_DIAG_VOYAGER-1_0014.rawspec.0000.h5"},
                     {"/home/nathan/datasets/voyager_2020_data/single_coarse_guppi_59046_81628_DIAG_VOYAGER-1_0016.rawspec.0000.h5"}});
-
-    // // Kinda weird, but the scoping is annoying and we don't have default constructors that make sense
-    // std::unique_ptr<bliss::filterbank_data> fil_holder;
-    // try {
-    //   fil_holder = std::make_unique<bliss::filterbank_data>(fil_path);
-    // } catch (std::exception) {
-    //   fmt::print("Bad file path provided. Couldn't open {} as hdf5 filterbank file\n", fil_path);
-    //   return -1;
-    // }
-    // auto fil_data = *fil_holder;
 
     cadence = bliss::flag_filter_rolloff(cadence, 0.2);
     cadence = bliss::flag_spectral_kurtosis(cadence, 0.02, 15);
@@ -57,18 +49,22 @@ int main(int argc, char **argv) {
             bliss::integrate_drifts_options{.desmear        = false,
                                             .low_rate       = -48,
                                             .high_rate      = 48,
-                                            .rate_step_size = 1}); // integrate along drift lines
+                                            .rate_step_size = 1});
 
-    cadence = bliss::hit_search(cadence, {.method=bliss::hit_search_methods::CONNECTED_COMPONENTS, .snr_threshold=50.0f});
+    cadence = bliss::hit_search(cadence, {.method=bliss::hit_search_methods::CONNECTED_COMPONENTS, .snr_threshold=20.0f});
 
-    fmt::print("Before filtering:\n");
-    for (auto &obs : cadence._observations) {
-        for (auto &scan : obs._scans) {
-            fmt::print("{} hits\n", scan.hits().size());
-        }
-    }
+    bliss::write_cadence_hits_to_files(cadence, "hits");
 
-    cadence = bliss::filter_hits(cadence, {});
+    auto events = bliss::event_search(cadence);
+
+    // fmt::print("Before filtering:\n");
+    // for (auto &obs : cadence._observations) {
+    //     for (auto &scan : obs._scans) {
+    //         fmt::print("{} hits\n", scan.hits().size());
+    //     }
+    // }
+
+    // cadence = bliss::filter_hits(cadence, {});
 
     fmt::print("After filtering:\n");
     for (auto &obs : cadence._observations) {
@@ -76,10 +72,6 @@ int main(int argc, char **argv) {
             fmt::print("{} hits\n", scan.hits().size());
         }
     }
-
-    // bliss::write_scan_hits_to_file(cadence._observations[0]._scans[0], "on0.cp");
-    // bliss::write_scan_hits_to_file(cadence._observations[0]._scans[1], "on1.cp");
-    // bliss::write_scan_hits_to_file(cadence._observations[0]._scans[2], "on2.cp");
 
     bliss::write_cadence_hits_to_files(cadence, "testing_hits");
 
