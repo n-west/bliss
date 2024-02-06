@@ -10,6 +10,7 @@
 #include <drift_search/filter_hits.hpp>
 #include <drift_search/event_search.hpp>
 #include <file_types/hits_file.hpp>
+#include <file_types/events_file.hpp>
 
 #include "fmt/core.h"
 #include <fmt/ranges.h>
@@ -46,12 +47,12 @@ int main(int argc, char **argv) {
 
     cadence = bliss::integrate_drifts(
             cadence,
-            bliss::integrate_drifts_options{.desmear        = false,
+            bliss::integrate_drifts_options{.desmear        = true,
                                             .low_rate       = -48,
                                             .high_rate      = 48,
                                             .rate_step_size = 1});
 
-    cadence = bliss::hit_search(cadence, {.method=bliss::hit_search_methods::CONNECTED_COMPONENTS, .snr_threshold=20.0f});
+    cadence = bliss::hit_search(cadence, {.method=bliss::hit_search_methods::CONNECTED_COMPONENTS, .snr_threshold=10.0f});
 
     bliss::write_cadence_hits_to_files(cadence, "hits");
 
@@ -73,6 +74,7 @@ int main(int argc, char **argv) {
         }
     }
 
-    bliss::write_cadence_hits_to_files(cadence, "testing_hits");
+
+    bliss::write_events_to_file(events, "events_output");
 
 }

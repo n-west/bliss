@@ -33,8 +33,6 @@ ndarray elementwise_binary_op(ndarray &out, const ndarray &a, const ndarray &b) 
     const auto a_strides   = compute_broadcast_strides(a.shape(), a.strides(), out_shape);
     const auto b_strides   = compute_broadcast_strides(b.shape(), b.strides(), out_shape);
     const auto out_strides = out.strides();
-    // fmt::print("Inside the op, shapes: {} = {} + {}\n", out.shape(), a.shape(), b.shape());
-    // fmt::print("Inside the op, strides: {} = {} + {}\n", out_strides, a_strides, b_strides);
 
     const auto a_shape = compute_broadcast_shape(a.shape(), out_shape);
     const auto b_shape = compute_broadcast_shape(b.shape(), out_shape);

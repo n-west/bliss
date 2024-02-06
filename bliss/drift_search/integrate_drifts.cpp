@@ -148,6 +148,13 @@ integrate_linear_rounded_bins(const bland::ndarray    &spectrum_grid,
 
                     int64_t spectrum_freq_slice_start = -drift_channels + channel_offset;
                     int64_t spectrum_freq_slice_end   = number_channels + channel_offset;
+                    if (spectrum_freq_slice_start < 0) {
+                        // This condition occurs at fast drive rates (very negative) with desmearing on.
+                        auto offset_amount = spectrum_freq_slice_start;
+
+                        spectrum_freq_slice_start -= offset_amount;
+                        drift_freq_slice_start -= offset_amount;
+                    }
 
                     auto drift_slice = bland::slice(drift_plane,
                                                     bland::slice_spec{0, drift_index, drift_index + 1},

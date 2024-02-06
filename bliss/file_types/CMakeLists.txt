@@ -23,6 +23,9 @@ if (WITH_CAPNP)
     target_sources(file_types
         PRIVATE
         hits_file.cpp
+        events_file.cpp
+        detail/raii_file_helpers.cpp
+        detail/cpnp_hit_builder.cpp
     )
     target_link_libraries(file_types
         PUBLIC
