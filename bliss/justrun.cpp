@@ -47,7 +47,7 @@ int main(int argc, char **argv) {
 
     cadence = bliss::integrate_drifts(
             cadence,
-            bliss::integrate_drifts_options{.desmear        = true,
+            bliss::integrate_drifts_options{.desmear        = false,
                                             .low_rate       = -48,
                                             .high_rate      = 48,
                                             .rate_step_size = 1});

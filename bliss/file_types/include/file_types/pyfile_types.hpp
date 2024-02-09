@@ -3,6 +3,7 @@
 
 #include "h5_filterbank_file.hpp"
 #include "hits_file.hpp"
+#include "events_file.hpp"
 
 #include <nanobind/nanobind.h>
 #include <nanobind/ndarray.h>
@@ -32,5 +33,7 @@ void bind_pyfile_types(nb::module_ m) {
     m.def("read_observation_target_hits_from_files", &bliss::read_observation_target_hits_from_files);
     m.def("write_cadence_hits_to_files", &bliss::write_cadence_hits_to_files);
     m.def("read_cadence_hits_from_files", &bliss::read_cadence_hits_from_files);
+    m.def("write_events_to_file", &bliss::write_events_to_file);
+    m.def("read_events_from_file", &bliss::read_events_from_file);
 
 }

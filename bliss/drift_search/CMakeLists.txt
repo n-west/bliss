@@ -1,4 +1,23 @@
 
+add_library(drift_search_kernels
+    kernels/drift_integration_bland.cpp
+    kernels/drift_integration_cpu.cpp
+)
+
+# target_include_directories(drift_search_kernels
+#     PUBLIC
+#     ${CMAKE_CURRENT_SOURCE_DIR}/kernels
+# )
+
+target_link_libraries(drift_search_kernels
+    PUBLIC
+    bland
+    bliss_core
+    PRIVATE
+    fmt::fmt-header-only
+    )
+
+
 add_library(drift_search
     connected_components.cpp
     integrate_drifts.cpp
@@ -20,6 +39,7 @@ target_link_libraries(drift_search
     PRIVATE
     fmt::fmt-header-only
     flaggers
+    drift_search_kernels
 )
 
 set_target_properties(drift_search PROPERTIES POSITION_INDEPENDENT_CODE TRUE)
