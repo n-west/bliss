@@ -1,9 +1,10 @@
 
 cmake_minimum_required(VERSION 3.9)
 # Future version upgrades:
-# 3.28 adds EXCLUDE_FROM_ALL to FetchContent_Declare
 # 3.9 required for check_ipo_supported
+# 3.14 adds FetchContent
 # 3.18 has many cuda improvements
+# 3.28 adds EXCLUDE_FROM_ALL to FetchContent_Declare
 
 
 project(
@@ -93,7 +94,7 @@ if (NOT CapnProto_FOUND)
   set(CMAKE_CXX_EXTENSIONS ON)
   set(CMAKE_POSITION_INDEPENDENT_CODE ON CACHE BOOL "Enable position independent code")
   message("**BLISS: capn proto not found. Attempting to pull in as an external project (and enabling CXX extensions)")
-  # Formatting library
+  # Cap'n proto (de)serialization library
   FetchContent_Declare(
     external_capnproto
     EXCLUDE_FROM_ALL
@@ -119,7 +120,7 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(fmtlib)
 # Adds fmt::fmt
 
-find_package(Python 3.8 COMPONENTS Interpreter Development.Module REQUIRED)
+find_package(Python 3.8 REQUIRED COMPONENTS Interpreter Development.Module)
 # nanobind (for python bindings)
 FetchContent_Declare(
   nanobind

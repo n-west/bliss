@@ -114,13 +114,10 @@ void bind_pycore(nb::module_ m) {
                           bland::ndarray /* doppler_spectrum */,
                           bliss::integrated_flags /* doppler_flags */,
                           bliss::integrate_drifts_options /* drift_parameters */>())
-            .def("doppler_spectrum", nb::overload_cast<>(&bliss::scan::doppler_spectrum))
-            .def("doppler_spectrum", nb::overload_cast<bland::ndarray>(&bliss::scan::doppler_spectrum))
-            .def("doppler_flags", nb::overload_cast<>(&bliss::scan::doppler_flags))
-            .def("doppler_flags", nb::overload_cast<bliss::integrated_flags>(&bliss::scan::doppler_flags))
-            .def("drift_parameters", nb::overload_cast<>(&bliss::scan::dedoppler_options))
-            .def("drift_parameters",
-                 nb::overload_cast<bliss::integrate_drifts_options>(&bliss::scan::dedoppler_options))
+            .def_prop_rw("doppler_spectrum", nb::overload_cast<>(&bliss::scan::doppler_spectrum), nb::overload_cast<bland::ndarray>(&bliss::scan::doppler_spectrum))
+            .def_prop_rw("integration_length", nb::overload_cast<>(&bliss::scan::integration_length), nb::overload_cast<int64_t>(&bliss::scan::integration_length))
+            .def_prop_rw("doppler_flags", nb::overload_cast<>(&bliss::scan::doppler_flags), nb::overload_cast<bliss::integrated_flags>(&bliss::scan::doppler_flags))
+            .def_prop_rw("drift_parameters", nb::overload_cast<>(&bliss::scan::dedoppler_options), nb::overload_cast<bliss::integrate_drifts_options>(&bliss::scan::dedoppler_options))
             .def_prop_rw("hits",
                          nb::overload_cast<>(&bliss::scan::hits),
                          nb::overload_cast<std::list<bliss::hit>>(&bliss::scan::hits))

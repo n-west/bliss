@@ -7,7 +7,7 @@
 using namespace bliss;
 
 std::string bliss::hit::repr() const {
-    auto r = fmt::format("Hit with start_freq_MHz={:6f} (index={}), drift_rate_Hz_per_second={:3f} (index={}) and SNR {:1f}", start_freq_MHz, start_freq_index, drift_rate_Hz_per_sec, rate_index, snr);
+    auto r = fmt::format("hit: .start_freq_MHz={:6f} (.index={}), .drift_rate_Hz_per_second={:3f} (.index={}), .SNR={:1f}, .power={:.0f}, bandwidth={:.1f}", start_freq_MHz, start_freq_index, drift_rate_Hz_per_sec, rate_index, snr, power, bandwidth);
     return r;
 }
 

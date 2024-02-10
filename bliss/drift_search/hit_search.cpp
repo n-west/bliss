@@ -58,7 +58,9 @@ std::list<hit> bliss::hit_search(scan dedrifted_scan, hit_search_options options
         this_hit.start_freq_index = c.index_max[1];
 
         // Start frequency in Hz is bin * Hz/bin
-        this_hit.start_freq_MHz = dedrifted_scan.fch1() + dedrifted_scan.foff() * this_hit.start_freq_index;
+        auto freq_offset = dedrifted_scan.foff() * this_hit.start_freq_index;
+        this_hit.start_freq_MHz = dedrifted_scan.fch1() + freq_offset;
+        // fmt::print("component max is fchan {} -> {:6F} + {:6F} * {} -> {:6F} + {:6F} -> freq={:6f}\n", this_hit.start_freq_index, dedrifted_scan.fch1(), dedrifted_scan.foff(), this_hit.start_freq_index, this_hit.start_freq_MHz);
 
         // TODO: sort out better names for these things as we go to whole-cadence integration
         auto drift_freq_span_bins = dedrifted_scan.dedoppler_options().low_rate +
@@ -91,6 +93,7 @@ std::list<hit> bliss::hit_search(scan dedrifted_scan, hit_search_options options
                 }
             }
         }
+        // fmt::print("Upper ind = {}, Lower ind={}\n", upper_freq_index_at_rate, lower_freq_index_at_rate);
         this_hit.binwidth  = upper_freq_index_at_rate - lower_freq_index_at_rate;
         this_hit.bandwidth = this_hit.binwidth * std::abs(1e6 * dedrifted_scan.foff());
         this_hit.start_time_sec = dedrifted_scan.tstart() * 24*60*60; // convert MJD to seconds since MJ

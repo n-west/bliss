@@ -3,6 +3,7 @@
 #include "hit.hpp"
 
 #include <list>
+#include <string>
 
 namespace bliss {
 
@@ -14,6 +15,8 @@ struct event {
     float          average_drift_rate_Hz_per_sec = 0;
     double         event_start_seconds           = 0;
     double         event_end_seconds             = 0;
+
+    std::string repr();
 };
 
 } // namespace bliss

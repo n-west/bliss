@@ -56,7 +56,7 @@ bliss::integrate_linear_rounded_bins_cpu(const bland::ndarray    &spectrum_grid,
             desmear_bandwidth = std::max(1.0f, smeared_channels);
         }
 
-        for (int t = 0; t < time_steps/2; ++t) {
+        for (int t = 0; t < time_steps; ++t) {
             int freq_offset_at_time = std::round(m * t);
             int freq_offset_at_time2 = std::round(m * (t+time_steps/2));
 

@@ -12,15 +12,15 @@ using rfi = std::map<flag_values, uint8_t>; // TODO: not so elegant, but OKish?
 struct hit {
     // we need a start time
     int64_t start_freq_index;
-    float   start_freq_MHz;
-    float   start_time_sec; // MJD converted to seconds
-    float   duration_sec;
+    double   start_freq_MHz;
+    double   start_time_sec; // MJD converted to seconds
+    double   duration_sec;
     int64_t rate_index;
-    float   drift_rate_Hz_per_sec;
-    float   power;
+    double   drift_rate_Hz_per_sec;
+    double   power;
     float   time_span_steps; // this feels poorly named and maybe should belong next to duration_sec
     float   snr;
-    double  bandwidth;
+    float  bandwidth;
     int64_t binwidth;
     rfi     rfi_counts;
 
