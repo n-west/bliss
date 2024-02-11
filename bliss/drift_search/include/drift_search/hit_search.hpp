@@ -1,24 +1,23 @@
 #pragma once
 
-#include <core/scan.hpp>
 #include <core/cadence.hpp>
-#include <core/noise_power.hpp>
-#include <core/hit.hpp>
 #include <core/flag_values.hpp>
+#include <core/hit.hpp>
+#include <core/noise_power.hpp>
+#include <core/scan.hpp>
 
 #include <list>
-
 
 namespace bliss {
 
 using nd_coords = std::vector<int64_t>;
-using rfi = std::map<flag_values, uint8_t>; // TODO: not so elegant, but OKish?
+using rfi       = std::map<flag_values, uint8_t>; // TODO: not so elegant, but OKish?
 
 struct component {
-    std::vector<nd_coords>         locations;
-    float                          max_integration = std::numeric_limits<float>::lowest();
-    rfi rfi_counts;
-    nd_coords                      index_max;
+    std::vector<nd_coords> locations;
+    float                  max_integration = std::numeric_limits<float>::lowest();
+    rfi                    rfi_counts;
+    nd_coords              index_max;
 };
 
 /**
@@ -53,7 +52,7 @@ struct hit_search_options {
     /**
      * threshold (linear SNR) that integrated power must be above to be considered a hit
      */
-    float snr_threshold = 20.0f;
+    float snr_threshold = 10.0f;
 
     std::vector<nd_coords> neighborhood = {
             // clang-format off
@@ -77,34 +76,24 @@ struct hit_search_options {
 };
 
 /**
- * Probably makes some sense to output this for quick hacking
-*/
-// std::vector<hit>
-// hit_search(bland::ndarray dedrifted_spectrum, hit_search_options options = {});
-
-/**
  * High level wrapper around finding drifting signals above a noise floor
- * 
+ *
  * The returned scan is a copy of the given scan with the hits field set
  */
-std::list<hit>
-hit_search(scan dedrifted_scan, hit_search_options options = {});
+std::list<hit> hit_search(scan dedrifted_scan, hit_search_options options = {});
 
 /**
  * High-level hit search over scans within an observation target
- * 
+ *
  * The returned observation_target is a copy of the given observation_target with hits set for all scans of the target
-*/
-observation_target
-hit_search(observation_target dedrifted_target, hit_search_options options = {});
+ */
+observation_target hit_search(observation_target dedrifted_target, hit_search_options options = {});
 
 /**
  * High-level hit search over an entire cadence
- * 
+ *
  * The returned cadence is a copy of the given cadence with hits set inside each scan
-*/
-cadence
-hit_search(cadence dedrifted_cadence, hit_search_options options = {});
-
+ */
+cadence hit_search(cadence dedrifted_cadence, hit_search_options options = {});
 
 } // namespace bliss

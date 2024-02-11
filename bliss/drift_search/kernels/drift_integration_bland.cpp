@@ -231,18 +231,6 @@ bliss::integrate_linear_rounded_bins(const bland::ndarray    &spectrum_grid,
     return std::make_tuple(drift_plane / time_steps, rfi_in_drift);
 }
 
-// template <>
-// [[nodiscard]] std::tuple<bland::ndarray, integrated_flags>
-// bliss::integrate_linear_rounded_bins<true>(const bland::ndarray    &spectrum_grid,
-//                                      const bland::ndarray    &rfi_mask,
-//                                      integrate_drifts_options options);
-
-// template <>
-// [[nodiscard]] std::tuple<bland::ndarray, integrated_flags>
-// bliss::integrate_linear_rounded_bins<false>(const bland::ndarray    &spectrum_grid,
-//                                      const bland::ndarray    &rfi_mask,
-//                                      integrate_drifts_options options);
-
 bland::ndarray bliss::integrate_linear_rounded_bins(const bland::ndarray    &spectrum_grid,
                                                     integrate_drifts_options options) {
     auto dummy_rfi_mask                      = bland::ndarray({1, 1});

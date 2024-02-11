@@ -48,7 +48,6 @@ std::list<hit> bliss::hit_search(scan dedrifted_scan, hit_search_options options
     }
     auto noise_stats = dedrifted_scan.noise_estimate();
 
-    // hits.reserve(components.size());
     // Do we need a "component to hit" for each type of search?
     for (const auto &c : components) {
         // Assume dims size 2 for now :-| (we'll get beam stuff sorted eventually)
@@ -58,11 +57,9 @@ std::list<hit> bliss::hit_search(scan dedrifted_scan, hit_search_options options
         this_hit.start_freq_index = c.index_max[1];
 
         // Start frequency in Hz is bin * Hz/bin
-        auto freq_offset = dedrifted_scan.foff() * this_hit.start_freq_index;
+        auto freq_offset        = dedrifted_scan.foff() * this_hit.start_freq_index;
         this_hit.start_freq_MHz = dedrifted_scan.fch1() + freq_offset;
-        // fmt::print("component max is fchan {} -> {:6F} + {:6F} * {} -> {:6F} + {:6F} -> freq={:6f}\n", this_hit.start_freq_index, dedrifted_scan.fch1(), dedrifted_scan.foff(), this_hit.start_freq_index, this_hit.start_freq_MHz);
 
-        // TODO: sort out better names for these things as we go to whole-cadence integration
         auto drift_freq_span_bins = dedrifted_scan.dedoppler_options().low_rate +
                                     this_hit.rate_index * dedrifted_scan.dedoppler_options().rate_step_size;
         float drift_span_freq_Hz = drift_freq_span_bins * 1e6 * dedrifted_scan.foff();
@@ -93,28 +90,29 @@ std::list<hit> bliss::hit_search(scan dedrifted_scan, hit_search_options options
                 }
             }
         }
-        // fmt::print("Upper ind = {}, Lower ind={}\n", upper_freq_index_at_rate, lower_freq_index_at_rate);
         this_hit.binwidth  = upper_freq_index_at_rate - lower_freq_index_at_rate;
         this_hit.bandwidth = this_hit.binwidth * std::abs(1e6 * dedrifted_scan.foff());
-        this_hit.start_time_sec = dedrifted_scan.tstart() * 24*60*60; // convert MJD to seconds since MJ
-        this_hit.duration_sec = dedrifted_scan.tsamp() * dedrifted_scan.integration_length();
+
+        // TODO: consider if we should focus hits on the "center" or keep it on strongest frequency that triggered
+        // the hit. For local maxima they should be similar but can deviate quite a bit for connected components
+        auto center_bin         = (upper_freq_index_at_rate + lower_freq_index_at_rate) / 2;
+        freq_offset             = dedrifted_scan.foff() * center_bin;
+        this_hit.start_freq_MHz = dedrifted_scan.fch1() + freq_offset;
+        this_hit.start_time_sec = dedrifted_scan.tstart() * 24 * 60 * 60; // convert MJD to seconds since MJ
+        this_hit.duration_sec   = dedrifted_scan.tsamp() * dedrifted_scan.integration_length();
         hits.push_back(this_hit);
     }
-
-    // dedrifted_scan.hits(hits);
 
     return hits;
 }
 
-observation_target
-bliss::hit_search(observation_target dedrifted_target, hit_search_options options) {
+observation_target bliss::hit_search(observation_target dedrifted_target, hit_search_options options) {
     for (auto &dedrifted_scan : dedrifted_target._scans) {
         auto hits = hit_search(dedrifted_scan, options);
         dedrifted_scan.hits(hits);
     }
     return dedrifted_target;
 }
-
 
 cadence bliss::hit_search(cadence dedrifted_cadence, hit_search_options options) {
     for (auto &obs_target : dedrifted_cadence._observations) {

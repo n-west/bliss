@@ -84,7 +84,5 @@ T bliss::h5_filterbank_file::read_file_attr(const std::string &key)
   }
 }
 
-// template <typename T>
-// T bliss::h5_filterbank_file::read_data_attr(const std::string &key);
 
 } // namespace bliss

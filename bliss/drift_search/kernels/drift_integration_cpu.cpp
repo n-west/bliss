@@ -57,23 +57,23 @@ bliss::integrate_linear_rounded_bins_cpu(const bland::ndarray    &spectrum_grid,
         }
 
         for (int t = 0; t < time_steps; ++t) {
-            int freq_offset_at_time = std::round(m * t);
-            int freq_offset_at_time2 = std::round(m * (t+time_steps/2));
+            int freq_offset_at_time  = std::round(m * t);
+            int freq_offset_at_time2 = std::round(m * (t + time_steps / 2));
 
             for (int desmear_channel = 0; desmear_channel < desmear_bandwidth; ++desmear_channel) {
 
                 if (m >= 0) {
                     // The accumulator (drift spectrum) stays fixed at 0 while the spectrum start increments
-                    auto channel_offset = freq_offset_at_time + desmear_channel;
+                    auto channel_offset  = freq_offset_at_time + desmear_channel;
                     auto channel_offset2 = freq_offset_at_time2 + desmear_channel;
 
                     int64_t drift_freq_slice_start = 0;
                     int64_t drift_freq_slice_end   = number_channels - channel_offset;
-                    int64_t drift_freq_slice_end2   = number_channels - channel_offset2;
+                    int64_t drift_freq_slice_end2  = number_channels - channel_offset2;
 
-                    int64_t spectrum_freq_slice_start = channel_offset;
+                    int64_t spectrum_freq_slice_start  = channel_offset;
                     int64_t spectrum_freq_slice_start2 = channel_offset2;
-                    int64_t spectrum_freq_slice_end   = number_channels;
+                    int64_t spectrum_freq_slice_end    = number_channels;
                     if (spectrum_freq_slice_start > spectrum_shape[1]) {
                         fmt::print("Just curious if we got here and need to fix it");
                     }
@@ -136,14 +136,13 @@ bliss::integrate_linear_rounded_bins_cpu(const bland::ndarray    &spectrum_grid,
                     auto   number_channels = drift_freq_slice_end - drift_freq_slice_start;
                     size_t drift_plane_index =
                             drift_index * drift_plane_strides[0] + drift_freq_slice_start * drift_plane_strides[1];
-                    size_t spectrum_index = t * spectrum_strides[0] + spectrum_freq_slice_start * spectrum_strides[1];
-                    size_t spectrum_index2 = (t+time_steps/2) * spectrum_strides[0] + spectrum_freq_slice_start * spectrum_strides[1];
+                    size_t spectrum_index  = t * spectrum_strides[0] + spectrum_freq_slice_start * spectrum_strides[1];
+                    size_t spectrum_index2 = (t + time_steps / 2) * spectrum_strides[0] +
+                                             spectrum_freq_slice_start * spectrum_strides[1];
                     for (size_t channel = 0; channel < number_channels; ++channel) {
                         drift_plane_ptr[drift_plane_index] += spectrum_ptr[spectrum_index] / desmear_bandwidth;
                         drift_plane_index += drift_plane_strides[1];
                         spectrum_index += spectrum_strides[1];
-
-                        // lowsk_rfi_ptr[lowsk_drift_index] += rfi_ptr[]
                     }
                 } else {
                     // At a negative drift rate, everything needs to scooch up instead of chop down
@@ -163,15 +162,6 @@ bliss::integrate_linear_rounded_bins_cpu(const bland::ndarray    &spectrum_grid,
                         spectrum_freq_slice_start -= offset_amount;
                         drift_freq_slice_start -= offset_amount;
                     }
-
-                    // auto drift_slice = bland::slice(drift_plane,
-                    //                                 bland::slice_spec{0, drift_index, drift_index + 1},
-                    //                                 bland::slice_spec{1, drift_freq_slice_start,
-                    //                                 drift_freq_slice_end});
-                    // auto spectrum_slice =
-                    //         bland::slice(spectrum_grid,
-                    //                      bland::slice_spec{0, t, t + 1},
-                    //                      bland::slice_spec{1, spectrum_freq_slice_start, spectrum_freq_slice_end});
 
                     // if (collect_rfi) {
                     //     // Keep track of how much each type of RFI is present along the drift track
@@ -237,8 +227,6 @@ bliss::integrate_linear_rounded_bins_cpu(const bland::ndarray    &spectrum_grid,
                         drift_plane_index += drift_plane_strides[1];
                         spectrum_index += spectrum_strides[1];
                     }
-
-                    // drift_slice = drift_slice + spectrum_slice / desmear_bandwidth;
                 }
             }
         }
@@ -246,4 +234,12 @@ bliss::integrate_linear_rounded_bins_cpu(const bland::ndarray    &spectrum_grid,
 
     // normalize back by integration length
     return std::make_tuple(drift_plane / time_steps, rfi_in_drift);
+}
+
+bland::ndarray bliss::integrate_linear_rounded_bins_cpu(const bland::ndarray    &spectrum_grid,
+                                                        integrate_drifts_options options) {
+    auto dummy_rfi_mask = bland::ndarray({1, 1});
+    auto [drift_plane, dummy_rfi_collection] =
+            integrate_linear_rounded_bins_cpu(spectrum_grid, dummy_rfi_mask, options);
+    return drift_plane;
 }

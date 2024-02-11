@@ -8,6 +8,9 @@
 
 namespace bliss {
 
+/**
+ * linear-rounded integration kernel implemented for cpu
+*/
 constexpr bool collect_rfi = true;
 [[nodiscard]] std::tuple<bland::ndarray, integrated_flags>
 integrate_linear_rounded_bins_cpu(const bland::ndarray    &spectrum_grid,
