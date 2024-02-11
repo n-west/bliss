@@ -1,10 +1,13 @@
 
 
 #include "estimators/noise_estimate.hpp"
-#include <fmt/core.h>
-#include <fmt/ranges.h>
 #include <bland/ops.hpp>
 #include <bland/ops_statistical.hpp>
+
+#include <fmt/core.h>
+#include <fmt/ranges.h>
+
+#include <thread>
 
 using namespace bliss;
 
@@ -114,9 +117,10 @@ bland::ndarray correct_mask(const bland::ndarray &mask) {
          *   which generates high spectral kurtosis across the entire band
          *   filename w/in BL: single_coarse_guppi_59046_80354_DIAG_VOYAGER-1_0012.rawspec.0000.h5
          */
-        // TODO: we can attempt to correct this, since it's only been known to occur based on SK with high thresholds of ~5
-        // that threshold can be increased. Some ideas:
-        // * have an "auto" mode for SK that starts with threshold of 5 and iteratively increases until the whole channel
+        // TODO: we can attempt to correct this, since it's only been known to occur based on SK with high thresholds of
+        // ~5 that threshold can be increased. Some ideas:
+        // * have an "auto" mode for SK that starts with threshold of 5 and iteratively increases until the whole
+        // channel
         //   is not falled
         // * ignore high SK here (or try to identify what flag is causing issues and ignore it)
         // * warn earlier in flagging step
@@ -164,17 +168,31 @@ noise_stats bliss::estimate_noise_power(filterbank_data fil_data, noise_power_es
 }
 
 observation_target bliss::estimate_noise_power(observation_target observations, noise_power_estimate_options options) {
+    std::vector<std::thread> work_threads;
     for (auto &target_scan : observations._scans) {
-        auto scan_noise_estimate = estimate_noise_power(target_scan, options);
-        target_scan.noise_estimate(scan_noise_estimate);
+        work_threads.emplace_back([&target_scan, &options]() {
+            auto scan_noise_estimate = estimate_noise_power(target_scan, options);
+            target_scan.noise_estimate(scan_noise_estimate);
+        });
     }
+
+    for (auto &thread : work_threads) {
+        thread.join();
+    }
+
     return observations;
 }
 
 cadence bliss::estimate_noise_power(cadence observations, noise_power_estimate_options options) {
+    std::vector<std::thread> work_threads;
     for (auto &obs_target : observations._observations) {
-        // cadence_noise_stats.push_back(estimate_noise_power(observation, options));
-        obs_target = estimate_noise_power(obs_target, options);
+        work_threads.emplace_back(
+                [&obs_target, &options]() { obs_target = estimate_noise_power(obs_target, options); });
     }
+
+    for (auto &thread : work_threads) {
+        thread.join();
+    }
+
     return observations;
 }

@@ -5,13 +5,14 @@
 
 #include <core/flag_values.hpp>
 
-#include <fmt/core.h>
-#include <fmt/ranges.h>
 #include <bland/bland.hpp>
 
-using namespace bliss;
+#include <fmt/core.h>
+#include <fmt/ranges.h>
 
-// namespace detail {
+#include <thread>
+
+using namespace bliss;
 
 bland::ndarray bliss::integrate_drifts(const bland::ndarray &spectrum_grid, integrate_drifts_options options) {
 
@@ -31,15 +32,25 @@ scan bliss::integrate_drifts(scan fil_data, integrate_drifts_options options) {
 }
 
 observation_target bliss::integrate_drifts(observation_target target, integrate_drifts_options options) {
+    std::vector<std::thread> drift_threads;
     for (auto &target_scan : target._scans) {
-        target_scan = integrate_drifts(target_scan, options);
+        drift_threads.emplace_back(
+                [&target_scan, &options]() { target_scan = integrate_drifts(target_scan, options); });
+    }
+    for (auto &t : drift_threads) {
+        t.join();
     }
     return target;
 }
 
 cadence bliss::integrate_drifts(cadence observation, integrate_drifts_options options) {
+
+    std::vector<std::thread> drift_threads;
     for (auto &target : observation._observations) {
-        target = integrate_drifts(target, options);
+        drift_threads.emplace_back([&target, &options]() { target = integrate_drifts(target, options); });
+    }
+    for (auto &t : drift_threads) {
+        t.join();
     }
     return observation;
 }
