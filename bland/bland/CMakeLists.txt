@@ -37,6 +37,12 @@ target_link_libraries(bland
     fmt::fmt-header-only
     )
 
+if (CUDAToolkit_FOUND)
+    target_link_libraries(bland
+    PRIVATE
+    CUDA::cudart)
+endif()
+
 set_target_properties(bland PROPERTIES POSITION_INDEPENDENT_CODE TRUE)
 
 add_library(bland_internal INTERFACE)

@@ -1,6 +1,10 @@
 
 #include "bland/detail/bland_tensor_internals.hpp"
 
+#if BLAND_CUDA
+#include <cuda_runtime.h> // cudaMalloc
+#endif // BLAND_CUDA
+
 using namespace bland;
 
 namespace bland::detail {
@@ -66,19 +70,50 @@ blandDLTensor::blandDLTensor(const std::vector<int64_t> &shape,
     DLTensor::dtype       = dtype;
     DLTensor::device      = device;
     DLTensor::byte_offset = 0;
+    // DLPack API "requires" 256-byte alignment. TODO: understand lanes > 1 better...
+    int64_t num_elements = std::accumulate(shape.begin(), shape.end(), 1, std::multiplies<int64_t>());
+    int64_t element_size = (DLTensor::dtype.bits / 8);
     if (DLTensor::device.device_type == DLDeviceType::kDLCPU) {
-        // DLPack API "requires" 256-byte alignment. TODO: understand lanes > 1 better...
-        int64_t num_elements = std::accumulate(shape.begin(), shape.end(), 1, std::multiplies<int64_t>());
         // _data_ownership = std::shared_ptr<void>(malloc(num_elements * (DLTensor::dtype.bits / 8)), free);
         void *ptr = nullptr;
-        auto  res = posix_memalign(&ptr, 256, num_elements * (DLTensor::dtype.bits / 8));
+        auto  res = posix_memalign(&ptr, 256, num_elements * element_size);
         if (res == ENOMEM) {
             throw std::runtime_error("Not enough memory to allocate for this tensor");
         } else if (res == EINVAL) {
             throw std::runtime_error("Alignment of 256B not suitable for this platform");
         }
         _data_ownership = std::shared_ptr<void>(ptr, free);
-    } else if (DLTensor::device.device_type == DLDeviceType::kDLCUDA) { /*todo*/
+    } else if (DLTensor::device.device_type == DLDeviceType::kDLCUDA) {
+        /* todo */
+        #if BLAND_CUDA
+        void* ptr = nullptr;
+        cudaError_t err = cudaMalloc(&ptr, num_elements * element_size);
+
+        if (err != cudaSuccess) {
+            auto err_str = cudaGetErrorString(err);
+            fmt::print("ERROR: {}\n", err_str);
+            cudaFree(ptr);
+            throw std::runtime_error(err_str);
+        }
+        _data_ownership = std::shared_ptr<void>(ptr, cudaFree);
+        #else // BLAND_CUDA
+        throw std::runtime_error("ERROR: bland was not build with CUDA support, but CUDA device requested");
+        #endif // BLAND_CUDA
+    } else if (DLTensor::device.device_type == DLDeviceType::kDLCUDAManaged) {
+        #if BLAND_CUDA
+        void* ptr = nullptr;
+        cudaError_t err = cudaMallocManaged(&ptr, num_elements * element_size);
+
+        if (err != cudaSuccess) {
+            auto err_str = cudaGetErrorString(err);
+            fmt::print("ERROR: {}\n", err_str);
+            cudaFree(ptr);
+            throw std::runtime_error(err_str);
+        }
+        _data_ownership = std::shared_ptr<void>(ptr, cudaFree);
+        #else // BLAND_CUDA
+        throw std::runtime_error("ERROR: bland was not build with CUDA support, but CUDAManaged device requested");
+        #endif // BLAND_CUDA
     } else {
         throw std::runtime_error("Unsupported device");
     }

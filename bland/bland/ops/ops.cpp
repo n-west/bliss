@@ -33,6 +33,19 @@ ndarray bland::copy(ndarray a, ndarray &out) {
     return dispatch_new2<unary_op_impl_wrapper, elementwise_copy_op>(out, a);
 }
 
+ndarray bland::to(ndarray a, DLDevice d) {
+    // create a new tensor on the given device, and copy data over
+    auto b = bland::ndarray(a.shape(), a.dtype(), d);
+    auto b_ptr = b.data_ptr<void>();
+    auto a_ptr = a.data_ptr<void>();
+
+    // TODO: fill in the device transport
+
+}
+ndarray bland::to(ndarray a, std::string_view d) {
+
+}
+
 // Decide if this should exist or should just be the base case for those recursive calls...
 ndarray_slice bland::slice(const ndarray &a, int64_t dim, int64_t start, int64_t end, int64_t stride) {
 

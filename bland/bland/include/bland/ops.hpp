@@ -5,6 +5,7 @@
 #include "ops_statistical.hpp"
 #include "ops_comparison.hpp"
 
+#include <string_view>
 #include <cstdint>
 #include <limits>
 
@@ -15,6 +16,9 @@ struct ndarray_slice;
 
 ndarray copy(ndarray a);
 ndarray copy(ndarray a, ndarray &out);
+
+ndarray to(ndarray a, DLDevice d);
+ndarray to(ndarray a, std::string_view d);
 
 ndarray square(ndarray a);
 ndarray square(ndarray a, ndarray out);

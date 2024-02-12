@@ -9,10 +9,16 @@ include(CheckLanguage)
 check_language(CUDA)
 
 if (CMAKE_CUDA_COMPILER)
-  message("BLAND:: enabling cuda")
+  message("BLAND:: enabling cuda (the language)")
   enable_language(CUDA)
 else()
   message("BLAND:: CUDA not found, building without it")
+endif()
+
+find_package(CUDAToolkit)
+if (CUDAToolkit_FOUND)
+    message("CUDAToolkit_FOUND")
+    add_definitions("-DBLAND_CUDA=1")
 endif()
 
 # Only do these if this is the main project, and not if it is included through add_subdirectory

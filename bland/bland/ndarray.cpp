@@ -74,6 +74,10 @@ bool bland::ndarray::dev::operator==(const dev &other) {
     return this->device_type == other.device_type && this->device_id == other.device_id;
 }
 
+bool bland::ndarray::dev::operator==(const DLDevice &other) {
+    return this->device_type == other.device_type && this->device_id == other.device_id;
+}
+
 bland::ndarray::dev::dev(std::string_view dev) {
     if (dev == "cpu") {
         device_type = DLDeviceType::kDLCPU;
