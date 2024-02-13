@@ -10,3 +10,5 @@ target_link_libraries(pybliss
     pyflaggers
 )
 
+install(TARGETS pybliss LIBRARY DESTINATION pybliss)
+

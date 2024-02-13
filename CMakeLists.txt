@@ -79,7 +79,7 @@ endif()
 
 
 # HDF5
-find_package(HDF5 COMPONENTS CXX REQUIRED)
+find_package(HDF5 REQUIRED COMPONENTS CXX)
 set_package_properties(HDF5 PROPERTIES
     URL "https://www.hdfgroup.org/solutions/hdf5/"
     DESCRIPTION "Hierarchical Data Format"

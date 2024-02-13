@@ -40,7 +40,7 @@ target_link_libraries(bland
 if (CUDAToolkit_FOUND)
     target_link_libraries(bland
     PRIVATE
-    CUDA::cudart)
+    CUDA::cudart_static)
 endif()
 
 set_target_properties(bland PROPERTIES POSITION_INDEPENDENT_CODE TRUE)

@@ -11,12 +11,13 @@ add_subdirectory(tests)
 add_subdirectory(python)
 
 add_executable(justrun justrun.cpp)
+
 target_link_libraries(justrun
-    estimators
-    flaggers
-    file_types
+    bliss_core
     drift_search
-    HDF5::HDF5
+    estimators
+    file_types
+    flaggers
     fmt::fmt-header-only
     )
 
@@ -30,7 +31,6 @@ add_executable(event_search event_search.cpp)
 target_link_libraries(event_search
     file_types
     drift_search
-    HDF5::HDF5
     fmt::fmt-header-only
     )
     
