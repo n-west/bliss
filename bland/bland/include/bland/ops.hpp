@@ -1,18 +1,18 @@
 #pragma once
 
+
 #include "ops_arithmetic.hpp"
 #include "ops_shape.hpp"
 #include "ops_statistical.hpp"
 #include "ops_comparison.hpp"
+
+#include <bland/ndarray.hpp>
 
 #include <string_view>
 #include <cstdint>
 #include <limits>
 
 namespace bland {
-
-struct ndarray;
-struct ndarray_slice;
 
 ndarray copy(ndarray a);
 ndarray copy(ndarray a, ndarray &out);

@@ -4,8 +4,7 @@
 #include "shape_helpers.hpp"
 
 #include <typeinfo>
-// #include <fmt/core.h>
-// #include <iostream>
+#include <numeric> // accumulate
 
 namespace bland {
 struct ndarray;
@@ -152,19 +151,6 @@ struct scalar_op_impl_wrapper {
         return elementwise_scalar_op<Out, A_type, B_type, Op>(out, a, b);
     }
 
-    // template <typename A_type, typename B_type, template <typename, typename> class Op>
-    // static inline ndarray call(const ndarray &a, const B_type &b, ndarray out) {
-    //     return elementwise_scalar_op<A_type, B_type, Op>(a, b, out);
-    // }
-
-    // template <typename Out, typename A_type, typename B_type, template <typename, typename, typename> class Op>
-    // static inline ndarray call(const ndarray &a, const B_type &b) {
-    //     // Create output array with appropriate shape and data type
-    //     // TODO: figure out type promotion for the return type
-    //     ndarray out(a.shape(), a.dtype(), a.device());
-
-    //     return elementwise_scalar_op<Out, A_type, B_type, Op>(out, a, b);
-    // }
 };
 
 } // namespace bland

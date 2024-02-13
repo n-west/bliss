@@ -51,6 +51,7 @@ class ndarray {
         dev(DLDevice);
         bool operator==(const dev &other);
         bool operator==(const DLDevice &other);
+        bool operator!=(const dev &other);
 
         static constexpr DLDevice cpu          = DLDevice{.device_type = kDLCPU, .device_id = 0};
         static constexpr DLDevice cuda         = DLDevice{.device_type = kDLCUDA, .device_id = 0};
@@ -150,6 +151,12 @@ class ndarray {
 
     // template <typename T, typename ...Args>
     // T scalarize(Args... args) const;
+
+    /**
+     * copy array to the given device
+     */
+    ndarray to(const dev &dest);
+    ndarray to(std::string_view dest);
 
     /**
      * Return a string representation of this tensor. Format is

@@ -2,39 +2,30 @@
 #include "bland/ndarray.hpp"
 #include "bland/ops_comparison.hpp"
 
-#include "cpu/comparison_cpu.hpp"
+#include "dispatcher.hpp"
+#include "elementwise_binary_op.hpp"
+#include "elementwise_scalar_op.hpp"
+
+#include "comparison_cpu_impl.hpp"
 
 #include <type_traits>
 
 using namespace bland;
 
-// ndarray greater_than(ndarray lhs, ndarray rhs);
-// template <typename T>
-// std::enable_if_t<std::is_arithmetic<T>::value, ndarray> greater_than(ndarray lhs, T rhs);
-// template <typename T>
-// std::enable_if_t<std::is_arithmetic<T>::value, ndarray> greater_than(T lhs, ndarray rhs);
-// ndarray                                                 operator>(ndarray lhs, ndarray rhs);
-// template <typename T>
-// std::enable_if_t<std::is_arithmetic<T>::value, ndarray> operator>(ndarray rhs, T lhs);
-// template <typename T>
-// std::enable_if_t<std::is_arithmetic<T>::value, ndarray> operator>(T lhs, ndarray rhs);
 
 ndarray bland::greater_than(ndarray lhs, ndarray rhs) {
-    return cpu::greater_than(lhs, rhs);
-    // auto out = ndarray(lhs.shape(), ndarray::datatype::uint8, lhs.device());
-    // return dispatch<elementwise_binary_op_impl_wrapper<greater_than_impl>, uint8_t>(out, lhs, rhs);
+    auto out = ndarray(lhs.shape(), ndarray::datatype::uint8, lhs.device());
+    return dispatch<elementwise_binary_op_impl_wrapper<greater_than_impl>, uint8_t>(out, lhs, rhs);
 }
 template <typename T>
 std::enable_if_t<std::is_arithmetic<T>::value, ndarray> bland::greater_than(T lhs, ndarray rhs) {
-    return cpu::greater_than(lhs, rhs);
-    // auto out = ndarray(rhs.shape(), ndarray::datatype::uint8, rhs.device());
-    // return dispatch_new3<scalar_op_impl_wrapper, uint8_t, T, greater_than_impl>(out, rhs, lhs);
+    auto out = ndarray(rhs.shape(), ndarray::datatype::uint8, rhs.device());
+    return dispatch_new3<scalar_op_impl_wrapper, uint8_t, T, greater_than_impl>(out, rhs, lhs);
 }
 template <typename T> // the scalar case (explicitly instantiated below)
-std::enable_if_t<std::is_arithmetic<T>::value, ndarray> bland::greater_than(ndarray lhs, T rhs) {
-    return cpu::greater_than(lhs, rhs);
-    // auto out = ndarray(a.shape(), ndarray::datatype::uint8, a.device());
-    // return dispatch_new3<scalar_op_impl_wrapper, uint8_t, T, greater_than_impl>(out, a, b);
+std::enable_if_t<std::is_arithmetic<T>::value, ndarray> bland::greater_than(ndarray a, T b) {
+    auto out = ndarray(a.shape(), ndarray::datatype::uint8, a.device());
+    return dispatch_new3<scalar_op_impl_wrapper, uint8_t, T, greater_than_impl>(out, a, b);
 }
 
 template ndarray bland::greater_than<double>(ndarray lhs, double rhs);
@@ -98,21 +89,18 @@ template ndarray bland::operator><int64_t>(int64_t lhs, ndarray rhs);
  * Greater than equal to
  */
 ndarray bland::greater_than_equal_to(ndarray lhs, ndarray rhs) {
-    return cpu::greater_than_equal_to(lhs, rhs);
-    // auto out = ndarray(lhs.shape(), ndarray::datatype::uint8, lhs.device());
-    // return dispatch<elementwise_binary_op_impl_wrapper<greater_than_equal_to_impl>, uint8_t>(out, lhs, rhs);
+    auto out = ndarray(lhs.shape(), ndarray::datatype::uint8, lhs.device());
+    return dispatch<elementwise_binary_op_impl_wrapper<greater_than_equal_to_impl>, uint8_t>(out, lhs, rhs);
 }
 template <typename T>
 std::enable_if_t<std::is_arithmetic<T>::value, ndarray> bland::greater_than_equal_to(T lhs, ndarray rhs) {
-    return cpu::greater_than_equal_to(lhs, rhs);
-    // auto out = ndarray(rhs.shape(), ndarray::datatype::uint8, rhs.device());
-    // return dispatch_new3<scalar_op_impl_wrapper, uint8_t, T, greater_than_equal_to_impl>(out, rhs, lhs);
+    auto out = ndarray(rhs.shape(), ndarray::datatype::uint8, rhs.device());
+    return dispatch_new3<scalar_op_impl_wrapper, uint8_t, T, greater_than_equal_to_impl>(out, rhs, lhs);
 }
 template <typename T> // the scalar case (explicitly instantiated below)
-std::enable_if_t<std::is_arithmetic<T>::value, ndarray> bland::greater_than_equal_to(ndarray lhs, T rhs) {
-    return cpu::greater_than_equal_to(lhs, rhs);
-    // auto out = ndarray(a.shape(), ndarray::datatype::uint8, a.device());
-    // return dispatch_new3<scalar_op_impl_wrapper, uint8_t, T, greater_than_equal_to_impl>(out, a, b);
+std::enable_if_t<std::is_arithmetic<T>::value, ndarray> bland::greater_than_equal_to(ndarray a, T b) {
+    auto out = ndarray(a.shape(), ndarray::datatype::uint8, a.device());
+    return dispatch_new3<scalar_op_impl_wrapper, uint8_t, T, greater_than_equal_to_impl>(out, a, b);
 }
 
 template ndarray bland::greater_than_equal_to<double>(ndarray lhs, double rhs);
@@ -172,21 +160,18 @@ template ndarray bland::operator>=<int64_t>(int64_t lhs, ndarray rhs);
  * Less than
  */
 ndarray bland::less_than(ndarray lhs, ndarray rhs) {
-    return less_than(lhs, rhs);
-    // auto out = ndarray(lhs.shape(), ndarray::datatype::uint8, rhs.device());
-    // return dispatch<elementwise_binary_op_impl_wrapper<less_than_impl>, uint8_t>(out, lhs, rhs);
+    auto out = ndarray(lhs.shape(), ndarray::datatype::uint8, rhs.device());
+    return dispatch<elementwise_binary_op_impl_wrapper<less_than_impl>, uint8_t>(out, lhs, rhs);
 }
 template <typename T>
 std::enable_if_t<std::is_arithmetic<T>::value, ndarray> bland::less_than(T lhs, ndarray rhs) {
-    return less_than(lhs, rhs);
-    // auto out = ndarray(rhs.shape(), ndarray::datatype::uint8, rhs.device());
-    // return dispatch_new3<scalar_op_impl_wrapper, uint8_t, T, less_than_impl>(out, rhs, lhs);
+    auto out = ndarray(rhs.shape(), ndarray::datatype::uint8, rhs.device());
+    return dispatch_new3<scalar_op_impl_wrapper, uint8_t, T, less_than_impl>(out, rhs, lhs);
 }
 template <typename T> // the scalar case (explicitly instantiated below)
-std::enable_if_t<std::is_arithmetic<T>::value, ndarray> bland::less_than(ndarray lhs, T rhs) {
-    return less_than(lhs, rhs);
-    // auto out = ndarray(a.shape(), ndarray::datatype::uint8, a.device());
-    // return dispatch_new3<scalar_op_impl_wrapper, uint8_t, T, less_than_impl>(out, a, b);
+std::enable_if_t<std::is_arithmetic<T>::value, ndarray> bland::less_than(ndarray a, T b) {
+    auto out = ndarray(a.shape(), ndarray::datatype::uint8, a.device());
+    return dispatch_new3<scalar_op_impl_wrapper, uint8_t, T, less_than_impl>(out, a, b);
 }
 
 template ndarray bland::less_than<double>(ndarray lhs, double rhs);
@@ -250,21 +235,18 @@ template ndarray bland::operator< <int64_t>(int64_t lhs, ndarray rhs);
  * Less than or equal to
  */
 ndarray bland::less_than_equal_to(ndarray lhs, ndarray rhs) {
-    return cpu::less_than_equal_to(lhs, rhs);
-    // auto out = ndarray(lhs.shape(), ndarray::datatype::uint8, rhs.device());
-    // return dispatch<elementwise_binary_op_impl_wrapper<less_than_equal_to_impl>, uint8_t>(out, lhs, rhs);
+    auto out = ndarray(lhs.shape(), ndarray::datatype::uint8, rhs.device());
+    return dispatch<elementwise_binary_op_impl_wrapper<less_than_equal_to_impl>, uint8_t>(out, lhs, rhs);
 }
 template <typename T>
 std::enable_if_t<std::is_arithmetic<T>::value, ndarray> bland::less_than_equal_to(T lhs, ndarray rhs) {
-    return cpu::less_than_equal_to(lhs, rhs);
-    // auto out = ndarray(rhs.shape(), ndarray::datatype::uint8, rhs.device());
-    // return dispatch_new3<scalar_op_impl_wrapper, uint8_t, T, less_than_equal_to_impl>(out, rhs, lhs);
+    auto out = ndarray(rhs.shape(), ndarray::datatype::uint8, rhs.device());
+    return dispatch_new3<scalar_op_impl_wrapper, uint8_t, T, less_than_equal_to_impl>(out, rhs, lhs);
 }
 template <typename T> // the scalar case (explicitly instantiated below)
-std::enable_if_t<std::is_arithmetic<T>::value, ndarray> bland::less_than_equal_to(ndarray lhs, T rhs) {
-    return cpu::less_than_equal_to(lhs, rhs);
-    // auto out = ndarray(a.shape(), ndarray::datatype::uint8, a.device());
-    // return dispatch_new3<scalar_op_impl_wrapper, uint8_t, T, less_than_equal_to_impl>(out, a, b);
+std::enable_if_t<std::is_arithmetic<T>::value, ndarray> bland::less_than_equal_to(ndarray a, T b) {
+    auto out = ndarray(a.shape(), ndarray::datatype::uint8, a.device());
+    return dispatch_new3<scalar_op_impl_wrapper, uint8_t, T, less_than_equal_to_impl>(out, a, b);
 }
 
 template ndarray bland::less_than_equal_to<double>(ndarray lhs, double rhs);
@@ -328,21 +310,18 @@ template ndarray bland::operator<=<int64_t>(int64_t lhs, ndarray rhs);
  * logical and (&)
  */
 ndarray bland::logical_and(ndarray lhs, ndarray rhs) {
-    return cpu::logical_and(lhs, rhs);
-    // auto out = ndarray(lhs.shape(), ndarray::datatype::uint8, rhs.device());
-    // return dispatch<elementwise_binary_op_impl_wrapper<logical_and_impl>, uint8_t>(out, lhs, rhs);
+    auto out = ndarray(lhs.shape(), ndarray::datatype::uint8, rhs.device());
+    return dispatch<elementwise_binary_op_impl_wrapper<logical_and_impl>, uint8_t>(out, lhs, rhs);
 }
 template <typename T>
 std::enable_if_t<std::is_arithmetic<T>::value, ndarray> bland::logical_and(T lhs, ndarray rhs) {
-    return cpu::logical_and(lhs, rhs);
-    // auto out = ndarray(rhs.shape(), ndarray::datatype::uint8, rhs.device());
-    // return dispatch_new3<scalar_op_impl_wrapper, uint8_t, T, logical_and_impl>(out, rhs, lhs);
+    auto out = ndarray(rhs.shape(), ndarray::datatype::uint8, rhs.device());
+    return dispatch_new3<scalar_op_impl_wrapper, uint8_t, T, logical_and_impl>(out, rhs, lhs);
 }
 template <typename T> // the scalar case (explicitly instantiated below)
-std::enable_if_t<std::is_arithmetic<T>::value, ndarray> bland::logical_and(ndarray lhs, T rhs) {
-    return cpu::logical_and(lhs, rhs);
-    // auto out = ndarray(a.shape(), ndarray::datatype::uint8, a.device());
-    // return dispatch_new3<scalar_op_impl_wrapper, uint8_t, T, logical_and_impl>(out, a, b);
+std::enable_if_t<std::is_arithmetic<T>::value, ndarray> bland::logical_and(ndarray a, T b) {
+    auto out = ndarray(a.shape(), ndarray::datatype::uint8, a.device());
+    return dispatch_new3<scalar_op_impl_wrapper, uint8_t, T, logical_and_impl>(out, a, b);
 }
 
 // logical_and doesn't make sense on float types, but left commented out as a reminder this isn't a mistake of omission
@@ -418,21 +397,18 @@ template ndarray bland::operator&<int64_t>(int64_t lhs, ndarray rhs);
  * logical and (&)
  */
 ndarray bland::equal_to(ndarray lhs, ndarray rhs) {
-    return cpu::equal_to(lhs, rhs);
-    // auto out = ndarray(lhs.shape(), ndarray::datatype::uint8, rhs.device());
-    // return dispatch<elementwise_binary_op_impl_wrapper<equal_to_impl>, uint8_t>(out, lhs, rhs);
+    auto out = ndarray(lhs.shape(), ndarray::datatype::uint8, rhs.device());
+    return dispatch<elementwise_binary_op_impl_wrapper<equal_to_impl>, uint8_t>(out, lhs, rhs);
 }
 template <typename T>
 std::enable_if_t<std::is_arithmetic<T>::value, ndarray> bland::equal_to(T lhs, ndarray rhs) {
-    return cpu::equal_to(lhs, rhs);
-    // auto out = ndarray(rhs.shape(), ndarray::datatype::uint8, rhs.device());
-    // return dispatch_new3<scalar_op_impl_wrapper, uint8_t, T, equal_to_impl>(out, rhs, lhs);
+    auto out = ndarray(rhs.shape(), ndarray::datatype::uint8, rhs.device());
+    return dispatch_new3<scalar_op_impl_wrapper, uint8_t, T, equal_to_impl>(out, rhs, lhs);
 }
 template <typename T> // the scalar case (explicitly instantiated below)
-std::enable_if_t<std::is_arithmetic<T>::value, ndarray> bland::equal_to(ndarray lhs, T rhs) {
-    return cpu::equal_to(lhs, rhs);
-    // auto out = ndarray(a.shape(), ndarray::datatype::uint8, a.device());
-    // return dispatch_new3<scalar_op_impl_wrapper, uint8_t, T, equal_to_impl>(out, a, b);
+std::enable_if_t<std::is_arithmetic<T>::value, ndarray> bland::equal_to(ndarray a, T b) {
+    auto out = ndarray(a.shape(), ndarray::datatype::uint8, a.device());
+    return dispatch_new3<scalar_op_impl_wrapper, uint8_t, T, equal_to_impl>(out, a, b);
 }
 
 template ndarray bland::equal_to<double>(ndarray lhs, double rhs);
@@ -492,49 +468,48 @@ template ndarray bland::operator==<int16_t>(int16_t lhs, ndarray rhs);
 template ndarray bland::operator==<int32_t>(int32_t lhs, ndarray rhs);
 template ndarray bland::operator==<int64_t>(int64_t lhs, ndarray rhs);
 
-// struct count_impl {
-//     template <typename in_datatype>
-//     static inline int64_t call(const ndarray &a) {
+struct count_impl {
+    template <typename in_datatype>
+    static inline int64_t call(const ndarray &a) {
 
-//         auto a_data    = a.data_ptr<in_datatype>();
-//         auto a_shape   = a.shape();
-//         auto a_strides = a.strides();
-//         auto a_offset  = a.offsets();
+        auto a_data    = a.data_ptr<in_datatype>();
+        auto a_shape   = a.shape();
+        auto a_strides = a.strides();
+        auto a_offset  = a.offsets();
 
-//         std::vector<int64_t> input_index(a_shape.size(), 0);
-//         int64_t a_linear_index = std::accumulate(a_offset.begin(), a_offset.end(), 0);
+        std::vector<int64_t> input_index(a_shape.size(), 0);
+        int64_t a_linear_index = std::accumulate(a_offset.begin(), a_offset.end(), 0);
 
-//         int64_t count = 0;
-//         auto    numel = a.numel();
-//         for (int i = 0; i < numel; ++i) {
-//             // Make a copy of the current input index, we'll fix the non-summed dims
-//             // and iterate over the reduced dims accumulating the total
-//             if (a_data[a_linear_index]) {
-//                 ++count;
-//             }
+        int64_t count = 0;
+        auto    numel = a.numel();
+        for (int i = 0; i < numel; ++i) {
+            // Make a copy of the current input index, we'll fix the non-summed dims
+            // and iterate over the reduced dims accumulating the total
+            if (a_data[a_linear_index]) {
+                ++count;
+            }
 
-//             // Increment the multi-dimensional input index
-//             // TODO: I think I can dedupe this with above by checking if axis is in reduce axis but that may actually be
-//             // less efficient
-//             for (int dim = a_shape.size() - 1; dim >= 0; --dim) {
-//                 // If we're not at the end of this dim, keep going
-//                 ++input_index[dim];
-//                 a_linear_index += a_strides[dim];
-//                 if (input_index[dim] < a_shape[dim]) {
-//                     break;
-//                 } else {
-//                     // Otherwise, set it to 0 and move down to the next dim
-//                     input_index[dim] = 0;
-//                     a_linear_index -= (a_shape[dim]) * a_strides[dim];
-//                 }
-//             }
-//         }
+            // Increment the multi-dimensional input index
+            // TODO: I think I can dedupe this with above by checking if axis is in reduce axis but that may actually be
+            // less efficient
+            for (int dim = a_shape.size() - 1; dim >= 0; --dim) {
+                // If we're not at the end of this dim, keep going
+                ++input_index[dim];
+                a_linear_index += a_strides[dim];
+                if (input_index[dim] < a_shape[dim]) {
+                    break;
+                } else {
+                    // Otherwise, set it to 0 and move down to the next dim
+                    input_index[dim] = 0;
+                    a_linear_index -= (a_shape[dim]) * a_strides[dim];
+                }
+            }
+        }
 
-//         return count;
-//     }
-// };
+        return count;
+    }
+};
 
 int64_t bland::count_true(ndarray x) {
-    return cpu::count_true(x);
-    // return dispatch_summary<count_impl>(x);
+    return dispatch_summary<count_impl>(x);
 }

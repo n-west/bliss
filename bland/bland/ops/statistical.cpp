@@ -3,8 +3,8 @@
 #include "bland/ops_statistical.hpp"
 
 #include "dispatcher.hpp"
-#include "elementwise_binary_op.hpp"
-#include "elementwise_scalar_op.hpp"
+#include "cpu/elementwise_binary_op.hpp"
+#include "cpu/elementwise_scalar_op.hpp"
 #include "shape_helpers.hpp"
 
 #include <fmt/core.h>
@@ -45,25 +45,23 @@ struct mean_impl {
         auto                 a_offset  = a.offsets();
         std::vector<int64_t> input_index(a_shape.size(), 0);
 
+        constexpr bool is_floating_point = std::is_floating_point<out_datatype>::value;
+        using accumulator_type = std::conditional_t<is_floating_point, double, out_datatype>;
+
         out_datatype scale = 1.0 / static_cast<out_datatype>(reduced_elements - 1);
-        // Loop over the dimensions of the array and perform the reduction operation
         auto numel = out.numel();
         for (int i = 0; i < numel; ++i) {
             // Make a copy of the current input index, we'll fix the non-summed dims
             // and iterate over the reduced dims accumulating the total
-            auto   reduce_nd_index = input_index;
-            double mean            = 0;
+            auto             reduce_nd_index = input_index;
+            accumulator_type mean            = 0;
             for (int jj = 0; jj < reduced_elements; ++jj) {
                 int64_t input_linear_index = 0;
                 // TODO (perf): move this inside the nd_index increment similar to the elementwise binary ops
                 for (int axis = 0; axis < a_shape.size(); ++axis) {
                     input_linear_index += a_offset[axis] + (reduce_nd_index[axis] % a_shape[axis]) * a_strides[axis];
                 }
-                // if (std::is_same<out_datatype, float>() || std::is_same<out_datatype, double>()) {
-                //     mean += (a_data[input_linear_index] * scale);
-                // } else {
                 mean += a_data[input_linear_index];
-                // }
                 // Increment the multi-dimensional index
                 for (int i = reduced_axes.size() - 1; i >= 0; --i) {
                     auto d = reduced_axes[i];
@@ -83,11 +81,7 @@ struct mean_impl {
                 out_linear_index += out_offset[axis] + (out_index[axis]) * out_strides[axis];
             }
 
-            // if (std::is_same<out_datatype, float>() || std::is_same<out_datatype, double>()) {
-            //     out_data[out_linear_index] = static_cast<out_datatype>(mean);
-            // } else {
             out_data[out_linear_index] = static_cast<out_datatype>(mean / reduced_elements);
-            // }
             // Increment the multi-dimensional output index
             for (int axis = out_shape.size() - 1; axis >= 0; --axis) {
                 // If we're not at the end of this dim, keep going
@@ -164,15 +158,16 @@ struct masked_mean_impl {
             throw std::runtime_error("mask_mean: dims of a shape does not match dims of mask shape");
         }
 
-        // out_datatype scale = 1.0 / static_cast<out_datatype>(reduced_elements);
-        // Loop over the dimensions of the array and perform the reduction operation
+        constexpr bool is_floating_point = std::is_floating_point<out_datatype>::value;
+        using accumulator_type = std::conditional_t<is_floating_point, double, out_datatype>;
+
         auto numel = out.numel();
         for (int i = 0; i < numel; ++i) {
             // Make a copy of the current input index, we'll fix the non-summed dims
             // and iterate over the reduced dims accumulating the total
-            auto    reduce_nd_index  = input_index;
-            double  mean             = 0; // For large values, this dtype makes a big difference
-            int64_t elements_in_mean = 0;
+            auto             reduce_nd_index  = input_index;
+            accumulator_type mean             = 0;
+            int64_t          elements_in_mean = 0;
             for (int jj = 0; jj < reduced_elements; ++jj) {
                 int64_t input_linear_index = 0;
                 // TODO (perf): move this inside the nd_index increment similar to the elementwise binary ops
@@ -319,15 +314,18 @@ struct stddev_impl {
             reduced_elements *= a_shape[d];
         }
 
+        constexpr bool is_floating_point = std::is_floating_point<out_datatype>::value;
+        using accumulator_type = std::conditional_t<is_floating_point, double, out_datatype>;
+
         // TODO (flexibility): add correction option (noff in torch)
         out_datatype scale = 1.0 / static_cast<out_datatype>(reduced_elements - 1);
-        // Loop over the dimensions of the array and perform the reduction operation
+
         auto numel = out.numel();
         for (int i = 0; i < numel; ++i) {
             // Make a copy of the current input index, we'll fix the non-summed dims
             // and iterate over the reduced dims accumulating the total
-            auto   reduce_nd_index = input_index;
-            double dev             = 0;
+            auto             reduce_nd_index = input_index;
+            accumulator_type dev             = 0;
 
             // TODO (perf): move this inside the nd_index increment similar to the elementwise binary ops
             int64_t mean_linear_index = 0;
@@ -481,16 +479,19 @@ struct masked_stddev_impl {
             reduced_elements *= a_shape[d];
         }
 
+        constexpr bool is_floating_point = std::is_floating_point<out_datatype>::value;
+        using accumulator_type = std::conditional_t<is_floating_point, double, out_datatype>;
+
         // TODO (flexibility): add correction option (noff in torch)
-        double scale = 1.0 / static_cast<out_datatype>(reduced_elements - 1);
-        // Loop over the dimensions of the array and perform the reduction operation
+        out_datatype scale = 1.0 / static_cast<out_datatype>(reduced_elements - 1);
+
         auto numel = out.numel();
         for (int i = 0; i < numel; ++i) {
             // Make a copy of the current input index, we'll fix the non-summed dims
             // and iterate over the reduced dims accumulating the total
-            auto    reduce_nd_index = input_index;
-            double  dev             = 0;
-            int64_t elements_in_dev = 0;
+            auto             reduce_nd_index = input_index;
+            accumulator_type dev             = 0;
+            int64_t          elements_in_dev = 0;
 
             // TODO (perf): move this inside the nd_index increment similar to the elementwise binary ops
             int64_t mean_linear_index = 0;
@@ -658,7 +659,7 @@ struct standardized_moment_impl {
 
         // TODO (flexibility): add correction option (noff in torch)
         out_datatype scale = 1.0 / static_cast<out_datatype>(reduced_elements - 1);
-        // Loop over the dimensions of the array and perform the reduction operation
+
         auto numel = out.numel();
         for (int i = 0; i < numel; ++i) {
             // Make a copy of the current input index, we'll fix the non-summed dims

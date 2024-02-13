@@ -3,4 +3,5 @@ build-*/
 notes/
 notebooks/
 .vscode/
+.py-build-cmake_cache/
 temp/

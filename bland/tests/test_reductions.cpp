@@ -76,9 +76,9 @@ TEST_CASE("ops", "[ndarray][ops]") {
 
         auto result = bland::sum(test_array, {0,1});
 
-        REQUIRE_THAT(std::vector<int64_t>(result.data_ptr<int64_t>(),
-                                          result.data_ptr<int64_t>() + result.numel()),
-                     Catch::Matchers::Equals(std::vector<int64_t>{25,}));
+        REQUIRE_THAT(std::vector<int32_t>(result.data_ptr<int32_t>(),
+                                          result.data_ptr<int32_t>() + result.numel()),
+                     Catch::Matchers::Equals(std::vector<int32_t>{25,}));
     }
 
     }

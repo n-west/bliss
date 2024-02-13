@@ -2,15 +2,13 @@
 
 #if BLISS_USE_CAPNP
 
-#include <core/hit.hpp>
-#include <core/scan.hpp>
-#include <core/cadence.hpp>
-#include <core/event.hpp>
 
 #include <string_view>
 #include <vector>
 
 namespace bliss {
+
+struct event;
 
 /**
  * write all detected hits for all scans of each observation target in a cadence as cap'n proto messages to binary files matching

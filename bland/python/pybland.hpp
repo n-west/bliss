@@ -4,6 +4,7 @@
 #include <nanobind/nanobind.h>
 #include <nanobind/ndarray.h>
 #include <nanobind/stl/string.h>
+#include <nanobind/stl/string_view.h>
 #include <nanobind/stl/vector.h>
 
 namespace nb = nanobind;
@@ -32,6 +33,7 @@ void bind_pybland(nb::module_ m) {
     .def("ndim", &bland::ndarray::ndim)
     .def("dtype", &bland::ndarray::dtype)
     .def("device", &bland::ndarray::device)
+    .def("to", nb::overload_cast<std::string_view>(&bland::ndarray::to))
     .def("size", &bland::ndarray::size)
     .def("__getstate__", [](bland::ndarray &self) {
         auto dtype = self.dtype();
