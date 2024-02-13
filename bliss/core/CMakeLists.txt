@@ -11,8 +11,9 @@ add_library(bliss_core
 target_include_directories(bliss_core PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 target_link_libraries(bliss_core
     PUBLIC
-    file_types
+    bland
     PRIVATE
+    file_types
     fmt::fmt-header-only
 )
 

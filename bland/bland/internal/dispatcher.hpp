@@ -25,7 +25,7 @@ namespace bland {
  * 
  * This requires three type deductions and passes through an underlying impl function with 3 template args
 */
-template <typename F, typename Out, typename A, class Op, typename ...Args>
+template <typename F, typename Out, typename A, typename ...Args>
 ndarray dispatch(ndarray &out, const ndarray &a, const ndarray &b, Args... args) {
     auto dtype = b.dtype();
 
@@ -33,9 +33,9 @@ ndarray dispatch(ndarray &out, const ndarray &a, const ndarray &b, Args... args)
     case kDLFloat: {
         switch (dtype.bits) {
         case 32:
-            return F::template call<Out, A, float, Op>(out, a, b, std::forward<Args>(args)...);
+            return F::template call<Out, A, float>(out, a, b, std::forward<Args>(args)...);
         case 64:
-            return F::template call<Out, A, double, Op>(out, a, b, std::forward<Args>(args)...);
+            return F::template call<Out, A, double>(out, a, b, std::forward<Args>(args)...);
         default:
             throw std::runtime_error("Unsupported float bitwidth");
         }
@@ -43,13 +43,13 @@ ndarray dispatch(ndarray &out, const ndarray &a, const ndarray &b, Args... args)
     case kDLInt: {
         switch (dtype.bits) {
         case 8:
-            return F::template call<Out, A, int8_t, Op>(out, a, b, std::forward<Args>(args)...);
+            return F::template call<Out, A, int8_t>(out, a, b, std::forward<Args>(args)...);
         // case 16:
-        //     return F::template call<Out, A, int16_t, Op>(out, a, b, std::forward<Args>(args)...);
+        //     return F::template call<Out, A, int16_t>(out, a, b, std::forward<Args>(args)...);
         case 32:
-            return F::template call<Out, A, int32_t, Op>(out, a, b, std::forward<Args>(args)...);
+            return F::template call<Out, A, int32_t>(out, a, b, std::forward<Args>(args)...);
         case 64:
-            return F::template call<Out, A, int64_t, Op>(out, a, b, std::forward<Args>(args)...);
+            return F::template call<Out, A, int64_t>(out, a, b, std::forward<Args>(args)...);
         default:
             throw std::runtime_error("Unsupported int bitwidth");
         }
@@ -57,13 +57,13 @@ ndarray dispatch(ndarray &out, const ndarray &a, const ndarray &b, Args... args)
     case kDLUInt: {
         switch (dtype.bits) {
         case 8:
-            return F::template call<Out, A, uint8_t, Op>(out, a, b, std::forward<Args>(args)...);
+            return F::template call<Out, A, uint8_t>(out, a, b, std::forward<Args>(args)...);
         // case 16:
-        //     return F::template call<Out, A, uint16_t, Op>(out, a, b, std::forward<Args>(args)...);
+        //     return F::template call<Out, A, uint16_t>(out, a, b, std::forward<Args>(args)...);
         case 32:
-            return F::template call<Out, A, uint32_t, Op>(out, a, b, std::forward<Args>(args)...);
+            return F::template call<Out, A, uint32_t>(out, a, b, std::forward<Args>(args)...);
         // case 64:
-        //     return F::template call<Out, A, uint64_t, Op>(out, a, b, std::forward<Args>(args)...);
+        //     return F::template call<Out, A, uint64_t>(out, a, b, std::forward<Args>(args)...);
         default:
             throw std::runtime_error("Unsupported uint bitwidth");
         }
@@ -73,7 +73,7 @@ ndarray dispatch(ndarray &out, const ndarray &a, const ndarray &b, Args... args)
     }
 }
 
-template <typename F, typename Out, class Op, typename ...Args>
+template <typename F, typename Out, typename ...Args>
 ndarray dispatch(ndarray &out, const ndarray &a, const ndarray &b, Args... args) {
     auto dtype = a.dtype();
 
@@ -81,9 +81,9 @@ ndarray dispatch(ndarray &out, const ndarray &a, const ndarray &b, Args... args)
     case kDLFloat: {
         switch (dtype.bits) {
         case 32:
-            return dispatch<F, Out, float, Op>(out, a, b, std::forward<Args>(args)...);
+            return dispatch<F, Out, float>(out, a, b, std::forward<Args>(args)...);
         case 64:
-            return dispatch<F, Out, double, Op>(out, a, b, std::forward<Args>(args)...);
+            return dispatch<F, Out, double>(out, a, b, std::forward<Args>(args)...);
         default:
             throw std::runtime_error("Unsupported float bitwidth");
         }
@@ -91,13 +91,13 @@ ndarray dispatch(ndarray &out, const ndarray &a, const ndarray &b, Args... args)
     case kDLInt: {
         switch (dtype.bits) {
         case 8:
-            return dispatch<F, Out, int8_t, Op>(out, a, b, std::forward<Args>(args)...);
+            return dispatch<F, Out, int8_t>(out, a, b, std::forward<Args>(args)...);
         // case 16:
-        //     return dispatch<F, Out, int16_t, Op>(out, a, b, std::forward<Args>(args)...);
+        //     return dispatch<F, Out, int16_t>(out, a, b, std::forward<Args>(args)...);
         case 32:
-            return dispatch<F, Out, int32_t, Op>(out, a, b, std::forward<Args>(args)...);
+            return dispatch<F, Out, int32_t>(out, a, b, std::forward<Args>(args)...);
         case 64:
-            return dispatch<F, Out, int64_t, Op>(out, a, b, std::forward<Args>(args)...);
+            return dispatch<F, Out, int64_t>(out, a, b, std::forward<Args>(args)...);
         default:
             throw std::runtime_error("Unsupported int bitwidth");
         }
@@ -105,13 +105,13 @@ ndarray dispatch(ndarray &out, const ndarray &a, const ndarray &b, Args... args)
     case kDLUInt: {
         switch (dtype.bits) {
         case 8:
-            return dispatch<F, Out, uint8_t, Op>(out, a, b, std::forward<Args>(args)...);
+            return dispatch<F, Out, uint8_t>(out, a, b, std::forward<Args>(args)...);
         // case 16:
-        //     return dispatch<F, Out, uint16_t, Op>(out, a, b, std::forward<Args>(args)...);
+        //     return dispatch<F, Out, uint16_t>(out, a, b, std::forward<Args>(args)...);
         case 32:
-            return dispatch<F, Out, uint32_t, Op>(out, a, b, std::forward<Args>(args)...);
+            return dispatch<F, Out, uint32_t>(out, a, b, std::forward<Args>(args)...);
         // case 64:
-        //     return dispatch<F, Out, uint64_t, Op>(out, a, b, std::forward<Args>(args)...);
+        //     return dispatch<F, Out, uint64_t>(out, a, b, std::forward<Args>(args)...);
         default:
             throw std::runtime_error("Unsupported uint bitwidth");
         }
@@ -124,7 +124,7 @@ ndarray dispatch(ndarray &out, const ndarray &a, const ndarray &b, Args... args)
 /**
  * out = f(a, b) where a and b are ndarray
 */
-template <typename F, class Op, typename ...Args>
+template <typename F, typename ...Args>
 ndarray dispatch(ndarray &out, const ndarray &a, const ndarray &b, Args... args) {
     auto dtype = out.dtype();
 
@@ -132,9 +132,9 @@ ndarray dispatch(ndarray &out, const ndarray &a, const ndarray &b, Args... args)
     case kDLFloat: {
         switch (dtype.bits) {
         case 32:
-            return dispatch<F, float, Op>(out, a, b, std::forward<Args>(args)...);
+            return dispatch<F, float>(out, a, b, std::forward<Args>(args)...);
         case 64:
-            return dispatch<F, double, Op>(out, a, b, std::forward<Args>(args)...);
+            return dispatch<F, double>(out, a, b, std::forward<Args>(args)...);
         default:
             throw std::runtime_error("Unsupported float bitwidth");
         }
@@ -142,13 +142,13 @@ ndarray dispatch(ndarray &out, const ndarray &a, const ndarray &b, Args... args)
     case kDLInt: {
         switch (dtype.bits) {
         case 8:
-            return dispatch<F, int8_t, Op>(out, a, b, std::forward<Args>(args)...);
+            return dispatch<F, int8_t>(out, a, b, std::forward<Args>(args)...);
         // case 16:
-        //     return dispatch<F, int16_t, Op>(out, a, b, std::forward<Args>(args)...);
+        //     return dispatch<F, int16_t>(out, a, b, std::forward<Args>(args)...);
         case 32:
-            return dispatch<F, int32_t, Op>(out, a, b, std::forward<Args>(args)...);
+            return dispatch<F, int32_t>(out, a, b, std::forward<Args>(args)...);
         case 64:
-            return dispatch<F, int64_t, Op>(out, a, b, std::forward<Args>(args)...);
+            return dispatch<F, int64_t>(out, a, b, std::forward<Args>(args)...);
         default:
             throw std::runtime_error("Unsupported int bitwidth");
         }
@@ -156,13 +156,13 @@ ndarray dispatch(ndarray &out, const ndarray &a, const ndarray &b, Args... args)
     case kDLUInt: {
         switch (dtype.bits) {
         case 8:
-            return dispatch<F, uint8_t, Op>(out, a, b, std::forward<Args>(args)...);
+            return dispatch<F, uint8_t>(out, a, b, std::forward<Args>(args)...);
         // case 16:
-        //     return dispatch<F, uint16_t, Op>(out, a, b, std::forward<Args>(args)...);
+        //     return dispatch<F, uint16_t>(out, a, b, std::forward<Args>(args)...);
         case 32:
-            return dispatch<F, uint32_t, Op>(out, a, b, std::forward<Args>(args)...);
+            return dispatch<F, uint32_t>(out, a, b, std::forward<Args>(args)...);
         // case 64:
-        //     return dispatch<F, uint64_t, Op>(out, a, b, std::forward<Args>(args)...);
+        //     return dispatch<F, uint64_t>(out, a, b, std::forward<Args>(args)...);
         default:
             throw std::runtime_error("Unsupported uint bitwidth");
         }

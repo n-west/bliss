@@ -114,9 +114,10 @@ ndarray elementwise_binary_op(ndarray &out, const ndarray &a, const ndarray &b) 
  * template wrapper around a template function which calls the function
  * with the given template datatypes
  */
+template <class Op>
 struct elementwise_binary_op_impl_wrapper {
     // An output tensor is provided
-    template <typename Out, typename A_type, typename B_type, class Op>
+    template <typename Out, typename A_type, typename B_type>
     static inline ndarray call(ndarray out, const ndarray &a, const ndarray &b) {
         // Check that this operation is possible
         auto a_shape = a.shape();

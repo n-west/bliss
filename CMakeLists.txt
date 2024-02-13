@@ -12,7 +12,6 @@ project(
     VERSION 0.0.0
     LANGUAGES CXX
 )
-
 # We don't actually need C, but there's an issue with debian packaging of cap'n proto
 # that causes gcc to fail
 # https://github.com/chaincodelabs/libmultiprocess/issues/68
@@ -24,12 +23,36 @@ enable_language(C)
 include(CheckLanguage)
 check_language(CUDA)
 
-if (CMAKE_CUDA_COMPILER)
-  message("Have cuda")
-else()
-  message("Does not have cuda")
+##
+# options
+##
+
+set(BUILD_SHARED_LIBS_DEFAULT OFF)
+
+option(BUILD_SHARED_LIBS          "BL: build shared libs" ${BUILD_SHARED_LIBS_DEFAULT})
+option(BL_SANITIZE_THREAD         "BL: enable thread sanitizer"    OFF)
+option(BL_SANITIZE_ADDRESS        "BL: enable address sanitizer"   OFF)
+option(BL_SANITIZE_UNDEFINED      "BL: enable undefined sanitizer" OFF)
+
+##
+# sanitizers
+##
+
+if (BL_SANITIZE_THREAD)
+    set(CMAKE_C_FLAGS   "${CMAKE_C_FLAGS}   -fsanitize=thread")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=thread")
 endif()
-# enable_language(CUDA)
+
+if (BL_SANITIZE_ADDRESS)
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS}     -fsanitize=address -fno-omit-frame-pointer")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address -fno-omit-frame-pointer")
+endif()
+
+if (BL_SANITIZE_UNDEFINED)
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS}     -fsanitize=undefined")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=undefined")
+endif()
+
 
 # This is required for python modules...
 set_property(GLOBAL PROPERTY POSITION_INDEPENDENT_CODE TRUE)
@@ -79,14 +102,14 @@ endif()
 
 
 # HDF5
-find_package(HDF5 REQUIRED COMPONENTS CXX)
+find_package(HDF5 QUIET REQUIRED COMPONENTS CXX)
 set_package_properties(HDF5 PROPERTIES
     URL "https://www.hdfgroup.org/solutions/hdf5/"
     DESCRIPTION "Hierarchical Data Format"
     PURPOSE "Read/write BL HDF5-wrapped filterbank data")
 
 # Cap'n proto
-find_package(CapnProto)
+find_package(CapnProto QUIET)
 if (NOT CapnProto_FOUND)
   # capn proto requires CXX extensions
   # https://github.com/capnproto/capnproto/blob/a12c15a7cd0ae5121dca6216f529fb15fdee238c/c%2B%2B/CMakeLists.txt#L152C43-L152C63

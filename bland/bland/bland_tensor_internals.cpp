@@ -5,6 +5,13 @@
 #include <cuda_runtime.h> // cudaMalloc
 #endif // BLAND_CUDA
 
+#include <fmt/core.h>
+#include <fmt/format.h>
+
+#include <numeric> // std::accumulate
+#include <cstdlib> // posix_memalign
+#include <cerrno>
+
 using namespace bland;
 
 namespace bland::detail {
@@ -84,6 +91,7 @@ blandDLTensor::blandDLTensor(const std::vector<int64_t> &shape,
         /* todo */
         #if BLAND_CUDA
         void* ptr = nullptr;
+        cudaSetDevice(device.device_id);
         cudaError_t err = cudaMalloc(&ptr, num_elements * element_size);
 
         if (err != cudaSuccess) {
@@ -96,9 +104,27 @@ blandDLTensor::blandDLTensor(const std::vector<int64_t> &shape,
         #else // BLAND_CUDA
         throw std::runtime_error("ERROR: bland was not build with CUDA support, but CUDA device requested");
         #endif // BLAND_CUDA
+    } else if (DLTensor::device.device_type == DLDeviceType::kDLCUDAHost) {
+        #if BLAND_CUDA
+        void* ptr = nullptr;
+        // Does a CUDAHost Device have a valid device_id to pass to cudaSetDevice?
+        cudaSetDevice(device.device_id);
+        cudaError_t err = cudaMallocHost(&ptr, num_elements * element_size);
+
+        if (err != cudaSuccess) {
+            auto err_str = cudaGetErrorString(err);
+            fmt::print("ERROR: {}\n", err_str);
+            cudaFree(ptr);
+            throw std::runtime_error(err_str);
+        }
+        _data_ownership = std::shared_ptr<void>(ptr, cudaFree);
+        #else // BLAND_CUDA
+        throw std::runtime_error("ERROR: bland was not build with CUDA support, but CUDAManaged device requested");
+        #endif // BLAND_CUDA
     } else if (DLTensor::device.device_type == DLDeviceType::kDLCUDAManaged) {
         #if BLAND_CUDA
         void* ptr = nullptr;
+        cudaSetDevice(device.device_id);
         cudaError_t err = cudaMallocManaged(&ptr, num_elements * element_size);
 
         if (err != cudaSuccess) {

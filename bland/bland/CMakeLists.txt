@@ -5,12 +5,22 @@ add_library(bland
     ndarray.cpp
     ops/ops.cpp
     ops/arithmetic.cpp
-    ops/arithmetic_scalar.cpp
+    ops/cpu/arithmetic_cpu.cpp
+    ops/cpu/arithmetic_scalar_cpu.cpp
+    ops/cpu/comparison_cpu.cpp
     ops/comparison.cpp
     ops/creators.cpp
     ops/statistical.cpp
     internal/shape_helpers.cpp
 )
+
+if (CMAKE_CUDA_COMPILER)
+target_sources(bland
+    PRIVATE
+    ops/cuda/arithmetic_cuda.cu
+    ops/cuda/arithmetic_scalar_cuda.cu
+    )
+endif ()
 
 target_include_directories(bland
     PUBLIC
@@ -19,16 +29,16 @@ target_include_directories(bland
     ${CMAKE_CURRENT_SOURCE_DIR}/internal
 )
 
-target_precompile_headers(bland
-  PRIVATE
-    [["bland/bland.hpp"]]
-    [["bland/ndarray.hpp"]]
-    [["bland/ops.hpp"]]
-    [["dispatcher.hpp"]]
-    [["elementwise_binary_op.hpp"]]
-    [["elementwise_scalar_op.hpp"]]
-    [["elementwise_unary_op.hpp"]]
-)
+# target_precompile_headers(bland
+#   PRIVATE
+#     [["bland/bland.hpp"]]
+#     [["bland/ndarray.hpp"]]
+#     [["bland/ops.hpp"]]
+#     [["dispatcher.hpp"]]
+#     [["elementwise_binary_op.hpp"]]
+#     [["elementwise_scalar_op.hpp"]]
+#     [["elementwise_unary_op.hpp"]]
+# )
 
 target_link_libraries(bland
     PUBLIC

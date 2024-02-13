@@ -16,20 +16,20 @@ target_link_libraries(justrun
     bliss_core
     drift_search
     estimators
-    file_types
+    bliss_serialization
     flaggers
     fmt::fmt-header-only
     )
 
 add_executable(read_hits read_hits.cpp)
 target_link_libraries(read_hits
-    file_types
+    bliss_serialization
     fmt::fmt-header-only
     )
     
 add_executable(event_search event_search.cpp)
 target_link_libraries(event_search
-    file_types
+    bliss_serialization
     drift_search
     fmt::fmt-header-only
     )

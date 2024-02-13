@@ -7,7 +7,6 @@
 
 #include "hit.capnp.h"
 
-
 #include <stdexcept>
 
 #include <capnp/c++.capnp.h>

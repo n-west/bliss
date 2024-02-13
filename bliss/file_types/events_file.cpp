@@ -3,6 +3,8 @@
 
 #include "hit.capnp.h"
 
+#include <core/event.hpp>
+
 #include "detail/cpnp_hit_builder.hpp"
 #include "detail/raii_file_helpers.hpp"
 

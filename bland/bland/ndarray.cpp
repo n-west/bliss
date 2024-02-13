@@ -8,6 +8,7 @@
 #include <fmt/ranges.h>
 
 #include <numeric> // accumulate
+#include <regex> // regex (parsing device id)
 
 using namespace bland;
 
@@ -78,17 +79,35 @@ bool bland::ndarray::dev::operator==(const DLDevice &other) {
     return this->device_type == other.device_type && this->device_id == other.device_id;
 }
 
+bool bland::ndarray::dev::operator!=(const dev &other) {
+    return !(*this == other);
+}
+
 bland::ndarray::dev::dev(std::string_view dev) {
     if (dev == "cpu") {
-        device_type = DLDeviceType::kDLCPU;
-        device_id   = 0;
-    } else if (dev == "cuda") {
-        // TODO: should we follow the torch concept of cuda:id
+		device_type = DLDeviceType::kDLCPU;
+		device_id   = 0;
+    } else if (dev.substr(0, 4) == "cuda") {
         device_type = DLDeviceType::kDLCUDA;
         device_id   = 0;
+        if (dev.size() > 4 && dev[4] == ':') {
+            device_id = std::stoi(std::string(dev.substr(5)));
+        }
+    } else if (dev.substr(0, 11) == "cudamanaged") {
+        device_type = DLDeviceType::kDLCUDAManaged;
+        device_id   = 0;
+        if (dev.size() > 11 && dev[11] == ':') {
+            device_id = std::stoi(std::string(dev.substr(12)));
+        }
+    } else if (dev.substr(0, 8) == "cudahost") {
+        device_type = DLDeviceType::kDLCUDAHost;
+        device_id   = 0;
+        if (dev.size() > 8 && dev[8] == ':') {
+            device_id = std::stoi(std::string(dev.substr(9)));
+        }
     } else {
         throw std::runtime_error("Device type not supported in bland yet");
-    }
+	}
 }
 
 bland::ndarray::ndarray(DLManagedTensor tensor) : _tensor(tensor) {
@@ -283,6 +302,13 @@ template uint16_t bland::ndarray::scalarize<uint16_t>(const std::vector<int64_t>
 template uint32_t bland::ndarray::scalarize<uint32_t>(const std::vector<int64_t> &) const;
 template uint64_t bland::ndarray::scalarize<uint64_t>(const std::vector<int64_t> &) const;
 
+ndarray bland::ndarray::to(const ndarray::dev &dest) {
+    return bland::to(*this, dest);
+}
+
+ndarray bland::ndarray::to(std::string_view dest) {
+    return bland::to(*this, dest);
+}
 
 template <typename datatype>
 std::string pretty_print(const ndarray &a) {
@@ -291,9 +317,11 @@ std::string pretty_print(const ndarray &a) {
     // (multi-dimensional) index to read into a
     std::vector<int64_t> index(a.shape().size(), 0);
 
+    std::string type_specifier{};
     std::string dtype_pp{};
     if (std::is_same<datatype, float>()) {
         dtype_pp = "float32";
+        type_specifier = {"{:f}"};
     } else if (std::is_same<datatype, double>()) {
         dtype_pp = "float64";
     } else if (std::is_same<datatype, int8_t>()) {
@@ -331,7 +359,7 @@ std::string pretty_print(const ndarray &a) {
         for (int i = 0; i < a.shape().size(); ++i) {
             linear_index += a.offsets()[i] + (index[i] % a.shape()[i]) * a.strides()[i];
         }
-        fmt::format_to(output_repr, "{:d} ", a_data[linear_index]);
+        fmt::format_to(output_repr, "{} ", a_data[linear_index]);
 
         // Increment the multi-dimensional index
         for (int i = a.shape().size() - 1; i >= 0; --i) {
