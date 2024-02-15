@@ -51,8 +51,8 @@ struct mean_impl {
         for (int i = 0; i < numel; ++i) {
             // Make a copy of the current input index, we'll fix the non-summed dims
             // and iterate over the reduced dims accumulating the total
-            auto         reduce_nd_index = input_index;
-            out_datatype mean            = 0;
+            auto   reduce_nd_index = input_index;
+            double mean            = 0;
             for (int jj = 0; jj < reduced_elements; ++jj) {
                 int64_t input_linear_index = 0;
                 // TODO (perf): move this inside the nd_index increment similar to the elementwise binary ops
@@ -86,7 +86,7 @@ struct mean_impl {
             // if (std::is_same<out_datatype, float>() || std::is_same<out_datatype, double>()) {
             //     out_data[out_linear_index] = static_cast<out_datatype>(mean);
             // } else {
-            out_data[out_linear_index] = static_cast<out_datatype>(mean) / reduced_elements;
+            out_data[out_linear_index] = static_cast<out_datatype>(mean / reduced_elements);
             // }
             // Increment the multi-dimensional output index
             for (int axis = out_shape.size() - 1; axis >= 0; --axis) {
@@ -170,9 +170,9 @@ struct masked_mean_impl {
         for (int i = 0; i < numel; ++i) {
             // Make a copy of the current input index, we'll fix the non-summed dims
             // and iterate over the reduced dims accumulating the total
-            auto         reduce_nd_index  = input_index;
-            out_datatype mean             = 0; // For large values, this dtype makes a big difference
-            int64_t      elements_in_mean = 0;
+            auto    reduce_nd_index  = input_index;
+            double  mean             = 0; // For large values, this dtype makes a big difference
+            int64_t elements_in_mean = 0;
             for (int jj = 0; jj < reduced_elements; ++jj) {
                 int64_t input_linear_index = 0;
                 // TODO (perf): move this inside the nd_index increment similar to the elementwise binary ops
@@ -205,7 +205,7 @@ struct masked_mean_impl {
             if (elements_in_mean == 0) {
                 throw std::runtime_error("masked_mean: there are no non-masked elements to take the mean of");
             }
-            out_data[out_linear_index] = static_cast<out_datatype>(mean) / (elements_in_mean - 1);
+            out_data[out_linear_index] = static_cast<out_datatype>(mean / (elements_in_mean - 1));
             // Increment the multi-dimensional output index
             for (int axis = out_shape.size() - 1; axis >= 0; --axis) {
                 // If we're not at the end of this dim, keep going
@@ -482,7 +482,7 @@ struct masked_stddev_impl {
         }
 
         // TODO (flexibility): add correction option (noff in torch)
-        out_datatype scale = 1.0 / static_cast<out_datatype>(reduced_elements - 1);
+        double scale = 1.0 / static_cast<out_datatype>(reduced_elements - 1);
         // Loop over the dimensions of the array and perform the reduction operation
         auto numel = out.numel();
         for (int i = 0; i < numel; ++i) {
