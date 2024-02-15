@@ -71,16 +71,17 @@ blandDLTensor::blandDLTensor(const std::vector<int64_t> &shape,
     DLTensor::device      = device;
     DLTensor::byte_offset = 0;
     // DLPack API "requires" 256-byte alignment. TODO: understand lanes > 1 better...
-    int64_t num_elements = std::accumulate(shape.begin(), shape.end(), 1, std::multiplies<int64_t>());
+    int64_t num_elements = std::accumulate(shape.begin(), shape.end(), 1LL, std::multiplies<int64_t>());
     int64_t element_size = (DLTensor::dtype.bits / 8);
     if (DLTensor::device.device_type == DLDeviceType::kDLCPU) {
-        // _data_ownership = std::shared_ptr<void>(malloc(num_elements * (DLTensor::dtype.bits / 8)), free);
         void *ptr = nullptr;
         auto  res = posix_memalign(&ptr, 256, num_elements * element_size);
         if (res == ENOMEM) {
             throw std::runtime_error("Not enough memory to allocate for this tensor");
         } else if (res == EINVAL) {
             throw std::runtime_error("Alignment of 256B not suitable for this platform");
+        } else if (res != 0) {
+            throw std::runtime_error("blandDLTensor: unknown error allocating cpu memory");
         }
         _data_ownership = std::shared_ptr<void>(ptr, free);
     } else if (DLTensor::device.device_type == DLDeviceType::kDLCUDA) {

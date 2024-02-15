@@ -112,6 +112,13 @@ bland::ndarray bliss::h5_filterbank_file::read_data() {
     if (std::get<1>(freq_bins) == false) {
         throw std::invalid_argument("Could not find a frequency dimension in dimension labels");
     }
+    if (std::get<0>(time_steps) == read_data_attr<int64_t>("nchans")) {
+        fmt::print("WARN h5_filterbank_file: the DIMENSION_LABELS appear out of order. Assuming frequency dimension will match nchans");
+        // There's some files that have the dim labels for time, channels swapped
+        auto temp_time_steps = freq_bins;
+        freq_bins = time_steps;
+        time_steps = temp_time_steps;
+    }
 
     bland::ndarray spectrum_grid({std::get<0>(time_steps), std::get<0>(freq_bins)});
 
@@ -172,6 +179,13 @@ bland::ndarray bliss::h5_filterbank_file::read_mask() {
     }
     if (std::get<1>(freq_bins) == false) {
         throw std::invalid_argument("Could not find a frequency dimension in dimension labels");
+    }
+    if (std::get<0>(time_steps) == read_data_attr<int64_t>("nchans")) {
+        fmt::print("WARN h5_filterbank_file: the DIMENSION_LABELS appear out of order. Assuming frequency dimension will match nchans");
+        // There's some files that have the dim labels for time, channels swapped
+        auto temp_time_steps = freq_bins;
+        freq_bins = time_steps;
+        time_steps = temp_time_steps;
     }
 
     bland::ndarray mask_grid({std::get<0>(time_steps), std::get<0>(freq_bins)}, bland::ndarray::datatype::uint8, bland::ndarray::dev::cpu);
