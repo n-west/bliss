@@ -49,6 +49,8 @@ struct Signal {
 
   startTime @11 :Float32; # MJ in seconds
   durationSeconds @12 :Float32; # duration of hit in seconds
+  bandwidth @13 :Float32;
+  binwidth @14 :Float32;
 }
 
 # The Filterbank contains a smaller slice of the larger filterbank that we originally

@@ -25,9 +25,9 @@ void bliss::detail::bliss_hit_to_capnp_signal_message(Signal::Builder &signal_bu
     signal_builder.setStartTime(this_hit.start_time_sec);
     signal_builder.setDurationSeconds(this_hit.duration_sec);
 
+    signal_builder.setBandwidth(this_hit.bandwidth);
+    signal_builder.setBinwidth(this_hit.binwidth);
     // These currently aren't in the capn proto definition to be serialized
-    // double  bandwidth;
-    // int64_t binwidth;
     // rfi     rfi_counts;
 }
 
@@ -45,9 +45,9 @@ hit bliss::detail::capnp_signal_message_to_bliss_hit(const Signal::Reader &signa
 
     this_hit.start_time_sec = signal_reader.getStartTime();
     this_hit.duration_sec = signal_reader.getDurationSeconds();
+    this_hit.bandwidth = signal_reader.getBandwidth();
+    this_hit.binwidth = signal_reader.getBinwidth();
     // The following are not (currently) in the capn proto definition
-    // this_hit.bandwidth;
-    // this_hit.binwidth;
     // this_hit.rfi_counts;
 
     return this_hit;
