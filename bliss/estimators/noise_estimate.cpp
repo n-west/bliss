@@ -21,7 +21,7 @@ noise_stats noise_power_estimate_stddev(const bland::ndarray &x) {
     noise_stats estimated_stats;
 
     estimated_stats._noise_floor = bland::mean(x).scalarize<float>();
-    estimated_stats._noise_power = bland::var(x).scalarize<float>();
+    estimated_stats._noise_power = bland::stddev(x).scalarize<float>();
 
     return estimated_stats;
 }
@@ -34,7 +34,7 @@ noise_stats noise_power_estimate_stddev(const bland::ndarray &x, const bland::nd
     noise_stats estimated_stats;
 
     estimated_stats._noise_floor = bland::masked_mean(x, mask).scalarize<float>();
-    estimated_stats._noise_power = std::pow(bland::masked_stddev(x, mask).scalarize<float>(), 2);
+    estimated_stats._noise_power = bland::masked_stddev(x, mask).scalarize<float>();
 
     return estimated_stats;
 }
@@ -50,7 +50,7 @@ noise_stats noise_power_estimate_mad(const bland::ndarray &x) {
     estimated_stats._noise_floor = bland::median(x);
     // median absolute deviation is median(|Xi - median|)
     auto median_absolute_deviation = bland::median(bland::abs(x - estimated_stats._noise_floor));
-    estimated_stats._noise_power   = std::pow(median_absolute_deviation, 2);
+    estimated_stats._noise_power   = median_absolute_deviation;
 
     return estimated_stats;
 }

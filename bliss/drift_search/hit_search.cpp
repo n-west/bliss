@@ -21,7 +21,7 @@ float bliss::compute_signal_threshold(const noise_stats &noise_stats, int64_t in
     // s > nf + sqrt(N * snr_threshold)
     // Since the noise power was estimate before integration, it also decreases by sqrt of integration length
     float integration_adjusted_noise_power = noise_stats.noise_power() / std::sqrt(integration_length);
-    auto  threshold = noise_stats.noise_floor() + std::sqrt(integration_adjusted_noise_power * snr_threshold);
+    auto  threshold = noise_stats.noise_floor() + integration_adjusted_noise_power * snr_threshold;
     return threshold;
 }
 
@@ -69,7 +69,7 @@ std::list<hit> bliss::hit_search(scan dedrifted_scan, hit_search_options options
 
         this_hit.drift_rate_Hz_per_sec = drift_span_freq_Hz / drift_span_time_sec;
 
-        auto signal_power = std::pow((c.max_integration - noise_stats.noise_floor()), 2);
+        auto signal_power = (c.max_integration - noise_stats.noise_floor());
         auto noise_power  = (noise_stats.noise_power() / std::sqrt(dedrifted_scan.integration_length()));
         this_hit.snr      = signal_power / noise_power;
 
