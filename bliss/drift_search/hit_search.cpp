@@ -12,14 +12,12 @@ using namespace bliss;
 
 float bliss::compute_signal_threshold(const noise_stats &noise_stats, int64_t integration_length, float snr_threshold) {
     // When the signal amplitude is snr_threshold above the noise floor, we have a 'prehit' (a signal that naively
-    // passes a hard threshold) that is when S/N > snr_threshold Given a noise floor estimate of nf, signal amplitude s,
-    // noise amplitude n...
-    // S = (s - nf)**2
-    // N = (n)**2         our estimate has already taken in to account noise floor
-    // (s-nf)/(n) > sqrt(snr_threshold)
-    // s-nf > n * sqrt(snr_threshold)
-    // s > nf + sqrt(N * snr_threshold)
-    // Since the noise power was estimate before integration, it also decreases by sqrt of integration length
+    // passes a hard threshold) that is when S/N > snr_threshold Given a noise floor estimate of nf, signal power above threshold S,
+    // noise power N...
+    // (S - noise_floor) / N > snr_threshold
+    // S - noise_floor > N * snr_threshold
+    // S > noise_floor + N * snr_threshold
+    // We have incoherently integrated (with mean) l bins, so adjust the noise power by sqrt(l)
     float integration_adjusted_noise_power = noise_stats.noise_power() / std::sqrt(integration_length);
     auto  threshold = noise_stats.noise_floor() + integration_adjusted_noise_power * snr_threshold;
     return threshold;
@@ -37,7 +35,7 @@ bland::ndarray bliss::hard_threshold_drifts(const bland::ndarray &dedrifted_spec
     return threshold_mask;
 }
 
-std::list<hit> bliss::hit_search(scan dedrifted_scan, hit_search_options options) {
+std::list<hit> bliss::hit_search(coarse_channel dedrifted_scan, hit_search_options options) {
     std::list<hit> hits;
 
     std::vector<component> components;
@@ -71,7 +69,7 @@ std::list<hit> bliss::hit_search(scan dedrifted_scan, hit_search_options options
 
         auto signal_power = (c.max_integration - noise_stats.noise_floor());
         auto noise_power  = (noise_stats.noise_power() / std::sqrt(dedrifted_scan.integration_length()));
-        fmt::print("Formed a hit with S/N = {}/{}\n", signal_power, noise_power);
+        this_hit.power    = signal_power;
         this_hit.snr      = signal_power / noise_power;
 
         // At the drift rate with max SNR, find the width of this component
@@ -107,10 +105,19 @@ std::list<hit> bliss::hit_search(scan dedrifted_scan, hit_search_options options
     return hits;
 }
 
+scan bliss::hit_search(scan dedrifted_scan, hit_search_options options) {
+    auto number_coarse_channels = dedrifted_scan.get_number_coarse_channels();
+    for (auto cc_index = 0; cc_index < number_coarse_channels; ++cc_index) {
+        auto cc = dedrifted_scan.get_coarse_channel(cc_index);
+        auto hits = hit_search(*cc, options);
+        cc->add_hits(hits);
+    }
+    return dedrifted_scan;
+}
+
 observation_target bliss::hit_search(observation_target dedrifted_target, hit_search_options options) {
     for (auto &dedrifted_scan : dedrifted_target._scans) {
-        auto hits = hit_search(dedrifted_scan, options);
-        dedrifted_scan.hits(hits);
+        dedrifted_scan = hit_search(dedrifted_scan, options);
     }
     return dedrifted_target;
 }

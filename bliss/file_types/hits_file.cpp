@@ -75,7 +75,7 @@ void bliss::write_scan_hits_to_file(scan scan_with_hits, std::string_view file_p
     fil_builder.setTelescopeId(scan_with_hits.telescope_id());
     fil_builder.setTsamp(scan_with_hits.tsamp());
     fil_builder.setTstart(scan_with_hits.tstart());
-    fil_builder.setNumTimesteps(scan_with_hits.integration_length());
+    fil_builder.setNumTimesteps(scan_with_hits.slow_time_bins());
     fil_builder.setNumChannels(scan_with_hits.nchans());
 
     auto hits           = scan_with_hits.hits();
@@ -101,15 +101,14 @@ scan bliss::read_scan_hits_from_file(std::string_view file_path) {
         capnp::StreamFdMessageReader message(in_file._fd);
         auto                         hit_reader        = message.getRoot<ScanDetections>();
         auto                         deserialized_scan = hit_reader.getScan();
-        scan_with_hits.fch1(deserialized_scan.getFch1());
-        scan_with_hits.foff(deserialized_scan.getFoff());
-        scan_with_hits.tsamp(deserialized_scan.getTsamp());
-        scan_with_hits.tstart(deserialized_scan.getTstart());
-        scan_with_hits.telescope_id(deserialized_scan.getTelescopeId());
-        scan_with_hits.src_dej(deserialized_scan.getDec());
-        scan_with_hits.src_raj(deserialized_scan.getRa());
-        scan_with_hits.nchans(deserialized_scan.getNumChannels());
-        scan_with_hits.integration_length(deserialized_scan.getNumTimesteps());
+        scan_with_hits.set_fch1(deserialized_scan.getFch1());
+        scan_with_hits.set_foff(deserialized_scan.getFoff());
+        scan_with_hits.set_tsamp(deserialized_scan.getTsamp());
+        scan_with_hits.set_tstart(deserialized_scan.getTstart());
+        scan_with_hits.set_telescope_id(deserialized_scan.getTelescopeId());
+        scan_with_hits.set_src_dej(deserialized_scan.getDec());
+        scan_with_hits.set_src_raj(deserialized_scan.getRa());
+        scan_with_hits.set_nchans(deserialized_scan.getNumChannels());
 
         std::list<hit> hits;
 
@@ -121,10 +120,10 @@ scan bliss::read_scan_hits_from_file(std::string_view file_path) {
             hits.push_back(this_hit);
         }
 
-        scan_with_hits.hits(hits);
+        // TODO: fix this
+        // scan_with_hits.hits(hits);
     } catch (kj::Exception &e) {
         // We've reached the end of the file.
-        fmt::print("Error deserializing from capnp");
     }
 
     return scan_with_hits;
@@ -159,7 +158,6 @@ void bliss::write_cadence_hits_to_files(cadence cadence_with_hits, std::string_v
 
 cadence bliss::read_cadence_hits_from_files(std::vector<std::vector<std::string_view>> file_paths) {
     cadence new_cadence;
-    // fmt::print("Got file_paths {}\n", file_paths);
     for (auto &cadence_paths : file_paths) {
         observation_target new_target = read_observation_target_hits_from_files(cadence_paths);
         new_cadence._observations.emplace_back(new_target);

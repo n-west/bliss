@@ -30,7 +30,7 @@ std::list<hit> bliss::filter_hits(std::list<hit> hits, filter_options options) {
 
 
 scan bliss::filter_hits(scan scan_with_hits, filter_options options) {
-    scan_with_hits.hits(filter_hits(scan_with_hits.hits(), options));
+    // scan_with_hits.hits(filter_hits(scan_with_hits.hits(), options));
     return scan_with_hits;
 }
 

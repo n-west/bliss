@@ -78,7 +78,7 @@ bliss::integrate_linear_rounded_bins_cpu(const bland::ndarray    &spectrum_grid,
                     int64_t spectrum_freq_slice_start2 = channel_offset2;
                     int64_t spectrum_freq_slice_end    = number_channels;
                     if (spectrum_freq_slice_start > spectrum_shape[1]) {
-                        fmt::print("Just curious if we got here and need to fix it");
+                        fmt::print("ERROR: drift integration might be going out of bounds. Report this condition");
                     }
 
                     auto   number_channels = drift_freq_slice_end - drift_freq_slice_start;

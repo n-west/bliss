@@ -21,14 +21,23 @@ bland::ndarray bliss::integrate_drifts(const bland::ndarray &spectrum_grid, inte
     return drift_grid;
 }
 
-scan bliss::integrate_drifts(scan fil_data, integrate_drifts_options options) {
-    auto [drift_grid, drift_rfi] = integrate_linear_rounded_bins_cpu(fil_data.data(), fil_data.mask(), options);
+coarse_channel bliss::integrate_drifts(coarse_channel cc_data, integrate_drifts_options options) {
+    auto [drift_grid, drift_rfi] = integrate_linear_rounded_bins_cpu(cc_data.data(), cc_data.mask(), options);
     // auto [drift_grid, drift_rfi] = integrate_linear_rounded_bins(fil_data.data(), fil_data.mask(), options);
-    fil_data.integration_length(fil_data.data().size(0)); // length is just the amount of time
-    fil_data.doppler_flags(drift_rfi);
-    fil_data.doppler_spectrum(drift_grid);
-    fil_data.dedoppler_options(options);
-    return fil_data;
+    cc_data.integration_length(cc_data.data().size(0)); // length is just the amount of time
+    cc_data.doppler_flags(drift_rfi);
+    cc_data.doppler_spectrum(drift_grid);
+    cc_data.dedoppler_options(options);
+    return cc_data;
+}
+
+scan bliss::integrate_drifts(scan scan_data, integrate_drifts_options options) {
+    auto number_coarse_channels = scan_data.get_number_coarse_channels();
+    for (auto cc_index = 0; cc_index < number_coarse_channels; ++cc_index) {
+        auto cc = scan_data.get_coarse_channel(cc_index);
+        *cc = integrate_drifts(*cc, options);
+    }
+    return scan_data;
 }
 
 observation_target bliss::integrate_drifts(observation_target target, integrate_drifts_options options) {

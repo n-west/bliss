@@ -8,6 +8,8 @@
 
 using namespace bliss;
 
+constexpr float seconds_per_day = 24 * 60 * 60;
+
 constexpr float freq_localization_weight = 0.01f;
 constexpr float drift_error_weight       = 10.0f;
 constexpr float snr_difference_weight    = 0.0f;
@@ -70,15 +72,23 @@ struct hit_distance {
     }
 };
 
+
 std::vector<event> bliss::event_search(cadence cadence_with_hits) {
     hit_distance       distance;
     std::vector<event> detected_events;
+
+    // TODO: should we find "matches" between same-scan as part of filtering
 
     // assume the on_target is the 0-indexed target inside the cadence. This can be adjusted
     // or we could even loop over multiple on_targets in the future, so keep it as a variable
     const int64_t on_target_index = 0;
     auto          on_target_obs   = cadence_with_hits._observations[on_target_index];
+    std::vector<std::list<hit>> on_scan_hits;
+    for (auto &scan : on_target_obs._scans) {
+        on_scan_hits.push_back(scan.hits());
+    }
 
+    // Flatten all OFF scans (order doesn't matter)
     std::vector<scan> off_scans;
     for (size_t ii = 0; ii < cadence_with_hits._observations.size(); ++ii) {
         if (ii != on_target_index) {
@@ -88,15 +98,11 @@ std::vector<event> bliss::event_search(cadence cadence_with_hits) {
         }
     }
 
-    // TODO: should we find "matches" between same-scan as part of filtering
-
-    constexpr float seconds_per_day = 24 * 60 * 60;
 
     for (size_t on_scan_index = 0; on_scan_index < on_target_obs._scans.size(); ++on_scan_index) {
         auto starting_scan           = on_target_obs._scans[on_scan_index];
-        auto candidate_starting_hits = starting_scan.hits();
-        // For every hit, look through hits in subsequent scans trying to match them
-        for (const auto &starting_hit : candidate_starting_hits) {
+        // For every hit, look through hits in subsequent scans for hit with the lowest distance
+        for (const auto &starting_hit : on_scan_hits[on_scan_index]) {
             event candidate_event;
             candidate_event.hits.push_back(starting_hit);
             candidate_event.average_power                 = starting_hit.power;
@@ -104,9 +110,8 @@ std::vector<event> bliss::event_search(cadence cadence_with_hits) {
             candidate_event.average_drift_rate_Hz_per_sec = starting_hit.drift_rate_Hz_per_sec;
             candidate_event.event_start_seconds           = starting_scan.tstart() * seconds_per_day;
             candidate_event.starting_frequency_Hz         = starting_hit.start_freq_MHz * 1e6;
-            auto number_spectra                           = starting_scan.integration_length();
             candidate_event.event_end_seconds =
-                    starting_scan.tstart() * seconds_per_day + starting_scan.tsamp() * number_spectra;
+                    starting_scan.tstart() * seconds_per_day + starting_scan.tduration_secs();
 
             for (size_t matching_scan_index = on_scan_index + 1; matching_scan_index < on_target_obs._scans.size();
                  ++matching_scan_index) {
@@ -127,7 +132,7 @@ std::vector<event> bliss::event_search(cadence cadence_with_hits) {
                         candidate_event.average_drift_rate_Hz_per_sec * candidate_event_time_to_rendezvous;
 
                 float best_distance_to_a_hit = std::numeric_limits<float>::max();
-                auto  hits_to_check          = candidate_scan.hits();
+                auto& hits_to_check          = on_scan_hits[matching_scan_index];
 
                 std::list<hit>::iterator best_matching_hit;
                 for (auto candidate_matching_hit = hits_to_check.begin(); candidate_matching_hit != hits_to_check.end();
@@ -144,14 +149,14 @@ std::vector<event> bliss::event_search(cadence cadence_with_hits) {
                         best_matching_hit      = candidate_matching_hit;
                     }
                 }
-                // fmt::print("Best distance to a hit is {}\n", best_distance_to_a_hit);
                 if (best_distance_to_a_hit < 50 /* Made up number that looks good when staring at distances */) {
                     candidate_event.hits.push_back(*best_matching_hit);
                     hits_to_check.erase(best_matching_hit);
-                    candidate_scan.hits(hits_to_check); // update the hits in the scan with the removed matches
+                    // TODO: fix this
+                    // candidate_scan.hits(hits_to_check); // update the hits in the scan with the removed matches
                 }
             }
-            // TODO: check if there is a good match in the OFF scans
+
             int times_event_in_off = 0;
             for (auto off_scan : off_scans) {
                 for (auto off_hit : off_scan.hits()) {
@@ -161,7 +166,7 @@ std::vector<event> bliss::event_search(cadence cadence_with_hits) {
                     }
                     if (distance_to_event_hits / candidate_event.hits.size() < 50) {
                         times_event_in_off += 1;
-                        fmt::print("Event was found in an off scan\n");
+                        fmt::print("INFO: Event was found in an off scan\n");
                     }
                 }
             }
@@ -180,7 +185,7 @@ std::vector<event> bliss::event_search(cadence cadence_with_hits) {
                         candidate_event.average_drift_rate_Hz_per_sec / candidate_event.hits.size();
                 candidate_event.average_power = candidate_event.average_power / candidate_event.hits.size();
                 candidate_event.average_snr   = candidate_event.average_snr / candidate_event.hits.size();
-                fmt::print("Average SNR of this candidate event is {} and drift is {}\n",
+                fmt::print("INFO: Average SNR of this candidate event is {} and drift is {}\n",
                            candidate_event.average_snr,
                            candidate_event.average_drift_rate_Hz_per_sec);
 

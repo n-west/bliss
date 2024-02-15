@@ -55,13 +55,7 @@ bliss::integrate_linear_rounded_bins(const bland::ndarray    &spectrum_grid,
         if (options.desmear) {
             desmear_bandwidth = std::max(1.0f, smeared_channels);
         }
-        // fmt::print("drift step {} (m={})has {} smeared channels, so {} number_integrated_channels\n",
-        //            drift_channels,
-        //            m,
-        //            smeared_channels,
-        //            desmear_bandwidth);
 
-        // these don't take in to account smear
         for (int t = 0; t < time_steps; ++t) {
             int freq_offset_at_time = std::round(m * t);
 

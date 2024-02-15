@@ -21,14 +21,13 @@ struct component {
 };
 
 /**
- * S/N > snr_threshold Given a noise floor estimate of nf, signal amplitude s,
- * noise amplitude n...
- * S = (s - nf)**2
- * N = (n)**2         our estimate has already taken in to account noise floor
- * (s-nf)/(n) > sqrt(snr_threshold)
- * s-nf > n * sqrt(snr_threshold)
- * s > nf + sqrt(N * snr_threshold)
- * Since the noise power was estimate before integration, it also decreases by sqrt of integration length
+  * When the signal amplitude is snr_threshold above the noise floor, we have a 'prehit' (a signal that naively
+  * passes a hard threshold) that is when S/N > snr_threshold Given a noise floor estimate of nf, signal power above threshold S,
+  * noise power N...
+  * (S - noise_floor) / N > snr_threshold
+  * S - noise_floor > N * snr_threshold
+  * S > noise_floor + N * snr_threshold
+  * We have incoherently integrated (with mean) l bins, so adjust the noise power by sqrt(l)
  */
 float compute_signal_threshold(const noise_stats &noise_stats, int64_t integration_length, float snr_threshold);
 
@@ -80,7 +79,14 @@ struct hit_search_options {
  *
  * The returned scan is a copy of the given scan with the hits field set
  */
-std::list<hit> hit_search(scan dedrifted_scan, hit_search_options options = {});
+std::list<hit> hit_search(coarse_channel dedrifted_scan, hit_search_options options = {});
+
+/**
+ * High level wrapper around finding drifting signals above a noise floor
+ *
+ * The returned scan is a copy of the given scan with the hits field set
+ */
+scan hit_search(scan dedrifted_scan, hit_search_options options = {});
 
 /**
  * High-level hit search over scans within an observation target
