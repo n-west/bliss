@@ -151,7 +151,6 @@ std::vector<component> bliss::find_components_above_threshold(scan              
 
     std::queue<nd_coords> coord_queue;
 
-    fmt::print("connected_components looking through {} candidates with threshold {}\n", numel, hard_threshold);
     for (int64_t n = 0; n < numel; ++n) {
         // Compute linear offsets for current location to search
         auto visited_linear          = visited_strider.to_linear_offset(curr_coord);

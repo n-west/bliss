@@ -75,22 +75,18 @@ ndarray_slice bland::slice(const ndarray &a, int64_t dim, int64_t start, int64_t
 
     sliced._tensor.shape[dim] = (end - start) / stride;
     sliced._tensor.strides[dim] *= stride;
-    // fmt::print("slice impl output data is at {}\n", sliced.data_ptr<void>());
 
     return sliced;
 }
 
 // Base case for the recursive call
 ndarray process_slice_specs(const ndarray_slice &sliced_result) {
-    // fmt::print("process_slice_specs w/o args input data is at {}\n", sliced_result.data_ptr<void>());
     return sliced_result;
 }
 
 template <typename... Args>
 ndarray process_slice_specs(const ndarray_slice &sliced_result, slice_spec slice_dim, Args... args) {
-    // fmt::print("process_slice_specs w/ args input data is at {}\n", sliced_result.data_ptr<void>());
     ndarray new_slice = slice(sliced_result, slice_dim.dim, slice_dim.start, slice_dim.end, slice_dim.stride);
-    // fmt::print("process_slice_specs new slice data is at {}\n", new_slice.data_ptr<void>());
 
     // Recursively process the remaining slice_spec arguments
     return process_slice_specs(new_slice, args...);
@@ -98,17 +94,13 @@ ndarray process_slice_specs(const ndarray_slice &sliced_result, slice_spec slice
 
 template <typename... Args>
 ndarray_slice bland::slice(const ndarray &a, slice_spec slice_dim, Args... args) {
-    // fmt::print("exposed slice: input to slice data is at {}\n", a.data_ptr<void>());
     ndarray sliced_result = slice(a, slice_dim.dim, slice_dim.start, slice_dim.end, slice_dim.stride);
-    // fmt::print("exposed slice: sliced data is at {}\n", sliced_result.data_ptr<void>());
 
     // Process the remaining slice_spec arguments
     // TODO: there are bug-covered dragons surrounding the variations of assignment and
     // copy constructors such that assigning to sliced_result from a numpy-borrowed tensor
     // will produce a tensor with null data, but with a new variable it's fine.
     auto sliced_result1 = process_slice_specs(sliced_result, args...);
-
-    // fmt::print("exposed slice: slice return will be at {}\n", sliced_result1.data_ptr<void>());
 
     return sliced_result1;
 }

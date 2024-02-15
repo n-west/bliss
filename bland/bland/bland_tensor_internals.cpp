@@ -18,8 +18,6 @@ blandDLTensor::blandDLTensor() {
 
 // Effectively a from_dlpack method...
 blandDLTensor::blandDLTensor(DLManagedTensor other_tensor) {
-    // TODO: check this is used...
-    // fmt::print("Construct blandDLTensor from DLManagedTensor\n");
     DLTensor::ndim = other_tensor.dl_tensor.ndim;
     // Deep copy the shape and stides to RAII container
     _shape_ownership   = std::vector<int64_t>(other_tensor.dl_tensor.shape,
@@ -44,8 +42,6 @@ blandDLTensor::blandDLTensor(const std::vector<int64_t> &shape,
                              DLDataType                  dtype,
                              DLDevice                    device,
                              std::vector<int64_t>        strides) {
-    // fmt::print("Construct blandDLTensor from individual specs\n");
-
     DLTensor::ndim                  = shape.size();
     blandDLTensor::_shape_ownership = std::vector<int64_t>(shape);
     blandDLTensor::shape            = _shape_ownership.data();
@@ -123,7 +119,6 @@ blandDLTensor::blandDLTensor(const std::vector<int64_t> &shape,
 
 // Copy constructor
 blandDLTensor::blandDLTensor(const blandDLTensor &other) {
-    // fmt::print("Construct blandDLTensor from copy of another blandDLTensor\n");
 
     this->byte_offset     = other.byte_offset;
     this->_data_ownership = other._data_ownership; // shared_ptr increases refcount

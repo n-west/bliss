@@ -9,7 +9,7 @@ std::string extract_source_name_from_scans(std::vector<scan> scans) {
     std::string source_name{};
     for (auto &sc : scans) {
         if (!(sc.source_name().empty())) {
-            fmt::print("Got source name {}\n", sc.source_name());
+            fmt::print("INFO: Got source name {}\n", sc.source_name());
             if (source_name.empty()) {
                 source_name = sc.source_name();
             } else {

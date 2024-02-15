@@ -65,7 +65,6 @@ std::vector<component> bliss::find_local_maxima_above_threshold(scan            
     // TODO: might be worth thinking through a distance that drops with L1/L2 increase
     constexpr float rtol = 1.0f;
 
-    fmt::print("local_maxima looking through {} candidates with threshold {}\n", numel, hard_threshold);
     for (int64_t n = 0; n < numel; ++n) {
         // 1. Check if this is not visited & above threshold
         auto linear_visited_index          = visited_strider.to_linear_offset(curr_coord);

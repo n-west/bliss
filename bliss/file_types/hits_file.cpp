@@ -124,7 +124,6 @@ scan bliss::read_scan_hits_from_file(std::string_view file_path) {
         scan_with_hits.hits(hits);
     } catch (kj::Exception &e) {
         // We've reached the end of the file.
-        fmt::print("Error deserializing from capnp");
     }
 
     return scan_with_hits;
@@ -159,7 +158,6 @@ void bliss::write_cadence_hits_to_files(cadence cadence_with_hits, std::string_v
 
 cadence bliss::read_cadence_hits_from_files(std::vector<std::vector<std::string_view>> file_paths) {
     cadence new_cadence;
-    // fmt::print("Got file_paths {}\n", file_paths);
     for (auto &cadence_paths : file_paths) {
         observation_target new_target = read_observation_target_hits_from_files(cadence_paths);
         new_cadence._observations.emplace_back(new_target);

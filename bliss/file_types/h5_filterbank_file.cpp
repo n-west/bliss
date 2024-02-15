@@ -168,7 +168,7 @@ bland::ndarray bliss::h5_filterbank_file::read_mask() {
             // unknown dimension. If it's size 1, we're probably OK though
             if (dims[ii] != 1) {
                 // TODO, make fmt print to cerr
-                fmt::print("Got unknown {} dimension: {}. Continuing since it is size 1.\n", ii, dim_labels[ii]);
+                fmt::print("INFO: Got unknown {} dimension: {}. Continuing since it is size 1.\n", ii, dim_labels[ii]);
             } else {
                 throw std::invalid_argument("Unknown dimension of non-unity size in data");
             }
@@ -181,11 +181,14 @@ bland::ndarray bliss::h5_filterbank_file::read_mask() {
         throw std::invalid_argument("Could not find a frequency dimension in dimension labels");
     }
     if (std::get<0>(time_steps) == read_data_attr<int64_t>("nchans")) {
-        fmt::print("WARN h5_filterbank_file: the DIMENSION_LABELS appear out of order. Assuming frequency dimension will match nchans");
+        fmt::print("WARN: h5_filterbank_file: the DIMENSION_LABELS appear out of order. Assuming frequency dimension will match nchans");
         // There's some files that have the dim labels for time, channels swapped
         auto temp_time_steps = freq_bins;
         freq_bins = time_steps;
         time_steps = temp_time_steps;
+    }
+    if (std::get<0>(freq_bins) != read_data_attr<int64_t>("nchans")) {
+        fmt::print("WARN: h5_filterbank_file: The reported nchans attribute does not match data size of frequency dimension");
     }
 
     bland::ndarray mask_grid({std::get<0>(time_steps), std::get<0>(freq_bins)}, bland::ndarray::datatype::uint8, bland::ndarray::dev::cpu);

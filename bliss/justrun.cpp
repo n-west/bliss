@@ -58,22 +58,7 @@ int main(int argc, char **argv) {
 
     auto events = bliss::event_search(cadence);
 
-    // fmt::print("Before filtering:\n");
-    // for (auto &obs : cadence._observations) {
-    //     for (auto &scan : obs._scans) {
-    //         fmt::print("{} hits\n", scan.hits().size());
-    //     }
-    // }
-
     // cadence = bliss::filter_hits(cadence, {});
-
-    fmt::print("After filtering:\n");
-    for (auto &obs : cadence._observations) {
-        for (auto &scan : obs._scans) {
-            fmt::print("{} hits\n", scan.hits().size());
-        }
-    }
-
 
     bliss::write_events_to_file(events, "events_output");
 

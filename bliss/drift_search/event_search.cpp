@@ -144,14 +144,13 @@ std::vector<event> bliss::event_search(cadence cadence_with_hits) {
                         best_matching_hit      = candidate_matching_hit;
                     }
                 }
-                // fmt::print("Best distance to a hit is {}\n", best_distance_to_a_hit);
                 if (best_distance_to_a_hit < 50 /* Made up number that looks good when staring at distances */) {
                     candidate_event.hits.push_back(*best_matching_hit);
                     hits_to_check.erase(best_matching_hit);
                     candidate_scan.hits(hits_to_check); // update the hits in the scan with the removed matches
                 }
             }
-            // TODO: check if there is a good match in the OFF scans
+
             int times_event_in_off = 0;
             for (auto off_scan : off_scans) {
                 for (auto off_hit : off_scan.hits()) {
@@ -161,7 +160,7 @@ std::vector<event> bliss::event_search(cadence cadence_with_hits) {
                     }
                     if (distance_to_event_hits / candidate_event.hits.size() < 50) {
                         times_event_in_off += 1;
-                        fmt::print("Event was found in an off scan\n");
+                        fmt::print("INFO: Event was found in an off scan\n");
                     }
                 }
             }
@@ -180,7 +179,7 @@ std::vector<event> bliss::event_search(cadence cadence_with_hits) {
                         candidate_event.average_drift_rate_Hz_per_sec / candidate_event.hits.size();
                 candidate_event.average_power = candidate_event.average_power / candidate_event.hits.size();
                 candidate_event.average_snr   = candidate_event.average_snr / candidate_event.hits.size();
-                fmt::print("Average SNR of this candidate event is {} and drift is {}\n",
+                fmt::print("INFO: Average SNR of this candidate event is {} and drift is {}\n",
                            candidate_event.average_snr,
                            candidate_event.average_drift_rate_Hz_per_sec);
 

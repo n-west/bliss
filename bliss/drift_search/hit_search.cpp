@@ -71,7 +71,7 @@ std::list<hit> bliss::hit_search(scan dedrifted_scan, hit_search_options options
 
         auto signal_power = (c.max_integration - noise_stats.noise_floor());
         auto noise_power  = (noise_stats.noise_power() / std::sqrt(dedrifted_scan.integration_length()));
-        fmt::print("Formed a hit with S/N = {}/{}\n", signal_power, noise_power);
+        this_hit.power    = signal_power;
         this_hit.snr      = signal_power / noise_power;
 
         // At the drift rate with max SNR, find the width of this component
