@@ -16,6 +16,9 @@ std::list<hit> bliss::filter_hits(std::list<hit> hits, filter_options options) {
         if (current_hit->rfi_counts[flag_values::low_spectral_kurtosis] > 0) {
             remove_hit = true;
         }
+        // if (current_hit->rfi_counts[flag_values::high_spectral_kurtosis < 0) {
+        //     remove_hit = true;
+        // }
         if (remove_hit) {
             current_hit = hits.erase(current_hit);
         } else {

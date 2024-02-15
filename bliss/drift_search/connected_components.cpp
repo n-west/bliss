@@ -185,6 +185,16 @@ std::vector<component> bliss::find_components_above_threshold(scan              
                     if (doppler_spectrum_data[this_coord_doppler_spectrum_linear] > this_component.max_integration) {
                         this_component.max_integration = doppler_spectrum_data[this_coord_doppler_spectrum_linear];
                         this_component.index_max       = idx;
+                        this_component.rfi_counts[flag_values::low_spectral_kurtosis] =
+                                dedrifted_spectrum.doppler_flags().low_spectral_kurtosis.scalarize<uint8_t>(curr_coord);
+                        this_component.rfi_counts[flag_values::high_spectral_kurtosis] =
+                                dedrifted_spectrum.doppler_flags().high_spectral_kurtosis.scalarize<uint8_t>(curr_coord);
+                        this_component.rfi_counts[flag_values::filter_rolloff] =
+                                dedrifted_spectrum.doppler_flags().filter_rolloff.scalarize<uint8_t>(curr_coord);
+                        this_component.rfi_counts[flag_values::magnitude] =
+                                dedrifted_spectrum.doppler_flags().magnitude.scalarize<uint8_t>(curr_coord);
+                        this_component.rfi_counts[flag_values::sigma_clip] =
+                                dedrifted_spectrum.doppler_flags().sigma_clip.scalarize<uint8_t>(curr_coord);
                     }
                     // Then add all of the neighbors as candidates
                     for (auto &neighbor_offset : neighborhood) {

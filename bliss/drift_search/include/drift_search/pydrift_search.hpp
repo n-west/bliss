@@ -4,6 +4,7 @@
 #include <nanobind/ndarray.h>
 #include <nanobind/stl/map.h>
 #include <nanobind/stl/tuple.h>
+#include <nanobind/stl/list.h>
 #include <nanobind/stl/vector.h>
 
 #include "connected_components.hpp"
@@ -11,6 +12,7 @@
 #include "hit_search.hpp"
 #include "integrate_drifts.hpp"
 #include "local_maxima.hpp"
+#include "filter_hits.hpp"
 
 void bind_pydrift_search(nb::module_ m) {
 
@@ -64,6 +66,11 @@ void bind_pydrift_search(nb::module_ m) {
               return bliss::hard_threshold_drifts(
                       nb_to_bland(dedrifted_spectrum), noise_stats, integration_length, snr_threshold);
           });
+
+    nb::class_<bliss::filter_options>(m, "filter_options")
+    .def(nb::init<>());
+    m.def("filter_hits", nb::overload_cast<std::list<bliss::hit>, bliss::filter_options>(&bliss::filter_hits));
+    m.def("filter_hits", nb::overload_cast<bliss::scan, bliss::filter_options>(&bliss::filter_hits));
 
     // ** hit finding methods **
 

@@ -86,9 +86,9 @@ bliss::integrate_linear_rounded_bins_cpu(const bland::ndarray    &spectrum_grid,
                             drift_index * drift_plane_strides[0] + drift_freq_slice_start * drift_plane_strides[1];
                     size_t spectrum_index  = t * spectrum_strides[0] + spectrum_freq_slice_start * spectrum_strides[1];
 
-                    size_t lowsk_index = t * lowsk_rfi_strides[0] + spectrum_freq_slice_start * lowsk_rfi_strides[1];
-                    size_t highsk_index = t * highsk_rfi_strides[0] + spectrum_freq_slice_start * highsk_rfi_strides[1];
-                    size_t filtrolloff_index = t * rolloff_rfi_strides[0] + spectrum_freq_slice_start * rolloff_rfi_strides[1];
+                    size_t lowsk_index = drift_index * lowsk_rfi_strides[0] + drift_freq_slice_start * lowsk_rfi_strides[1];
+                    size_t highsk_index = drift_index * highsk_rfi_strides[0] + drift_freq_slice_start * highsk_rfi_strides[1];
+                    size_t filtrolloff_index = drift_index * rolloff_rfi_strides[0] + drift_freq_slice_start * rolloff_rfi_strides[1];
                     size_t rfi_index = t * rfi_strides[0] + spectrum_freq_slice_start * rfi_strides[1];
                     for (size_t channel = 0; channel < number_channels; ++channel) {
                         drift_plane_ptr[drift_plane_index] += spectrum_ptr[spectrum_index] / desmear_bandwidth;
@@ -135,9 +135,9 @@ bliss::integrate_linear_rounded_bins_cpu(const bland::ndarray    &spectrum_grid,
                             drift_index * drift_plane_strides[0] + drift_freq_slice_start * drift_plane_strides[1];
                     size_t spectrum_index = t * spectrum_strides[0] + spectrum_freq_slice_start * spectrum_strides[1];
 
-                    size_t lowsk_index = t * lowsk_rfi_strides[0] + spectrum_freq_slice_start * lowsk_rfi_strides[1];
-                    size_t highsk_index = t * highsk_rfi_strides[0] + spectrum_freq_slice_start * highsk_rfi_strides[1];
-                    size_t filtrolloff_index = t * rolloff_rfi_strides[0] + spectrum_freq_slice_start * rolloff_rfi_strides[1];
+                    size_t lowsk_index = drift_index * lowsk_rfi_strides[0] + drift_freq_slice_start * lowsk_rfi_strides[1];
+                    size_t highsk_index = drift_index * highsk_rfi_strides[0] + drift_freq_slice_start * highsk_rfi_strides[1];
+                    size_t filtrolloff_index = drift_index * rolloff_rfi_strides[0] + drift_freq_slice_start * rolloff_rfi_strides[1];
                     size_t rfi_index = t * rfi_strides[0] + spectrum_freq_slice_start * rfi_strides[1];
                     for (size_t channel = 0; channel < number_channels; ++channel) {
                         drift_plane_ptr[drift_plane_index] += spectrum_ptr[spectrum_index] / desmear_bandwidth;
