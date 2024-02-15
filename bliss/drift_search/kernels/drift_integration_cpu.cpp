@@ -12,8 +12,6 @@ using namespace bliss;
 bliss::integrate_linear_rounded_bins_cpu(const bland::ndarray    &spectrum_grid,
                                          const bland::ndarray    &rfi_mask,
                                          integrate_drifts_options options) {
-
-    fmt::print("We're doing cpu version\n");
     auto spectrum_ptr     = spectrum_grid.data_ptr<float>();
     auto spectrum_strides = spectrum_grid.strides();
     auto spectrum_shape   = spectrum_grid.shape();
@@ -30,10 +28,15 @@ bliss::integrate_linear_rounded_bins_cpu(const bland::ndarray    &spectrum_grid,
     auto maximum_drift_span = time_steps - 1;
 
     bland::ndarray drift_plane({number_drifts, number_channels}, spectrum_grid.dtype(), spectrum_grid.device());
-    auto           rfi_in_drift    = integrated_flags(number_drifts, number_channels, rfi_mask.device());
-    auto           rolloff_rfi_ptr = rfi_in_drift.filter_rolloff.data_ptr<uint8_t>();
-    auto           lowsk_rfi_ptr   = rfi_in_drift.low_spectral_kurtosis.data_ptr<uint8_t>();
-    auto           highsk_rfi_ptr  = rfi_in_drift.high_spectral_kurtosis.data_ptr<uint8_t>();
+
+    auto rfi_in_drift    = integrated_flags(number_drifts, number_channels, rfi_mask.device());
+    auto rolloff_rfi_ptr = rfi_in_drift.filter_rolloff.data_ptr<uint8_t>();
+    auto lowsk_rfi_ptr   = rfi_in_drift.low_spectral_kurtosis.data_ptr<uint8_t>();
+    auto highsk_rfi_ptr  = rfi_in_drift.high_spectral_kurtosis.data_ptr<uint8_t>();
+
+    auto rolloff_rfi_strides = rfi_in_drift.filter_rolloff.strides();
+    auto lowsk_rfi_strides = rfi_in_drift.low_spectral_kurtosis.strides();
+    auto highsk_rfi_strides = rfi_in_drift.high_spectral_kurtosis.strides();
 
     bland::fill(drift_plane, 0.0f);
     auto drift_plane_ptr     = drift_plane.data_ptr<float>();
@@ -78,71 +81,35 @@ bliss::integrate_linear_rounded_bins_cpu(const bland::ndarray    &spectrum_grid,
                         fmt::print("Just curious if we got here and need to fix it");
                     }
 
-                    // if (collect_rfi) {
-                    //     // Keep track of how much each type of RFI is present along the drift track
-                    //     // The slicing is there because at the edges we just need to trim the out of bounds cases
-                    //     auto rfi_mask_slice =
-                    //             bland::slice(rfi_mask,
-                    //                          bland::slice_spec{0, t, t + 1},
-                    //                          bland::slice_spec{1, spectrum_freq_slice_start,
-                    //                          spectrum_freq_slice_end});
-
-                    //     // TODO: think through bitshifting and underflow to see if this can just be a bitshift
-                    //     auto filter_rolloff_slice =
-                    //             bland::slice(rfi_in_drift.filter_rolloff,
-                    //                          bland::slice_spec{0, drift_index, drift_index + 1},
-                    //                          bland::slice_spec{1, drift_freq_slice_start, drift_freq_slice_end});
-                    //     filter_rolloff_slice = filter_rolloff_slice +
-                    //                            (rfi_mask_slice & static_cast<uint8_t>(flag_values::filter_rolloff)) /
-                    //                                    static_cast<uint8_t>(flag_values::filter_rolloff);
-
-                    //     auto low_spectral_kurtosis_slice =
-                    //             bland::slice(rfi_in_drift.low_spectral_kurtosis,
-                    //                          bland::slice_spec{0, drift_index, drift_index + 1},
-                    //                          bland::slice_spec{1, drift_freq_slice_start, drift_freq_slice_end});
-                    //     low_spectral_kurtosis_slice =
-                    //             low_spectral_kurtosis_slice +
-                    //             (rfi_mask_slice & static_cast<uint8_t>(flag_values::low_spectral_kurtosis)) /
-                    //                     static_cast<uint8_t>(flag_values::low_spectral_kurtosis);
-
-                    //     auto high_spectral_kurtosis_slice =
-                    //             bland::slice(rfi_in_drift.high_spectral_kurtosis,
-                    //                          bland::slice_spec{0, drift_index, drift_index + 1},
-                    //                          bland::slice_spec{1, drift_freq_slice_start, drift_freq_slice_end});
-                    //     high_spectral_kurtosis_slice =
-                    //             high_spectral_kurtosis_slice +
-                    //             (rfi_mask_slice & static_cast<uint8_t>(flag_values::high_spectral_kurtosis)) /
-                    //                     static_cast<uint8_t>(flag_values::high_spectral_kurtosis);
-
-                    //     // auto magnitude_slice =
-                    //     //         bland::slice(rfi_in_drift.magnitude,
-                    //     //                      bland::slice_spec{0, drift_index, drift_index + 1},
-                    //     //                      bland::slice_spec{1, drift_freq_slice_start, drift_freq_slice_end});
-                    //     // magnitude_slice =
-                    //     //         magnitude_slice + (rfi_mask_slice & static_cast<uint8_t>(flag_values::magnitude))
-                    //     /
-                    //     //                                   static_cast<uint8_t>(flag_values::magnitude);
-
-                    //     // auto sigma_clip_slice =
-                    //     //         bland::slice(rfi_in_drift.sigma_clip,
-                    //     //                      bland::slice_spec{0, drift_index, drift_index + 1},
-                    //     //                      bland::slice_spec{1, drift_freq_slice_start, drift_freq_slice_end});
-                    //     // sigma_clip_slice =
-                    //     //         sigma_clip_slice + (rfi_mask_slice &
-                    //     static_cast<uint8_t>(flag_values::sigma_clip)) /
-                    //     //                                    static_cast<uint8_t>(flag_values::sigma_clip);
-                    // }
-
                     auto   number_channels = drift_freq_slice_end - drift_freq_slice_start;
                     size_t drift_plane_index =
                             drift_index * drift_plane_strides[0] + drift_freq_slice_start * drift_plane_strides[1];
                     size_t spectrum_index  = t * spectrum_strides[0] + spectrum_freq_slice_start * spectrum_strides[1];
-                    size_t spectrum_index2 = (t + time_steps / 2) * spectrum_strides[0] +
-                                             spectrum_freq_slice_start * spectrum_strides[1];
+
+                    size_t lowsk_index = t * lowsk_rfi_strides[0] + spectrum_freq_slice_start * lowsk_rfi_strides[1];
+                    size_t highsk_index = t * highsk_rfi_strides[0] + spectrum_freq_slice_start * highsk_rfi_strides[1];
+                    size_t filtrolloff_index = t * rolloff_rfi_strides[0] + spectrum_freq_slice_start * rolloff_rfi_strides[1];
+                    size_t rfi_index = t * rfi_strides[0] + spectrum_freq_slice_start * rfi_strides[1];
                     for (size_t channel = 0; channel < number_channels; ++channel) {
                         drift_plane_ptr[drift_plane_index] += spectrum_ptr[spectrum_index] / desmear_bandwidth;
                         drift_plane_index += drift_plane_strides[1];
                         spectrum_index += spectrum_strides[1];
+                        if (collect_rfi) {
+                            if (rfi_ptr[rfi_index] & static_cast<uint8_t>(flag_values::low_spectral_kurtosis)) {
+                                lowsk_rfi_ptr[lowsk_index] += 1;
+                            }
+                            lowsk_index += lowsk_rfi_strides[1];
+                            if (rfi_ptr[rfi_index] & static_cast<uint8_t>(flag_values::high_spectral_kurtosis)) {
+                                highsk_rfi_ptr[highsk_index] += 1;
+                            }
+                            highsk_index += highsk_rfi_strides[1];
+                            if (rfi_ptr[rfi_index] & static_cast<uint8_t>(flag_values::filter_rolloff)) {
+                                rolloff_rfi_ptr[filtrolloff_index] += 1;
+                            }
+                            filtrolloff_index += rolloff_rfi_strides[1];
+
+                            rfi_index += rfi_strides[1];
+                        }
                     }
                 } else {
                     // At a negative drift rate, everything needs to scooch up instead of chop down
@@ -163,69 +130,35 @@ bliss::integrate_linear_rounded_bins_cpu(const bland::ndarray    &spectrum_grid,
                         drift_freq_slice_start -= offset_amount;
                     }
 
-                    // if (collect_rfi) {
-                    //     // Keep track of how much each type of RFI is present along the drift track
-                    //     // The slicing is there because at the edges we just need to trim the out of bounds cases
-                    //     auto rfi_mask_slice =
-                    //             bland::slice(rfi_mask,
-                    //                          bland::slice_spec{0, t, t + 1},
-                    //                          bland::slice_spec{1, spectrum_freq_slice_start,
-                    //                          spectrum_freq_slice_end});
-
-                    //     // TODO: think through bitshifting and underflow to see if this can just be a bitshift
-                    //     auto filter_rolloff_slice =
-                    //             bland::slice(rfi_in_drift.filter_rolloff,
-                    //                          bland::slice_spec{0, drift_index, drift_index + 1},
-                    //                          bland::slice_spec{1, drift_freq_slice_start, drift_freq_slice_end});
-                    //     filter_rolloff_slice = filter_rolloff_slice +
-                    //                            (rfi_mask_slice & static_cast<uint8_t>(flag_values::filter_rolloff)) /
-                    //                                    static_cast<uint8_t>(flag_values::filter_rolloff);
-
-                    //     auto low_spectral_kurtosis_slice =
-                    //             bland::slice(rfi_in_drift.low_spectral_kurtosis,
-                    //                          bland::slice_spec{0, drift_index, drift_index + 1},
-                    //                          bland::slice_spec{1, drift_freq_slice_start, drift_freq_slice_end});
-                    //     low_spectral_kurtosis_slice =
-                    //             low_spectral_kurtosis_slice +
-                    //             (rfi_mask_slice & static_cast<uint8_t>(flag_values::low_spectral_kurtosis)) /
-                    //                     static_cast<uint8_t>(flag_values::low_spectral_kurtosis);
-
-                    //     auto high_spectral_kurtosis_slice =
-                    //             bland::slice(rfi_in_drift.high_spectral_kurtosis,
-                    //                          bland::slice_spec{0, drift_index, drift_index + 1},
-                    //                          bland::slice_spec{1, drift_freq_slice_start, drift_freq_slice_end});
-                    //     high_spectral_kurtosis_slice =
-                    //             high_spectral_kurtosis_slice +
-                    //             (rfi_mask_slice & static_cast<uint8_t>(flag_values::high_spectral_kurtosis)) /
-                    //                     static_cast<uint8_t>(flag_values::high_spectral_kurtosis);
-
-                    //     // auto magnitude_slice =
-                    //     //         bland::slice(rfi_in_drift.magnitude,
-                    //     //                      bland::slice_spec{0, drift_index, drift_index + 1},
-                    //     //                      bland::slice_spec{1, drift_freq_slice_start, drift_freq_slice_end});
-                    //     // magnitude_slice =
-                    //     //         magnitude_slice + (rfi_mask_slice & static_cast<uint8_t>(flag_values::magnitude))
-                    //     /
-                    //     //                                   static_cast<uint8_t>(flag_values::magnitude);
-
-                    //     // auto sigma_clip_slice =
-                    //     //         bland::slice(rfi_in_drift.sigma_clip,
-                    //     //                      bland::slice_spec{0, drift_index, drift_index + 1},
-                    //     //                      bland::slice_spec{1, drift_freq_slice_start, drift_freq_slice_end});
-                    //     // sigma_clip_slice =
-                    //     //         sigma_clip_slice + (rfi_mask_slice &
-                    //     static_cast<uint8_t>(flag_values::sigma_clip)) /
-                    //     //                                    static_cast<uint8_t>(flag_values::sigma_clip);
-                    // }
-
                     auto   number_channels = drift_freq_slice_end - drift_freq_slice_start;
                     size_t drift_plane_index =
                             drift_index * drift_plane_strides[0] + drift_freq_slice_start * drift_plane_strides[1];
                     size_t spectrum_index = t * spectrum_strides[0] + spectrum_freq_slice_start * spectrum_strides[1];
+
+                    size_t lowsk_index = t * lowsk_rfi_strides[0] + spectrum_freq_slice_start * lowsk_rfi_strides[1];
+                    size_t highsk_index = t * highsk_rfi_strides[0] + spectrum_freq_slice_start * highsk_rfi_strides[1];
+                    size_t filtrolloff_index = t * rolloff_rfi_strides[0] + spectrum_freq_slice_start * rolloff_rfi_strides[1];
+                    size_t rfi_index = t * rfi_strides[0] + spectrum_freq_slice_start * rfi_strides[1];
                     for (size_t channel = 0; channel < number_channels; ++channel) {
                         drift_plane_ptr[drift_plane_index] += spectrum_ptr[spectrum_index] / desmear_bandwidth;
                         drift_plane_index += drift_plane_strides[1];
                         spectrum_index += spectrum_strides[1];
+                        if (collect_rfi) {
+                            if (rfi_ptr[rfi_index] & static_cast<uint8_t>(flag_values::low_spectral_kurtosis)) {
+                                lowsk_rfi_ptr[lowsk_index] += 1;
+                            }
+                            lowsk_index += lowsk_rfi_strides[1];
+                            if (rfi_ptr[rfi_index] & static_cast<uint8_t>(flag_values::high_spectral_kurtosis)) {
+                                highsk_rfi_ptr[highsk_index] += 1;
+                            }
+                            highsk_index += highsk_rfi_strides[1];
+                            if (rfi_ptr[rfi_index] & static_cast<uint8_t>(flag_values::filter_rolloff)) {
+                                rolloff_rfi_ptr[filtrolloff_index] += 1;
+                            }
+                            filtrolloff_index += rolloff_rfi_strides[1];
+
+                            rfi_index += rfi_strides[1];
+                        }
                     }
                 }
             }

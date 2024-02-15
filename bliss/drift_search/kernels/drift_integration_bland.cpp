@@ -27,9 +27,6 @@ constexpr bool collect_rfi = true;
 bliss::integrate_linear_rounded_bins(const bland::ndarray    &spectrum_grid,
                                      const bland::ndarray    &rfi_mask,
                                      integrate_drifts_options options) {
-
-    fmt::print("We're doing bland version\n");
-
     auto number_drifts = (options.high_rate - options.low_rate) / options.rate_step_size;
 
     auto time_steps      = spectrum_grid.size(0);
