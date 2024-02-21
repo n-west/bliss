@@ -1,5 +1,6 @@
 #pragma once
 
+#include "noise_power.hpp"
 #include "filterbank_data.hpp"
 #include "hit.hpp"
 #include "integrate_drifts_options.hpp"

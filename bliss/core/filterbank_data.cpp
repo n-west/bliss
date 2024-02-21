@@ -7,7 +7,8 @@
 
 using namespace bliss;
 
-filterbank_data::filterbank_data(h5_filterbank_file fb_file) : _data(fb_file.read_data()), _mask(fb_file.read_mask()) {
+filterbank_data::filterbank_data(h5_filterbank_file fb_file) {
+    _h5_file_handle = std::make_shared<h5_filterbank_file>(fb_file);
 
     // double      fch1;
     _fch1 = fb_file.read_data_attr<double>("fch1");
@@ -44,8 +45,8 @@ filterbank_data::filterbank_data(h5_filterbank_file fb_file) : _data(fb_file.rea
 
 filterbank_data::filterbank_data(std::string_view file_path) : filterbank_data(h5_filterbank_file(file_path)) {}
 
-filterbank_data::filterbank_data(bland::ndarray data, bland::ndarray mask, double foff) :
-        _data(data), _mask(mask), _foff(foff) {}
+// filterbank_data::filterbank_data(bland::ndarray data, bland::ndarray mask, double foff) :
+//         _data(data), _mask(mask), _foff(foff) {}
 
 filterbank_data::filterbank_data(bland::ndarray data,
                                  bland::ndarray mask,
@@ -64,8 +65,8 @@ filterbank_data::filterbank_data(bland::ndarray data,
                                  int64_t        data_type,
                                  double         az_start,
                                  double         za_start) :
-        _data(data),
-        _mask(mask),
+        // _data(data),
+        // _mask(mask),
         _fch1(fch1),
         _foff(foff),
         _machine_id(machine_id),
@@ -115,8 +116,8 @@ filterbank_data::filterbank_data(double      fch1,
 
 template <bool POPULATE_DATA_AND_MASK>
 filterbank_data::state_tuple bliss::filterbank_data::get_state() {
-    bland::ndarray data_state;
-    bland::ndarray mask_state;
+    std::map<int, bland::ndarray> data_state;
+    std::map<int, bland::ndarray> mask_state;
     if (POPULATE_DATA_AND_MASK) {
         data_state = _data;
         mask_state = _mask;
@@ -161,12 +162,26 @@ filterbank_data::state_tuple bliss::filterbank_data::get_state<true>();
 template
 filterbank_data::state_tuple bliss::filterbank_data::get_state<false>();
 
-bland::ndarray &bliss::filterbank_data::data() {
-    return _data;
+bland::ndarray &bliss::filterbank_data::data(int coarse_channel) {
+    if (_data.find(coarse_channel) != _data.end()) {
+        return _data[coarse_channel];
+    } else {
+        _h5_file_handle->
+        // _h5_file_handle->
+        // TODO: check if the underlying file handle has this coarse
+        // channel and read it now
+        throw std::out_of_range("data does not have that coarse channel");
+    }
 }
 
-bland::ndarray &bliss::filterbank_data::mask() {
-    return _mask;
+bland::ndarray &bliss::filterbank_data::mask(int coarse_channel) {
+    if (_mask.find(coarse_channel) != _mask.end()) {
+        return _mask[coarse_channel];
+    } else {
+        // TODO: check if the underlying file handle has this coarse
+        // channel and read it now
+        throw std::out_of_range("data does not have that coarse channel");
+    }
 }
 
 double bliss::filterbank_data::fch1() {

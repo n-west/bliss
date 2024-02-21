@@ -1,9 +1,9 @@
 #pragma once
 
-#include "noise_power.hpp"
 #include <bland/bland.hpp>
 
 #include <cstdint>
+#include <map>
 #include <optional>
 #include <string>
 #include <string_view>
@@ -16,7 +16,7 @@ class filterbank_data {
   public:
     filterbank_data() = default;
     filterbank_data(h5_filterbank_file fb_file);
-    filterbank_data(bland::ndarray data, bland::ndarray mask, double foff = 1);
+    // filterbank_data(bland::ndarray data, bland::ndarray mask, double foff = 1);
     filterbank_data(bland::ndarray data,
                     bland::ndarray mask,
                     double         fch1,
@@ -51,8 +51,8 @@ class filterbank_data {
                     double      za_start);
     filterbank_data(std::string_view file_path);
 
-    using state_tuple = std::tuple<bland::ndarray,
-                                   bland::ndarray,
+    using state_tuple = std::tuple<std::map<int, bland::ndarray>,
+                                   std::map<int, bland::ndarray>,
                                    double,
                                    double,
                                    int64_t,
@@ -72,8 +72,8 @@ class filterbank_data {
     template <bool POPULATE_DATA_AND_MASK = false>
     state_tuple get_state();
 
-    bland::ndarray &data();
-    bland::ndarray &mask();
+    bland::ndarray &data(int coarse_channel=0);
+    bland::ndarray &mask(int coarse_channel=0);
     // Set the mask to a new mask. A copy of underlying ndarray is not made
     // void            mask(const bland::ndarray &new_mask);
 
@@ -113,8 +113,9 @@ class filterbank_data {
     // <KeysViewHDF5 ['data', 'mask']>
     // <HDF5 dataset "data": shape (16, 1, 1048576), type "<f4">
     // <HDF5 dataset "mask": shape (16, 1, 1048576), type "|u1">
-    bland::ndarray _data;
-    bland::ndarray _mask;
+    std::map<int, bland::ndarray> _data;
+    std::map<int, bland::ndarray> _mask;
+    std::shared_ptr<h5_filterbank_file> _h5_file_handle=nullptr;
 
     double      _fch1;
     double      _foff;
