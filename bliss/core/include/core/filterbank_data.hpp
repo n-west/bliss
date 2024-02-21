@@ -74,9 +74,17 @@ class filterbank_data {
 
     bland::ndarray &data(int coarse_channel=0);
     bland::ndarray &mask(int coarse_channel=0);
-    // Set the mask to a new mask. A copy of underlying ndarray is not made
-    // void            mask(const bland::ndarray &new_mask);
 
+    /**
+     * get the number of coarse channels in this filterbank
+     * 
+     * This value is derived from known channelizations of BL backends and
+     * the actual number of fine channels in this filterbank
+    */
+    int get_number_coarse_channels();
+    using filterbank_channelization_revs = std::tuple<int, double, double, const char*>;
+
+    // Setters and getters for values read from disk
     double      fch1();
     void        fch1(double);
     double      foff();
@@ -110,13 +118,11 @@ class filterbank_data {
     void    za_start(double);
 
   protected:
-    // <KeysViewHDF5 ['data', 'mask']>
-    // <HDF5 dataset "data": shape (16, 1, 1048576), type "<f4">
-    // <HDF5 dataset "mask": shape (16, 1, 1048576), type "|u1">
     std::map<int, bland::ndarray> _data;
     std::map<int, bland::ndarray> _mask;
     std::shared_ptr<h5_filterbank_file> _h5_file_handle=nullptr;
 
+    // Read from h5 file
     double      _fch1;
     double      _foff;
     int64_t     _machine_id;
@@ -133,24 +139,10 @@ class filterbank_data {
     int64_t _data_type;
     double  _az_start;
     double  _za_start;
-    /*
-     * *DIMENSION_LABELS
-     * *az_start
-     * *data_type
-     * *fch1
-     * *foff
-     * *machine_id
-     * *nbits
-     * *nchans
-     * *nifs
-     * *source_name
-     * *src_dej
-     * *src_raj
-     * *telescope_id
-     * *tsamp
-     * *tstart
-     * *za_start
-     */
+
+    // Derived values at read-time
+    int64_t _num_coarse_channels;
+    filterbank_channelization_revs _inferred_channelization;
 
   private:
 };

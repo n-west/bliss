@@ -3,9 +3,50 @@
 #include "file_types/h5_filterbank_file.hpp"
 
 #include "fmt/format.h"
-#include <bland/bland.hpp>
+#include "fmt/ranges.h"
+
+#include <array>
 
 using namespace bliss;
+
+// "The Breakthrough Listen Search for Intelligent Life: Public Data, Formats, Reduction and Archiving"
+// Lebofsky, et al, 2020
+// https://arxiv.org/pdf/1906.07391.pdf
+// Fine channels, freq resolution (Hz), time resolution (sec), name
+// clang-format off
+constexpr std::array<filterbank_data::filterbank_channelization_revs, 9> known_channelizations = {{
+    {1033216,      2.84, 17.98,       "HSR-Rev1A"},
+    {      8, 366210.0,   0.00034953, "HTR-Rev1A"},
+    {   1024,   2860.0,   1.06,       "MR-Rev1A"},
+
+    {999424,      2.93, 17.4,        "HSR-Rev1B"},
+    {     8, 366210.0,   0.00034953, "HTR-Rev1B"},
+    {  1024,   2860.0,   1.02,       "MR-Rev1B"},
+
+    {1048576,       2.79, 18.25,       "HSR-Rev2A"},
+    {      8,  366210.0,   0.00034953, "HTR-Rev2A"},
+    {   1024,    2860.0,   1.07,       "MR-Rev2A"}
+}};
+// clang-format on
+
+std::tuple<int, filterbank_data::filterbank_channelization_revs> infer_number_coarse_channels(int number_fine_channels, double foff, double tsamp) {
+    for (const auto &channelization : known_channelizations) {
+        auto [fine_channels_per_coarse, freq_res, time_res, version] = channelization;
+
+        auto num_coarse_channels = number_fine_channels / fine_channels_per_coarse;
+        // Check this is an integer number of coarse channels, freq and time res are close enough
+        // to expected
+        if (num_coarse_channels * fine_channels_per_coarse == number_fine_channels &&
+            std::abs(std::abs(foff) - freq_res) < .1 &&
+            std::abs(std::abs(tsamp) - time_res) < .1) {
+            return std::make_tuple(num_coarse_channels, channelization);
+        }
+    }
+    fmt::print("WARN: filterbank_data with {} fine channels could not be matched with a known channelization scheme. "
+               "Assuming 1 coarse channel\n",
+               number_fine_channels);
+    return {1, filterbank_data::filterbank_channelization_revs{}};
+}
 
 filterbank_data::filterbank_data(h5_filterbank_file fb_file) {
     _h5_file_handle = std::make_shared<h5_filterbank_file>(fb_file);
@@ -41,6 +82,9 @@ filterbank_data::filterbank_data(h5_filterbank_file fb_file) {
     _az_start = fb_file.read_data_attr<double>("az_start");
     // double  za_start;
     _za_start = fb_file.read_data_attr<double>("za_start");
+
+    // Find the number of coarse channels
+    std::tie(_num_coarse_channels, _inferred_channelization) = infer_number_coarse_channels(_nchans, 1e6 * _foff, _tsamp);
 }
 
 filterbank_data::filterbank_data(std::string_view file_path) : filterbank_data(h5_filterbank_file(file_path)) {}
@@ -112,7 +156,10 @@ filterbank_data::filterbank_data(double      fch1,
         _tstart(tstart),
         _data_type(data_type),
         _az_start(az_start),
-        _za_start(za_start) {}
+        _za_start(za_start) {
+    // Find the number of coarse channels
+    std::tie(_num_coarse_channels, _inferred_channelization) = infer_number_coarse_channels(_nchans, 1e6 * _foff, _tsamp);
+}
 
 template <bool POPULATE_DATA_AND_MASK>
 filterbank_data::state_tuple bliss::filterbank_data::get_state() {
@@ -122,21 +169,6 @@ filterbank_data::state_tuple bliss::filterbank_data::get_state() {
         data_state = _data;
         mask_state = _mask;
     }
-    //     filterbank_data(bland::ndarray data,
-    //     bland::ndarray mask,
-    //     double         fch1,
-    //     double         foff,
-    //     int64_t        machine_id,
-    //     int64_t        nbits,
-    //     int64_t        nchans,
-    //     int64_t        nifs,
-    //     std::string    source_name,
-    //     double         src_dej,
-    //     double         src_raj,
-    //     int64_t        telescope_id,
-    //     double         tsamp,
-    //     double         tstart);
-
     auto state = std::make_tuple(data_state,
                                  mask_state,
                                  _fch1,
@@ -157,20 +189,30 @@ filterbank_data::state_tuple bliss::filterbank_data::get_state() {
     return state;
 }
 
-template
-filterbank_data::state_tuple bliss::filterbank_data::get_state<true>();
-template
-filterbank_data::state_tuple bliss::filterbank_data::get_state<false>();
+template filterbank_data::state_tuple bliss::filterbank_data::get_state<true>();
+template filterbank_data::state_tuple bliss::filterbank_data::get_state<false>();
 
 bland::ndarray &bliss::filterbank_data::data(int coarse_channel) {
+    if (coarse_channel < 0 || coarse_channel > _num_coarse_channels) {
+        throw std::out_of_range("ERROR: invalid coarse channel");
+    }
+
     if (_data.find(coarse_channel) != _data.end()) {
         return _data[coarse_channel];
     } else {
-        _h5_file_handle->
-        // _h5_file_handle->
-        // TODO: check if the underlying file handle has this coarse
-        // channel and read it now
-        throw std::out_of_range("data does not have that coarse channel");
+        // TODO: decide if we should evict an old coarse channel from the cache (might need
+        // to stop returning references to keep that safe)
+
+        // This is expected to be [time, feed, freq]
+        auto data_count = _h5_file_handle->get_data_shape();
+        data_count[2] = std::get<0>(_inferred_channelization);
+        std::vector<int64_t> data_offset(3, 0);
+        auto start_fine_channel = std::get<0>(_inferred_channelization) * coarse_channel;
+        data_offset[2] = start_fine_channel;
+        fmt::print("reading data from coarse channel {} which translates to offset {} + count {}\n", coarse_channel, data_offset, data_count);
+        auto new_coarse_channel_data = _h5_file_handle->read_data(data_offset, data_count);
+        _data[coarse_channel] = std::move(new_coarse_channel_data);
+        return _data[coarse_channel];
     }
 }
 
@@ -182,6 +224,10 @@ bland::ndarray &bliss::filterbank_data::mask(int coarse_channel) {
         // channel and read it now
         throw std::out_of_range("data does not have that coarse channel");
     }
+}
+
+int bliss::filterbank_data::get_number_coarse_channels() {
+    return _num_coarse_channels;
 }
 
 double bliss::filterbank_data::fch1() {

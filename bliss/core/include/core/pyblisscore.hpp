@@ -18,8 +18,9 @@ void bind_pycore(nb::module_ m) {
 
     nb::class_<bliss::filterbank_data>(m, "filterbank_data")
             .def(nb::init<std::string>())
-            .def_prop_ro("data", nb::overload_cast<int>(&bliss::filterbank_data::data))
+            .def("data", nb::overload_cast<int>(&bliss::filterbank_data::data))
             .def_prop_ro("mask", nb::overload_cast<int>(&bliss::filterbank_data::mask))
+            .def_prop_ro("num_coarse_channels", &bliss::filterbank_data::get_number_coarse_channels)
             // .def_prop_rw("mask", nb::overload_cast<>(&bliss::filterbank_data::mask), nb::overload_cast<const
             // bland::ndarray&>(&bliss::filterbank_data::mask))
             .def_prop_ro("az_start", nb::overload_cast<>(&bliss::filterbank_data::az_start))
