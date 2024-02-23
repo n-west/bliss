@@ -41,12 +41,8 @@ void bind_pycore(nb::module_ m) {
 
     nb::class_<bliss::filterbank_data>(m, "filterbank_data")
             .def(nb::init<std::string>())
-        //     .def("data", nb::overload_cast<int>(&bliss::filterbank_data::data))
-        //     .def("mask", nb::overload_cast<int>(&bliss::filterbank_data::mask))
             .def("get_coarse_channel", &bliss::filterbank_data::get_coarse_channel)
             .def_prop_ro("num_coarse_channels", &bliss::filterbank_data::get_number_coarse_channels)
-            // .def_prop_rw("mask", nb::overload_cast<>(&bliss::filterbank_data::mask), nb::overload_cast<const
-            // bland::ndarray&>(&bliss::filterbank_data::mask))
             .def_prop_ro("az_start", &bliss::filterbank_data::az_start)
             .def_prop_ro("data_type",&bliss::filterbank_data::data_type)
             .def_prop_ro("fch1", &bliss::filterbank_data::fch1)
@@ -136,25 +132,10 @@ void bind_pycore(nb::module_ m) {
 
     nb::class_<bliss::scan, bliss::filterbank_data>(m, "scan")
             .def(nb::init<const bliss::filterbank_data &>())
-            .def(nb::init<bliss::filterbank_data /* fb_data */,
-                          bland::ndarray /* doppler_spectrum */,
-                          bliss::integrated_flags /* doppler_flags */,
-                          bliss::integrate_drifts_options /* drift_parameters */>())
-            .def_prop_rw("doppler_spectrum", nb::overload_cast<>(&bliss::scan::doppler_spectrum), nb::overload_cast<bland::ndarray>(&bliss::scan::doppler_spectrum))
-            .def_prop_rw("integration_length", nb::overload_cast<>(&bliss::scan::integration_length), nb::overload_cast<int64_t>(&bliss::scan::integration_length))
-            .def_prop_rw("doppler_flags", nb::overload_cast<>(&bliss::scan::doppler_flags), nb::overload_cast<bliss::integrated_flags>(&bliss::scan::doppler_flags))
-            .def_prop_rw("drift_parameters", nb::overload_cast<>(&bliss::scan::dedoppler_options), nb::overload_cast<bliss::integrate_drifts_options>(&bliss::scan::dedoppler_options))
-        //     .def_prop_rw("hits",
-        //                  nb::overload_cast<>(&bliss::scan::hits),
-        //                  nb::overload_cast<std::list<bliss::hit>>(&bliss::scan::add_hits))
-        //     .def_prop_rw("noise_estimate",
-        //                  nb::overload_cast<>(&bliss::scan::noise_estimate),
-        //                  nb::overload_cast<bliss::noise_stats>(&bliss::scan::noise_estimate))
-        //     .def("__getstate__", &bliss::scan::get_state)
+            //    .def("__getstate__", &bliss::scan::get_state)
             //    .def("__setstate__", [](bliss::scan &self, const std::tuple<bliss::noise_stats, int,
             //    std::vector<bliss::hit>, int64_t> &state_tuple) {
             //         new (&self) bliss::scan();
-
             //    })
             ;
 

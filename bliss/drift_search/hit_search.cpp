@@ -12,14 +12,12 @@ using namespace bliss;
 
 float bliss::compute_signal_threshold(const noise_stats &noise_stats, int64_t integration_length, float snr_threshold) {
     // When the signal amplitude is snr_threshold above the noise floor, we have a 'prehit' (a signal that naively
-    // passes a hard threshold) that is when S/N > snr_threshold Given a noise floor estimate of nf, signal amplitude s,
-    // noise amplitude n...
-    // S = (s - nf)**2
-    // N = (n)**2         our estimate has already taken in to account noise floor
-    // (s-nf)/(n) > sqrt(snr_threshold)
-    // s-nf > n * sqrt(snr_threshold)
-    // s > nf + sqrt(N * snr_threshold)
-    // Since the noise power was estimate before integration, it also decreases by sqrt of integration length
+    // passes a hard threshold) that is when S/N > snr_threshold Given a noise floor estimate of nf, signal power above threshold S,
+    // noise power N...
+    // (S - noise_floor) / N > snr_threshold
+    // S - noise_floor > N * snr_threshold
+    // S > noise_floor + N * snr_threshold
+    // We have incoherently integrated (with mean) l bins, so adjust the noise power by sqrt(l)
     float integration_adjusted_noise_power = noise_stats.noise_power() / std::sqrt(integration_length);
     auto  threshold = noise_stats.noise_floor() + integration_adjusted_noise_power * snr_threshold;
     return threshold;

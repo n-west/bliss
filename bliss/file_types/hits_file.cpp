@@ -75,7 +75,7 @@ void bliss::write_scan_hits_to_file(scan scan_with_hits, std::string_view file_p
     fil_builder.setTelescopeId(scan_with_hits.telescope_id());
     fil_builder.setTsamp(scan_with_hits.tsamp());
     fil_builder.setTstart(scan_with_hits.tstart());
-    fil_builder.setNumTimesteps(scan_with_hits.integration_length());
+    fil_builder.setNumTimesteps(scan_with_hits.slow_time_bins());
     fil_builder.setNumChannels(scan_with_hits.nchans());
 
     auto hits           = scan_with_hits.hits();
@@ -109,7 +109,6 @@ scan bliss::read_scan_hits_from_file(std::string_view file_path) {
         scan_with_hits.set_src_dej(deserialized_scan.getDec());
         scan_with_hits.set_src_raj(deserialized_scan.getRa());
         scan_with_hits.set_nchans(deserialized_scan.getNumChannels());
-        scan_with_hits.integration_length(deserialized_scan.getNumTimesteps());
 
         std::list<hit> hits;
 

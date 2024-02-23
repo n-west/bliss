@@ -91,8 +91,6 @@ filterbank_data::filterbank_data(h5_filterbank_file fb_file) {
 
 filterbank_data::filterbank_data(std::string_view file_path) : filterbank_data(h5_filterbank_file(file_path)) {}
 
-// filterbank_data::filterbank_data(bland::ndarray data, bland::ndarray mask, double foff) :
-//         _data(data), _mask(mask), _foff(foff) {}
 
 filterbank_data::filterbank_data(bland::ndarray data,
                                  bland::ndarray mask,
@@ -111,8 +109,6 @@ filterbank_data::filterbank_data(bland::ndarray data,
                                  int64_t        data_type,
                                  double         az_start,
                                  double         za_start) :
-        // _data(data),
-        // _mask(mask),
         _fch1(fch1),
         _foff(foff),
         _machine_id(machine_id),
@@ -234,13 +230,6 @@ std::shared_ptr<coarse_channel> bliss::filterbank_data::get_coarse_channel(int c
     }
 }
 
-// bland::ndarray bliss::filterbank_data::data(int coarse_channel_index) {
-//     return get_coarse_channel(coarse_channel_index)._data;
-// }
-
-// bland::ndarray bliss::filterbank_data::mask(int coarse_channel_index) {
-//     return get_coarse_channel(coarse_channel_index)._mask;
-// }
 
 int bliss::filterbank_data::get_number_coarse_channels() {
     return _num_coarse_channels;
