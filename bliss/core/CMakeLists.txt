@@ -1,6 +1,7 @@
 
 add_library(bliss_core
     cadence.cpp
+    coarse_channel.cpp
     event.cpp
     hit.cpp
     filterbank_data.cpp

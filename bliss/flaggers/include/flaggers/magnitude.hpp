@@ -13,6 +13,13 @@ namespace bliss {
 bland::ndarray flag_magnitude(const bland::ndarray &data, float threshold);
 
 /**
+ * return a masked copy of fb_data where the coarse_channel.data() is above the given threshold
+ * 
+*/
+coarse_channel flag_magnitude(coarse_channel fb_data, float threshold);
+coarse_channel flag_magnitude(coarse_channel fb_data);
+
+/**
  * return a masked copy of fb_data where the filterbank_data.data() is above the given threshold
  * 
 */

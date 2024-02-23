@@ -26,6 +26,8 @@ namespace bliss {
  */
 bland::ndarray estimate_spectral_kurtosis(const bland::ndarray &spectrum_grid, int64_t N, int64_t M, float d = 1.0);
 
-bland::ndarray estimate_spectral_kurtosis(filterbank_data &fil_data);
+bland::ndarray estimate_spectral_kurtosis(coarse_channel &cc_data);
+
+// bland::ndarray estimate_spectral_kurtosis(filterbank_data &fil_data);
 
 } // namespace bliss

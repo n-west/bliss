@@ -29,7 +29,8 @@ constexpr std::array<filterbank_data::filterbank_channelization_revs, 9> known_c
 }};
 // clang-format on
 
-std::tuple<int, filterbank_data::filterbank_channelization_revs> infer_number_coarse_channels(int number_fine_channels, double foff, double tsamp) {
+std::tuple<int, filterbank_data::filterbank_channelization_revs>
+infer_number_coarse_channels(int number_fine_channels, double foff, double tsamp) {
     for (const auto &channelization : known_channelizations) {
         auto [fine_channels_per_coarse, freq_res, time_res, version] = channelization;
 
@@ -37,8 +38,7 @@ std::tuple<int, filterbank_data::filterbank_channelization_revs> infer_number_co
         // Check this is an integer number of coarse channels, freq and time res are close enough
         // to expected
         if (num_coarse_channels * fine_channels_per_coarse == number_fine_channels &&
-            std::abs(std::abs(foff) - freq_res) < .1 &&
-            std::abs(std::abs(tsamp) - time_res) < .1) {
+            std::abs(std::abs(foff) - freq_res) < .1 && std::abs(std::abs(tsamp) - time_res) < .1) {
             return std::make_tuple(num_coarse_channels, channelization);
         }
     }
@@ -47,6 +47,7 @@ std::tuple<int, filterbank_data::filterbank_channelization_revs> infer_number_co
                number_fine_channels);
     return {1, filterbank_data::filterbank_channelization_revs{}};
 }
+
 
 filterbank_data::filterbank_data(h5_filterbank_file fb_file) {
     _h5_file_handle = std::make_shared<h5_filterbank_file>(fb_file);
@@ -84,7 +85,8 @@ filterbank_data::filterbank_data(h5_filterbank_file fb_file) {
     _za_start = fb_file.read_data_attr<double>("za_start");
 
     // Find the number of coarse channels
-    std::tie(_num_coarse_channels, _inferred_channelization) = infer_number_coarse_channels(_nchans, 1e6 * _foff, _tsamp);
+    std::tie(_num_coarse_channels, _inferred_channelization) =
+            infer_number_coarse_channels(_nchans, 1e6 * _foff, _tsamp);
 }
 
 filterbank_data::filterbank_data(std::string_view file_path) : filterbank_data(h5_filterbank_file(file_path)) {}
@@ -158,7 +160,12 @@ filterbank_data::filterbank_data(double      fch1,
         _az_start(az_start),
         _za_start(za_start) {
     // Find the number of coarse channels
-    std::tie(_num_coarse_channels, _inferred_channelization) = infer_number_coarse_channels(_nchans, 1e6 * _foff, _tsamp);
+    std::tie(_num_coarse_channels, _inferred_channelization) =
+            infer_number_coarse_channels(_nchans, 1e6 * _foff, _tsamp);
+    auto shape = _h5_file_handle->get_data_shape(); // should we just hold on to the shape?
+    _slow_time_bins = shape[0];
+    // This assumes there is no overlap which needs to be confirmed with data paper
+    _tduration_secs = _slow_time_bins * _tsamp;
 }
 
 template <bool POPULATE_DATA_AND_MASK>
@@ -166,8 +173,8 @@ filterbank_data::state_tuple bliss::filterbank_data::get_state() {
     std::map<int, bland::ndarray> data_state;
     std::map<int, bland::ndarray> mask_state;
     if (POPULATE_DATA_AND_MASK) {
-        data_state = _data;
-        mask_state = _mask;
+        // data_state = _data;
+        // mask_state = _mask;
     }
     auto state = std::make_tuple(data_state,
                                  mask_state,
@@ -192,161 +199,162 @@ filterbank_data::state_tuple bliss::filterbank_data::get_state() {
 template filterbank_data::state_tuple bliss::filterbank_data::get_state<true>();
 template filterbank_data::state_tuple bliss::filterbank_data::get_state<false>();
 
-bland::ndarray &bliss::filterbank_data::data(int coarse_channel) {
-    if (coarse_channel < 0 || coarse_channel > _num_coarse_channels) {
+std::shared_ptr<coarse_channel> bliss::filterbank_data::get_coarse_channel(int coarse_channel_index) {
+    if (coarse_channel_index < 0 || coarse_channel_index > _num_coarse_channels) {
         throw std::out_of_range("ERROR: invalid coarse channel");
     }
 
-    if (_data.find(coarse_channel) != _data.end()) {
-        return _data[coarse_channel];
+    if (_coarse_channels.find(coarse_channel_index) != _coarse_channels.end()) {
+        return _coarse_channels.at(coarse_channel_index);
     } else {
         // TODO: decide if we should evict an old coarse channel from the cache (might need
         // to stop returning references to keep that safe)
 
         // This is expected to be [time, feed, freq]
         auto data_count = _h5_file_handle->get_data_shape();
-        data_count[2] = std::get<0>(_inferred_channelization);
+        data_count[2]   = std::get<0>(_inferred_channelization);
         std::vector<int64_t> data_offset(3, 0);
-        auto start_fine_channel = std::get<0>(_inferred_channelization) * coarse_channel;
-        data_offset[2] = start_fine_channel;
-        fmt::print("reading data from coarse channel {} which translates to offset {} + count {}\n", coarse_channel, data_offset, data_count);
+        auto                 start_fine_channel = std::get<0>(_inferred_channelization) * coarse_channel_index;
+        data_offset[2]                          = start_fine_channel;
+
+        fmt::print("reading data from coarse channel {} which translates to offset {} + count {}\n",
+                   coarse_channel_index,
+                   data_offset,
+                   data_count);
         auto new_coarse_channel_data = _h5_file_handle->read_data(data_offset, data_count);
-        _data[coarse_channel] = std::move(new_coarse_channel_data);
-        return _data[coarse_channel];
+        auto new_coarse_channel_mask = _h5_file_handle->read_mask(data_offset, data_count);
+        auto coarse_fch1 = _fch1 + _foff * start_fine_channel;
+
+        auto new_coarse = std::make_shared<coarse_channel>(new_coarse_channel_data, new_coarse_channel_mask,
+            coarse_fch1, _foff, _machine_id, _nbits, std::get<0>(_inferred_channelization),
+            _nifs, _source_name, _src_dej, _src_raj, _telescope_id, _tsamp, _tstart, _data_type,
+            _az_start, _za_start);
+        _coarse_channels.insert({coarse_channel_index, new_coarse});
+        return _coarse_channels.at(coarse_channel_index);
     }
 }
 
-bland::ndarray &bliss::filterbank_data::mask(int coarse_channel) {
-    if (_mask.find(coarse_channel) != _mask.end()) {
-        return _mask[coarse_channel];
-    } else {
-        // TODO: check if the underlying file handle has this coarse
-        // channel and read it now
-        throw std::out_of_range("data does not have that coarse channel");
-    }
-}
+// bland::ndarray bliss::filterbank_data::data(int coarse_channel_index) {
+//     return get_coarse_channel(coarse_channel_index)._data;
+// }
+
+// bland::ndarray bliss::filterbank_data::mask(int coarse_channel_index) {
+//     return get_coarse_channel(coarse_channel_index)._mask;
+// }
 
 int bliss::filterbank_data::get_number_coarse_channels() {
     return _num_coarse_channels;
 }
 
-double bliss::filterbank_data::fch1() {
+double bliss::filterbank_data::fch1() const {
     return _fch1;
 }
-void bliss::filterbank_data::fch1(double fch1) {
+void bliss::filterbank_data::set_fch1(double fch1) {
     _fch1 = fch1;
 }
 
-double bliss::filterbank_data::foff() {
+double bliss::filterbank_data::foff() const {
     return _foff;
 }
-void bliss::filterbank_data::foff(double foff) {
+void bliss::filterbank_data::set_foff(double foff) {
     _foff = foff;
 }
 
-int64_t bliss::filterbank_data::machine_id() {
+int64_t bliss::filterbank_data::machine_id() const {
     return _machine_id;
 }
-void bliss::filterbank_data::machine_id(int64_t machine_id) {
+void bliss::filterbank_data::set_machine_id(int64_t machine_id) {
     _machine_id = machine_id;
 }
 
-int64_t bliss::filterbank_data::nbits() {
+int64_t bliss::filterbank_data::nbits() const {
     return _nbits;
 }
-void bliss::filterbank_data::nbits(int64_t nbits) {
+void bliss::filterbank_data::set_nbits(int64_t nbits) {
     _nbits = nbits;
 }
 
-int64_t bliss::filterbank_data::nchans() {
+int64_t bliss::filterbank_data::nchans() const {
     return _nchans;
 }
-void bliss::filterbank_data::nchans(int64_t nchans) {
+void bliss::filterbank_data::set_nchans(int64_t nchans) {
     _nchans = nchans;
 }
 
-int64_t bliss::filterbank_data::nifs() {
+int64_t bliss::filterbank_data::nifs() const {
     return _nifs;
 }
-void bliss::filterbank_data::nifs(int64_t nifs) {
+void bliss::filterbank_data::set_nifs(int64_t nifs) {
     _nifs = nifs;
 }
 
-std::string bliss::filterbank_data::source_name() {
+std::string bliss::filterbank_data::source_name() const {
     return _source_name;
 }
-void bliss::filterbank_data::source_name(std::string source_name) {
+void bliss::filterbank_data::set_source_name(std::string source_name) {
     _source_name = source_name;
 }
 
-double bliss::filterbank_data::src_dej() {
+double bliss::filterbank_data::src_dej() const {
     return _src_dej;
 }
-void bliss::filterbank_data::src_dej(double src_dej) {
+void bliss::filterbank_data::set_src_dej(double src_dej) {
     _src_dej = src_dej;
 }
 
-double bliss::filterbank_data::src_raj() {
+double bliss::filterbank_data::src_raj() const {
     return _src_raj;
 }
-void bliss::filterbank_data::src_raj(double src_raj) {
+void bliss::filterbank_data::set_src_raj(double src_raj) {
     _src_raj = src_raj;
 }
 
-int64_t bliss::filterbank_data::telescope_id() {
+int64_t bliss::filterbank_data::telescope_id() const {
     return _telescope_id;
 }
-void bliss::filterbank_data::telescope_id(int64_t telescope_id) {
+void bliss::filterbank_data::set_telescope_id(int64_t telescope_id) {
     _telescope_id = telescope_id;
 }
 
-double bliss::filterbank_data::tsamp() {
+double bliss::filterbank_data::tsamp() const {
     return _tsamp;
 }
-void bliss::filterbank_data::tsamp(double tsamp) {
+void bliss::filterbank_data::set_tsamp(double tsamp) {
     _tsamp = tsamp;
 }
 
-double bliss::filterbank_data::tstart() {
+double bliss::filterbank_data::tstart() const {
     return _tstart;
 }
-void bliss::filterbank_data::tstart(double tstart) {
+void bliss::filterbank_data::set_tstart(double tstart) {
     _tstart = tstart;
 }
 
-int64_t bliss::filterbank_data::data_type() {
+int64_t bliss::filterbank_data::data_type() const {
     return _data_type;
 }
-void bliss::filterbank_data::data_type(int64_t data_type) {
+void bliss::filterbank_data::set_data_type(int64_t data_type) {
     _data_type = data_type;
 }
 
-double bliss::filterbank_data::az_start() {
+double bliss::filterbank_data::az_start() const {
     return _az_start;
 }
-void bliss::filterbank_data::az_start(double az_start) {
+void bliss::filterbank_data::set_az_start(double az_start) {
     _az_start = az_start;
 }
 
-double bliss::filterbank_data::za_start() {
+double bliss::filterbank_data::za_start() const {
     return _za_start;
 }
-void bliss::filterbank_data::za_start(double za_start) {
+void bliss::filterbank_data::set_za_start(double za_start) {
     _za_start = za_start;
 }
 
-// void bliss::filterbank_data::mask(const bland::ndarray &mask) {
-//     _mask = mask;
-// }
+int64_t bliss::filterbank_data::slow_time_bins() const {
+    return _slow_time_bins;
+}
 
-// noise_stats bliss::filterbank_data::noise_estimates() {
-//     if (_noise_stats.has_value()) {
-//         return _noise_stats.value();
-//     } else {
-//         throw std::runtime_error("Noise stats have not been calculated yet");
-//     }
-// }
-
-// void bliss::filterbank_data::noise_estimates(noise_stats stats) {
-//     _noise_stats = stats;
-// }
+double bliss::filterbank_data::tduration_secs() const {
+    return _tduration_secs;
+}

@@ -6,8 +6,6 @@
 
 namespace bliss {
 
-
-
 /**
  * return a mask with flags set for grid elements which have non gaussian spectral kurtosis
  * 
@@ -31,6 +29,14 @@ bland::ndarray flag_spectral_kurtosis(const bland::ndarray &data, int64_t N, int
 
 /**
  * Flag the filterbank data based on spectral kurtosis bounds and return the flagged filterbank
+*/
+coarse_channel flag_spectral_kurtosis(coarse_channel channel_data, float lower_threshold=0.05f, float upper_threshold=0.05f);
+
+/**
+ * Flag the filterbank data based on spectral kurtosis bounds and return the flagged filterbank
+ * 
+ * TODO: make this work on *all* coarse channels in a filterbank, it might be useful to
+ * defer computing perhaps with a future 
 */
 filterbank_data flag_spectral_kurtosis(filterbank_data fb_data, float lower_threshold=0.05f, float upper_threshold=0.05f);
 

@@ -1,5 +1,7 @@
 #pragma once
 
+#include "coarse_channel.hpp"
+
 #include <bland/bland.hpp>
 
 #include <cstdint>
@@ -7,6 +9,7 @@
 #include <optional>
 #include <string>
 #include <string_view>
+#include <tuple>
 
 namespace bliss {
 
@@ -72,8 +75,10 @@ class filterbank_data {
     template <bool POPULATE_DATA_AND_MASK = false>
     state_tuple get_state();
 
-    bland::ndarray &data(int coarse_channel=0);
-    bland::ndarray &mask(int coarse_channel=0);
+    std::shared_ptr<coarse_channel> get_coarse_channel(int coarse_channel_index=0);
+
+    // bland::ndarray data(int coarse_channel_index=0);
+    // bland::ndarray mask(int coarse_channel_index=0);
 
     /**
      * get the number of coarse channels in this filterbank
@@ -85,41 +90,44 @@ class filterbank_data {
     using filterbank_channelization_revs = std::tuple<int, double, double, const char*>;
 
     // Setters and getters for values read from disk
-    double      fch1();
-    void        fch1(double);
-    double      foff();
-    void        foff(double);
-    int64_t     machine_id();
-    void        machine_id(int64_t);
-    int64_t     nbits();
-    void        nbits(int64_t);
-    int64_t     nchans();
-    void        nchans(int64_t);
-    int64_t     nifs();
-    void        nifs(int64_t);
-    std::string source_name();
-    void        source_name(std::string);
-    double      src_dej();
-    void        src_dej(double);
-    double      src_raj();
-    void        src_raj(double);
-    int64_t     telescope_id();
-    void        telescope_id(int64_t);
-    double      tsamp();
-    void        tsamp(double);
-    double      tstart();
-    void        tstart(double);
+    double      fch1() const;
+    void        set_fch1(double);
+    double      foff() const;
+    void        set_foff(double);
+    int64_t     machine_id() const;
+    void        set_machine_id(int64_t);
+    int64_t     nbits() const;
+    void        set_nbits(int64_t);
+    int64_t     nchans() const;
+    void        set_nchans(int64_t);
+    int64_t     nifs() const;
+    void        set_nifs(int64_t);
+    std::string source_name() const;
+    void        set_source_name(std::string);
+    double      src_dej() const;
+    void        set_src_dej(double);
+    double      src_raj() const;
+    void        set_src_raj(double);
+    int64_t     telescope_id() const;
+    void        set_telescope_id(int64_t);
+    double      tsamp() const;
+    void        set_tsamp(double);
+    double      tstart() const;
+    void        set_tstart(double);
 
-    int64_t data_type();
-    void    data_type(int64_t);
-    double  az_start();
-    void    az_start(double);
-    double  za_start();
-    void    za_start(double);
+    int64_t data_type() const;
+    void    set_data_type(int64_t);
+    double  az_start() const;
+    void    set_az_start(double);
+    double  za_start() const;
+    void    set_za_start(double);
+
+    int64_t slow_time_bins() const;
+
+    double tduration_secs() const;
 
   protected:
-    std::map<int, bland::ndarray> _data;
-    std::map<int, bland::ndarray> _mask;
+    std::map<int, std::shared_ptr<coarse_channel>> _coarse_channels;
     std::shared_ptr<h5_filterbank_file> _h5_file_handle=nullptr;
 
     // Read from h5 file
@@ -143,6 +151,9 @@ class filterbank_data {
     // Derived values at read-time
     int64_t _num_coarse_channels;
     filterbank_channelization_revs _inferred_channelization;
+    // slow time is number of spectra
+    int64_t _slow_time_bins;
+    double _tduration_secs;
 
   private:
 };

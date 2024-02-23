@@ -25,7 +25,7 @@ namespace bliss {
 class scan : public filterbank_data {
   public:
     scan() = default;
-    
+
     scan(const filterbank_data &fb_data);
 
     scan(filterbank_data          fb_data,
@@ -39,7 +39,7 @@ class scan : public filterbank_data {
                                   std::list<hit>,
                                   noise_stats::state_tuple>;
 
-    state_tuple get_state();
+    // state_tuple get_state();
 
     bool                    has_doppler_spectrum();
     bland::ndarray          &doppler_spectrum();
@@ -54,18 +54,19 @@ class scan : public filterbank_data {
     /**
      * Get the noise estimate from this scan
      */
-    noise_stats noise_estimate();
+    // noise_stats noise_estimate();
     /**
      * Set a noise estimate to associate with this scan
      */
-    void noise_estimate(noise_stats estimate);
+    // void noise_estimate(noise_stats estimate);
 
-    bool             has_hits();
+    // bool           has_hits();
     std::list<hit> hits();
-    void             hits(std::list<hit> new_hits);
+    // void           hits(std::list<hit> new_hits);
 
   protected:
-    std::optional<noise_stats> _noise_stats;
+    std::map<int, std::shared_ptr<coarse_channel>> _coarse_channels;
+    // std::optional<noise_stats> _noise_stats;
 
     // TODO: think through if we should wrap this up in another class that's optional rather than each one being
     // optional
@@ -74,7 +75,7 @@ class scan : public filterbank_data {
     std::optional<integrated_flags>         _dedrifted_rfi;
     std::optional<integrate_drifts_options> _drift_parameters;
 
-    std::optional<std::list<hit>> _hits;
+    // std::optional<std::list<hit>> _hits;
 };
 
 } // namespace bliss

@@ -27,7 +27,8 @@ struct stride_helper {
     }
 };
 
-std::vector<component> bliss::find_local_maxima_above_threshold(scan                  &dedrifted_spectrum,
+// TODO: rename this to dedrifted_coarse_channel
+std::vector<component> bliss::find_local_maxima_above_threshold(coarse_channel        &dedrifted_spectrum,
                                                                 float                  snr_threshold,
                                                                 std::vector<nd_coords> max_neighborhood) {
     auto noise_stats = dedrifted_spectrum.noise_estimate();
@@ -120,7 +121,6 @@ std::vector<component> bliss::find_local_maxima_above_threshold(scan            
                     c.rfi_counts[flag_values::sigma_clip] =
                             dedrifted_spectrum.doppler_flags().sigma_clip.scalarize<uint8_t>(curr_coord);
 
-
                     // Wow, this very conceptually simple thing of adding a bandwidth estimate to local maxima hits
                     // wound up being some ugly code... rethink it
 
@@ -151,9 +151,9 @@ std::vector<component> bliss::find_local_maxima_above_threshold(scan            
                             // Keep expanding "bandwidth" at the drift of local max as long as extended bandwidth
                             // continues to decrease in magnitude and it's still a "hit" above SNR threshold
                             if (new_lower_edge_value > snr_threshold && new_lower_edge_value < lower_edge_value) {
-                                // It's tempting to mark this as "visited" so it won't be added to a different local maxima hit
-                                // or used for its consideration, but to keep things reproducible (it doesn't matter which local
-                                // maxima was looked at first), we'll not mark it as visited
+                                // It's tempting to mark this as "visited" so it won't be added to a different local
+                                // maxima hit or used for its consideration, but to keep things reproducible (it doesn't
+                                // matter which local maxima was looked at first), we'll not mark it as visited
                                 lower_edge_value = new_lower_edge_value;
                                 c.locations.push_back(max_lower_edge);
                             } else {

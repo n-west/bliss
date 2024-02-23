@@ -73,86 +73,6 @@ bliss::h5_filterbank_file::h5_filterbank_file(std::string_view file_path) {
     }
 }
 
-//   bland::ndarray read_data(std::vector<int64_t> offset={}, std::vector<int64_t> count={})
-bland::ndarray bliss::h5_filterbank_file::read_data(std::vector<int64_t> offset, std::vector<int64_t> count) {
-    auto dataspace   = _h5_data_handle.getSpace();
-    auto number_dims = dataspace.getSimpleExtentNdims();
-
-    std::vector<hsize_t> dims(number_dims);
-    dataspace.getSimpleExtentDims(dims.data());
-
-    auto dim_labels = read_data_attr<std::vector<std::string>>("DIMENSION_LABELS");
-    // tuples of size, initialized state, index
-    std::tuple<int64_t, bool, int> time_steps = {0, false, -1};
-    std::tuple<int64_t, bool, int> freq_bins  = {0, false, -1};
-    for (int ii = 0; ii < dims.size(); ++ii) {
-        if (dim_labels[ii] == "time") {
-            time_steps = {dims[ii], true, ii};
-        } else if (dim_labels[ii] == "frequency") {
-            freq_bins = {dims[ii], true, ii};
-        } else if (dim_labels[ii] == "feed_id") {
-            if (dims[ii] != 1) {
-                throw std::invalid_argument("Expected unity feed_id");
-            }
-        } else {
-            // unknown dimension. If it's size 1, we're probably OK though
-            if (dims[ii] != 1) {
-                // TODO, we're using fmtlib now, update this. Does fmtlib act as a proper
-                // "logging" lib?
-                std::cerr << "Got unknown " << ii << " dimension: " << dim_labels[ii]
-                          << ". Continuing since it is size 1." << std::endl;
-            } else {
-                throw std::invalid_argument("Unknown dimension of non-unity size in data");
-            }
-        }
-    }
-    if (std::get<1>(time_steps) == false) {
-        throw std::invalid_argument("Could not find a time dimension in dimension labels");
-    }
-    if (std::get<1>(freq_bins) == false) {
-        throw std::invalid_argument("Could not find a frequency dimension in dimension labels");
-    }
-    if (std::get<0>(time_steps) == read_data_attr<int64_t>("nchans") && std::get<0>(freq_bins) != read_data_attr<int64_t>("nchans")) {
-        fmt::print("WARN h5_filterbank_file: the DIMENSION_LABELS appear out of order, time dimension matches nchans");
-        // There's some files that have the dim labels for time, channels swapped
-        auto temp_time_steps = freq_bins;
-        freq_bins            = time_steps;
-        time_steps           = temp_time_steps;
-    }
-
-    bland::ndarray spectrum_grid;
-
-    if (offset.empty() && count.empty()) {
-        spectrum_grid = bland::ndarray({std::get<0>(time_steps), std::get<0>(freq_bins)});
-    } else {
-        // TODO: Better guarding about whether we were given 2 or 3 dims
-        if (offset.empty()) {
-            offset = std::vector<int64_t>(count.size(), 0);
-        }
-        if (count.empty()) {
-            count    = std::vector<int64_t>(count.size(), -1 /*TODO: fill in with LASTDIM*/);
-            count[0] = std::get<0>(time_steps) - offset[0];
-            count[2] = std::get<0>(freq_bins) - offset[2];
-        }
-
-        spectrum_grid = bland::ndarray(count);
-        std::vector<hsize_t> offset_hsize(offset.begin(), offset.end());
-        std::vector<hsize_t> count_hsize(count.begin(), count.end());
-
-        // TODO: verify this works with different vals...
-        dataspace.selectHyperslab(H5S_SELECT_SET, count_hsize.data(), offset_hsize.data());
-    } // TODO: either one could be non-empty...
-
-    // Define the memory dataspace to receive the read data
-    auto                 shape = spectrum_grid.shape();
-    std::vector<hsize_t> grid_shape(shape.begin(), shape.end());
-    H5::DataSpace        memspace(shape.size(), grid_shape.data());
-
-    // The row-major reading and axes we set up means frequency (most dense) is in last dim
-    _h5_data_handle.read(spectrum_grid.data_ptr<float>(), H5::PredType::NATIVE_FLOAT, memspace, dataspace);
-
-    return spectrum_grid;
-}
 
 std::vector<int64_t> bliss::h5_filterbank_file::get_data_shape() {
     auto dataspace   = _h5_data_handle.getSpace();
@@ -162,19 +82,24 @@ std::vector<int64_t> bliss::h5_filterbank_file::get_data_shape() {
     dataspace.getSimpleExtentDims(dims.data());
 
     auto dim_labels = read_data_attr<std::vector<std::string>>("DIMENSION_LABELS");
-    // tuples of size, initialized state, index
+    // tuples of size, initialized state, index. This will validate the dimensions
+    // fit our expectations:
+    // * there are 3 dimensions with unique labels of time, feed_id, frequency
+    // and fix any known issues (like labels swapped)
     std::tuple<int64_t, bool, int> time_steps = {0, false, -1};
+    std::tuple<int64_t, bool, int> feed_id = {0, false, -1};
     std::tuple<int64_t, bool, int> freq_bins  = {0, false, -1};
     for (int ii = 0; ii < dims.size(); ++ii) {
-        if (dim_labels[ii] == "time") {
+        if (!std::get<1>(time_steps) && dim_labels[ii] == "time") {
             time_steps = {dims[ii], true, ii};
-        } else if (dim_labels[ii] == "frequency") {
+        } else if (!std::get<1>(freq_bins) && dim_labels[ii] == "frequency") {
             freq_bins = {dims[ii], true, ii};
-        } else if (dim_labels[ii] == "feed_id") {
+        } else if (!std::get<1>(feed_id) && dim_labels[ii] == "feed_id") {
+            feed_id = {dims[ii], true, ii};
             if (dims[ii] != 1) {
                 throw std::invalid_argument("Expected unity feed_id");
             }
-        } else {
+        } else { // if there are more than 3 dims this will catch it
             // unknown dimension. If it's size 1, we're probably OK though
             if (dims[ii] != 1) {
                 // TODO, we're using fmtlib now, update this. Does fmtlib act as a proper
@@ -189,6 +114,9 @@ std::vector<int64_t> bliss::h5_filterbank_file::get_data_shape() {
     if (std::get<1>(time_steps) == false) {
         throw std::invalid_argument("Could not find a time dimension in dimension labels");
     }
+    if (std::get<1>(feed_id) == false) {
+        throw std::invalid_argument("Could not find a feed_id dimension in dimension labels");
+    }
     if (std::get<1>(freq_bins) == false) {
         throw std::invalid_argument("Could not find a frequency dimension in dimension labels");
     }
@@ -200,71 +128,83 @@ std::vector<int64_t> bliss::h5_filterbank_file::get_data_shape() {
         time_steps           = temp_time_steps;
     }
 
-    if (std::get<2>(time_steps) != 0 && std::get<2>(freq_bins) != 2) {
-        throw std::runtime_error("Unexpected dim ordering. Requires more dev!");
-    }
-
-    std::vector<int64_t> data_shape(dims.begin(), dims.end());
-    return data_shape;
+    auto shape = std::vector<int64_t>({std::get<0>(time_steps), std::get<0>(feed_id), std::get<0>(freq_bins)});
+    return shape;
   }
 
 
-bland::ndarray bliss::h5_filterbank_file::read_mask() {
-    auto space       = _h5_mask_handle.getSpace();
-    auto number_dims = space.getSimpleExtentNdims();
+bland::ndarray bliss::h5_filterbank_file::read_data(std::vector<int64_t> offset, std::vector<int64_t> count) {
+    auto dataspace   = _h5_data_handle.getSpace();
+    auto number_dims = dataspace.getSimpleExtentNdims();
 
-    std::vector<hsize_t> dims(number_dims);
-    space.getSimpleExtentDims(dims.data());
+    bland::ndarray spectrum_grid;
 
-    auto dim_labels = read_data_attr<std::vector<std::string>>("DIMENSION_LABELS");
-    // tuples of size, initialized state, index
-    std::tuple<int64_t, bool, int> time_steps = {0, false, -1};
-    std::tuple<int64_t, bool, int> freq_bins  = {0, false, -1};
-    for (int ii = 0; ii < dims.size(); ++ii) {
-        if (dim_labels[ii] == "time") {
-            time_steps = {dims[ii], true, ii};
-        } else if (dim_labels[ii] == "frequency") {
-            freq_bins = {dims[ii], true, ii};
-        } else if (dim_labels[ii] == "feed_id") {
-            if (dims[ii] != 1) {
-                throw std::invalid_argument("Expected unity feed_id");
-            }
-        } else {
-            // unknown dimension. If it's size 1, we're probably OK though
-            if (dims[ii] != 1) {
-                // TODO, make fmt print to cerr
-                fmt::print("INFO: Got unknown {} dimension: {}. Continuing since it is size 1.\n", ii, dim_labels[ii]);
-            } else {
-                throw std::invalid_argument("Unknown dimension of non-unity size in data");
-            }
-        }
-    }
-    if (std::get<1>(time_steps) == false) {
-        throw std::invalid_argument("Could not find a time dimension in dimension labels");
-    }
-    if (std::get<1>(freq_bins) == false) {
-        throw std::invalid_argument("Could not find a frequency dimension in dimension labels");
-    }
-    if (std::get<0>(time_steps) == read_data_attr<int64_t>("nchans") && std::get<0>(freq_bins) != read_data_attr<int64_t>("nchans")) {
-        fmt::print("WARN h5_filterbank_file: the DIMENSION_LABELS appear out of order, time dimension matches nchans");
-        // There's some files that have the dim labels for time, channels swapped
-        auto temp_time_steps = freq_bins;
-        freq_bins            = time_steps;
-        time_steps           = temp_time_steps;
-    }
-    if (std::get<0>(freq_bins) != read_data_attr<int64_t>("nchans")) {
-        fmt::print("WARN: h5_filterbank_file: The reported nchans attribute does not match data size of frequency "
-                   "dimension");
-    }
+    auto shape = get_data_shape();
 
-    bland::ndarray mask_grid({std::get<0>(time_steps), std::get<0>(freq_bins)},
-                             bland::ndarray::datatype::uint8,
-                             bland::ndarray::dev::cpu);
+    if (offset.empty()) {
+        offset = std::vector<int64_t>(shape.size(), 0);
+    }
+    if (count.empty()) {
+        count = shape;
+        count[0] -= offset[0];
+        count[1] -= offset[1];
+        count[2] -= offset[2];
+    }
+    // TODO: if we have cuda we should put this in unified memory since we *know* we'll move it to device
+    // and it needs to pass through there anyway
+    spectrum_grid = bland::ndarray(count, bland::ndarray::datatype::float32, bland::ndarray::dev::cpu);
+    // TODO: validate both offset and count are size 3
 
-    // The data is read such that dim0 is time and dim1 is frequency
-    _h5_mask_handle.read(mask_grid.data_ptr<uint8_t>(), H5::PredType::NATIVE_UINT8);
+    std::vector<hsize_t> offset_hsize(offset.begin(), offset.end());
+    std::vector<hsize_t> count_hsize(count.begin(), count.end());
 
-    return mask_grid;
+    dataspace.selectHyperslab(H5S_SELECT_SET, count_hsize.data(), offset_hsize.data());
+
+    // Define the memory dataspace to receive the read data
+    std::vector<hsize_t> grid_shape(count.begin(), count.end());
+    H5::DataSpace        memspace(grid_shape.size(), grid_shape.data());
+
+    // The row-major reading and axes we set up means frequency (most dense) is in last dim
+    _h5_data_handle.read(spectrum_grid.data_ptr<float>(), H5::PredType::NATIVE_FLOAT, memspace, dataspace);
+
+    spectrum_grid = spectrum_grid.squeeze(1); // squeeze out the feed_id
+    return spectrum_grid;
+}
+
+bland::ndarray bliss::h5_filterbank_file::read_mask(std::vector<int64_t> offset, std::vector<int64_t> count) {
+    auto dataspace   = _h5_mask_handle.getSpace();
+    auto number_dims = dataspace.getSimpleExtentNdims();
+
+    bland::ndarray spectrum_grid;
+
+    auto shape = get_data_shape();
+
+    if (offset.empty()) {
+        offset = std::vector<int64_t>(shape.size(), 0);
+    }
+    if (count.empty()) {
+        count = shape;
+        count[0] -= offset[0];
+        count[1] -= offset[1];
+        count[2] -= offset[2];
+    }
+    spectrum_grid = bland::ndarray(count, bland::ndarray::datatype::uint8, bland::ndarray::dev::cpu);
+    // TODO: validate both offset and count are size 3
+
+    std::vector<hsize_t> offset_hsize(offset.begin(), offset.end());
+    std::vector<hsize_t> count_hsize(count.begin(), count.end());
+
+    dataspace.selectHyperslab(H5S_SELECT_SET, count_hsize.data(), offset_hsize.data());
+
+    // Define the memory dataspace to receive the read data
+    std::vector<hsize_t> grid_shape(count.begin(), count.end());
+    H5::DataSpace        memspace(grid_shape.size(), grid_shape.data());
+
+    // The row-major reading and axes we set up means frequency (most dense) is in last dim
+    _h5_mask_handle.read(spectrum_grid.data_ptr<float>(), H5::PredType::NATIVE_UINT8, memspace, dataspace);
+
+    spectrum_grid = spectrum_grid.squeeze(1); // squeeze out the feed_id
+    return spectrum_grid;
 }
 
 std::string bliss::h5_filterbank_file::repr() {

@@ -47,19 +47,21 @@ class h5_filterbank_file {
     T read_data_attr(const std::string &key);
 
     /**
+     * Return the shape of `data` dataset with dim ordering [time, feed_id, frequency]. This does
+     * assumption and error handling and is guaranteed to return a vector of size 3
+     * TODO: should it be an array if we know it's 3
+    */
+    std::vector<int64_t> get_data_shape();
+
+    /**
      * Read the `data` dataset to a new ndarray
      */
     bland::ndarray read_data(std::vector<int64_t> offset = {}, std::vector<int64_t> count = {});
 
     /**
-     * Return the shape of `data` dataset with dim ordering [time, feed_id, frequency]
-    */
-    std::vector<int64_t> get_data_shape();
-
-    /**
      * Read the `mask` dataset to a new ndarray
      */
-    bland::ndarray read_mask();
+    bland::ndarray read_mask(std::vector<int64_t> offset = {}, std::vector<int64_t> count = {});
 
     /**
      * Return a high level string representation of the file (file path, file attributes, datasets + axes...)

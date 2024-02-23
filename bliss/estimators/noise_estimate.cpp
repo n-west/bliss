@@ -7,8 +7,6 @@
 #include <fmt/core.h>
 #include <fmt/ranges.h>
 
-#include <thread>
-
 using namespace bliss;
 
 namespace detail {
@@ -130,69 +128,64 @@ bland::ndarray correct_mask(const bland::ndarray &mask) {
     return mask;
 }
 
+
 /**
  * This is the masked equivalent of noise power estimate
  */
-
-noise_stats bliss::estimate_noise_power(filterbank_data fil_data, noise_power_estimate_options options) {
+noise_stats bliss::estimate_noise_power(coarse_channel cc_data, noise_power_estimate_options options) {
     noise_stats estimated_stats;
     if (options.masked_estimate) {
         // Check the mask will give us something valid
-        auto &mask = fil_data.mask();
-        mask       = correct_mask(mask);
+        auto mask = cc_data.mask();
+        cc_data.set_mask(correct_mask(mask));
+
         switch (options.estimator_method) {
         case noise_power_estimator::MEAN_ABSOLUTE_DEVIATION: {
-            estimated_stats = detail::noise_power_estimate_mad(fil_data.data(), mask);
+            estimated_stats = detail::noise_power_estimate_mad(cc_data.data(), mask);
         } break;
         case noise_power_estimator::STDDEV: {
-            estimated_stats = detail::noise_power_estimate_stddev(fil_data.data(), mask);
+            estimated_stats = detail::noise_power_estimate_stddev(cc_data.data(), mask);
         } break;
         default: {
-            estimated_stats = detail::noise_power_estimate_stddev(fil_data.data(), mask);
+            estimated_stats = detail::noise_power_estimate_stddev(cc_data.data(), mask);
         }
         }
     } else {
         switch (options.estimator_method) {
         case noise_power_estimator::MEAN_ABSOLUTE_DEVIATION: {
-            estimated_stats = detail::noise_power_estimate_mad(fil_data.data());
+            estimated_stats = detail::noise_power_estimate_mad(cc_data.data());
         } break;
         case noise_power_estimator::STDDEV: {
-            estimated_stats = detail::noise_power_estimate_stddev(fil_data.data());
+            estimated_stats = detail::noise_power_estimate_stddev(cc_data.data());
         } break;
         default: {
-            estimated_stats = detail::noise_power_estimate_stddev(fil_data.data());
+            estimated_stats = detail::noise_power_estimate_stddev(cc_data.data());
         }
         }
     }
     return estimated_stats;
 }
 
+filterbank_data bliss::estimate_noise_power(filterbank_data fil_data, noise_power_estimate_options options) {
+    auto number_coarse_channels = fil_data.get_number_coarse_channels();
+    for (auto cc_index = 0; cc_index < number_coarse_channels; ++cc_index) {
+        auto cc = fil_data.get_coarse_channel(cc_index);
+        auto cc_noise_estimate = estimate_noise_power(*cc, options);
+        cc->noise_estimate(cc_noise_estimate);
+    }
+    return fil_data;
+}
+
 observation_target bliss::estimate_noise_power(observation_target observations, noise_power_estimate_options options) {
-    std::vector<std::thread> work_threads;
     for (auto &target_scan : observations._scans) {
-        work_threads.emplace_back([&target_scan, &options]() {
-            auto scan_noise_estimate = estimate_noise_power(target_scan, options);
-            target_scan.noise_estimate(scan_noise_estimate);
-        });
+        target_scan = estimate_noise_power(target_scan, options);
     }
-
-    for (auto &thread : work_threads) {
-        thread.join();
-    }
-
     return observations;
 }
 
 cadence bliss::estimate_noise_power(cadence observations, noise_power_estimate_options options) {
-    std::vector<std::thread> work_threads;
     for (auto &obs_target : observations._observations) {
-        work_threads.emplace_back(
-                [&obs_target, &options]() { obs_target = estimate_noise_power(obs_target, options); });
+        obs_target = estimate_noise_power(obs_target, options);
     }
-
-    for (auto &thread : work_threads) {
-        thread.join();
-    }
-
     return observations;
 }

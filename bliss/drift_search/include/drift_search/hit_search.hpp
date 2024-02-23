@@ -80,7 +80,14 @@ struct hit_search_options {
  *
  * The returned scan is a copy of the given scan with the hits field set
  */
-std::list<hit> hit_search(scan dedrifted_scan, hit_search_options options = {});
+std::list<hit> hit_search(coarse_channel dedrifted_scan, hit_search_options options = {});
+
+/**
+ * High level wrapper around finding drifting signals above a noise floor
+ *
+ * The returned scan is a copy of the given scan with the hits field set
+ */
+scan hit_search(scan dedrifted_scan, hit_search_options options = {});
 
 /**
  * High-level hit search over scans within an observation target
