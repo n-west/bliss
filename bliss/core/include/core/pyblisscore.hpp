@@ -13,6 +13,7 @@
 #include <nanobind/stl/list.h>
 #include <nanobind/stl/shared_ptr.h>
 #include <nanobind/stl/optional.h>
+#include <nanobind/stl/tuple.h>
 
 namespace nb = nanobind;
 using namespace nb::literals;
@@ -37,11 +38,14 @@ void bind_pycore(nb::module_ m) {
             .def_ro("tsamp", &bliss::coarse_channel::_tsamp)
             .def_ro("tstart", &bliss::coarse_channel::_tstart)
             .def_ro("za_start", &bliss::coarse_channel::_za_start)
+            .def_ro("noise_estimate", &bliss::coarse_channel::_noise_stats)
                 ;
 
     nb::class_<bliss::filterbank_data>(m, "filterbank_data")
             .def(nb::init<std::string>())
             .def("get_coarse_channel", &bliss::filterbank_data::get_coarse_channel)
+            .def("get_channelization", &bliss::filterbank_data::get_channelization)
+            .def("get_coarse_channel_with_frequency", &bliss::filterbank_data::get_coarse_channel_with_frequency)
             .def_prop_ro("num_coarse_channels", &bliss::filterbank_data::get_number_coarse_channels)
             .def_prop_ro("az_start", &bliss::filterbank_data::az_start)
             .def_prop_ro("data_type",&bliss::filterbank_data::data_type)
@@ -132,6 +136,9 @@ void bind_pycore(nb::module_ m) {
 
     nb::class_<bliss::scan, bliss::filterbank_data>(m, "scan")
             .def(nb::init<const bliss::filterbank_data &>())
+            .def(nb::init<std::string_view>(), "file_path"_a)
+            .def("extract_corase_channels", &bliss::scan::extract_coarse_channels, "start"_a=0, "count"_a=1)
+            .def("hits", &bliss::scan::hits)
             //    .def("__getstate__", &bliss::scan::get_state)
             //    .def("__setstate__", [](bliss::scan &self, const std::tuple<bliss::noise_stats, int,
             //    std::vector<bliss::hit>, int64_t> &state_tuple) {

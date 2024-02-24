@@ -60,7 +60,7 @@ noise_stats bliss::coarse_channel::noise_estimate() const {
     return _noise_stats.value();
 }
 
-void bliss::coarse_channel::noise_estimate(noise_stats estimate) {
+void bliss::coarse_channel::set_noise_estimate(noise_stats estimate) {
     _noise_stats = estimate;
 }
 
@@ -69,11 +69,7 @@ bool bliss::coarse_channel::has_hits() {
 }
 
 std::list<hit> bliss::coarse_channel::hits() const {
-    if (_hits.has_value()) {
-        return _hits.value();
-    } else {
-        throw std::runtime_error("hits: have not computed hits yet");
-    }
+    return _hits.value();
 }
 
 void bliss::coarse_channel::add_hits(std::list<hit> new_hits) {

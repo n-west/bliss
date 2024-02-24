@@ -48,7 +48,6 @@ infer_number_coarse_channels(int number_fine_channels, double foff, double tsamp
     return {1, filterbank_data::filterbank_channelization_revs{}};
 }
 
-
 filterbank_data::filterbank_data(h5_filterbank_file fb_file) {
     _h5_file_handle = std::make_shared<h5_filterbank_file>(fb_file);
 
@@ -90,7 +89,6 @@ filterbank_data::filterbank_data(h5_filterbank_file fb_file) {
 }
 
 filterbank_data::filterbank_data(std::string_view file_path) : filterbank_data(h5_filterbank_file(file_path)) {}
-
 
 filterbank_data::filterbank_data(bland::ndarray data,
                                  bland::ndarray mask,
@@ -158,7 +156,8 @@ filterbank_data::filterbank_data(double      fch1,
     // Find the number of coarse channels
     std::tie(_num_coarse_channels, _inferred_channelization) =
             infer_number_coarse_channels(_nchans, 1e6 * _foff, _tsamp);
-    auto shape = _h5_file_handle->get_data_shape(); // should we just hold on to the shape?
+
+    auto shape      = _h5_file_handle->get_data_shape(); // should we just hold on to the shape?
     _slow_time_bins = shape[0];
     // This assumes there is no overlap which needs to be confirmed with data paper
     _tduration_secs = _slow_time_bins * _tsamp;
@@ -200,6 +199,7 @@ std::shared_ptr<coarse_channel> bliss::filterbank_data::get_coarse_channel(int c
         throw std::out_of_range("ERROR: invalid coarse channel");
     }
 
+    coarse_channel_index += _coarse_channel_offset;
     if (_coarse_channels.find(coarse_channel_index) != _coarse_channels.end()) {
         return _coarse_channels.at(coarse_channel_index);
     } else {
@@ -219,17 +219,40 @@ std::shared_ptr<coarse_channel> bliss::filterbank_data::get_coarse_channel(int c
                    data_count);
         auto new_coarse_channel_data = _h5_file_handle->read_data(data_offset, data_count);
         auto new_coarse_channel_mask = _h5_file_handle->read_mask(data_offset, data_count);
-        auto coarse_fch1 = _fch1 + _foff * start_fine_channel;
+        auto coarse_fch1             = _fch1 + _foff * start_fine_channel;
 
-        auto new_coarse = std::make_shared<coarse_channel>(new_coarse_channel_data, new_coarse_channel_mask,
-            coarse_fch1, _foff, _machine_id, _nbits, std::get<0>(_inferred_channelization),
-            _nifs, _source_name, _src_dej, _src_raj, _telescope_id, _tsamp, _tstart, _data_type,
-            _az_start, _za_start);
+        auto new_coarse = std::make_shared<coarse_channel>(new_coarse_channel_data,
+                                                           new_coarse_channel_mask,
+                                                           coarse_fch1,
+                                                           _foff,
+                                                           _machine_id,
+                                                           _nbits,
+                                                           std::get<0>(_inferred_channelization),
+                                                           _nifs,
+                                                           _source_name,
+                                                           _src_dej,
+                                                           _src_raj,
+                                                           _telescope_id,
+                                                           _tsamp,
+                                                           _tstart,
+                                                           _data_type,
+                                                           _az_start,
+                                                           _za_start);
         _coarse_channels.insert({coarse_channel_index, new_coarse});
         return _coarse_channels.at(coarse_channel_index);
     }
 }
 
+bliss::filterbank_data::filterbank_channelization_revs bliss::filterbank_data::get_channelization() {
+    return _inferred_channelization;
+}
+
+int bliss::filterbank_data::get_coarse_channel_with_frequency(double frequency) {
+    auto band_fraction = ((frequency - _fch1) / _foff / static_cast<double>(_nchans));
+    // TODO: if band_fraction is < 0 or > 1 then it's not in this filterbank. Throw an error
+    auto fractional_channel = band_fraction * _num_coarse_channels;
+    return std::floor(fractional_channel);
+}
 
 int bliss::filterbank_data::get_number_coarse_channels() {
     return _num_coarse_channels;

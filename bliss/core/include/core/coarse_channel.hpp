@@ -49,7 +49,7 @@ struct coarse_channel {
     void                     integration_length(int64_t);
 
     noise_stats noise_estimate() const;
-    void        noise_estimate(noise_stats estimate);
+    void        set_noise_estimate(noise_stats estimate);
 
     bool           has_hits();
     std::list<hit> hits() const;

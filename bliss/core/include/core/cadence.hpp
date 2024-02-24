@@ -19,6 +19,11 @@ struct observation_target {
     observation_target(std::vector<scan> filterbanks);
     observation_target(std::vector<std::string_view> filterbank_paths);
 
+    /**
+     * create a new observation_target consisting of a slice of coarse channels
+    */
+    observation_target extract_coarse_channels(int start_channel=0, int count=1);
+
     // Is it useful to capture which of ABACAD this is?
     std::vector<scan> _scans;
     std::string       _target_name;
@@ -47,6 +52,11 @@ struct cadence {
 
     // Is it useful to capture any data about a "primary target?"
     std::vector<observation_target> _observations;
+
+    /**
+     * create a new cadence consisting of a slice of coarse channels
+    */
+    cadence extract_coarse_channels(int start_channel=0, int count=1);
 
   protected:
 };

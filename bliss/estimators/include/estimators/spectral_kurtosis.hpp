@@ -22,7 +22,6 @@ namespace bliss {
  * The non-averaged estimator (N=1) and background derivation can be found in
  * "Radio Frequency Interference Excision Using Spectral-Domain Statistics"
  *
- * TODO: should this move to estimators?
  */
 [[nodiscard]] bland::ndarray estimate_spectral_kurtosis(const bland::ndarray &spectrum_grid, int64_t N, int64_t M, float d = 1.0);
 

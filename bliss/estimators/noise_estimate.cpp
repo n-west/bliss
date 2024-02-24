@@ -171,7 +171,7 @@ filterbank_data bliss::estimate_noise_power(filterbank_data fil_data, noise_powe
     for (auto cc_index = 0; cc_index < number_coarse_channels; ++cc_index) {
         auto cc = fil_data.get_coarse_channel(cc_index);
         auto cc_noise_estimate = estimate_noise_power(*cc, options);
-        cc->noise_estimate(cc_noise_estimate);
+        cc->set_noise_estimate(cc_noise_estimate);
     }
     return fil_data;
 }
