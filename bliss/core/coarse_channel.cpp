@@ -79,105 +79,105 @@ void bliss::coarse_channel::add_hits(std::list<hit> new_hits) {
 double bliss::coarse_channel::fch1() const {
     return _fch1;
 }
-// void bliss::filterbank_data::fch1(double fch1) {
+// void bliss::scan::fch1(double fch1) {
 //     _fch1 = fch1;
 // }
 
 double bliss::coarse_channel::foff() const {
     return _foff;
 }
-// void bliss::filterbank_data::foff(double foff) {
+// void bliss::scan::foff(double foff) {
 //     _foff = foff;
 // }
 
 int64_t bliss::coarse_channel::machine_id() const {
     return _machine_id;
 }
-// void bliss::filterbank_data::machine_id(int64_t machine_id) {
+// void bliss::scan::machine_id(int64_t machine_id) {
 //     _machine_id = machine_id;
 // }
 
 int64_t bliss::coarse_channel::nbits() const {
     return _nbits;
 }
-// void bliss::filterbank_data::nbits(int64_t nbits) {
+// void bliss::scan::nbits(int64_t nbits) {
 //     _nbits = nbits;
 // }
 
 int64_t bliss::coarse_channel::nchans() const {
     return _nchans;
 }
-// void bliss::filterbank_data::nchans(int64_t nchans) {
+// void bliss::scan::nchans(int64_t nchans) {
 //     _nchans = nchans;
 // }
 
 int64_t bliss::coarse_channel::nifs() const {
     return _nifs;
 }
-// void bliss::filterbank_data::nifs(int64_t nifs) {
+// void bliss::scan::nifs(int64_t nifs) {
 //     _nifs = nifs;
 // }
 
 std::string bliss::coarse_channel::source_name() const {
     return _source_name;
 }
-// void bliss::filterbank_data::source_name(std::string source_name) {
+// void bliss::scan::source_name(std::string source_name) {
 //     _source_name = source_name;
 // }
 
 double bliss::coarse_channel::src_dej() const {
     return _src_dej;
 }
-// void bliss::filterbank_data::src_dej(double src_dej) {
+// void bliss::scan::src_dej(double src_dej) {
 //     _src_dej = src_dej;
 // }
 
 double bliss::coarse_channel::src_raj() const {
     return _src_raj;
 }
-// void bliss::filterbank_data::src_raj(double src_raj) {
+// void bliss::scan::src_raj(double src_raj) {
 //     _src_raj = src_raj;
 // }
 
 int64_t bliss::coarse_channel::telescope_id() const {
     return _telescope_id;
 }
-// void bliss::filterbank_data::telescope_id(int64_t telescope_id) {
+// void bliss::scan::telescope_id(int64_t telescope_id) {
 //     _telescope_id = telescope_id;
 // }
 
 double bliss::coarse_channel::tsamp() const {
     return _tsamp;
 }
-// void bliss::filterbank_data::tsamp(double tsamp) {
+// void bliss::scan::tsamp(double tsamp) {
 //     _tsamp = tsamp;
 // }
 
 double bliss::coarse_channel::tstart() const {
     return _tstart;
 }
-// void bliss::filterbank_data::tstart(double tstart) {
+// void bliss::scan::tstart(double tstart) {
 //     _tstart = tstart;
 // }
 
 int64_t bliss::coarse_channel::data_type() const {
     return _data_type;
 }
-// void bliss::filterbank_data::data_type(int64_t data_type) {
+// void bliss::scan::data_type(int64_t data_type) {
 //     _data_type = data_type;
 // }
 
 double bliss::coarse_channel::az_start() const {
     return _az_start;
 }
-// void bliss::filterbank_data::az_start(double az_start) {
+// void bliss::scan::az_start(double az_start) {
 //     _az_start = az_start;
 // }
 
 double bliss::coarse_channel::za_start() const {
     return _za_start;
 }
-// void bliss::filterbank_data::za_start(double za_start) {
+// void bliss::scan::za_start(double za_start) {
 //     _za_start = za_start;
 // }
 

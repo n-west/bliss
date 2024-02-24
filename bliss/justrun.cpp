@@ -1,14 +1,14 @@
 
-#include <core/filterbank_data.hpp>
+#include <core/scan.hpp>
 #include <core/cadence.hpp>
 #include <estimators/noise_estimate.hpp>
+#include <drift_search/event_search.hpp>
+#include <drift_search/filter_hits.hpp>
 #include <drift_search/hit_search.hpp>
 #include <drift_search/integrate_drifts.hpp>
 #include <flaggers/filter_rolloff.hpp>
 #include <flaggers/magnitude.hpp>
 #include <flaggers/spectral_kurtosis.hpp>
-#include <drift_search/filter_hits.hpp>
-#include <drift_search/event_search.hpp>
 #include <file_types/hits_file.hpp>
 #include <file_types/events_file.hpp>
 

@@ -20,7 +20,7 @@ coarse_channel bliss::flag_filter_rolloff(coarse_channel cc_data, float rolloff_
 }
 
 
-filterbank_data bliss::flag_filter_rolloff(filterbank_data fil_data, float rolloff_width) {
+scan bliss::flag_filter_rolloff(scan fil_data, float rolloff_width) {
     auto number_coarse_channels = fil_data.get_number_coarse_channels();
     for (auto cc_index = 0; cc_index < number_coarse_channels; ++cc_index) {
         auto cc = fil_data.get_coarse_channel(cc_index);

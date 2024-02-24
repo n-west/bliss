@@ -166,7 +166,7 @@ noise_stats bliss::estimate_noise_power(coarse_channel cc_data, noise_power_esti
     return estimated_stats;
 }
 
-filterbank_data bliss::estimate_noise_power(filterbank_data fil_data, noise_power_estimate_options options) {
+scan bliss::estimate_noise_power(scan fil_data, noise_power_estimate_options options) {
     auto number_coarse_channels = fil_data.get_number_coarse_channels();
     for (auto cc_index = 0; cc_index < number_coarse_channels; ++cc_index) {
         auto cc = fil_data.get_coarse_channel(cc_index);

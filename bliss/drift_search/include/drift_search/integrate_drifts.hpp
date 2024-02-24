@@ -3,7 +3,6 @@
 
 #include <bland/ndarray.hpp>
 #include <core/cadence.hpp>
-#include <core/filterbank_data.hpp>
 #include <core/scan.hpp>
 
 namespace bliss {

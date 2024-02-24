@@ -3,7 +3,7 @@
 
 #include <bland/ndarray.hpp>
 #include <core/cadence.hpp>
-#include <core/filterbank_data.hpp>
+#include <core/scan.hpp>
 #include <core/noise_power.hpp>
 
 namespace bliss {
@@ -41,9 +41,9 @@ struct noise_power_estimate_options {
                                                noise_power_estimate_options    options);
 
 /**
- * Estimate noise power statistics of filterbank_data (this can include a flagged/masked estimate)
+ * Estimate noise power statistics of scan (this can include a flagged/masked estimate)
  */
-[[nodiscard]] filterbank_data estimate_noise_power(filterbank_data fil_data, noise_power_estimate_options options);
+[[nodiscard]] scan estimate_noise_power(scan fil_data, noise_power_estimate_options options);
 
 /**
  * Estimate noise power statistics of an observation target which may include multiple discrete "views" of the target

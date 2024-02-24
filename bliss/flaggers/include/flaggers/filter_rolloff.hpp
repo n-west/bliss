@@ -1,6 +1,6 @@
 #pragma once
 
-#include <core/filterbank_data.hpp>
+#include <core/scan.hpp>
 #include <core/cadence.hpp>
 
 namespace bliss {
@@ -17,7 +17,7 @@ namespace bliss {
  */
 coarse_channel flag_filter_rolloff(coarse_channel cc_data, float rolloff_width);
 
-filterbank_data flag_filter_rolloff(filterbank_data fb_data, float rolloff_width);
+scan flag_filter_rolloff(scan fb_data, float rolloff_width);
 
 observation_target flag_filter_rolloff(observation_target observations, float rolloff_width);
 

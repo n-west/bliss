@@ -4,7 +4,6 @@ add_library(bliss_core
     coarse_channel.cpp
     event.cpp
     hit.cpp
-    filterbank_data.cpp
     noise_power.cpp
     scan.cpp
 )

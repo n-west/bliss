@@ -27,15 +27,11 @@ std::string extract_source_name_from_scans(std::vector<scan> scans) {
     return source_name;
 }
 
-bliss::observation_target::observation_target(std::vector<filterbank_data> filterbanks) {
+bliss::observation_target::observation_target(std::vector<scan> filterbanks) {
     for (const auto &fb : filterbanks) {
         _scans.push_back(fb);
     }
     _target_name = extract_source_name_from_scans(_scans);
-}
-
-bliss::observation_target::observation_target(std::vector<scan> scans) : _scans(scans) {
-    _target_name = extract_source_name_from_scans(scans);
 }
 
 bliss::observation_target::observation_target(std::vector<std::string_view> filterbank_paths) {

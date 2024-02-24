@@ -1,7 +1,7 @@
 #pragma once
 
 #include <bland/ndarray.hpp>
-#include <core/filterbank_data.hpp>
+#include <core/scan.hpp>
 
 namespace bliss {
 
@@ -27,6 +27,6 @@ namespace bliss {
 
 [[nodiscard]] bland::ndarray estimate_spectral_kurtosis(coarse_channel &cc_data);
 
-// bland::ndarray estimate_spectral_kurtosis(filterbank_data &fil_data);
+// bland::ndarray estimate_spectral_kurtosis(scan &fil_data);
 
 } // namespace bliss

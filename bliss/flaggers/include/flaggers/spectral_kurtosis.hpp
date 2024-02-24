@@ -1,7 +1,7 @@
 
 #pragma once
 
-#include <core/filterbank_data.hpp>
+#include <core/scan.hpp>
 #include <core/cadence.hpp>
 
 namespace bliss {
@@ -38,7 +38,7 @@ coarse_channel flag_spectral_kurtosis(coarse_channel channel_data, float lower_t
  * TODO: make this work on *all* coarse channels in a filterbank, it might be useful to
  * defer computing perhaps with a future 
 */
-filterbank_data flag_spectral_kurtosis(filterbank_data fb_data, float lower_threshold=0.05f, float upper_threshold=0.05f);
+scan flag_spectral_kurtosis(scan fb_data, float lower_threshold=0.05f, float upper_threshold=0.05f);
 
 /**
  * Flag all filterbanks in an observation target

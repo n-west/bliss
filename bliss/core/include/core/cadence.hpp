@@ -9,13 +9,12 @@ namespace bliss {
 
 /**
  * An observation target is a physical object / location in the sky that is observed. It may have multiple
- * scans (different observations). These are held as `scan` objects which hold the underlying `filterbank_data`
- * as well as optionally derived data products that are directly tied to filterbank_data.
+ * scans (different observations). These are held as `scan` objects which hold the underlying `scan`
+ * as well as optionally derived data products that are directly tied to scan.
  */
 struct observation_target {
   public:
     observation_target() = default;
-    observation_target(std::vector<filterbank_data> filterbanks);
     observation_target(std::vector<scan> filterbanks);
     observation_target(std::vector<std::string_view> filterbank_paths);
 
@@ -47,7 +46,7 @@ struct cadence {
      * Build a cadence by reading file paths to scans
      */
     cadence(std::vector<std::vector<std::string_view>> observations);
-    // TODO might be nice to be able to just give a list of filterbank_data, then look at that metadata to autosort
+    // TODO might be nice to be able to just give a list of scan, then look at that metadata to autosort
     // targets
 
     // Is it useful to capture any data about a "primary target?"

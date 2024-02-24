@@ -46,7 +46,7 @@ void bind_pyestimators(nb::module_ m) {
     m.def("estimate_noise_power",
           nb::overload_cast<bliss::coarse_channel, bliss::noise_power_estimate_options>(&bliss::estimate_noise_power));
     m.def("estimate_noise_power",
-          nb::overload_cast<bliss::filterbank_data, bliss::noise_power_estimate_options>(&bliss::estimate_noise_power));
+          nb::overload_cast<bliss::scan, bliss::noise_power_estimate_options>(&bliss::estimate_noise_power));
     m.def("estimate_noise_power",
           nb::overload_cast<bliss::observation_target, bliss::noise_power_estimate_options>(
                   &bliss::estimate_noise_power));
