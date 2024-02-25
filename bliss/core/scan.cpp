@@ -199,27 +199,29 @@ std::shared_ptr<coarse_channel> bliss::scan::get_coarse_channel(int coarse_chann
         throw std::out_of_range("ERROR: invalid coarse channel");
     }
 
-    coarse_channel_index += _coarse_channel_offset;
-    if (_coarse_channels.find(coarse_channel_index) != _coarse_channels.end()) {
-        return _coarse_channels.at(coarse_channel_index);
+    auto global_offset_in_file = coarse_channel_index + _coarse_channel_offset;
+    if (_coarse_channels.find(global_offset_in_file) != _coarse_channels.end()) {
+        return _coarse_channels.at(global_offset_in_file);
     } else {
         // TODO: decide if we should evict an old coarse channel from the cache (might need
         // to stop returning references to keep that safe)
 
         // This is expected to be [time, feed, freq]
         auto data_count = _h5_file_handle->get_data_shape();
-        data_count[2]   = std::get<0>(_inferred_channelization);
         std::vector<int64_t> data_offset(3, 0);
-        auto                 start_fine_channel = std::get<0>(_inferred_channelization) * coarse_channel_index;
-        data_offset[2]                          = start_fine_channel;
+
+        data_count[2] = std::get<0>(_inferred_channelization);
+        auto global_start_fine_channel = std::get<0>(_inferred_channelization) * global_offset_in_file;
+        data_offset[2] = global_start_fine_channel;
 
         fmt::print("reading data from coarse channel {} which translates to offset {} + count {}\n",
-                   coarse_channel_index,
+                   global_offset_in_file,
                    data_offset,
                    data_count);
         auto new_coarse_channel_data = _h5_file_handle->read_data(data_offset, data_count);
         auto new_coarse_channel_mask = _h5_file_handle->read_mask(data_offset, data_count);
-        auto coarse_fch1             = _fch1 + _foff * start_fine_channel;
+        auto relative_start_fine_channel = std::get<0>(_inferred_channelization) * coarse_channel_index;
+        auto coarse_fch1             = _fch1 + _foff * relative_start_fine_channel;
 
         auto new_coarse = std::make_shared<coarse_channel>(new_coarse_channel_data,
                                                            new_coarse_channel_mask,
@@ -238,8 +240,8 @@ std::shared_ptr<coarse_channel> bliss::scan::get_coarse_channel(int coarse_chann
                                                            _data_type,
                                                            _az_start,
                                                            _za_start);
-        _coarse_channels.insert({coarse_channel_index, new_coarse});
-        return _coarse_channels.at(coarse_channel_index);
+        _coarse_channels.insert({global_offset_in_file, new_coarse});
+        return _coarse_channels.at(global_offset_in_file);
     }
 }
 
