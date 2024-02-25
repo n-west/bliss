@@ -44,7 +44,7 @@ void bind_pycore(nb::module_ m) {
             .def(nb::init<std::string_view>(), "file_path"_a)
             .def("get_coarse_channel", &bliss::scan::get_coarse_channel)
             .def("get_channelization", &bliss::scan::get_channelization)
-            .def("get_coarse_channel_with_frequency", &bliss::scan::get_coarse_channel_with_frequency, "frequency"_a);
+            .def("get_coarse_channel_with_frequency", &bliss::scan::get_coarse_channel_with_frequency, "frequency"_a)
             .def("extract_coarse_channels", &bliss::scan::extract_coarse_channels, "start"_a=0, "count"_a=1)
             .def("hits", &bliss::scan::hits)
             .def_prop_ro("num_coarse_channels", &bliss::scan::get_number_coarse_channels)
@@ -62,44 +62,6 @@ void bind_pycore(nb::module_ m) {
             .def_prop_ro("tsamp", &bliss::scan::tsamp)
             .def_prop_ro("tstart", &bliss::scan::tstart)
             .def_prop_ro("za_start", &bliss::scan::za_start)
-        //     .def("__getstate__", &bliss::scan::get_state<false>)
-        //     .def("__setstate__",
-        //          [](bliss::scan   &self,
-        //             const std::tuple<bland::ndarray,
-        //                              bland::ndarray,
-        //                              double,
-        //                              double,
-        //                              int64_t,
-        //                              int64_t,
-        //                              int64_t,
-        //                              int64_t,
-        //                              std::string,
-        //                              double,
-        //                              double,
-        //                              int64_t,
-        //                              double,
-        //                              double,
-        //                              int64_t,
-        //                              double,
-        //                              double> &state) {
-        //              new (&self) bliss::scan(std::get<0>(state),
-        //                                                 std::get<1>(state),
-        //                                                 std::get<2>(state),
-        //                                                 std::get<3>(state),
-        //                                                 std::get<4>(state),
-        //                                                 std::get<5>(state),
-        //                                                 std::get<6>(state),
-        //                                                 std::get<7>(state),
-        //                                                 std::get<8>(state),
-        //                                                 std::get<9>(state),
-        //                                                 std::get<10>(state),
-        //                                                 std::get<11>(state),
-        //                                                 std::get<12>(state),
-        //                                                 std::get<13>(state),
-        //                                                 std::get<14>(state),
-        //                                                 std::get<15>(state),
-        //                                                 std::get<16>(state));
-        //          })
         ;
 
     //  * *DIMENSION_LABELS
