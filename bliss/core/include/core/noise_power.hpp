@@ -1,6 +1,7 @@
 #pragma once
 
 #include <tuple>
+#include <string>
 
 namespace bliss {
 
@@ -22,6 +23,8 @@ struct noise_stats {
     float noise_amplitude() const;
 
     float noise_floor() const;
+
+    std::string repr() const;
 
     using state_tuple = std::tuple<float, float>;
 

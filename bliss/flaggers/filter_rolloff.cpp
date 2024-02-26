@@ -9,14 +9,24 @@
 
 using namespace bliss;
 
-filterbank_data bliss::flag_filter_rolloff(filterbank_data fb_data, float rolloff_width) {
-    auto &rfi_flags = fb_data.mask();
+coarse_channel bliss::flag_filter_rolloff(coarse_channel cc_data, float rolloff_width) {
+    auto rfi_flags = cc_data.mask();
 
-    int64_t one_sided_channels = std::round(fb_data.nchans() * rolloff_width);
+    int64_t one_sided_channels = std::round(cc_data.nchans() * rolloff_width);
     bland::slice(rfi_flags, {1, 0, one_sided_channels}) = bland::slice(rfi_flags, {1, 0, one_sided_channels}) + static_cast<uint8_t>(flag_values::filter_rolloff);
-    bland::slice(rfi_flags, {1, -one_sided_channels, fb_data.nchans()}) = bland::slice(rfi_flags, {1, -one_sided_channels, fb_data.nchans()}) + static_cast<uint8_t>(flag_values::filter_rolloff);
+    bland::slice(rfi_flags, {1, -one_sided_channels, cc_data.nchans()}) = bland::slice(rfi_flags, {1, -one_sided_channels, cc_data.nchans()}) + static_cast<uint8_t>(flag_values::filter_rolloff);
+    cc_data.set_mask(rfi_flags);
+    return cc_data;
+}
 
-    return fb_data;
+
+scan bliss::flag_filter_rolloff(scan fil_data, float rolloff_width) {
+    auto number_coarse_channels = fil_data.get_number_coarse_channels();
+    for (auto cc_index = 0; cc_index < number_coarse_channels; ++cc_index) {
+        auto cc = fil_data.get_coarse_channel(cc_index);
+        *cc = flag_filter_rolloff(*cc, rolloff_width);
+    }
+    return fil_data;
 }
 
 observation_target bliss::flag_filter_rolloff(observation_target observations, float rolloff_width) {
@@ -27,7 +37,6 @@ observation_target bliss::flag_filter_rolloff(observation_target observations, f
 }
 
 cadence bliss::flag_filter_rolloff(cadence observations, float rolloff_width) {
-    // TODO: it's probably unexpected that this would
     for (auto &observation : observations._observations) {
         observation = flag_filter_rolloff(observation, rolloff_width);
     }

@@ -14,16 +14,30 @@ bland::ndarray bliss::estimate_spectral_kurtosis(const bland::ndarray &spectrum_
     return sk;
 }
 
-bland::ndarray bliss::estimate_spectral_kurtosis(filterbank_data &fil_data) {
-    const auto spectrum_grid = fil_data.data();
+bland::ndarray bliss::estimate_spectral_kurtosis(coarse_channel &cc_data) {
+    const auto spectrum_grid = cc_data.data();
 
     // 1. Compute spectral kurtosis along each channel
     auto M  = spectrum_grid.size(0);
     auto d  = 1;
-    auto Fs = std::abs(1.0 / (1e6 * fil_data.foff()));
-    auto N  = std::round(fil_data.tsamp() / Fs);
+    auto Fs = std::abs(1.0 / (1e6 * cc_data.foff()));
+    auto N  = std::round(cc_data.tsamp() / Fs);
 
     auto sk = estimate_spectral_kurtosis(spectrum_grid, N, M, 1.0);
 
     return sk;
 }
+
+// bland::ndarray bliss::estimate_spectral_kurtosis(scan &fil_data) {
+//     const auto spectrum_grid = fil_data.data();
+
+//     // 1. Compute spectral kurtosis along each channel
+//     auto M  = spectrum_grid.size(0);
+//     auto d  = 1;
+//     auto Fs = std::abs(1.0 / (1e6 * fil_data.foff()));
+//     auto N  = std::round(fil_data.tsamp() / Fs);
+
+//     auto sk = estimate_spectral_kurtosis(spectrum_grid, N, M, 1.0);
+
+//     return sk;
+// }

@@ -25,7 +25,7 @@ void bind_pyestimators(nb::module_ m) {
           "Compute spectral kurtosis of the given spectra");
 
     m.def("estimate_spectral_kurtosis",
-          nb::overload_cast<bliss::filterbank_data &>(&bliss::estimate_spectral_kurtosis),
+          nb::overload_cast<bliss::coarse_channel &>(&bliss::estimate_spectral_kurtosis),
           "fil_data"_a,
           "Compute spectral kurtosis of the given filterbank data");
 
@@ -44,7 +44,9 @@ void bind_pyestimators(nb::module_ m) {
     m.def("estimate_noise_power",
           nb::overload_cast<const bland::ndarray &, bliss::noise_power_estimate_options>(&bliss::estimate_noise_power));
     m.def("estimate_noise_power",
-          nb::overload_cast<bliss::filterbank_data, bliss::noise_power_estimate_options>(&bliss::estimate_noise_power));
+          nb::overload_cast<bliss::coarse_channel, bliss::noise_power_estimate_options>(&bliss::estimate_noise_power));
+    m.def("estimate_noise_power",
+          nb::overload_cast<bliss::scan, bliss::noise_power_estimate_options>(&bliss::estimate_noise_power));
     m.def("estimate_noise_power",
           nb::overload_cast<bliss::observation_target, bliss::noise_power_estimate_options>(
                   &bliss::estimate_noise_power));
@@ -56,12 +58,7 @@ void bind_pyestimators(nb::module_ m) {
             .def_rw("noise_floor", &bliss::noise_stats::_noise_floor)
             .def_prop_ro("noise_amplitude", &bliss::noise_stats::noise_amplitude)
             .def_rw("noise_power", &bliss::noise_stats::_noise_power)
-            .def("__repr__", [](bliss::noise_stats &self) {
-                return fmt::format("noise floor: {}\nnoise amplitude: {}\nnoise power: {}\n",
-                                   self.noise_floor(),
-                                   self.noise_amplitude(),
-                                   self.noise_power());
-            })
+            .def("__repr__", &bliss::noise_stats::repr)
             .def("__getstate__", [](bliss::noise_stats &self) {
                   return std::make_tuple(self._noise_floor, self._noise_power);
             })

@@ -25,23 +25,33 @@ bland::ndarray bliss::flag_spectral_kurtosis(const bland::ndarray &data,
     return rfi;
 }
 
-filterbank_data bliss::flag_spectral_kurtosis(filterbank_data fb_data, float lower_threshold, float upper_threshold) {
-    auto  spectrum_grid = fb_data.data();
-    auto &rfi_flags     = fb_data.mask();
+coarse_channel bliss::flag_spectral_kurtosis(coarse_channel cc_data, float lower_threshold, float upper_threshold) {
+    auto spectrum_grid = cc_data.data();
+    auto rfi_flags     = cc_data.mask();
 
     // 1. Compute params for SK estimate
     auto M  = spectrum_grid.size(0);
     auto d  = 1;
-    auto Fs = std::abs(1.0 / (1e6 * fb_data.foff()));
-    auto N  = std::round(fb_data.tsamp() / Fs);
+    auto Fs = std::abs(1.0 / (1e6 * cc_data.foff()));
+    auto N  = std::round(cc_data.tsamp() / Fs);
 
     // 2. Generate SK flag
     auto rfi = flag_spectral_kurtosis(spectrum_grid, N, M, d, lower_threshold, upper_threshold);
 
+    fmt::print("Storing sk mask back to coarse channel data\n");
     // 3. Store back accumulated rfi
-    rfi_flags = rfi_flags + rfi;
+    cc_data.set_mask(rfi_flags + rfi);
 
-    return fb_data;
+    return cc_data;
+}
+
+scan bliss::flag_spectral_kurtosis(scan fil_data, float lower_threshold, float upper_threshold) {
+    auto number_coarse_channels = fil_data.get_number_coarse_channels();
+    for (auto cc_index = 0; cc_index < number_coarse_channels; ++cc_index) {
+        auto cc = fil_data.get_coarse_channel(cc_index);
+        *cc = flag_spectral_kurtosis(*cc, lower_threshold, upper_threshold);
+    }
+    return fil_data;
 }
 
 observation_target
@@ -53,7 +63,6 @@ bliss::flag_spectral_kurtosis(observation_target observations, float lower_thres
 }
 
 cadence bliss::flag_spectral_kurtosis(cadence observations, float lower_threshold, float upper_threshold) {
-    // TODO: it's probably unexpected that this would
     for (auto &observation : observations._observations) {
         observation = flag_spectral_kurtosis(observation, lower_threshold, upper_threshold);
     }

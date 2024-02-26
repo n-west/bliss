@@ -18,67 +18,88 @@ using namespace nb::literals;
 
 void bind_pyflaggers(nb::module_ m) {
 
+      // Spectral Kurtosis
     m.def("flag_spectral_kurtosis",
-          nb::overload_cast<bliss::filterbank_data, float, float>(&bliss::flag_spectral_kurtosis),
-          "filterbank_data"_a,
+          nb::overload_cast<bliss::coarse_channel, float, float>(&bliss::flag_spectral_kurtosis),
+          "cc_data"_a,
           "lower_threshold"_a,
           "upper_threshold"_a,
-          "return a masked copy of filterbank_data where estimate_spectral_kurtosis indicates non-gaussian samples");
+          "return a masked copy of scan where estimate_spectral_kurtosis indicates non-gaussian samples");
+
+    m.def("flag_spectral_kurtosis",
+          nb::overload_cast<bliss::scan, float, float>(&bliss::flag_spectral_kurtosis),
+          "scan"_a,
+          "lower_threshold"_a,
+          "upper_threshold"_a,
+          "return a masked copy of scan where estimate_spectral_kurtosis indicates non-gaussian samples");
 
     m.def("flag_spectral_kurtosis",
           nb::overload_cast<bliss::observation_target, float, float>(&bliss::flag_spectral_kurtosis),
-          "filterbank_data"_a,
+          "observation"_a,
           "lower_threshold"_a,
           "upper_threshold"_a,
-          "return an observation target where all filterbank_data have non-gaussian samples flagged by spectral "
+          "return an observation target where all scan have non-gaussian samples flagged by spectral "
           "kurtosis");
 
     m.def("flag_spectral_kurtosis",
           nb::overload_cast<bliss::cadence, float, float>(&bliss::flag_spectral_kurtosis),
-          "filterbank_data"_a,
+          "cadence"_a,
           "lower_threshold"_a,
           "upper_threshold"_a,
           "return a cadence with non-gaussian samples are flagged");
 
+      // Rolloff
     m.def("flag_filter_rolloff",
-          nb::overload_cast<bliss::filterbank_data, float>(&bliss::flag_filter_rolloff),
-          "filterbank_data"_a,
+          nb::overload_cast<bliss::coarse_channel, float>(&bliss::flag_filter_rolloff),
+          "cc_data"_a,
           "rolloff_width"_a,
-          "return a masked copy of filterbank_data where the frequency edges are flagged according to rolloff width");
+          "return a masked copy of scan where the frequency edges are flagged according to rolloff width");
+
+    m.def("flag_filter_rolloff",
+          nb::overload_cast<bliss::scan, float>(&bliss::flag_filter_rolloff),
+          "scan"_a,
+          "rolloff_width"_a,
+          "return a masked copy of scan where the frequency edges are flagged according to rolloff width");
 
     m.def("flag_filter_rolloff",
           nb::overload_cast<bliss::observation_target, float>(&bliss::flag_filter_rolloff),
-          "filterbank_data"_a,
+          "observation"_a,
           "rolloff_width"_a,
-          "return a masked copy of filterbank_data where the frequency edges are flagged according to rolloff width");
+          "return a masked copy of scan where the frequency edges are flagged according to rolloff width");
 
     m.def("flag_filter_rolloff",
           nb::overload_cast<bliss::cadence, float>(&bliss::flag_filter_rolloff),
-          "filterbank_data"_a,
+          "cadence"_a,
           "rolloff_width"_a,
-          "return a masked copy of filterbank_data where the frequency edges are flagged according to rolloff width");
+          "return a masked copy of scan where the frequency edges are flagged according to rolloff width");
 
+      // Magnitude
     m.def("flag_magnitude",
           nb::overload_cast<const bland::ndarray &, float>(&bliss::flag_magnitude),
-          "filterbank_data"_a,
+          "scan"_a,
           "threshold"_a,
-          "return a masked copy of filterbank_data where magnitude exceeds the mean by given sigma");
+          "return a masked copy of scan where magnitude exceeds the mean by given sigma");
 
     m.def("flag_magnitude",
-          nb::overload_cast<bliss::filterbank_data, float>(&bliss::flag_magnitude),
-          "filterbank_data"_a,
-          "threshold"_a,
-          "return a masked copy of filterbank_data where magnitude exceeds the mean by given sigma");
+          nb::overload_cast<bliss::coarse_channel>(&bliss::flag_magnitude),
+          "cc_data"_a,
+          "return a masked copy of coarse_channel where magnitude exceeds the mean by given sigma");
 
     m.def("flag_magnitude",
-          nb::overload_cast<bliss::filterbank_data>(&bliss::flag_magnitude),
-          "filterbank_data"_a,
-          "return a masked copy of filterbank_data where magnitude exceeds the mean by given sigma");
+          nb::overload_cast<bliss::coarse_channel, float>(&bliss::flag_magnitude),
+          "cc_data"_a,
+          "threshold"_a,
+          "return a masked copy of coarse_channel where magnitude exceeds the mean by given sigma");
+
+    m.def("flag_magnitude",
+          nb::overload_cast<bliss::scan>(&bliss::flag_magnitude),
+          "scan"_a,
+          "return a masked copy of scan where magnitude exceeds the mean by given sigma");
 
     m.def("flag_magnitude",
           nb::overload_cast<bliss::observation_target>(&bliss::flag_magnitude),
           "observation"_a,
-          "return a masked copy of filterbank_data where magnitude exceeds the mean by given sigma");
+          "return a masked copy of scan where magnitude exceeds the mean by given sigma");
 
     m.def("flag_magnitude",
           nb::overload_cast<bliss::cadence>(&bliss::flag_magnitude),
@@ -117,34 +138,4 @@ void bind_pyflaggers(nb::module_ m) {
             })
             ;
 
- // This is the format of pickling nb enum expects:
- /*
- static PyObject *nb_enum_new(PyTypeObject *subtype, PyObject *args, PyObject *kwds) {
-    PyObject *arg;
-
-    if (kwds) {
-        printf("kwds evaluated to true\n");
-    }
-    if (kwds || NB_TUPLE_GET_SIZE(args) != 1) {
-        printf("NB_TUPLE_GET_SIZE(args) %zi\n", NB_TUPLE_GET_SIZE(args));
-        goto error;
-    }
-
-    arg = NB_TUPLE_GET_ITEM(args, 0);
-    if (PyLong_Check(arg)) {
-        enum_supplement &supp = nb_enum_supplement(subtype);
-        if (!supp.entries)
-            goto error;
-
-        PyObject *item = PyDict_GetItem(supp.entries, arg);
-        if (item && PyTuple_CheckExact(item) && NB_TUPLE_GET_SIZE(item) == 3) {
-            item = NB_TUPLE_GET_ITEM(item, 2);
-            Py_INCREF(item);
-            return item;
-        }
-    } else if (Py_TYPE(arg) == subtype) {
-        Py_INCREF(arg);
-        return arg;
-    }
- */
 }

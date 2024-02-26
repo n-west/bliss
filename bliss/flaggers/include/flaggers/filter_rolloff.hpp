@@ -1,9 +1,10 @@
 #pragma once
 
-#include <core/filterbank_data.hpp>
+#include <core/scan.hpp>
 #include <core/cadence.hpp>
 
 namespace bliss {
+
 /**
  * Flag the frequency edges of give filterbank data
  *
@@ -14,7 +15,9 @@ namespace bliss {
  * input mask:  o o o o o o o o o o
  * output mask: x x o o o o o o x x
  */
-filterbank_data flag_filter_rolloff(filterbank_data fb_data, float rolloff_width);
+coarse_channel flag_filter_rolloff(coarse_channel cc_data, float rolloff_width);
+
+scan flag_filter_rolloff(scan fb_data, float rolloff_width);
 
 observation_target flag_filter_rolloff(observation_target observations, float rolloff_width);
 

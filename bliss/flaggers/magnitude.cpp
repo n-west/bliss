@@ -11,25 +11,48 @@ bland::ndarray bliss::flag_magnitude(const bland::ndarray &data, float threshold
     return magnitude_mask;
 }
 
+
 /**
  * return a mask with flags set for grid elements which have very large magnitudes
  * 
 */
-filterbank_data bliss::flag_magnitude(filterbank_data fb_data, float threshold) {
-    auto magnitude_mask = flag_magnitude(fb_data.data(), threshold);
+coarse_channel bliss::flag_magnitude(coarse_channel cc_data, float threshold) {
+    auto magnitude_mask = flag_magnitude(cc_data.data(), threshold);
 
-    auto &mask = fb_data.mask();
+    auto mask = cc_data.mask();
     mask = mask + magnitude_mask;
-
-    return fb_data;
+    cc_data.set_mask(mask);
+    return cc_data;
 }
 
-filterbank_data bliss::flag_magnitude(filterbank_data fb_data) {
-    auto data = fb_data.data();
+coarse_channel bliss::flag_magnitude(coarse_channel cc_data) {
+    auto data = cc_data.data();
 
     auto mean = bland::mean(data).scalarize<float>();
     auto stddev = bland::stddev(data).scalarize<float>();
-    return flag_magnitude(fb_data, mean + 10*stddev);
+    return flag_magnitude(cc_data, mean + 10*stddev);
+}
+
+/**
+ * return a mask with flags set for grid elements which have very large magnitudes
+ * 
+*/
+scan bliss::flag_magnitude(scan fil_data, float threshold) {
+    auto number_coarse_channels = fil_data.get_number_coarse_channels();
+    for (auto cc_index = 0; cc_index < number_coarse_channels; ++cc_index) {
+        auto cc = fil_data.get_coarse_channel(cc_index);
+        *cc = flag_magnitude(*cc, threshold);
+    }
+    return fil_data;
+}
+
+scan bliss::flag_magnitude(scan fil_data) {
+    auto number_coarse_channels = fil_data.get_number_coarse_channels();
+    for (auto cc_index = 0; cc_index < number_coarse_channels; ++cc_index) {
+        auto cc = fil_data.get_coarse_channel(cc_index);
+        *cc = flag_magnitude(*cc);
+    }
+    return fil_data;
 }
 
 observation_target bliss::flag_magnitude(observation_target observations, float threshold) {

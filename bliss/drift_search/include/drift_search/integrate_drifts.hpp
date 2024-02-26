@@ -3,10 +3,22 @@
 
 #include <bland/ndarray.hpp>
 #include <core/cadence.hpp>
-#include <core/filterbank_data.hpp>
 #include <core/scan.hpp>
 
 namespace bliss {
+
+struct frequency_drift_plane {
+        struct drift_rates {
+                int index_in_plane;
+                double drift_rate_Hz_per_sec=0.0F;
+                int desmeared_bins=1; // number of bins per spectra used to desmear
+        };
+
+        int64_t integration_steps; // slow-time steps passed through for a complete integration
+        std::vector<drift_rates> drift_rate_info; // info for each drift rate searched
+        bland::ndarray integrated_drifts;
+        // TODO: rfi info should belong here
+};
 
 /**
  * Methods to select bins along a linear track in time-frequency spectrum estimate.
@@ -35,7 +47,7 @@ namespace bliss {
  * TAYLOR_TREE: use a tree-based method equivalent to turbo_seti, seticore, and first published by
  * Taylor, J. H, "A Sensitive Method for Detecting Dispersed Radio Emission." 1974 Astron. Astrophys. Suppl.
  *
- * HOUSTIN: not implemented yet, but will follow Ken Houston's rules for rounding
+ * HOUSTON: not implemented yet, but will follow Ken Houston's rules for rounding
  */
 // enum class spectrum_sum_method {
 //     LINEAR_ROUND,
@@ -50,7 +62,10 @@ namespace bliss {
                                               integrate_drifts_options options = integrate_drifts_options{
                                                       .desmear = true});
 
-[[nodiscard]] scan integrate_drifts(scan                     fil_data,
+[[nodiscard]] coarse_channel
+integrate_drifts(coarse_channel cc_data, integrate_drifts_options options = integrate_drifts_options{.desmear = true});
+
+[[nodiscard]] scan integrate_drifts(scan                     scan_data,
                                     integrate_drifts_options options = integrate_drifts_options{.desmear = true});
 
 /**
