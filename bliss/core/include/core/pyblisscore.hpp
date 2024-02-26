@@ -101,10 +101,12 @@ void bind_pycore(nb::module_ m) {
             .def(nb::init<std::vector<bliss::scan>>())
             .def(nb::init<std::vector<std::string_view>>())
             .def_rw("scans", &bliss::observation_target::_scans)
+            .def("slice_observation_channels", &bliss::observation_target::slice_observation_channels, "start"_a=0, "count"_a=1)
             .def_rw("target_name", &bliss::observation_target::_target_name);
 
     nb::class_<bliss::cadence>(m, "cadence")
             .def(nb::init<std::vector<bliss::observation_target>>())
             .def(nb::init<std::vector<std::vector<std::string_view>>>())
+            .def("slice_cadence_channels", &bliss::cadence::slice_cadence_channels, "start"_a=0, "count"_a=1)
             .def_rw("observations", &bliss::cadence::_observations);
 }

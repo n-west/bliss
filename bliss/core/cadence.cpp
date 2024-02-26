@@ -44,7 +44,7 @@ bliss::observation_target::observation_target(std::vector<std::string_view> filt
 bliss::observation_target bliss::observation_target::slice_observation_channels(int start_channel, int count) {
     observation_target target_coarse_channel;
     for (auto &sc : _scans) {
-        target_coarse_channel._scans.push_back(sc.slice_observation_channels(start_channel, count));
+        target_coarse_channel._scans.push_back(sc.slice_scan_channels(start_channel, count));
     }
     return target_coarse_channel;
 }
