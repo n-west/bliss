@@ -276,7 +276,7 @@ std::list<hit> bliss::scan::hits() {
     return all_hits;
 }
 
-bliss::scan bliss::scan::extract_coarse_channels(int start_channel, int count) {
+bliss::scan bliss::scan::slice_scan_channels(int start_channel, int count) {
     auto sliced_scan = *this;
 
     // what are implications of negative numbers here?
@@ -286,11 +286,7 @@ bliss::scan bliss::scan::extract_coarse_channels(int start_channel, int count) {
     int fine_channels_per_coarse = std::get<0>(_inferred_channelization);
 
     sliced_scan._fch1 = _fch1 + _foff * fine_channels_per_coarse * start_channel;
-
-    for (int channel_index = start_channel; channel_index < start_channel + count; ++channel_index) {
-        // This probably isn't really necessary since it's done behind the scenes
-        // _coarse_channels.insert({channel_index, get_coarse_channel(channel_index)});
-    }
+    sliced_scan._nchans = count * fine_channels_per_coarse;
 
     return sliced_scan;
 }

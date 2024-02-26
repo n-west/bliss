@@ -21,7 +21,7 @@ struct observation_target {
     /**
      * create a new observation_target consisting of a slice of coarse channels
     */
-    observation_target extract_coarse_channels(int start_channel=0, int count=1);
+    observation_target slice_observation_channels(int start_channel=0, int count=1);
 
     // Is it useful to capture which of ABACAD this is?
     std::vector<scan> _scans;
@@ -55,7 +55,7 @@ struct cadence {
     /**
      * create a new cadence consisting of a slice of coarse channels
     */
-    cadence extract_coarse_channels(int start_channel=0, int count=1);
+    cadence slice_cadence_channels(int start_channel=0, int count=1);
 
   protected:
 };

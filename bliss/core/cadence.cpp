@@ -41,10 +41,10 @@ bliss::observation_target::observation_target(std::vector<std::string_view> filt
     _target_name = extract_source_name_from_scans(_scans);
 }
 
-bliss::observation_target bliss::observation_target::extract_coarse_channels(int start_channel, int count) {
+bliss::observation_target bliss::observation_target::slice_observation_channels(int start_channel, int count) {
     observation_target target_coarse_channel;
     for (auto &sc : _scans) {
-        target_coarse_channel._scans.push_back(sc.extract_coarse_channels(start_channel, count));
+        target_coarse_channel._scans.push_back(sc.slice_observation_channels(start_channel, count));
     }
     return target_coarse_channel;
 }
@@ -57,10 +57,10 @@ bliss::cadence::cadence(std::vector<std::vector<std::string_view>> observations)
     }
 }
 
-bliss::cadence bliss::cadence::extract_coarse_channels(int start_channel, int count) {
+bliss::cadence bliss::cadence::slice_cadence_channels(int start_channel, int count) {
     cadence cadence_coarse_channel;
     for (auto &obs : _observations) {
-        cadence_coarse_channel._observations.push_back(obs.extract_coarse_channels(start_channel, count));
+        cadence_coarse_channel._observations.push_back(obs.slice_observation_channels(start_channel, count));
     }
     return cadence_coarse_channel;
 }
