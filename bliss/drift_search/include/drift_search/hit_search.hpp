@@ -16,6 +16,8 @@ using rfi       = std::map<flag_values, uint8_t>; // TODO: not so elegant, but O
 struct component {
     std::vector<nd_coords> locations;
     float                  max_integration = std::numeric_limits<float>::lowest();
+    // float                  max_snr; // it might be more general to save off the noise est. of this component
+    float                  desmeared_noise;
     rfi                    rfi_counts;
     nd_coords              index_max;
 };
@@ -30,6 +32,11 @@ struct component {
   * We have incoherently integrated (with mean) l bins, so adjust the noise power by sqrt(l)
  */
 float compute_signal_threshold(const noise_stats &noise_stats, int64_t integration_length, float snr_threshold);
+
+std::vector<std::pair<float, float>> compute_noise_and_snr_thresholds(const noise_stats   &noise_stats,
+                                            int64_t                                        integration_length,
+                                            std::vector<frequency_drift_plane::drift_rate> drift_rates,
+                                            float                                          snr_threshold);
 
 /**
  * Return a binary mask (dtype uint8) when doppler spectrum values fall above

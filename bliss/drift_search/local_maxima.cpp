@@ -27,17 +27,15 @@ struct stride_helper {
     }
 };
 
-// TODO: rename this to dedrifted_coarse_channel
-std::vector<component> bliss::find_local_maxima_above_threshold(coarse_channel        &dedrifted_spectrum,
+std::vector<component> bliss::find_local_maxima_above_threshold(coarse_channel        &dedrifted_coarse_channel,
                                                                 float                  snr_threshold,
                                                                 std::vector<nd_coords> max_neighborhood) {
-    auto noise_stats = dedrifted_spectrum.noise_estimate();
-    // run through a max filter, what's the best way to establish neighborhood?
+    auto noise_stats = dedrifted_coarse_channel.noise_estimate();
     
-    auto drift_plane = dedrifted_spectrum.integrated_drift_plane();
+    auto drift_plane = dedrifted_coarse_channel.integrated_drift_plane();
     auto integration_length = drift_plane._integration_steps;
 
-    auto hard_threshold = compute_signal_threshold(noise_stats, integration_length, snr_threshold);
+    const auto noise_and_thresholds_per_drift = compute_noise_and_snr_thresholds(noise_stats, integration_length, drift_plane._drift_rate_info, snr_threshold);
 
     std::vector<component> maxima;
     
@@ -79,6 +77,7 @@ std::vector<component> bliss::find_local_maxima_above_threshold(coarse_channel  
 
             // 3. Check that we're above our search threshold
             auto candidate_maxima_val = doppler_spectrum_data[linear_doppler_spectrum_index];
+            auto hard_threshold = noise_and_thresholds_per_drift[curr_coord[0]].first;
             if (candidate_maxima_val > hard_threshold) {
 
                 // 4. Check if it is greater than surrounding neighborhood
@@ -113,6 +112,8 @@ std::vector<component> bliss::find_local_maxima_above_threshold(coarse_channel  
                     c.index_max = curr_coord;
                     c.locations.push_back(curr_coord);
                     c.max_integration = candidate_maxima_val;
+                    c.desmeared_noise = noise_and_thresholds_per_drift[curr_coord[0]].second;
+
                     c.rfi_counts[flag_values::low_spectral_kurtosis] =
                             drift_plane._dedrifted_rfi.low_spectral_kurtosis.scalarize<uint8_t>(curr_coord);
                     c.rfi_counts[flag_values::high_spectral_kurtosis] =

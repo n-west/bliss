@@ -110,10 +110,10 @@ std::vector<component> bliss::find_components_in_binary_mask(const bland::ndarra
     return components;
 }
 
-std::vector<component> bliss::find_components_above_threshold(coarse_channel        &dedrifted_spectrum,
+std::vector<component> bliss::find_components_above_threshold(coarse_channel        &dedrifted_coarse_channel,
                                                               float                  snr_threshold,
                                                               std::vector<nd_coords> neighborhood) {
-    auto noise_stats = dedrifted_spectrum.noise_estimate();
+    auto noise_stats = dedrifted_coarse_channel.noise_estimate();
 
     if (neighborhood.empty()) {
         neighborhood = {
@@ -124,9 +124,9 @@ std::vector<component> bliss::find_components_above_threshold(coarse_channel    
         };
     }
 
-    auto drift_plane = dedrifted_spectrum.integrated_drift_plane();
+    auto drift_plane = dedrifted_coarse_channel.integrated_drift_plane();
     auto integration_length = drift_plane._integration_steps;
-    auto hard_threshold = compute_signal_threshold(noise_stats, integration_length, snr_threshold);
+    auto noise_and_thresholds_per_drift = compute_noise_and_snr_thresholds(noise_stats, integration_length, drift_plane._drift_rate_info, snr_threshold);
 
     std::vector<component> components;
 
@@ -158,6 +158,7 @@ std::vector<component> bliss::find_components_above_threshold(coarse_channel    
         auto visited_linear          = visited_strider.to_linear_offset(curr_coord);
         auto doppler_spectrum_linear = doppler_spectrum_strider.to_linear_offset(curr_coord);
         // If not visited and signal is above threshold...
+        auto hard_threshold = noise_and_thresholds_per_drift[curr_coord[0]].first;
         if (visited_data[visited_linear] == 0 && doppler_spectrum_data[doppler_spectrum_linear] > hard_threshold) {
             coord_queue.push(curr_coord);
             component this_component;
@@ -185,6 +186,8 @@ std::vector<component> bliss::find_components_above_threshold(coarse_channel    
                     // Track some stats for this cluster like the maximum value and where it is
                     if (doppler_spectrum_data[this_coord_doppler_spectrum_linear] > this_component.max_integration) {
                         this_component.max_integration = doppler_spectrum_data[this_coord_doppler_spectrum_linear];
+                        this_component.desmeared_noise = noise_and_thresholds_per_drift[curr_coord[0]].second;
+
                         this_component.index_max       = idx;
                         this_component.rfi_counts[flag_values::low_spectral_kurtosis] =
                                 drift_plane._dedrifted_rfi.low_spectral_kurtosis.scalarize<uint8_t>(curr_coord);
