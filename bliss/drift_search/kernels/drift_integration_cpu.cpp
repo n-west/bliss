@@ -65,6 +65,7 @@ bliss::integrate_linear_rounded_bins_cpu(const bland::ndarray    &spectrum_grid,
             desmear_bandwidth = std::max(1.0f, smeared_channels);
             rate.desmeared_bins = smeared_channels;
         }
+        drift_rate_info.push_back(rate);
 
         for (int t = 0; t < time_steps; ++t) {
             int freq_offset_at_time  = std::round(m * t);

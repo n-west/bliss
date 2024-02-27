@@ -64,7 +64,7 @@ std::list<hit> bliss::hit_search(coarse_channel dedrifted_scan, hit_search_optio
         // auto drift_freq_span_bins = dedrifted_scan.dedoppler_options().low_rate +
         //                             this_hit.rate_index * dedrifted_scan.dedoppler_options().rate_step_size;
         // float drift_span_freq_Hz = drift_freq_span_bins * 1e6 * dedrifted_scan.foff();
-        this_hit.drift_rate_Hz_per_sec =  dedrifted_plane._drift_rate_info[this_hit.rate_index].drift_rate_slope * dedrifted_scan.foff() / dedrifted_scan.tsamp();
+        this_hit.drift_rate_Hz_per_sec =  dedrifted_plane._drift_rate_info[this_hit.rate_index].drift_rate_slope * dedrifted_scan.foff()*1e6 / dedrifted_scan.tsamp();
 
 
         // auto drift_span_time_bins = integration_length;
