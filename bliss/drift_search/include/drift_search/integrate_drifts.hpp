@@ -7,18 +7,6 @@
 
 namespace bliss {
 
-struct frequency_drift_plane {
-        struct drift_rates {
-                int index_in_plane;
-                double drift_rate_Hz_per_sec=0.0F;
-                int desmeared_bins=1; // number of bins per spectra used to desmear
-        };
-
-        int64_t integration_steps; // slow-time steps passed through for a complete integration
-        std::vector<drift_rates> drift_rate_info; // info for each drift rate searched
-        bland::ndarray integrated_drifts;
-        // TODO: rfi info should belong here
-};
 
 /**
  * Methods to select bins along a linear track in time-frequency spectrum estimate.
@@ -71,7 +59,7 @@ integrate_drifts(coarse_channel cc_data, integrate_drifts_options options = inte
 /**
  * Integrate energy through linear tracks in the scans of given observation target
  *
- * The returned observation_target is a copy of the given observation_target with valid dedrifted_spectrum
+ * The returned observation_target is a copy of the given observation_target with valid dedrifted_coarse_channel
  * fields of each scan.
  */
 [[nodiscard]] observation_target integrate_drifts(observation_target       target,
@@ -81,7 +69,7 @@ integrate_drifts(coarse_channel cc_data, integrate_drifts_options options = inte
 /**
  * Integrate energy through linear tracks in the scans of the given cadence
  *
- * The returned cadence is a copy of the given cadence with valid dedrifted_spectrum for each scan
+ * The returned cadence is a copy of the given cadence with valid dedrifted_coarse_channel for each scan
  * in each observation target.
  */
 [[nodiscard]] cadence integrate_drifts(cadence                  observations,

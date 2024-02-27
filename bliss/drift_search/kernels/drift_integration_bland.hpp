@@ -1,6 +1,7 @@
 #pragma once
 
 #include <core/integrate_drifts_options.hpp>
+#include <core/frequency_drift_plane.hpp>
 
 #include <bland/ndarray.hpp>
 
@@ -20,11 +21,11 @@ namespace bliss {
  * drifts will have frequency spans of 0, 1, 2, 3, 4, 5, 6, 7 giving 8 slopes of
  * value 0/7, 1/7, 2/7, 3/7, 4/7, 5/7, 6/7, 7/7.
  */
-[[nodiscard]] std::tuple<bland::ndarray, integrated_flags>
-integrate_linear_rounded_bins(const bland::ndarray    &spectrum_grid,
+[[nodiscard]] frequency_drift_plane
+integrate_linear_rounded_bins_bland(const bland::ndarray    &spectrum_grid,
                               const bland::ndarray    &rfi_mask,
                               integrate_drifts_options options);
 
-bland::ndarray integrate_linear_rounded_bins(const bland::ndarray &spectrum_grid, integrate_drifts_options options);
+bland::ndarray integrate_linear_rounded_bins_bland(const bland::ndarray &spectrum_grid, integrate_drifts_options options);
 
 } // namespace bliss

@@ -1,6 +1,8 @@
 
 #include "drift_integration_cpu.hpp"
 
+#include "core/frequency_drift_plane.hpp"
+
 #include <fmt/core.h>
 #include <fmt/format.h>
 
@@ -8,7 +10,7 @@
 
 using namespace bliss;
 
-[[nodiscard]] std::tuple<bland::ndarray, integrated_flags>
+[[nodiscard]] frequency_drift_plane
 bliss::integrate_linear_rounded_bins_cpu(const bland::ndarray    &spectrum_grid,
                                          const bland::ndarray    &rfi_mask,
                                          integrate_drifts_options options) {
@@ -21,6 +23,7 @@ bliss::integrate_linear_rounded_bins_cpu(const bland::ndarray    &spectrum_grid,
     auto rfi_shape   = rfi_mask.shape();
 
     auto number_drifts = (options.high_rate - options.low_rate) / options.rate_step_size;
+    std::vector<frequency_drift_plane::drift_rate> drift_rate_info;
 
     auto time_steps      = spectrum_grid.size(0);
     auto number_channels = spectrum_grid.size(1);
@@ -48,16 +51,21 @@ bliss::integrate_linear_rounded_bins_cpu(const bland::ndarray    &spectrum_grid,
     for (int drift_index = 0; drift_index < number_drifts; ++drift_index) {
         // Drift in number of channels over the entire time extent
         auto drift_channels = options.low_rate + drift_index * options.rate_step_size;
+        frequency_drift_plane::drift_rate rate;
+        rate.index_in_plane = drift_index;
 
         // The actual slope of that drift (number channels / time)
         auto m = static_cast<float>(drift_channels) / static_cast<float>(maximum_drift_span);
+        rate.drift_rate_slope = m;
         // If a single time step crosses more than 1 channel, there is smearing over multiple channels
         auto smeared_channels = std::round(std::abs(m));
 
         int desmear_bandwidth = 1;
         if (options.desmear) {
             desmear_bandwidth = std::max(1.0f, smeared_channels);
+            rate.desmeared_bins = smeared_channels;
         }
+        drift_rate_info.push_back(rate);
 
         for (int t = 0; t < time_steps; ++t) {
             int freq_offset_at_time  = std::round(m * t);
@@ -166,13 +174,13 @@ bliss::integrate_linear_rounded_bins_cpu(const bland::ndarray    &spectrum_grid,
     }
 
     // normalize back by integration length
-    return std::make_tuple(drift_plane / time_steps, rfi_in_drift);
+    frequency_drift_plane freq_drift(drift_plane / time_steps, rfi_in_drift, time_steps, drift_rate_info);
+    return freq_drift;
 }
 
 bland::ndarray bliss::integrate_linear_rounded_bins_cpu(const bland::ndarray    &spectrum_grid,
                                                         integrate_drifts_options options) {
     auto dummy_rfi_mask = bland::ndarray({1, 1});
-    auto [drift_plane, dummy_rfi_collection] =
-            integrate_linear_rounded_bins_cpu(spectrum_grid, dummy_rfi_mask, options);
-    return drift_plane;
+    auto drift_plane = integrate_linear_rounded_bins_cpu(spectrum_grid, dummy_rfi_mask, options);
+    return drift_plane._integrated_drifts;
 }

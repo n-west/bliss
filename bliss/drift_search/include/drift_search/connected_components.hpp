@@ -21,6 +21,6 @@ std::vector<component> find_components_in_binary_mask(const bland::ndarray &thre
  * Given noise stats do a combined threshold and cluster of nearby components
  */
 std::vector<component>
-find_components_above_threshold(coarse_channel &dedrifted_spectrum, float snr_threshold, std::vector<nd_coords> neighborhood);
+find_components_above_threshold(coarse_channel &dedrifted_coarse_channel, float snr_threshold, std::vector<nd_coords> neighborhood);
 
 } // namespace bliss

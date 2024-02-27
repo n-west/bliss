@@ -40,8 +40,6 @@ coarse_channel::coarse_channel(bland::ndarray data,
         _data_type(data_type),
         _az_start(az_start),
         _za_start(za_start) {
-    // TODO: compute/extract this somewhere more authoritative
-    _integration_length = data.size(0);
 }
 
 bland::ndarray bliss::coarse_channel::data() const {
@@ -181,54 +179,10 @@ double bliss::coarse_channel::za_start() const {
 //     _za_start = za_start;
 // }
 
-bool bliss::coarse_channel::has_doppler_spectrum() {
-    return _dedrifted_spectrum.has_value();
+frequency_drift_plane bliss::coarse_channel::integrated_drift_plane() {
+    return _integrated_drift_plane.value();
 }
 
-bland::ndarray &bliss::coarse_channel::doppler_spectrum() {
-    if (_dedrifted_spectrum.has_value()) {
-        return _dedrifted_spectrum.value();
-    } else {
-        throw std::runtime_error("dedrifted_spectrum: have not computed dedrifted spectrum yet");
-    }
-}
-
-void bliss::coarse_channel::doppler_spectrum(bland::ndarray doppler_spectrum) {
-    _dedrifted_spectrum = doppler_spectrum;
-}
-
-integrated_flags &bliss::coarse_channel::doppler_flags() {
-    if (_dedrifted_rfi.has_value()) {
-        return _dedrifted_rfi.value();
-    } else {
-        throw std::runtime_error("doppler_flags (getter): have not computed dedrifted flags");
-    }
-}
-
-void bliss::coarse_channel::doppler_flags(integrated_flags doppler_flags) {
-    _dedrifted_rfi = doppler_flags;
-}
-
-integrate_drifts_options bliss::coarse_channel::dedoppler_options() {
-    if (_drift_parameters.has_value()) {
-        return _drift_parameters.value();
-    } else {
-        throw std::runtime_error("dedoppler_options (getter): have not computed dedrifted spectrum yet");
-    }
-}
-
-void bliss::coarse_channel::dedoppler_options(integrate_drifts_options dedoppler_options) {
-    _drift_parameters = dedoppler_options;
-}
-
-int64_t bliss::coarse_channel::integration_length() {
-    if (_integration_length.has_value()) {
-        return _integration_length.value();
-    } else {
-        throw std::runtime_error("_integration_length: have not computed dedrifted spectrum yet");
-    }
-}
-
-void bliss::coarse_channel::integration_length(int64_t length) {
-    _integration_length = length;
+void bliss::coarse_channel::set_integrated_drift_plane(frequency_drift_plane integrated_plane) {
+    _integrated_drift_plane = integrated_plane;
 }
