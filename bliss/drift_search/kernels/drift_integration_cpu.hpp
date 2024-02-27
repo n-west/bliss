@@ -1,6 +1,7 @@
 #pragma once
 
 #include <core/integrate_drifts_options.hpp>
+#include <core/frequency_drift_plane.hpp>
 
 #include <bland/ndarray.hpp>
 
@@ -12,7 +13,7 @@ namespace bliss {
  * linear-rounded integration kernel implemented for cpu
 */
 constexpr bool collect_rfi = true;
-[[nodiscard]] std::tuple<bland::ndarray, integrated_flags>
+[[nodiscard]] frequency_drift_plane
 integrate_linear_rounded_bins_cpu(const bland::ndarray    &spectrum_grid,
                                   const bland::ndarray    &rfi_mask,
                                   integrate_drifts_options options);

@@ -4,6 +4,7 @@
 
 #include "noise_power.hpp"
 #include "integrate_drifts_options.hpp"
+#include "frequency_drift_plane.hpp"
 #include "hit.hpp"
 
 #include <list>
@@ -38,15 +39,8 @@ struct coarse_channel {
     bland::ndarray mask() const;
     void           set_mask(bland::ndarray new_mask);
 
-    bool                    has_doppler_spectrum();
-    bland::ndarray          &doppler_spectrum();
-    void                     doppler_spectrum(bland::ndarray doppler_spectrum);
-    integrated_flags        &doppler_flags();
-    void                     doppler_flags(integrated_flags doppler_flags);
-    integrate_drifts_options dedoppler_options();
-    void                     dedoppler_options(integrate_drifts_options dedoppler_options);
-    int64_t                  integration_length();
-    void                     integration_length(int64_t);
+    frequency_drift_plane integrated_drift_plane();
+    void set_integrated_drift_plane(frequency_drift_plane integrated_plane);
 
     noise_stats noise_estimate() const;
     void        set_noise_estimate(noise_stats estimate);
@@ -109,9 +103,14 @@ struct coarse_channel {
 
     std::optional<noise_stats> _noise_stats;
 
-    std::optional<int64_t>                  _integration_length;
+    std::optional<frequency_drift_plane> _integrated_drift_plane;
+
     std::optional<bland::ndarray>           _dedrifted_spectrum;
     std::optional<integrated_flags>         _dedrifted_rfi;
+
+
+    // TODO: I do not think we need to carry this around anymore since we'll track everything needed
+    // in the frequency_drift_plane object
     std::optional<integrate_drifts_options> _drift_parameters;
 
     std::optional<std::list<hit>> _hits;

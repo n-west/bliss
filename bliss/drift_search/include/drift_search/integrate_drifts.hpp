@@ -7,18 +7,6 @@
 
 namespace bliss {
 
-struct frequency_drift_plane {
-        struct drift_rates {
-                int index_in_plane;
-                double drift_rate_Hz_per_sec=0.0F;
-                int desmeared_bins=1; // number of bins per spectra used to desmear
-        };
-
-        int64_t integration_steps; // slow-time steps passed through for a complete integration
-        std::vector<drift_rates> drift_rate_info; // info for each drift rate searched
-        bland::ndarray integrated_drifts;
-        // TODO: rfi info should belong here
-};
 
 /**
  * Methods to select bins along a linear track in time-frequency spectrum estimate.

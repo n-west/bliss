@@ -124,11 +124,13 @@ std::vector<component> bliss::find_components_above_threshold(coarse_channel    
         };
     }
 
-    auto hard_threshold = compute_signal_threshold(noise_stats, dedrifted_spectrum.integration_length(), snr_threshold);
+    auto drift_plane = dedrifted_spectrum.integrated_drift_plane();
+    auto integration_length = drift_plane._integration_steps;
+    auto hard_threshold = compute_signal_threshold(noise_stats, integration_length, snr_threshold);
 
     std::vector<component> components;
 
-    auto &doppler_spectrum = dedrifted_spectrum.doppler_spectrum();
+    auto doppler_spectrum = drift_plane._integrated_drifts;
     if (doppler_spectrum.dtype() != bland::ndarray::datatype::float32) {
         throw std::runtime_error("find_components_above_threshold: dedrifted doppler spectrum was not float. Only cpu "
                                  "float is supported right now");
@@ -137,7 +139,7 @@ std::vector<component> bliss::find_components_above_threshold(coarse_channel    
     auto          doppler_spectrum_strides = doppler_spectrum.strides();
     stride_helper doppler_spectrum_strider(doppler_spectrum.shape(), doppler_spectrum_strides);
 
-    auto          visited         = bland::ndarray(dedrifted_spectrum.doppler_spectrum().shape(),
+    auto          visited         = bland::ndarray(doppler_spectrum.shape(),
                                   0,
                                   bland::ndarray::datatype::uint8,
                                   bland::ndarray::dev::cpu);
@@ -185,15 +187,15 @@ std::vector<component> bliss::find_components_above_threshold(coarse_channel    
                         this_component.max_integration = doppler_spectrum_data[this_coord_doppler_spectrum_linear];
                         this_component.index_max       = idx;
                         this_component.rfi_counts[flag_values::low_spectral_kurtosis] =
-                                dedrifted_spectrum.doppler_flags().low_spectral_kurtosis.scalarize<uint8_t>(curr_coord);
+                                drift_plane._dedrifted_rfi.low_spectral_kurtosis.scalarize<uint8_t>(curr_coord);
                         this_component.rfi_counts[flag_values::high_spectral_kurtosis] =
-                                dedrifted_spectrum.doppler_flags().high_spectral_kurtosis.scalarize<uint8_t>(curr_coord);
+                                drift_plane._dedrifted_rfi.high_spectral_kurtosis.scalarize<uint8_t>(curr_coord);
                         this_component.rfi_counts[flag_values::filter_rolloff] =
-                                dedrifted_spectrum.doppler_flags().filter_rolloff.scalarize<uint8_t>(curr_coord);
+                                drift_plane._dedrifted_rfi.filter_rolloff.scalarize<uint8_t>(curr_coord);
                         this_component.rfi_counts[flag_values::magnitude] =
-                                dedrifted_spectrum.doppler_flags().magnitude.scalarize<uint8_t>(curr_coord);
+                                drift_plane._dedrifted_rfi.magnitude.scalarize<uint8_t>(curr_coord);
                         this_component.rfi_counts[flag_values::sigma_clip] =
-                                dedrifted_spectrum.doppler_flags().sigma_clip.scalarize<uint8_t>(curr_coord);
+                                drift_plane._dedrifted_rfi.sigma_clip.scalarize<uint8_t>(curr_coord);
                     }
                     // Then add all of the neighbors as candidates
                     for (auto &neighbor_offset : neighborhood) {

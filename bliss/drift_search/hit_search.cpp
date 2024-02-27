@@ -45,6 +45,9 @@ std::list<hit> bliss::hit_search(coarse_channel dedrifted_scan, hit_search_optio
         components = find_local_maxima_above_threshold(dedrifted_scan, options.snr_threshold, options.neighborhood);
     }
     auto noise_stats = dedrifted_scan.noise_estimate();
+    auto dedrifted_plane = dedrifted_scan.integrated_drift_plane();
+    auto integration_length = dedrifted_plane._integration_steps;
+
 
     // Do we need a "component to hit" for each type of search?
     for (const auto &c : components) {
@@ -58,17 +61,19 @@ std::list<hit> bliss::hit_search(coarse_channel dedrifted_scan, hit_search_optio
         auto freq_offset        = dedrifted_scan.foff() * this_hit.start_freq_index;
         this_hit.start_freq_MHz = dedrifted_scan.fch1() + freq_offset;
 
-        auto drift_freq_span_bins = dedrifted_scan.dedoppler_options().low_rate +
-                                    this_hit.rate_index * dedrifted_scan.dedoppler_options().rate_step_size;
-        float drift_span_freq_Hz = drift_freq_span_bins * 1e6 * dedrifted_scan.foff();
+        // auto drift_freq_span_bins = dedrifted_scan.dedoppler_options().low_rate +
+        //                             this_hit.rate_index * dedrifted_scan.dedoppler_options().rate_step_size;
+        // float drift_span_freq_Hz = drift_freq_span_bins * 1e6 * dedrifted_scan.foff();
+        this_hit.drift_rate_Hz_per_sec =  dedrifted_plane._drift_rate_info[this_hit.rate_index].drift_rate_slope * dedrifted_scan.foff() / dedrifted_scan.tsamp();
 
-        auto drift_span_time_bins = dedrifted_scan.integration_length();
-        auto drift_span_time_sec  = drift_span_time_bins * dedrifted_scan.tsamp();
 
-        this_hit.drift_rate_Hz_per_sec = drift_span_freq_Hz / drift_span_time_sec;
+        // auto drift_span_time_bins = integration_length;
+        // auto drift_span_time_sec  = drift_span_time_bins * dedrifted_scan.tsamp();
+
+        // this_hit.drift_rate_Hz_per_sec = drift_span_freq_Hz / drift_span_time_sec;
 
         auto signal_power = (c.max_integration - noise_stats.noise_floor());
-        auto noise_power  = (noise_stats.noise_power() / std::sqrt(dedrifted_scan.integration_length()));
+        auto noise_power  = (noise_stats.noise_power() / std::sqrt(integration_length));
         this_hit.power    = signal_power;
         this_hit.snr      = signal_power / noise_power;
 
@@ -98,7 +103,7 @@ std::list<hit> bliss::hit_search(coarse_channel dedrifted_scan, hit_search_optio
         freq_offset             = dedrifted_scan.foff() * center_bin;
         this_hit.start_freq_MHz = dedrifted_scan.fch1() + freq_offset;
         this_hit.start_time_sec = dedrifted_scan.tstart() * 24 * 60 * 60; // convert MJD to seconds since MJ
-        this_hit.duration_sec   = dedrifted_scan.tsamp() * dedrifted_scan.integration_length();
+        this_hit.duration_sec   = dedrifted_scan.tsamp() * integration_length;
         hits.push_back(this_hit);
     }
 

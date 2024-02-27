@@ -16,18 +16,15 @@ using namespace bliss;
 
 bland::ndarray bliss::integrate_drifts(const bland::ndarray &spectrum_grid, integrate_drifts_options options) {
 
-    auto drift_grid = integrate_linear_rounded_bins(spectrum_grid, options);
+    auto drift_grid = integrate_linear_rounded_bins_cpu(spectrum_grid, options);
 
     return drift_grid;
 }
 
 coarse_channel bliss::integrate_drifts(coarse_channel cc_data, integrate_drifts_options options) {
-    auto [drift_grid, drift_rfi] = integrate_linear_rounded_bins_cpu(cc_data.data(), cc_data.mask(), options);
-    // auto [drift_grid, drift_rfi] = integrate_linear_rounded_bins(fil_data.data(), fil_data.mask(), options);
-    cc_data.integration_length(cc_data.data().size(0)); // length is just the amount of time
-    cc_data.doppler_flags(drift_rfi);
-    cc_data.doppler_spectrum(drift_grid);
-    cc_data.dedoppler_options(options);
+    auto integrated_dedrift = integrate_linear_rounded_bins_cpu(cc_data.data(), cc_data.mask(), options);
+
+    cc_data.set_integrated_drift_plane(integrated_dedrift);
     return cc_data;
 }
 
@@ -41,25 +38,15 @@ scan bliss::integrate_drifts(scan scan_data, integrate_drifts_options options) {
 }
 
 observation_target bliss::integrate_drifts(observation_target target, integrate_drifts_options options) {
-    std::vector<std::thread> drift_threads;
     for (auto &target_scan : target._scans) {
-        drift_threads.emplace_back(
-                [&target_scan, &options]() { target_scan = integrate_drifts(target_scan, options); });
-    }
-    for (auto &t : drift_threads) {
-        t.join();
+        target_scan = integrate_drifts(target_scan, options);
     }
     return target;
 }
 
 cadence bliss::integrate_drifts(cadence observation, integrate_drifts_options options) {
-
-    std::vector<std::thread> drift_threads;
     for (auto &target : observation._observations) {
-        drift_threads.emplace_back([&target, &options]() { target = integrate_drifts(target, options); });
-    }
-    for (auto &t : drift_threads) {
-        t.join();
+        target = integrate_drifts(target, options);
     }
     return observation;
 }

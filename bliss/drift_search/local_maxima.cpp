@@ -33,12 +33,15 @@ std::vector<component> bliss::find_local_maxima_above_threshold(coarse_channel  
                                                                 std::vector<nd_coords> max_neighborhood) {
     auto noise_stats = dedrifted_spectrum.noise_estimate();
     // run through a max filter, what's the best way to establish neighborhood?
+    
+    auto drift_plane = dedrifted_spectrum.integrated_drift_plane();
+    auto integration_length = drift_plane._integration_steps;
 
-    auto hard_threshold = compute_signal_threshold(noise_stats, dedrifted_spectrum.integration_length(), snr_threshold);
+    auto hard_threshold = compute_signal_threshold(noise_stats, integration_length, snr_threshold);
 
     std::vector<component> maxima;
-
-    auto &doppler_spectrum = dedrifted_spectrum.doppler_spectrum();
+    
+    auto doppler_spectrum = drift_plane._integrated_drifts;
     if (doppler_spectrum.dtype() != bland::ndarray::datatype::float32) {
         throw std::runtime_error(
                 "find_local_maxima_above_threshold: dedrifted doppler spectrum was not float. Only cpu "
@@ -50,7 +53,7 @@ std::vector<component> bliss::find_local_maxima_above_threshold(coarse_channel  
 
     // Use 1 to mark visited, then we can potentially replace this creation with a mask of above thresh to speed things
     // up a bit
-    auto visited = bland::ndarray(dedrifted_spectrum.doppler_spectrum().shape(),
+    auto visited = bland::ndarray(doppler_spectrum.shape(),
                                   1,
                                   bland::ndarray::datatype::uint8,
                                   bland::ndarray::dev::cpu);
@@ -111,15 +114,15 @@ std::vector<component> bliss::find_local_maxima_above_threshold(coarse_channel  
                     c.locations.push_back(curr_coord);
                     c.max_integration = candidate_maxima_val;
                     c.rfi_counts[flag_values::low_spectral_kurtosis] =
-                            dedrifted_spectrum.doppler_flags().low_spectral_kurtosis.scalarize<uint8_t>(curr_coord);
+                            drift_plane._dedrifted_rfi.low_spectral_kurtosis.scalarize<uint8_t>(curr_coord);
                     c.rfi_counts[flag_values::high_spectral_kurtosis] =
-                            dedrifted_spectrum.doppler_flags().high_spectral_kurtosis.scalarize<uint8_t>(curr_coord);
+                            drift_plane._dedrifted_rfi.high_spectral_kurtosis.scalarize<uint8_t>(curr_coord);
                     c.rfi_counts[flag_values::filter_rolloff] =
-                            dedrifted_spectrum.doppler_flags().filter_rolloff.scalarize<uint8_t>(curr_coord);
+                            drift_plane._dedrifted_rfi.filter_rolloff.scalarize<uint8_t>(curr_coord);
                     c.rfi_counts[flag_values::magnitude] =
-                            dedrifted_spectrum.doppler_flags().magnitude.scalarize<uint8_t>(curr_coord);
+                            drift_plane._dedrifted_rfi.magnitude.scalarize<uint8_t>(curr_coord);
                     c.rfi_counts[flag_values::sigma_clip] =
-                            dedrifted_spectrum.doppler_flags().sigma_clip.scalarize<uint8_t>(curr_coord);
+                            drift_plane._dedrifted_rfi.sigma_clip.scalarize<uint8_t>(curr_coord);
 
                     // Wow, this very conceptually simple thing of adding a bandwidth estimate to local maxima hits
                     // wound up being some ugly code... rethink it
