@@ -19,6 +19,10 @@ using namespace nb::literals;
 
 void bind_pycore(nb::module_ m) {
 
+    nb::class_<bliss::frequency_drift_plane>(m, "frequency_drift_plane")
+        .def_ro("integrated_drifts", &bliss::frequency_drift_plane::_integrated_drifts)
+    ;
+
     nb::class_<bliss::coarse_channel>(m, "coarse_channel")
             .def_ro("data", &bliss::coarse_channel::_data)
             .def_ro("mask", &bliss::coarse_channel::_mask)
@@ -38,6 +42,7 @@ void bind_pycore(nb::module_ m) {
             .def_ro("tstart", &bliss::coarse_channel::_tstart)
             .def_ro("za_start", &bliss::coarse_channel::_za_start)
             .def_ro("noise_estimate", &bliss::coarse_channel::_noise_stats)
+            .def("integrated_drift_plane", &bliss::coarse_channel::integrated_drift_plane)
                 ;
 
     nb::class_<bliss::scan>(m, "scan")

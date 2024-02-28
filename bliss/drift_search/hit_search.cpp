@@ -88,7 +88,7 @@ std::list<hit> bliss::hit_search(coarse_channel dedrifted_scan, hit_search_optio
 
         // This is the unsmeared SNR
         // auto noise_power  = (noise_stats.noise_power() / std::sqrt(integration_length));
-        // this_hit.power    = signal_power;
+        this_hit.power    = signal_power;
         // this_hit.snr      = signal_power / noise_power;
         this_hit.snr      = signal_power / c.desmeared_noise;
 

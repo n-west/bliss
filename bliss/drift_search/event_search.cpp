@@ -176,14 +176,17 @@ std::vector<event> bliss::event_search(cadence cadence_with_hits) {
                 candidate_event.average_drift_rate_Hz_per_sec = 0;
                 candidate_event.average_power = 0;
                 candidate_event.average_snr = 0;
+                candidate_event.average_bandwidth = 0;
                 for (auto &hit_in_event : candidate_event.hits) {
                     candidate_event.average_drift_rate_Hz_per_sec += hit_in_event.drift_rate_Hz_per_sec;
                     candidate_event.average_power += hit_in_event.power;
                     candidate_event.average_snr += hit_in_event.snr;
+                    candidate_event.average_bandwidth += hit_in_event.bandwidth;
                 }
                 candidate_event.average_drift_rate_Hz_per_sec =
                         candidate_event.average_drift_rate_Hz_per_sec / candidate_event.hits.size();
                 candidate_event.average_power = candidate_event.average_power / candidate_event.hits.size();
+                candidate_event.average_bandwidth = candidate_event.average_bandwidth / candidate_event.hits.size();
                 candidate_event.average_snr   = candidate_event.average_snr / candidate_event.hits.size();
                 fmt::print("INFO: Average SNR of this candidate event is {} and drift is {}\n",
                            candidate_event.average_snr,
