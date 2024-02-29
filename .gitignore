@@ -1,5 +1,6 @@
 build/
 build-*/
+.py-build-cmake_cache/
 notes/
 notebooks/
 .vscode/

@@ -123,6 +123,10 @@ void bind_pybland(nb::module_ m) {
     });
 
 
+    m.def("square", [](nb::ndarray<> a) {
+        return bland::square(nb_to_bland(a));
+    });
+
     /**************
      * Statistical & Reduction ops
     **************/

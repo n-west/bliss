@@ -1,14 +1,15 @@
 #pragma once
 
-#include <fmt/format.h>
-#include <fmt/ranges.h>
 #include "bland/ndarray.hpp"
 #include "shape_helpers.hpp"
-#include <thrust/device_vector.h>
-#include <cuda_runtime.h>
 
 #include <numeric> // needed for accumulate
 #include <stdexcept>
+
+#include <thrust/device_vector.h>
+#include <cuda_runtime.h>
+
+#include <fmt/format.h>
 
 namespace bland {
 
@@ -31,7 +32,7 @@ elementwise_binary_op_cuda_impl(Out* out_data, int64_t* out_shape, int64_t* out_
     // Initialize nd index based on work ids. The last dim may not have enough work
     // for the entire grid, so have to check for wrap-around to other dimensions
     int64_t* nd_index = (int64_t*) malloc(ndim * sizeof(int64_t));
-        auto flattened_work_item = worker_id;
+    auto flattened_work_item = worker_id;
     for (int dim = ndim - 1; dim >= 0; --dim) {
         nd_index[dim] = flattened_work_item % out_shape[dim];
         flattened_work_item /= out_shape[dim];
@@ -66,18 +67,6 @@ elementwise_binary_op_cuda_impl(Out* out_data, int64_t* out_shape, int64_t* out_
     free(nd_index);
 }
 
-/**
- * Perform an elementwise binary operation such as add, sub, mul, div as indicated
- * in the Op parameter (which will have the underlying datatypes passed through
- * as template parameters to the op) between two tensors with underlying datatypes
- * A and B.
- *
- * Currently the result datatype will be the same as A, but we should fix that!
- */
-// template <typename Out, typename A, typename B, class Op>
-// ndarray elementwise_binary_op_cuda(ndarray &out, const ndarray &a, const ndarray &b) {
-
-// }
 
 /**
  * template wrapper around a template function which calls the function
@@ -85,7 +74,6 @@ elementwise_binary_op_cuda_impl(Out* out_data, int64_t* out_shape, int64_t* out_
  */
 template <class Op>
 struct elementwise_binary_op_impl_wrapper_cuda {
-    // An output tensor is provided
     template <typename Out, typename A_type, typename B_type>
     static inline ndarray call(ndarray out, const ndarray &a, const ndarray &b) {
         // Check that this operation is possible
@@ -101,8 +89,6 @@ struct elementwise_binary_op_impl_wrapper_cuda {
             }
             // TODO: check if this can be broadcasted....
         }
-        // int num_blocks = 16;
-        // return elementwise_binary_op_cuda<Out, A_type, B_type, Op>(out, a, b);
         auto a_data = a.data_ptr<A_type>();
         auto b_data = b.data_ptr<B_type>();
         
@@ -133,11 +119,12 @@ struct elementwise_binary_op_impl_wrapper_cuda {
         auto numel = out.numel();
         // TODO: do some benchmarking to get a better default max number of blocks
         int num_blocks = std::min<int>(16, (numel+block_size-1) / block_size);
+        // cudaDeviceSynchronize();
         elementwise_binary_op_cuda_impl<Out, A_type, B_type, Op><<<num_blocks, block_size>>>(out_data, thrust::raw_pointer_cast(dev_out_shape.data()), thrust::raw_pointer_cast(dev_out_strides.data()),
                                                                 a_data, thrust::raw_pointer_cast(dev_a_shape.data()), thrust::raw_pointer_cast(dev_a_strides.data()),
                                                                 b_data, thrust::raw_pointer_cast(dev_b_shape.data()), thrust::raw_pointer_cast(dev_b_strides.data()),
                                                                 out.ndim(), numel);
-        
+        // cudaDeviceSynchronize();
         return out;
     }
 };

@@ -1,5 +1,7 @@
 #pragma once
 
+#pragma once
+
 #include "bland/ndarray.hpp"
 #include "shape_helpers.hpp"
 
@@ -12,21 +14,13 @@
 #include <fmt/format.h>
 
 namespace bland {
+namespace cuda {
 
-template <typename T>
-struct is_floating {
-    static constexpr bool value = false;
-};
 
-template <>
-struct is_floating<float> {
-    static constexpr bool value = true;
-};
-
-template <typename Out, typename A, typename B, class Op>
-__global__ void elementwise_scalar_op_cuda_impl(Out* out_data, int64_t* out_shape, int64_t* out_strides,
+template <typename Out, typename A, template <typename, typename> class Op>
+__global__ void elementwise_unary_op_impl(Out* out_data, int64_t* out_shape, int64_t* out_strides,
                                 A* a_data, int64_t* a_shape, int64_t* a_strides,
-                                B scalar_val, int64_t ndim, int64_t numel) {
+                                int64_t ndim, int64_t numel) {
     auto worker_id = gridDim.x * blockIdx.x + threadIdx.x;
     auto grid_size = gridDim.x * blockDim.x;
 
@@ -43,13 +37,11 @@ __global__ void elementwise_scalar_op_cuda_impl(Out* out_data, int64_t* out_shap
             out_index += nd_index[dim] * out_strides[dim];
             a_index += nd_index[dim] * a_strides[dim];
         }
-        out_data[out_index] = Op::template call<Out, A, B>(a_data[a_index], scalar_val);
-        // if constexpr (is_floating<B>::value ) {
-        // printf("storing %f [%lld] = f(%f [%lld], %f) at ind=%i with tid=%i.%i\n", out_data[out_index], out_index,
+        out_data[out_index] = Op<Out, A>::call(a_data[a_index]);
+        // printf("storing %f [%lld] = f(%f [%lld], %f [%lld]) at ind=%i with tid=%i.%i\n", out_data[out_index], out_index,
         //                                                                         a_data[a_index], a_index,
-        //                                                                         scalar_val,
+        //                                                                         b_data[b_index], b_index,
         //                                                                         n, threadIdx.x, blockIdx.x);
-        // }
 
         auto increment_amount = grid_size;
         for (int dim = ndim - 1; dim >= 0; --dim) {
@@ -69,17 +61,16 @@ __global__ void elementwise_scalar_op_cuda_impl(Out* out_data, int64_t* out_shap
  * template wrapper around a template function which calls the function
  * with the given template datatypes
  */
-struct scalar_op_impl_wrapper_cuda {
-    template <typename Out, typename A_type, typename B_type, class Op>
-    static inline ndarray call(ndarray out, const ndarray &a, const B_type &b) {
+struct unary_op_impl_wrapper {
+    template <typename Out, typename A_type, template <typename, typename> class Op>
+    static inline ndarray call(ndarray out, const ndarray &a) {
         // Check that this operation is possible
         auto a_shape = a.shape();
-        // TODO: check/validate output shape!
         auto a_data = a.data_ptr<A_type>();
-
+        
         const auto a_offset   = a.offsets();
         const auto out_offset = out.offsets();
-
+        
         auto       out_data  = out.data_ptr<Out>();
         const auto out_shape = out.shape();
         
@@ -97,28 +88,15 @@ struct scalar_op_impl_wrapper_cuda {
         int block_size = 256; // TODO: for some small numels we might still want to reduce this
         auto numel = out.numel();
         // TODO: do some benchmarking to get a better default max number of blocks
-        int num_blocks = std::min<int>(1, (numel+block_size-1) / block_size);
-        elementwise_scalar_op_cuda_impl<Out, A_type, B_type, Op><<<num_blocks, block_size>>>(out_data, thrust::raw_pointer_cast(dev_out_shape.data()), thrust::raw_pointer_cast(dev_out_strides.data()),
+        int num_blocks = std::min<int>(16, (numel+block_size-1) / block_size);
+        // cudaDeviceSynchronize();
+        elementwise_unary_op_impl<Out, A_type, Op><<<num_blocks, block_size>>>(out_data, thrust::raw_pointer_cast(dev_out_shape.data()), thrust::raw_pointer_cast(dev_out_strides.data()),
                                                                 a_data, thrust::raw_pointer_cast(dev_a_shape.data()), thrust::raw_pointer_cast(dev_a_strides.data()),
-                                                                b,
                                                                 out.ndim(), numel);
-        // Might want to drop these in a debug mode...
-        // Synchronize the device
-        // cudaError_t syncErr = cudaDeviceSynchronize();
-
-        // // Check for errors in kernel launch
-        // cudaError_t launchErr = cudaGetLastError();
-        // if (syncErr != cudaSuccess) 
-        // {
-        //     printf("Error during kernel execution: %s\n", cudaGetErrorString(syncErr));
-        // }
-
-        // if (launchErr != cudaSuccess) 
-        // {
-        //     printf("Error during kernel launch: %s\n", cudaGetErrorString(launchErr));
-        // }
+        // cudaDeviceSynchronize();
         return out;
     }
 };
 
+} // namespace cuda
 } // namespace bland

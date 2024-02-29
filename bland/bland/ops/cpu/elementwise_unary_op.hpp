@@ -11,6 +11,8 @@
 namespace bland {
 struct ndarray;
 
+namespace cpu {
+
 /**
  * Perform an elementwise binary operation such as add, sub, mul, div as indicated
  * in the Op parameter (which will have the underlying datatypes passed through
@@ -83,4 +85,5 @@ struct unary_op_impl_wrapper {
     }
 };
 
+} // namespace cpu
 } // namespace bland
