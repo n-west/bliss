@@ -8,22 +8,27 @@ project(
 include(CheckLanguage)
 check_language(CUDA)
 
-if (CMAKE_CUDA_COMPILER)
+find_package(CUDAToolkit)
+if (CUDAToolkit_FOUND)
+    message("CUDAToolkit_FOUND")
+endif()
+
+cmake_dependent_option(WITH_CUDA "Enable CUDA backend for array storage and operations" ON "CMAKE_CUDA_COMPILER;CUDAToolkit_FOUND" OFF)
+add_feature_info(CUDA WITH_CUDA "Using CUDA as a backend for array storage and compute")
+
+if (WITH_CUDA)
   message("BLAND:: enabling cuda (the language)")
   if(NOT DEFINED CMAKE_CUDA_ARCHITECTURES)
-    set(CMAKE_CUDA_ARCHITECTURES all-major)
+    set(CMAKE_CUDA_ARCHITECTURES native)
   endif()
   enable_language(CUDA)
   add_definitions("-DBLAND_CUDA_CODE=1")
+  add_definitions("-DBLAND_CUDA=1")
 else()
   message("BLAND:: CUDA not found, building without it")
 endif()
 
-find_package(CUDAToolkit)
-if (CUDAToolkit_FOUND)
-    message("CUDAToolkit_FOUND")
-    add_definitions("-DBLAND_CUDA=1")
-endif()
+
 
 # Only do these if this is the main project, and not if it is included through add_subdirectory
 if(CMAKE_PROJECT_NAME STREQUAL PROJECT_NAME)

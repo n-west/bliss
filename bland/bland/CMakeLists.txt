@@ -8,18 +8,27 @@ add_library(bland
     ops/cpu/arithmetic_cpu.cpp
     ops/cpu/arithmetic_scalar_cpu.cpp
     ops/cpu/comparison_cpu.cpp
+    ops/cpu/ops_cpu.cpp
+    ops/cpu/statistical_cpu.cpp
     ops/comparison.cpp
     ops/creators.cpp
     ops/statistical.cpp
     internal/shape_helpers.cpp
 )
 
-if (CMAKE_CUDA_COMPILER)
-target_sources(bland
-    PRIVATE
-    ops/cuda/arithmetic_cuda.cu
-    ops/cuda/arithmetic_scalar_cuda.cu
+if (WITH_CUDA)
+    target_sources(bland
+        PRIVATE
+        ops/cuda/arithmetic_cuda.cu
+        ops/cuda/arithmetic_scalar_cuda.cu
+        ops/cuda/comparison_cuda.cu
+        ops/cuda/ops_cuda.cu
+        ops/cuda/statistical_cuda.cu
     )
+
+    target_link_libraries(bland
+    PRIVATE
+    CUDA::cudart_static)
 endif ()
 
 target_include_directories(bland
@@ -37,7 +46,6 @@ target_include_directories(bland
 #     [["dispatcher.hpp"]]
 #     [["elementwise_binary_op.hpp"]]
 #     [["elementwise_scalar_op.hpp"]]
-#     [["elementwise_unary_op.hpp"]]
 # )
 
 target_link_libraries(bland
@@ -47,11 +55,6 @@ target_link_libraries(bland
     fmt::fmt-header-only
     )
 
-if (CUDAToolkit_FOUND)
-    target_link_libraries(bland
-    PRIVATE
-    CUDA::cudart_static)
-endif()
 
 set_target_properties(bland PROPERTIES POSITION_INDEPENDENT_CODE TRUE)
 

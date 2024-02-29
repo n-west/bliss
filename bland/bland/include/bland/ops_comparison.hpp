@@ -1,75 +1,58 @@
 #pragma once
 
+#include <type_traits>
+
 namespace bland {
 
 struct ndarray;
 struct ndarray_slice;
 
-ndarray greater_than(ndarray lhs, ndarray rhs);
-template <typename T>
-std::enable_if_t<std::is_arithmetic<T>::value, ndarray> greater_than(ndarray lhs, T rhs);
-template <typename T>
-std::enable_if_t<std::is_arithmetic<T>::value, ndarray> greater_than(T lhs, ndarray rhs);
-ndarray                                                 operator>(ndarray lhs, ndarray rhs);
-template <typename T>
-std::enable_if_t<std::is_arithmetic<T>::value, ndarray> operator>(ndarray rhs, T lhs);
-template <typename T>
-std::enable_if_t<std::is_arithmetic<T>::value, ndarray> operator>(T lhs, ndarray rhs);
+template <typename L, typename R>
+ndarray greater_than(L lhs, R rhs);
 
-ndarray greater_than_equal_to(ndarray lhs, ndarray rhs);
-template <typename T>
-std::enable_if_t<std::is_arithmetic<T>::value, ndarray> greater_than_equal_to(ndarray lhs, T rhs);
-template <typename T>
-std::enable_if_t<std::is_arithmetic<T>::value, ndarray> greater_than_equal_to(T lhs, ndarray rhs);
-ndarray                                                 operator>=(ndarray lhs, ndarray rhs);
-template <typename T>
-std::enable_if_t<std::is_arithmetic<T>::value, ndarray> operator>=(ndarray rhs, T lhs);
-template <typename T>
-std::enable_if_t<std::is_arithmetic<T>::value, ndarray> operator>=(T lhs, ndarray rhs);
+template <typename L, typename R>
+std::enable_if_t<std::is_base_of<ndarray, std::decay_t<L>>::value || std::is_base_of<ndarray, std::decay_t<R>>::value, ndarray>
+operator>(L lhs, R rhs);
 
-ndarray less_than(ndarray lhs, ndarray rhs);
-template <typename T>
-std::enable_if_t<std::is_arithmetic<T>::value, ndarray> less_than(ndarray lhs, T rhs);
-template <typename T>
-std::enable_if_t<std::is_arithmetic<T>::value, ndarray> less_than(T lhs, ndarray rhs);
-ndarray                                                 operator<(ndarray lhs, ndarray rhs);
-template <typename T>
-std::enable_if_t<std::is_arithmetic<T>::value, ndarray> operator<(ndarray rhs, T lhs);
-template <typename T>
-std::enable_if_t<std::is_arithmetic<T>::value, ndarray> operator<(T lhs, ndarray rhs);
 
-ndarray less_than_equal_to(ndarray lhs, ndarray rhs);
-template <typename T>
-std::enable_if_t<std::is_arithmetic<T>::value, ndarray> less_than_equal_to(ndarray lhs, T rhs);
-template <typename T>
-std::enable_if_t<std::is_arithmetic<T>::value, ndarray> less_than_equal_to(T lhs, ndarray rhs);
-ndarray                                                 operator<=(ndarray lhs, ndarray rhs);
-template <typename T>
-std::enable_if_t<std::is_arithmetic<T>::value, ndarray> operator<=(ndarray rhs, T lhs);
-template <typename T>
-std::enable_if_t<std::is_arithmetic<T>::value, ndarray> operator<=(T lhs, ndarray rhs);
+template <typename L, typename R>
+ndarray greater_than_equal_to(L lhs, R rhs);
 
-ndarray logical_and(ndarray lhs, ndarray rhs);
-template <typename T>
-std::enable_if_t<std::is_arithmetic<T>::value, ndarray> logical_and(ndarray lhs, T rhs);
-template <typename T>
-std::enable_if_t<std::is_arithmetic<T>::value, ndarray> logical_and(T lhs, ndarray rhs);
-ndarray                                                 operator&(ndarray lhs, ndarray rhs);
-template <typename T>
-std::enable_if_t<std::is_arithmetic<T>::value, ndarray> operator&(ndarray rhs, T lhs);
-template <typename T>
-std::enable_if_t<std::is_arithmetic<T>::value, ndarray> operator&(T lhs, ndarray rhs);
+template <typename L, typename R>
+std::enable_if_t<std::is_base_of<ndarray, std::decay_t<L>>::value || std::is_base_of<ndarray, std::decay_t<R>>::value, ndarray>
+operator>=(L lhs, R rhs);
 
-ndarray equal_to(ndarray lhs, ndarray rhs);
-template <typename T>
-std::enable_if_t<std::is_arithmetic<T>::value, ndarray> equal_to(ndarray lhs, T rhs);
-template <typename T>
-std::enable_if_t<std::is_arithmetic<T>::value, ndarray> equal_to(T lhs, ndarray rhs);
-ndarray                                                 operator==(ndarray lhs, ndarray rhs);
-template <typename T>
-std::enable_if_t<std::is_arithmetic<T>::value, ndarray> operator==(ndarray rhs, T lhs);
-template <typename T>
-std::enable_if_t<std::is_arithmetic<T>::value, ndarray> operator==(T lhs, ndarray rhs);
+
+template <typename L, typename R>
+ndarray less_than(L lhs, R rhs);
+
+template <typename L, typename R>
+std::enable_if_t<std::is_base_of<ndarray, std::decay_t<L>>::value || std::is_base_of<ndarray, std::decay_t<R>>::value, ndarray>
+operator<(L lhs, R rhs);
+
+
+template <typename L, typename R>
+ndarray less_than_equal_to(L lhs, R rhs);
+
+template <typename L, typename R>
+std::enable_if_t<std::is_base_of<ndarray, std::decay_t<L>>::value || std::is_base_of<ndarray, std::decay_t<R>>::value, ndarray>
+operator<=(L lhs, R rhs);
+
+
+template <typename L, typename R>
+ndarray logical_and(L lhs, R rhs);
+
+template <typename L, typename R>
+std::enable_if_t<std::is_base_of<ndarray, std::decay_t<L>>::value || std::is_base_of<ndarray, std::decay_t<R>>::value, ndarray>
+operator&(L lhs, R rhs);
+
+
+template <typename L, typename R>
+ndarray equal_to(L lhs, R rhs);
+
+template <typename L, typename R>
+std::enable_if_t<std::is_base_of<ndarray, std::decay_t<L>>::value || std::is_base_of<ndarray, std::decay_t<R>>::value, ndarray>
+operator==(L lhs, R rhs);
 
 /**
  * absolute(lhs - rhs) <= (atol + rtol * absolute(rhs))

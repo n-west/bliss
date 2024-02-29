@@ -1,13 +1,13 @@
 #pragma once
 
-#include <type_traits>
 #include <cstdint>
+#include <type_traits>
 
 namespace bland {
 struct ndarray;
 struct ndarray_slice;
 
-namespace cpu {
+namespace cuda {
 
 template <typename L, typename R>
 ndarray greater_than(L lhs, R rhs);
@@ -32,5 +32,5 @@ ndarray equal_to(L lhs, R rhs);
  */
 int64_t count_true(ndarray x);
 
-} // namespace cpu
+} // namespace cuda
 } // namespace bland

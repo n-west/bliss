@@ -8,6 +8,7 @@
 
 #include "arithmetic_cuda_impl.cuh"
 
+#include <fmt/format.h>
 
 using namespace bland;
 using namespace bland::cuda;
@@ -22,7 +23,7 @@ template <> // Specialize for adding an array
 ndarray bland::cuda::add_cuda<ndarray>(ndarray a, ndarray b) {
     auto out_shape = expand_shapes_to_broadcast(a.shape(), b.shape());
     auto out = ndarray(out_shape, a.dtype(), a.device());
-    return dispatch<elementwise_binary_op_impl_wrapper_cuda<elementwise_add_op_ts>>(out, a, b);
+    return dispatch<elementwise_binary_op_impl_wrapper_cuda<cuda::elementwise_add_op_ts>>(out, a, b);
 }
 
 
@@ -36,7 +37,7 @@ template <> // Specialize for adding an array
 ndarray bland::cuda::subtract_cuda<ndarray>(ndarray a, ndarray b) {
     auto out_shape = expand_shapes_to_broadcast(a.shape(), b.shape());
     auto out = ndarray(out_shape, a.dtype(), a.device());
-    return dispatch<elementwise_binary_op_impl_wrapper_cuda<elementwise_subtract_op_ts>>(out, a, b);
+    return dispatch<elementwise_binary_op_impl_wrapper_cuda<cuda::elementwise_subtract_op_ts>>(out, a, b);
 }
 template <>
 ndarray bland::cuda::subtract_cuda<ndarray_slice>(ndarray a, ndarray_slice b) {
@@ -48,7 +49,7 @@ template <> // Specialize for adding an array
 ndarray bland::cuda::multiply_cuda<ndarray>(ndarray a, ndarray b) {
     auto out_shape = expand_shapes_to_broadcast(a.shape(), b.shape());
     auto out = ndarray(out_shape, a.dtype(), a.device());
-    return dispatch<elementwise_binary_op_impl_wrapper_cuda<elementwise_multiply_op_ts>>(out, a, b);
+    return dispatch<elementwise_binary_op_impl_wrapper_cuda<cuda::elementwise_multiply_op_ts>>(out, a, b);
 }
 template <>
 ndarray bland::cuda::multiply_cuda<ndarray_slice>(ndarray a, ndarray_slice b) {
@@ -60,7 +61,7 @@ template <> // Specialize for adding an array
 ndarray bland::cuda::divide_cuda<ndarray>(ndarray a, ndarray b) {
     auto out_shape = expand_shapes_to_broadcast(a.shape(), b.shape());
     auto out = ndarray(out_shape, a.dtype(), a.device());
-    return dispatch<elementwise_binary_op_impl_wrapper_cuda<elementwise_divide_op_ts>>(out, a, b);
+    return dispatch<elementwise_binary_op_impl_wrapper_cuda<cuda::elementwise_divide_op_ts>>(out, a, b);
 }
 template <>
 ndarray bland::cuda::divide_cuda<ndarray_slice>(ndarray a, ndarray_slice b) {

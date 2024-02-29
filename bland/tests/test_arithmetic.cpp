@@ -10,7 +10,7 @@
 // #include <fmt/ranges.h>
 #include <bland/bland.hpp>
 
-TEST_CASE("add", "[ops][arithmetic]") {
+TEST_CASE("cpu arithmetic", "[ops][arithmetic]") {
     SECTION("addition", "addition ops") {
         {
             auto test_array =
@@ -58,28 +58,6 @@ TEST_CASE("add", "[ops][arithmetic]") {
                                  0.0001f));
         }
     }
-#if BLAND_CUDA_CODE
-    SECTION("cuda", "cuda ops") {
-        // TODO: we will (eventually) want some smarter device discovery to decide this can be run
-        {
-            auto test_array =
-                    bland::arange(0.0f, 50.0f, 1.0f, DLDataType{.code = DLDataTypeCode::kDLFloat, .bits = 32});
-            test_array = test_array.to("cuda:0");
-            auto x = test_array.reshape({5, 10});
-
-            auto result = x + x;
-            result = result.to("cpu");
-
-            REQUIRE(x.numel() == 50);
-
-            auto expected = bland::arange(0.0f, 100.0f, 2.0f, DLDataType{.code = DLDataTypeCode::kDLFloat, .bits = 32});
-            REQUIRE_THAT(std::vector<float>(result.data_ptr<float>(), result.data_ptr<float>() + result.numel()),
-                         BlandWithinAbs(std::vector<float>(expected.data_ptr<float>(),
-                                                           expected.data_ptr<float>() + expected.numel()),
-                                        0.0001f));
-        }
-    }
-#endif
     SECTION("division", "division ops") {
         { // 2D divide by scalar
             auto test_array =
@@ -167,3 +145,44 @@ TEST_CASE("add", "[ops][arithmetic]") {
         }
     }
 }
+
+#if BLAND_CUDA_CODE
+#include <cuda_runtime.h>
+
+TEST_CASE("cuda arithmetic", "[ops][arithmetic]") {
+    SECTION("add array array", "[5, 10] array + [5, 10] array") {
+            auto test_array =
+                    bland::arange(0.0f, 50.0f, 1.0f, DLDataType{.code = DLDataTypeCode::kDLFloat, .bits = 32});
+            test_array = test_array.to("cuda:0");
+            auto x = test_array.reshape({5, 10});
+
+            auto result = x + x;
+            result = result.to("cpu");
+            cudaDeviceSynchronize();
+
+            REQUIRE(x.numel() == 50);
+
+            auto expected = bland::arange(0.0f, 100.0f, 2.0f, DLDataType{.code = DLDataTypeCode::kDLFloat, .bits = 32});
+            REQUIRE_THAT(std::vector<float>(result.data_ptr<float>(), result.data_ptr<float>() + result.numel()),
+                         BlandWithinAbs(std::vector<float>(expected.data_ptr<float>(),
+                                                           expected.data_ptr<float>() + expected.numel()),
+                                        0.0001f));
+    }
+    SECTION("array-scalar mul-add", "[10000, 10000] array * 4 + 2") {
+        auto test_array = bland::ndarray({10000, 10000}, 1.0f);
+
+        test_array = test_array.to("cuda:0");
+
+        auto result = test_array * 4 + 2;
+        result = result.to("cpu");
+        cudaDeviceSynchronize();
+
+        REQUIRE(test_array.numel() == 10000*10000);
+        auto expected = std::vector<float>(test_array.numel(), 6.0f);
+        REQUIRE_THAT(std::vector<float>(result.data_ptr<float>(), result.data_ptr<float>() + result.numel()),
+                        BlandWithinAbs(expected,
+                                0.0001f));
+    }
+}
+#endif
+

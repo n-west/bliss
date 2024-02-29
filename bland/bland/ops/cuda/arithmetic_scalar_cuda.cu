@@ -8,6 +8,8 @@
 #include "elementwise_scalar_op_cuda.cuh"
 #include "arithmetic_cuda_impl.cuh"
 
+#include <fmt/format.h>
+
 
 using namespace bland;
 using namespace bland::cuda;

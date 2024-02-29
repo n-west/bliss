@@ -7,6 +7,10 @@
 #include <fmt/ranges.h>
 #include <bland/bland.hpp>
 
+#if BLAND_CUDA_CODE
+#include <cuda_runtime.h>
+#endif
+
 TEST_CASE("benchmark add", "[ops][arithmetic]") {
     SECTION("addition", "addition") {
         {
@@ -30,6 +34,16 @@ TEST_CASE("benchmark add", "[ops][arithmetic]") {
             BENCHMARK("bland float addition") {
                 return a + b;
             };
+
+#if BLAND_CUDA_CODE
+            a = bland::to(a, "cuda:0");
+            b = bland::to(b, "cuda:0");
+            BENCHMARK("addition on cuda:0") {
+                auto r = a + b;
+                cudaDeviceSynchronize();
+                return r;
+            };
+#endif
         }
     }
 

@@ -16,44 +16,44 @@ using namespace bland;
  * ndarray impl
  */
 
-bland::ndarray::datatype::datatype(std::string_view dtype) {
-    if (dtype == "float" || dtype == "float32") {
+bland::ndarray::datatype::datatype(std::string_view dtype_str) {
+    if (dtype_str == "float" || dtype_str == "float32") {
         code  = kDLFloat;
         bits  = 32;
         lanes = 1;
-    } else if (dtype == "double" || dtype == "float64") {
+    } else if (dtype_str == "double" || dtype_str == "float64") {
         code  = kDLFloat;
         bits  = 64;
         lanes = 1;
-    } else if (dtype == "int" || dtype == "int64") {
+    } else if (dtype_str == "int" || dtype_str == "int64") {
         code  = kDLInt;
         bits  = 64;
         lanes = 1;
-    } else if (dtype == "int32") {
+    } else if (dtype_str == "int32") {
         code  = kDLInt;
         bits  = 32;
         lanes = 1;
-    } else if (dtype == "int16") {
+    } else if (dtype_str == "int16") {
         code  = kDLInt;
         bits  = 16;
         lanes = 1;
-    } else if (dtype == "int8") {
+    } else if (dtype_str == "int8") {
         code  = kDLInt;
         bits  = 8;
         lanes = 1;
-    } else if (dtype == "uint" || dtype == "uint64") {
+    } else if (dtype_str == "uint" || dtype_str == "uint64") {
         code  = kDLUInt;
         bits  = 64;
         lanes = 1;
-    } else if (dtype == "uint32") {
+    } else if (dtype_str == "uint32") {
         code  = kDLUInt;
         bits  = 32;
         lanes = 1;
-    } else if (dtype == "uint16") {
+    } else if (dtype_str == "uint16") {
         code  = kDLUInt;
         bits  = 16;
         lanes = 1;
-    } else if (dtype == "uint8") {
+    } else if (dtype_str == "uint8") {
         code  = kDLUInt;
         bits  = 8;
         lanes = 1;
@@ -83,27 +83,27 @@ bool bland::ndarray::dev::operator!=(const dev &other) {
     return !(*this == other);
 }
 
-bland::ndarray::dev::dev(std::string_view dev) {
-    if (dev == "cpu") {
+bland::ndarray::dev::dev(std::string_view dev_str) {
+    if (dev_str == "cpu") {
 		device_type = DLDeviceType::kDLCPU;
 		device_id   = 0;
-    } else if (dev.substr(0, 4) == "cuda") {
+    } else if (dev_str.substr(0, 4) == "cuda") {
         device_type = DLDeviceType::kDLCUDA;
         device_id   = 0;
-        if (dev.size() > 4 && dev[4] == ':') {
-            device_id = std::stoi(std::string(dev.substr(5)));
+        if (dev_str.size() > 4 && dev_str[4] == ':') {
+            device_id = std::stoi(std::string(dev_str.substr(5)));
         }
-    } else if (dev.substr(0, 11) == "cudamanaged") {
+    } else if (dev_str.substr(0, 11) == "cudamanaged") {
         device_type = DLDeviceType::kDLCUDAManaged;
         device_id   = 0;
-        if (dev.size() > 11 && dev[11] == ':') {
-            device_id = std::stoi(std::string(dev.substr(12)));
+        if (dev_str.size() > 11 && dev_str[11] == ':') {
+            device_id = std::stoi(std::string(dev_str.substr(12)));
         }
-    } else if (dev.substr(0, 8) == "cudahost") {
+    } else if (dev_str.substr(0, 8) == "cudahost") {
         device_type = DLDeviceType::kDLCUDAHost;
         device_id   = 0;
-        if (dev.size() > 8 && dev[8] == ':') {
-            device_id = std::stoi(std::string(dev.substr(9)));
+        if (dev_str.size() > 8 && dev_str[8] == ':') {
+            device_id = std::stoi(std::string(dev_str.substr(9)));
         }
     } else {
         throw std::runtime_error("Device type not supported in bland yet");
@@ -261,8 +261,10 @@ T bland::ndarray::scalarize() const {
     if (numel() > 1) {
         throw std::runtime_error("scalarize: There is more than one element, so not a scalar. Cannot scalarize");
     }
+    // You can only scalarize a cpu value...
+    auto cpu_copy = bland::to(*this, "cpu");
     // TODO also check datatype makes sense to scalarize
-    return data_ptr<T>()[0];
+    return cpu_copy.data_ptr<T>()[0];
 }
 
 template float    bland::ndarray::scalarize<float>() const;
@@ -312,8 +314,6 @@ ndarray bland::ndarray::to(std::string_view dest) {
 
 template <typename datatype>
 std::string pretty_print(const ndarray &a) {
-    auto a_data = a.data_ptr<datatype>();
-
     // (multi-dimensional) index to read into a
     std::vector<int64_t> index(a.shape().size(), 0);
 
@@ -321,7 +321,7 @@ std::string pretty_print(const ndarray &a) {
     std::string dtype_pp{};
     if (std::is_same<datatype, float>()) {
         dtype_pp = "float32";
-        type_specifier = {"{:f}"};
+        type_specifier = "{:f}";
     } else if (std::is_same<datatype, double>()) {
         dtype_pp = "float64";
     } else if (std::is_same<datatype, int8_t>()) {
@@ -343,28 +343,37 @@ std::string pretty_print(const ndarray &a) {
     }
     std::string dev_pp{};
     auto        dev = a.device();
-    if (dev == bland::ndarray::dev::cpu) {
-        dev_pp = "cpu";
+    if (dev.device_type == bland::ndarray::dev::cpu.device_type) {
+        dev_pp = fmt::format("cpu:{}", dev.device_id);
+    } else if (dev.device_type == bland::ndarray::dev::cuda.device_type) {
+        dev_pp = fmt::format("cuda:{}", dev.device_id);
+    } else if (dev.device_type == bland::ndarray::dev::cuda_managed.device_type) {
+        dev_pp = fmt::format("cuda_managed:{}", dev.device_id);
+    } else if (dev.device_type == bland::ndarray::dev::cuda_host.device_type) {
+        dev_pp = fmt::format("cuda_host:{}", dev.device_id);
     } else {
         dev_pp = "not implemented device";
     }
     fmt::memory_buffer output_repr;
     fmt::format_to(output_repr, "bland shape {} with dtype {} on device {}:\n", a.shape(), dtype_pp, dev_pp);
     int count = 0;
+    auto a_cpu = bland::to(a, "cpu");
+    auto a_data = a_cpu.data_ptr<datatype>();
+
     // TODO: condense printing large arrays, no one needs or wants to see thousands of items
-    auto numel = std::min<int64_t>(a.numel(), 25);
+    auto numel = std::min<int64_t>(a_cpu.numel(), 25);
     for (int64_t n = 0; n < numel; ++n) {
         // Finally... do the actual op
         int64_t linear_index = 0;
-        for (int i = 0; i < a.shape().size(); ++i) {
-            linear_index += a.offsets()[i] + (index[i] % a.shape()[i]) * a.strides()[i];
+        for (int i = 0; i < a_cpu.shape().size(); ++i) {
+            linear_index += a_cpu.offsets()[i] + (index[i] % a_cpu.shape()[i]) * a_cpu.strides()[i];
         }
         fmt::format_to(output_repr, "{} ", a_data[linear_index]);
 
         // Increment the multi-dimensional index
-        for (int i = a.shape().size() - 1; i >= 0; --i) {
+        for (int i = a_cpu.shape().size() - 1; i >= 0; --i) {
             // If we're not at the end of this dim, keep going
-            if (++index[i] != a.shape()[i]) {
+            if (++index[i] != a_cpu.shape()[i]) {
                 break;
             } else {
                 // Otherwise, set it to 0 and move down to the next dim

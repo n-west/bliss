@@ -46,7 +46,7 @@ struct logical_and_impl {
     template <typename Out, typename A, typename B>
     static __device__ inline Out call(const A &a, const B &b) {
         if constexpr (std::is_floating_point_v<A> || std::is_floating_point_v<B> || std::is_floating_point_v<Out>) {
-            throw std::runtime_error("logical_and_impl: cannot perform logical_and on floating point types");
+            // TODO: how to signal an error from device
         } else {
             return static_cast<Out>(a & b);
         }

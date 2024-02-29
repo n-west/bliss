@@ -3,13 +3,17 @@
 #include "bland/ops.hpp"
 #include "bland/ndarray.hpp"
 
+#include "device_dispatch.hpp"
 #include "assignment_op.hpp"
 #include "dispatcher.hpp"
-// #include "elementwise_binary_op.hpp"
-// #include "cpu/elementwise_scalar_op.hpp"
-#include "cpu/elementwise_unary_op.hpp"
 #include "shape_helpers.hpp"
 #include <dlpack/dlpack.h> // consider if bland_tensor_internals.hpp which includes this is more appropriate
+
+#include "cpu/elementwise_unary_op.hpp"
+#include "cpu/ops_cpu.hpp"
+#if BLAND_CUDA_CODE
+#include "cuda/ops_cuda.cuh"
+#endif
 
 #include <fmt/core.h>
 
@@ -24,18 +28,19 @@ using namespace bland;
 /**
  * Copy (data)
  */
-template <typename Out, typename A>
-struct elementwise_copy_op {
-    static inline Out call(const A &a) { return static_cast<Out>(a); }
-};
-
 ndarray bland::copy(ndarray a) {
     auto out = ndarray(a.shape(), a.dtype(), a.device());
     return copy(a, out);
 }
 
 ndarray bland::copy(ndarray a, ndarray &out) {
-    return dispatch_new2<unary_op_impl_wrapper, elementwise_copy_op>(out, a);
+    return device_dispatch(cpu::copy,
+                            #if BLAND_CUDA_CODE
+                            cuda::copy,
+                            #else
+                            nullptr,
+                            #endif
+                            a, out);
 }
 
 ndarray bland::to(ndarray src, DLDevice dest_dev) {
@@ -230,13 +235,15 @@ template ndarray bland::fill<int16_t>(ndarray out, int16_t v);
 template ndarray bland::fill<int32_t>(ndarray out, int32_t v);
 template ndarray bland::fill<int64_t>(ndarray out, int64_t v);
 
-template <typename Out, typename A>
-struct elementwise_square_op {
-    static inline Out call(const A &a) { return static_cast<Out>(a * a); }
-};
 
 ndarray bland::square(ndarray a, ndarray out) {
-    return dispatch_new2<unary_op_impl_wrapper, elementwise_square_op>(out, a);
+    return device_dispatch(cpu::square,
+                            #if BLAND_CUDA_CODE
+                            cuda::square,
+                            #else
+                            nullptr,
+                            #endif
+                            a, out);
 }
 
 ndarray bland::square(ndarray a) {
@@ -244,13 +251,15 @@ ndarray bland::square(ndarray a) {
     return square(a, out);
 }
 
-template <typename Out, typename A>
-struct elementwise_sqrt_op {
-    static inline Out call(const A &a) { return static_cast<Out>(std::sqrt(a)); }
-};
 
 ndarray bland::sqrt(ndarray a, ndarray out) {
-    return dispatch_new2<unary_op_impl_wrapper, elementwise_sqrt_op>(out, a);
+    return device_dispatch(cpu::sqrt,
+                            #if BLAND_CUDA_CODE
+                            cuda::sqrt,
+                            #else
+                            nullptr,
+                            #endif
+                            a, out);
 }
 
 ndarray bland::sqrt(ndarray a) {
@@ -258,33 +267,17 @@ ndarray bland::sqrt(ndarray a) {
     return sqrt(a, out);
 }
 
-template <typename Out, typename A>
-struct elementwise_abs_op {
-    static inline Out call(const A &a) { return static_cast<Out>(std::abs(a)); }
-};
-
-template <typename Out>
-struct elementwise_abs_op<Out, uint8_t> {
-    static inline Out call(const uint8_t &a) { return static_cast<Out>(a); }
-};
-template <typename Out>
-struct elementwise_abs_op<Out, uint16_t> {
-    static inline Out call(const uint16_t &a) { return static_cast<Out>(a); }
-};
-template <typename Out>
-struct elementwise_abs_op<Out, uint32_t> {
-    static inline Out call(const uint32_t &a) { return static_cast<Out>(a); }
-};
-template <typename Out>
-struct elementwise_abs_op<Out, uint64_t> {
-    static inline Out call(const uint64_t &a) { return static_cast<Out>(a); }
-};
-
 ndarray bland::abs(ndarray a, ndarray out) {
-    return dispatch_new2<unary_op_impl_wrapper, elementwise_abs_op>(out, a);
+    return device_dispatch(cpu::abs,
+                            #if BLAND_CUDA_CODE
+                            cuda::abs,
+                            #else
+                            nullptr,
+                            #endif
+                            a, out);
 }
 
 ndarray bland::abs(ndarray a) {
     auto out = ndarray(a.shape(), a.dtype(), a.device());
-    return abs(a, out);
+    return cpu::abs(a, out);
 }

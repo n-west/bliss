@@ -1,6 +1,5 @@
 #pragma once
 
-
 #include "ops_arithmetic.hpp"
 #include "ops_shape.hpp"
 #include "ops_statistical.hpp"
