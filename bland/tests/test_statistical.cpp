@@ -190,7 +190,6 @@ TEST_CASE("cuda statistical", "[ndarray][ops][statistical]") {
             REQUIRE_THAT(cuda_stddev.data_ptr<float>()[0], Catch::Matchers::WithinAbs(1.0f, .1));
             // REQUIRE_THAT(cuda_kurtosis.data_ptr<float>()[0], Catch::Matchers::WithinAbs(3.0f, .1));
     }
-
     SECTION("mean 2d axis", "test 2d mean and stddev with axis arguments on cuda") {
             auto test_array = bland::rand_normal(
                     {500000, 5}, 0.0f, 1.0f, DLDataType{.code = DLDataTypeCode::kDLFloat, .bits = 32});
@@ -242,6 +241,46 @@ TEST_CASE("cuda statistical", "[ndarray][ops][statistical]") {
 
             // REQUIRE_THAT(std::vector<float>(kurtosis.data_ptr<float>(), kurtosis.data_ptr<float>() + kurtosis.numel()),
             //              BlandWithinAbs(std::vector<float>{3, 3, 0, 3, 3}, .1f));
+    }
+    SECTION("sum 2d axis", "test 2d sum with axis arguments on cuda") {
+            auto test_array = bland::ndarray(
+                    {16, 50}, 42, DLDataType{.code = DLDataTypeCode::kDLFloat, .bits = 32});
+
+            test_array = test_array.to("cuda:0");
+
+            auto sum = bland::sum(test_array, {0});
+
+            sum = sum.to("cpu");
+            cudaDeviceSynchronize();
+
+            REQUIRE_THAT(std::vector<float>(sum.data_ptr<float>(), sum.data_ptr<float>() + sum.numel()),
+                         BlandWithinAbs(std::vector<float>(50, 42*16), .1f));
+
+
+        //     // Linear transform: mean and variance get scaled and translated, normalized moment should remain the same.
+        //     test_array = test_array.to("cpu");
+        //     cudaDeviceSynchronize();
+        //     test_array = test_array * 4 + 2;
+        //     cudaDeviceSynchronize();
+        //     test_array = test_array.to("cuda");
+        //     cudaDeviceSynchronize();
+
+        //     mean     = bland::mean(test_array, {0});
+        //     stddev   = bland::stddev(test_array, {0});
+        //     cudaDeviceSynchronize();
+        //     // kurtosis = bland::standardized_moment(test_array, 4, {0});
+        //     mean = mean.to("cpu");
+        //     stddev = stddev.to("cpu");
+        //     cudaDeviceSynchronize();
+
+        //     REQUIRE_THAT(std::vector<float>(mean.data_ptr<float>(), mean.data_ptr<float>() + mean.numel()),
+        //                  BlandWithinAbs(std::vector<float>{2, 10, 22, 2, 2}, .1f));
+
+        //     REQUIRE_THAT(std::vector<float>(stddev.data_ptr<float>(), stddev.data_ptr<float>() + stddev.numel()),
+        //                  BlandWithinAbs(std::vector<float>{4, 16, 0, 4, 4}, .1f));
+
+        //     // REQUIRE_THAT(std::vector<float>(kurtosis.data_ptr<float>(), kurtosis.data_ptr<float>() + kurtosis.numel()),
+        //     //              BlandWithinAbs(std::vector<float>{3, 3, 0, 3, 3}, .1f));
     }
 }
 

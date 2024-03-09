@@ -26,9 +26,10 @@ using namespace bliss;
 constexpr bool collect_rfi = true;
 // template <bool collect_rfi>
 [[nodiscard]] frequency_drift_plane
-bliss::integrate_linear_rounded_bins_bland(const bland::ndarray    &spectrum_grid,
-                                     const bland::ndarray    &rfi_mask,
-                                     integrate_drifts_options options) {
+bliss::integrate_linear_rounded_bins_bland(const bland::ndarray &spectrum_grid,
+                                     const bland::ndarray       &rfi_mask,
+                                     integrate_drifts_options    options) {
+
     auto number_drifts = (options.high_rate - options.low_rate) / options.rate_step_size;
     std::vector<frequency_drift_plane::drift_rate> drift_rate_info;
 
@@ -181,14 +182,17 @@ bliss::integrate_linear_rounded_bins_bland(const bland::ndarray    &spectrum_gri
                                 bland::slice(rfi_in_drift.filter_rolloff,
                                              bland::slice_spec{0, drift_index, drift_index + 1},
                                              bland::slice_spec{1, drift_freq_slice_start, drift_freq_slice_end});
+
                         filter_rolloff_slice = filter_rolloff_slice +
                                                (rfi_mask_slice & static_cast<uint8_t>(flag_values::filter_rolloff)) /
                                                        static_cast<uint8_t>(flag_values::filter_rolloff);
+
 
                         auto low_spectral_kurtosis_slice =
                                 bland::slice(rfi_in_drift.low_spectral_kurtosis,
                                              bland::slice_spec{0, drift_index, drift_index + 1},
                                              bland::slice_spec{1, drift_freq_slice_start, drift_freq_slice_end});
+
                         low_spectral_kurtosis_slice =
                                 low_spectral_kurtosis_slice +
                                 (rfi_mask_slice & static_cast<uint8_t>(flag_values::low_spectral_kurtosis)) /
@@ -198,6 +202,7 @@ bliss::integrate_linear_rounded_bins_bland(const bland::ndarray    &spectrum_gri
                                 bland::slice(rfi_in_drift.high_spectral_kurtosis,
                                              bland::slice_spec{0, drift_index, drift_index + 1},
                                              bland::slice_spec{1, drift_freq_slice_start, drift_freq_slice_end});
+
                         high_spectral_kurtosis_slice =
                                 high_spectral_kurtosis_slice +
                                 (rfi_mask_slice & static_cast<uint8_t>(flag_values::high_spectral_kurtosis)) /

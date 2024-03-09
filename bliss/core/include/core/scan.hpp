@@ -120,6 +120,8 @@ class scan {
      * return the coarse channel index that the given frequency is in
      * 
      * useful for reinvestigating hits by looking up frequency
+     * 
+     * In the future this may change name or return the actual coarse channel
     */
     int get_coarse_channel_with_frequency(double frequency);
 
@@ -135,6 +137,10 @@ class scan {
      * gather hits in all coarse channels of this scan and return as a single list
      */
     std::list<hit> hits();
+
+    bland::ndarray::dev device();
+    void set_device(bland::ndarray::dev &device);
+    void set_device(std::string_view device);
 
     /**
      * create a new scan consisting of the selected coarse channel
@@ -208,6 +214,8 @@ class scan {
     // slow time is number of spectra
     int64_t _slow_time_bins;
     double  _tduration_secs;
+
+    bland::ndarray::dev _device = bland::ndarray::dev::cpu;
 
   private:
 };

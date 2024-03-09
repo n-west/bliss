@@ -23,6 +23,9 @@ struct observation_target {
     */
     observation_target slice_observation_channels(int start_channel=0, int count=1);
 
+    // bland::ndarray::dev device();
+    // void set_device(bland::ndarray::dev &device);
+
     // Is it useful to capture which of ABACAD this is?
     std::vector<scan> _scans;
     std::string       _target_name;
@@ -56,6 +59,9 @@ struct cadence {
      * create a new cadence consisting of a slice of coarse channels
     */
     cadence slice_cadence_channels(int start_channel=0, int count=1);
+
+    // bland::ndarray::dev device();
+    // void set_device(bland::ndarray::dev &device);
 
   protected:
 };

@@ -15,17 +15,18 @@ inline ndarray device_dispatch(FuncCPU cpu_func, FuncCUDA cuda_func, L lhs, R rh
     
     ndarray::dev compute_device = default_device;
     // Check device consistency between arguments and set appropriate compute device
-    if constexpr (std::is_same<L, ndarray>::value && std::is_same<R, ndarray>::value) {
+    if constexpr (std::is_base_of<ndarray, std::decay_t<L>>::value && std::is_base_of<ndarray, std::decay_t<R>>::value) {
         if (lhs.device() == rhs.device()) {
             compute_device = rhs.device();
         } else {
             throw std::runtime_error("ERROR: got two arrays on different devices");
         }
-    } else if constexpr (std::is_same<L, ndarray>::value) {
+    } else if constexpr (std::is_base_of<ndarray, std::decay_t<L>>::value) {
         compute_device = lhs.device();
-    } else if constexpr (std::is_same<R, ndarray>::value) {
+    } else if constexpr (std::is_base_of<ndarray, std::decay_t<R>>::value) {
         compute_device = rhs.device();
     }
+    // fmt::print("compute device is {}\n", compute_device.device_type);
 
     // Call the correct function impl based on compute device
     if (compute_device.device_type == kDLCPU || compute_device.device_type == kDLCUDAHost) {

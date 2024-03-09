@@ -200,9 +200,7 @@ std::shared_ptr<coarse_channel> bliss::scan::get_coarse_channel(int coarse_chann
     }
 
     auto global_offset_in_file = coarse_channel_index + _coarse_channel_offset;
-    if (_coarse_channels.find(global_offset_in_file) != _coarse_channels.end()) {
-        return _coarse_channels.at(global_offset_in_file);
-    } else {
+    if (_coarse_channels.find(global_offset_in_file) == _coarse_channels.end()) {
         // TODO: decide if we should evict an old coarse channel from the cache (might need
         // to stop returning references to keep that safe)
 
@@ -214,7 +212,7 @@ std::shared_ptr<coarse_channel> bliss::scan::get_coarse_channel(int coarse_chann
         auto global_start_fine_channel = std::get<0>(_inferred_channelization) * global_offset_in_file;
         data_offset[2] = global_start_fine_channel;
 
-        fmt::print("reading data from coarse channel {} which translates to offset {} + count {}\n",
+        fmt::print("DEBUG: reading data from coarse channel {} which translates to offset {} + count {}\n",
                    global_offset_in_file,
                    data_offset,
                    data_count);
@@ -240,9 +238,12 @@ std::shared_ptr<coarse_channel> bliss::scan::get_coarse_channel(int coarse_chann
                                                            _data_type,
                                                            _az_start,
                                                            _za_start);
+        new_coarse->set_device(_device);
         _coarse_channels.insert({global_offset_in_file, new_coarse});
-        return _coarse_channels.at(global_offset_in_file);
     }
+    auto cc = _coarse_channels.at(global_offset_in_file);
+    cc->set_device(_device);
+    return cc;
 }
 
 bliss::scan::filterbank_channelization_revs bliss::scan::get_channelization() {
@@ -274,6 +275,21 @@ std::list<hit> bliss::scan::hits() {
         }
     }
     return all_hits;
+}
+
+
+bland::ndarray::dev bliss::scan::device() {
+    return _device;
+}
+
+void bliss::scan::set_device(bland::ndarray::dev &device) {
+    _device = device;
+    // TODO: what to do about data already in our "cache"?
+}
+
+void bliss::scan::set_device(std::string_view device) {
+    _device = device;
+    // TODO: what to do about data already in our "cache"?
 }
 
 bliss::scan bliss::scan::slice_scan_channels(int start_channel, int count) {

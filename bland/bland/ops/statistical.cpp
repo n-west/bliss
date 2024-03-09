@@ -276,3 +276,19 @@ ndarray bland::sum(const ndarray &a, std::vector<int64_t> reduced_axes) {
     ndarray out(out_shape, a.dtype(), a.device());
     return sum(a, out, reduced_axes);
 }
+
+int64_t bland::count_true(ndarray x) {
+    auto compute_device = x.device();
+
+#if BLAND_CUDA_CODE
+    if (compute_device.device_type == ndarray::dev::cuda.device_type || compute_device.device_type == ndarray::dev::cuda_managed.device_type) {
+        return cuda::count_true(x);
+    } else
+#endif // BLAND_CUDA_CODE
+    if (compute_device.device_type == ndarray::dev::cpu.device_type) {
+        return cpu::count_true(x);
+    } else {
+        throw std::runtime_error("unsupported device for count_true");
+    }
+
+}

@@ -41,4 +41,13 @@ float median(const ndarray &a, std::vector<int64_t> axes={});
 // ndarray median(const ndarray &a, std::vector<int64_t> axes={});
 // ndarray median(const ndarray &a, ndarray &out, std::vector<int64_t> axes={});
 
+
+/**
+ * return the number of elements that will evaluate to true
+ *
+ * TODO: optionally add an dim parameter
+ */
+int64_t count_true(ndarray x);
+
+
 } // namespace bland

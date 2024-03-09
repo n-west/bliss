@@ -1,8 +1,10 @@
 #pragma once
 
+#include <bland/ndarray.hpp>
 #include "cadence.hpp"
 #include "coarse_channel.hpp"
 #include "scan.hpp"
+#include <variant>
 
 #include <nanobind/nanobind.h>
 #include <nanobind/ndarray.h>
@@ -13,6 +15,7 @@
 #include <nanobind/stl/shared_ptr.h>
 #include <nanobind/stl/optional.h>
 #include <nanobind/stl/tuple.h>
+#include <nanobind/stl/variant.h>
 
 namespace nb = nanobind;
 using namespace nb::literals;
@@ -43,7 +46,7 @@ void bind_pycore(nb::module_ m) {
             .def_ro("za_start", &bliss::coarse_channel::_za_start)
             .def_ro("noise_estimate", &bliss::coarse_channel::_noise_stats)
             .def("integrated_drift_plane", &bliss::coarse_channel::integrated_drift_plane)
-                ;
+            .def_prop_rw("device", &bliss::coarse_channel::device, &bliss::coarse_channel::set_device);
 
     nb::class_<bliss::scan>(m, "scan")
             .def(nb::init<std::string_view>(), "file_path"_a)
@@ -67,7 +70,15 @@ void bind_pycore(nb::module_ m) {
             .def_prop_ro("tsamp", &bliss::scan::tsamp)
             .def_prop_ro("tstart", &bliss::scan::tstart)
             .def_prop_ro("za_start", &bliss::scan::za_start)
-        ;
+            .def_prop_rw("device", &bliss::scan::device,
+                                   [](bliss::scan &t, std::variant<int, std::string_view> value) {
+                                       if (std::holds_alternative<std::string_view>(value)) {
+                                            t.set_device(std::get<std::string_view>(value));
+                                       } else if (std::holds_alternative<int>(value)) {
+                                            // TODO: handle the case its actually a dev object
+                                            //t.set_device(std::get<bland::ndarray::dev>(value));
+                                       }
+                                   });
 
     //  * *DIMENSION_LABELS
     //  * *az_start

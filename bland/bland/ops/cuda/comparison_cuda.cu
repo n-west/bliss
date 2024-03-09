@@ -7,7 +7,6 @@
 #include "elementwise_scalar_op_cuda.cuh"
 
 #include "comparison_cuda_impl.cuh"
-#include "count.cuh" // kernel definition for count
 
 using namespace bland;
 using namespace bland::cuda;
@@ -54,6 +53,9 @@ template ndarray bland::cuda::greater_than<int8_t, ndarray>(int8_t lhs, ndarray 
 template ndarray bland::cuda::greater_than<int16_t, ndarray>(int16_t lhs, ndarray rhs);
 template ndarray bland::cuda::greater_than<int32_t, ndarray>(int32_t lhs, ndarray rhs);
 template ndarray bland::cuda::greater_than<int64_t, ndarray>(int64_t lhs, ndarray rhs);
+
+template ndarray bland::cuda::greater_than<uint8_t, ndarray_slice>(uint8_t lhs, ndarray_slice rhs);
+template ndarray bland::cuda::greater_than<ndarray_slice, uint8_t>(ndarray_slice lhs, uint8_t rhs);
 
 
 /**
@@ -231,6 +233,8 @@ template ndarray bland::cuda::logical_and<int16_t, ndarray>(int16_t lhs, ndarray
 template ndarray bland::cuda::logical_and<int32_t, ndarray>(int32_t lhs, ndarray rhs);
 template ndarray bland::cuda::logical_and<int64_t, ndarray>(int64_t lhs, ndarray rhs);
 
+template ndarray bland::cuda::logical_and<uint8_t, ndarray_slice>(uint8_t lhs, ndarray_slice rhs);
+template ndarray bland::cuda::logical_and<ndarray_slice, uint8_t>(ndarray_slice lhs, uint8_t rhs);
 
 /**
  * equal_to
@@ -275,7 +279,3 @@ template ndarray bland::cuda::equal_to<int16_t, ndarray>(int16_t lhs, ndarray rh
 template ndarray bland::cuda::equal_to<int32_t, ndarray>(int32_t lhs, ndarray rhs);
 template ndarray bland::cuda::equal_to<int64_t, ndarray>(int64_t lhs, ndarray rhs);
 
-
-int64_t bland::cuda::count_true(ndarray x) {
-    return dispatch_summary<count_launcher>(x);
-}

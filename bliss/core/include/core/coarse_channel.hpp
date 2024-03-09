@@ -35,8 +35,8 @@ struct coarse_channel {
                    int64_t        data_type,
                    double         az_start,
                    double         za_start);
-    bland::ndarray data() const;
-    bland::ndarray mask() const;
+    bland::ndarray data();
+    bland::ndarray mask();
     void           set_mask(bland::ndarray new_mask);
 
     frequency_drift_plane integrated_drift_plane();
@@ -48,6 +48,14 @@ struct coarse_channel {
     bool           has_hits();
     std::list<hit> hits() const;
     void           add_hits(std::list<hit> new_hits);
+
+    bland::ndarray::dev device();
+
+    /**
+     * Set the compute device for this coarse_channel. When `data` or `mask` is requested, it will first
+     * be sent to this device if it is not already there.
+    */
+    void set_device(bland::ndarray::dev &device);
 
     double fch1() const;
     // void        fch1(double);
@@ -108,10 +116,7 @@ struct coarse_channel {
     std::optional<bland::ndarray>           _dedrifted_spectrum;
     std::optional<integrated_flags>         _dedrifted_rfi;
 
-
-    // TODO: I do not think we need to carry this around anymore since we'll track everything needed
-    // in the frequency_drift_plane object
-    std::optional<integrate_drifts_options> _drift_parameters;
+    bland::ndarray::dev _device = bland::ndarray::dev::cpu;
 
     std::optional<std::list<hit>> _hits;
 };

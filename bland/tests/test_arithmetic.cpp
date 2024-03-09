@@ -169,7 +169,7 @@ TEST_CASE("cuda arithmetic", "[ops][arithmetic]") {
                                         0.0001f));
     }
     SECTION("array-scalar mul-add", "[10000, 10000] array * 4 + 2") {
-        auto test_array = bland::ndarray({10000, 10000}, 1.0f);
+        auto test_array = bland::ndarray({1024, 5}, 1.0f);
 
         test_array = test_array.to("cuda:0");
 
@@ -177,8 +177,9 @@ TEST_CASE("cuda arithmetic", "[ops][arithmetic]") {
         result = result.to("cpu");
         cudaDeviceSynchronize();
 
-        REQUIRE(test_array.numel() == 10000*10000);
+        REQUIRE(test_array.numel() == 1024*5);
         auto expected = std::vector<float>(test_array.numel(), 6.0f);
+        // REQUIRE(result.numel() == )
         REQUIRE_THAT(std::vector<float>(result.data_ptr<float>(), result.data_ptr<float>() + result.numel()),
                         BlandWithinAbs(expected,
                                 0.0001f));

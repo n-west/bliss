@@ -42,11 +42,13 @@ coarse_channel::coarse_channel(bland::ndarray data,
         _za_start(za_start) {
 }
 
-bland::ndarray bliss::coarse_channel::data() const {
+bland::ndarray bliss::coarse_channel::data() {
+    _data = _data.to(_device);
     return _data;
 }
 
-bland::ndarray bliss::coarse_channel::mask() const {
+bland::ndarray bliss::coarse_channel::mask() {
+    _mask = _mask.to(_device);
     return _mask;
 }
 
@@ -72,6 +74,16 @@ std::list<hit> bliss::coarse_channel::hits() const {
 
 void bliss::coarse_channel::add_hits(std::list<hit> new_hits) {
     _hits = new_hits;
+}
+
+bland::ndarray::dev bliss::coarse_channel::device() {
+    return _device;
+}
+
+void bliss::coarse_channel::set_device(bland::ndarray::dev &device) {
+    _device = device;
+    // TODO: what to do about data already read? Maybe just wait until it's been rerequested
+    // defer as much as possible
 }
 
 double bliss::coarse_channel::fch1() const {

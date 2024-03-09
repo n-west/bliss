@@ -38,9 +38,9 @@ coarse_channel bliss::flag_spectral_kurtosis(coarse_channel cc_data, float lower
     // 2. Generate SK flag
     auto rfi = flag_spectral_kurtosis(spectrum_grid, N, M, d, lower_threshold, upper_threshold);
 
-    fmt::print("Storing sk mask back to coarse channel data\n");
+    auto accumulated_rfi = rfi_flags + rfi;
     // 3. Store back accumulated rfi
-    cc_data.set_mask(rfi_flags + rfi);
+    cc_data.set_mask(accumulated_rfi);
 
     return cc_data;
 }
