@@ -10,6 +10,7 @@
 #include <cuda_runtime.h>
 
 #include <fmt/format.h>
+#include <fmt/ranges.h>
 
 namespace bland {
 
@@ -23,14 +24,17 @@ struct is_floating<float> {
     static constexpr bool value = true;
 };
 
+// TODO: have a safe default if ndim > MAX_NDIM
+constexpr int SCALAR_MAX_NDIM=4;
+
 template <typename Out, typename A, typename B, class Op>
 __global__ void elementwise_scalar_op_cuda_impl(Out* out_data, int64_t* out_shape, int64_t* out_strides,
                                 A* a_data, int64_t* a_shape, int64_t* a_strides,
                                 B scalar_val, int64_t ndim, int64_t numel) {
-    auto worker_id = gridDim.x * blockIdx.x + threadIdx.x;
+    auto worker_id = blockIdx.x * blockDim.x + threadIdx.x;
     auto grid_size = gridDim.x * blockDim.x;
 
-    int64_t* nd_index = (int64_t*) malloc(ndim * sizeof(int64_t));
+    int64_t nd_index[SCALAR_MAX_NDIM] = {0};
     auto flattened_work_item = worker_id;
     for (int dim = ndim - 1; dim >= 0; --dim) {
         nd_index[dim] = flattened_work_item % out_shape[dim];
@@ -63,7 +67,6 @@ __global__ void elementwise_scalar_op_cuda_impl(Out* out_data, int64_t* out_shap
             }
         }
     }
-    free(nd_index);
 }
 /**
  * template wrapper around a template function which calls the function
@@ -72,17 +75,16 @@ __global__ void elementwise_scalar_op_cuda_impl(Out* out_data, int64_t* out_shap
 struct scalar_op_impl_wrapper_cuda {
     template <typename Out, typename A_type, typename B_type, class Op>
     static inline ndarray call(ndarray out, const ndarray &a, const B_type &b) {
-        // Check that this operation is possible
         auto a_shape = a.shape();
-        // TODO: check/validate output shape!
-        auto a_data = a.data_ptr<A_type>();
-
         const auto a_offset   = a.offsets();
-        const auto out_offset = out.offsets();
+        int64_t a_ptr_offset = std::accumulate(a_offset.begin(), a_offset.end(), 0LL);
+        auto a_data = a.data_ptr<A_type>() + a_ptr_offset;
 
-        auto       out_data  = out.data_ptr<Out>();
         const auto out_shape = out.shape();
-        
+        const auto out_offset = out.offsets();
+        int64_t out_ptr_offset = std::accumulate(out_offset.begin(), out_offset.end(), 0LL);
+        auto out_data = out.data_ptr<Out>() + out_ptr_offset;
+
         const auto a_strides   = compute_broadcast_strides(a.shape(), a.strides(), out_shape);
         const auto out_strides = out.strides();
         
@@ -94,16 +96,17 @@ struct scalar_op_impl_wrapper_cuda {
         thrust::device_vector<int64_t> dev_a_shape(a_shape.begin(), a_shape.end());
         thrust::device_vector<int64_t> dev_a_strides(a_strides.begin(), a_strides.end());
 
-        int block_size = 256; // TODO: for some small numels we might still want to reduce this
+        uint32_t block_size = 512; // TODO: for some small numels we might still want to reduce this
+        
         auto numel = out.numel();
-        // TODO: do some benchmarking to get a better default max number of blocks
-        int num_blocks = std::min<int>(1, (numel+block_size-1) / block_size);
+        // TODO: do some benchmarking to get a better default max number of blocksa_shape
+        uint32_t num_blocks = std::min<uint32_t>(32, (numel+block_size-1) / block_size);
         elementwise_scalar_op_cuda_impl<Out, A_type, B_type, Op><<<num_blocks, block_size>>>(out_data, thrust::raw_pointer_cast(dev_out_shape.data()), thrust::raw_pointer_cast(dev_out_strides.data()),
                                                                 a_data, thrust::raw_pointer_cast(dev_a_shape.data()), thrust::raw_pointer_cast(dev_a_strides.data()),
                                                                 b,
                                                                 out.ndim(), numel);
-        // Might want to drop these in a debug mode...
-        // Synchronize the device
+        // // Might want to drop these in a debug mode...
+        // // Synchronize the device
         // cudaError_t syncErr = cudaDeviceSynchronize();
 
         // // Check for errors in kernel launch

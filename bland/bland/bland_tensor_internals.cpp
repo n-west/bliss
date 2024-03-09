@@ -88,7 +88,6 @@ blandDLTensor::blandDLTensor(const std::vector<int64_t> &shape,
         }
         _data_ownership = std::shared_ptr<void>(ptr, free);
     } else if (DLTensor::device.device_type == DLDeviceType::kDLCUDA) {
-        /* todo */
         #if BLAND_CUDA
         void* ptr = nullptr;
         cudaSetDevice(device.device_id);

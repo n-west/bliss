@@ -15,16 +15,31 @@
 using namespace bliss;
 
 bland::ndarray bliss::integrate_drifts(const bland::ndarray &spectrum_grid, integrate_drifts_options options) {
+    auto compute_device = spectrum_grid.device();
 
-    auto drift_grid = integrate_linear_rounded_bins_cpu(spectrum_grid, options);
-
-    return drift_grid;
+    if (compute_device.device_type == kDLCPU) {
+        auto drift_grid = integrate_linear_rounded_bins_cpu(spectrum_grid, options);
+        return drift_grid;
+    } else if (compute_device.device_type == kDLCUDA) {
+        auto drift_grid = integrate_linear_rounded_bins_bland(spectrum_grid, options);
+        return drift_grid;
+    } else {
+        throw std::runtime_error("integrate_drifts not supported on this device");
+    }
 }
 
 coarse_channel bliss::integrate_drifts(coarse_channel cc_data, integrate_drifts_options options) {
-    auto integrated_dedrift = integrate_linear_rounded_bins_cpu(cc_data.data(), cc_data.mask(), options);
+    auto compute_device = cc_data.device();
 
-    cc_data.set_integrated_drift_plane(integrated_dedrift);
+    if (compute_device.device_type == kDLCPU) {
+        auto integrated_dedrift = integrate_linear_rounded_bins_cpu(cc_data.data(), cc_data.mask(), options);
+        cc_data.set_integrated_drift_plane(integrated_dedrift);
+    } else if (compute_device.device_type == kDLCUDA) {
+        auto integrated_dedrift = integrate_linear_rounded_bins_bland(cc_data.data(), cc_data.mask(), options);
+        cc_data.set_integrated_drift_plane(integrated_dedrift);
+    }
+
+    // cc_data.set_integrated_drift_plane(integrated_dedrift);
     return cc_data;
 }
 

@@ -1,5 +1,7 @@
 #pragma once
 
+#include "integrate_drifts_options.hpp" // integrated_flags
+
 #include <bland/ndarray.hpp>
 
 #include <cstdint>

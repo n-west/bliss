@@ -4,7 +4,6 @@
 #include "bland/ndarray.hpp"
 
 #include "device_dispatch.hpp"
-#include "assignment_op.hpp"
 #include "dispatcher.hpp"
 #include "shape_helpers.hpp"
 #include <dlpack/dlpack.h> // consider if bland_tensor_internals.hpp which includes this is more appropriate
@@ -225,11 +224,25 @@ template ndarray_slice bland::slice(const ndarray &a,
 
 template <typename T>
 ndarray bland::fill(ndarray out, T value) {
-    return dispatch_new<assignment_op_impl_wrapper, T>(out, value);
+    auto compute_device = out.device();
+#if BLAND_CUDA_CODE
+    if (compute_device.device_type == ndarray::dev::cuda.device_type || compute_device.device_type == ndarray::dev::cuda_managed.device_type) {
+        return cuda::fill(out, value);
+    } else
+#endif // BLAND_CUDA_CODE
+    if (compute_device.device_type == ndarray::dev::cpu.device_type) {
+        return cpu::fill(out, value);
+    } else {
+        throw std::runtime_error("unsupported device for masked_stddev");
+    }
 }
 
 template ndarray bland::fill<float>(ndarray out, float v);
 template ndarray bland::fill<double>(ndarray out, double v);
+template ndarray bland::fill<uint8_t>(ndarray out, uint8_t v);
+template ndarray bland::fill<uint16_t>(ndarray out, uint16_t v);
+template ndarray bland::fill<uint32_t>(ndarray out, uint32_t v);
+template ndarray bland::fill<uint64_t>(ndarray out, uint64_t v);
 template ndarray bland::fill<int8_t>(ndarray out, int8_t v);
 template ndarray bland::fill<int16_t>(ndarray out, int16_t v);
 template ndarray bland::fill<int32_t>(ndarray out, int32_t v);

@@ -3,8 +3,9 @@
 #include "bland/ndarray.hpp"
 
 #include "dispatcher.hpp"
-
 #include "shape_helpers.hpp"
+
+#include "count.cuh" // kernel definition for count
 
 #include <fmt/core.h>
 #include <fmt/ranges.h>
@@ -108,19 +109,20 @@ __global__ void reduction_impl(out_datatype* out_data, int64_t* out_shape, int64
     accumulator_type sdata_c = 0;
     accumulator_type* s2data = sdata + blockDim.x;
     accumulator_type s2data_c = 0;
-    sdata[tid] = 0;
-    if constexpr (Op == reductiontype::stddev || Op == reductiontype::var) {
-        s2data[tid] = 0;
-    }
 
     int64_t out_index[MAX_NDIM] = {0};
     int64_t in_index[MAX_NDIM] = {0};
-    int64_t mask_index[MAX_NDIM] = {0};
+    // int64_t mask_index[MAX_NDIM] = {0};
     int64_t reduced_nd_index[MAX_NDIM] = {0};
 
     auto numel = out_numel;
     for (int64_t i = 0; i < numel; ++i) {
 
+        // Reset accumulators
+        sdata[tid] = 0;
+        if constexpr (Op == reductiontype::stddev || Op == reductiontype::var) {
+            s2data[tid] = 0;
+        }
         // Deep copy the input index which is advancing over non-reduced inputs
         // to reduced_nd_index which will be used in inner loop to advance through
         // reduced inputs 
@@ -209,10 +211,8 @@ __global__ void reduction_impl(out_datatype* out_data, int64_t* out_shape, int64
             out_linear_index += out_index[dim] * out_strides[dim];
         }
 
-        // Normalize accumulated inputs as needed
-        if constexpr (Op == reductiontype::sum) {
-            // do nothing...
-        } else if constexpr (Op == reductiontype::mean) {
+        // Normalize accumulated inputs as needed.
+        if constexpr (Op == reductiontype::mean) {
             // printf("(%i) The partial sum is %f\n", tid, sdata[tid]);
             sdata[tid] /= reduction_factor;
         } else if constexpr (Op == reductiontype::stddev || Op == reductiontype::var) {
@@ -234,7 +234,6 @@ __global__ void reduction_impl(out_datatype* out_data, int64_t* out_shape, int64
         // Write the final accumulated value to global output
         if (tid == 0) {
             if constexpr (Op == reductiontype::stddev) {
-                // TODO: don't cast down to float when it's a double type
                 // out_data[out_linear_index] = static_cast<out_datatype>((s2data[0] - sdata[0]*sdata[0]));
                 // printf("E[X^2] = %f - E[X]^2 = %f\n", s2data[0], sdata[0]*sdata[0]);
                 auto diff = (s2data[0] - sdata[0]*sdata[0]);
@@ -301,12 +300,11 @@ __global__ void reduction_impl(out_datatype* out_data, int64_t* out_shape, int64
     accumulator_type sdata_c = 0;
     accumulator_type* s2data = sdata + blockDim.x;
     accumulator_type s2data_c = 0;
-    uint32_t* scount = reinterpret_cast<uint32_t*>(sdata + 2*blockDim.x);
-    sdata[tid] = 0;
-    scount[tid] = 0;
-    if constexpr (Op == reductiontype::stddev || Op == reductiontype::var) {
-        s2data[tid] = 0;
+    int count_offset = blockDim.x;
+    if constexpr(Op == reductiontype::stddev || Op == reductiontype::var) {
+        count_offset = 2*blockDim.x;
     }
+    uint32_t* scount = reinterpret_cast<uint32_t*>(sdata + count_offset);
 
     int64_t out_index[MAX_NDIM] = {0};
     int64_t in_index[MAX_NDIM] = {0};
@@ -314,7 +312,12 @@ __global__ void reduction_impl(out_datatype* out_data, int64_t* out_shape, int64
 
     auto numel = out_numel;
     for (int64_t i = 0; i < numel; ++i) {
-
+        // Reset accumulators
+        sdata[tid] = 0;
+        scount[tid] = 0;
+        if constexpr (Op == reductiontype::stddev || Op == reductiontype::var) {
+            s2data[tid] = 0;
+        }
         // Deep copy the input index which is advancing over non-reduced inputs
         // to reduced_nd_index which will be used in inner loop to advance through
         // reduced inputs 
@@ -381,7 +384,7 @@ __global__ void reduction_impl(out_datatype* out_data, int64_t* out_shape, int64
                 }
             }
 
-            // Increment nd_indix for reduced dimensions
+            // Increment nd_index for reduced dimensions
             auto increment_size = blockDim.x;
             for (int dim = a_ndim - 1; dim >= 0; --dim) {
                 // increment the index if this dim is being reduced
@@ -410,16 +413,6 @@ __global__ void reduction_impl(out_datatype* out_data, int64_t* out_shape, int64
             out_linear_index += out_index[dim] * out_strides[dim];
         }
 
-        // // Normalize accumulated inputs as needed
-        // if constexpr (Op == reductiontype::sum) {
-        //     // do nothing...
-        // } else if constexpr (Op == reductiontype::mean) {
-        //     // printf("(%i) The partial sum is %f\n", tid, sdata[tid]);
-        //     sdata[tid] /= reduction_factor;
-        // } else if constexpr (Op == reductiontype::stddev || Op == reductiontype::var) {
-        //     sdata[tid] /= reduction_factor;
-        //     s2data[tid] /= reduction_factor;
-        // }
         __syncthreads();
         for (int s=blockDim.x/2; s > 0; s>>=1) {
             if (tid < s) {
@@ -435,7 +428,7 @@ __global__ void reduction_impl(out_datatype* out_data, int64_t* out_shape, int64
         }
         // Write the final accumulated value to global output
         if (tid == 0) {
-            // TODO: don't cast down to float when it's a double type
+            // TODO: guard against scount == 0
             if constexpr (Op == reductiontype::stddev) {
                 sdata[0] /= scount[0];
                 s2data[0] /= scount[0];
@@ -456,7 +449,7 @@ __global__ void reduction_impl(out_datatype* out_data, int64_t* out_shape, int64
                 diff = max((in_datatype)0, diff);
                 out_data[out_linear_index] = static_cast<out_datatype>(diff);
             } else if constexpr (Op == reductiontype::mean) {
-                sdata[0] /= scount[0];
+                out_data[out_linear_index] = static_cast<out_datatype>(sdata[0] / scount[0]);
             } else {
                 // sum
                 out_data[out_linear_index] = static_cast<out_datatype>(sdata[0]);
@@ -506,23 +499,16 @@ struct statistical_launch_wrapper {
 
         auto a_shape = a.shape();
         auto a_data = a.data_ptr<in_datatype>();
-        const auto a_offset   = a.offsets();
-        const auto a_strides   = a.strides();
+        const auto a_offset  = a.offsets();
+        const auto a_strides = a.strides();
 
         thrust::device_vector<int64_t> dev_a_shape(a_shape.begin(), a_shape.end());
         thrust::device_vector<int64_t> dev_a_strides(a_strides.begin(), a_strides.end());
-
-        if (reduced_axes.empty()) {
-            for (int axis = 0; axis < a.ndim(); ++axis) {
-                reduced_axes.push_back(axis);
-            }
-        }
 
         int64_t reduced_elements = 1;
         for (auto &d : reduced_axes) {
             reduced_elements *= a_shape[d];
         }
-        // fmt::print("reduced_axes {} produces {} reduced_elements\n", reduced_axes, reduced_elements);
         thrust::device_vector<int64_t> dev_reduced_axes(reduced_axes.begin(), reduced_axes.end());
 
         cudaDeviceProp props;
@@ -548,7 +534,6 @@ struct statistical_launch_wrapper {
             // TODO: Check we have enough smem
             smem_per_block *= 2; // need to keep an E[X^2] which will take double the smem
         }
-
         reduction_impl<out_datatype, in_datatype, Reduction><<<num_blocks, block_size, smem_per_block>>>(out_data, thrust::raw_pointer_cast(dev_out_shape.data()), thrust::raw_pointer_cast(dev_out_strides.data()), dev_out_shape.size(), out_numel,
                                                                 a_data, thrust::raw_pointer_cast(dev_a_shape.data()), thrust::raw_pointer_cast(dev_a_strides.data()), dev_a_shape.size(),
                                                                 thrust::raw_pointer_cast(dev_reduced_axes.data()), dev_reduced_axes.size(), reduced_elements
@@ -586,7 +571,7 @@ struct statistical_launch_wrapper {
         auto mask_shape = mask.shape();
         auto mask_data = mask.data_ptr<uint8_t>();
         const auto mask_offset   = mask.offsets();
-        const auto mask_strides   = mask.strides();
+        const auto mask_strides  = mask.strides();
 
         thrust::device_vector<int64_t> dev_mask_shape(mask_shape.begin(), mask_shape.end());
         thrust::device_vector<int64_t> dev_mask_strides(mask_strides.begin(), mask_strides.end());
@@ -638,10 +623,10 @@ struct statistical_launch_wrapper {
         // size to get parallelized reductions.
         int num_blocks = 1;
         int smem_per_block = required_smem_per_thread * block_size; // this should be sizeof the accumulator type
-
         reduction_impl<out_datatype, in_datatype, Reduction><<<num_blocks, block_size, smem_per_block>>>(out_data, thrust::raw_pointer_cast(dev_out_shape.data()), thrust::raw_pointer_cast(dev_out_strides.data()), dev_out_shape.size(), out_numel,
                                                                 a_data, thrust::raw_pointer_cast(dev_a_shape.data()), thrust::raw_pointer_cast(dev_a_strides.data()), dev_a_shape.size(),
                                                                 mask_data, thrust::raw_pointer_cast(dev_mask_shape.data()), thrust::raw_pointer_cast(dev_mask_strides.data()), dev_mask_shape.size(),
+                                                                // mask_data, nullptr, nullptr, mask_shape.size(),
                                                                 thrust::raw_pointer_cast(dev_reduced_axes.data()), dev_reduced_axes.size(), reduced_elements
                                                                 );
         // auto launch_ret = cudaDeviceSynchronize();
@@ -688,5 +673,9 @@ ndarray bland::cuda::var(const ndarray &a, ndarray &out, std::vector<int64_t> re
 
 ndarray bland::cuda::masked_var(const ndarray &a, const ndarray &mask, ndarray &out, std::vector<int64_t> reduced_axes) {
     return dispatch_new<statistical_launch_wrapper<reductiontype::var>>(out, a, mask, reduced_axes);
+}
+
+int64_t bland::cuda::count_true(ndarray x) {
+    return dispatch_summary<count_launcher>(x);
 }
 

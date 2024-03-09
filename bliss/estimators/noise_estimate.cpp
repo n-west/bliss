@@ -124,7 +124,7 @@ bland::ndarray correct_mask(const bland::ndarray &mask) {
         // * warn earlier in flagging step
         throw std::runtime_error("correct_mask: the mask is completely flagged");
     }
-    // auto corrected_mask = bland::copy(mask);
+    auto corrected_mask = bland::copy(mask);
     return mask;
 }
 

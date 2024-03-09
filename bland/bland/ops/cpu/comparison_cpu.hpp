@@ -27,10 +27,5 @@ ndarray logical_and(L lhs, R rhs);
 template <typename L, typename R>
 ndarray equal_to(L lhs, R rhs);
 
-/**
- * return the number of elements that will evaluate to true
- */
-int64_t count_true(ndarray x);
-
 } // namespace cpu
 } // namespace bland

@@ -19,7 +19,7 @@ add_feature_info(CUDA WITH_CUDA "Using CUDA as a backend for array storage and c
 if (WITH_CUDA)
   message("BLAND:: enabling cuda (the language)")
   if(NOT DEFINED CMAKE_CUDA_ARCHITECTURES)
-    set(CMAKE_CUDA_ARCHITECTURES native)
+    set(CMAKE_CUDA_ARCHITECTURES all-major)
   endif()
   enable_language(CUDA)
   add_definitions("-DBLAND_CUDA_CODE=1")

@@ -58,6 +58,11 @@ void bind_pybland(nb::module_ m) {
     )
     ;
 
+    nb::class_<bland::ndarray::dev>(m, "device")
+    .def(nb::init<std::string_view>())
+    ;
+
+
     m.def("arange", [](float start, float end, float step) {
         return bland::arange(start, end, step);
     });
@@ -118,8 +123,78 @@ void bind_pybland(nb::module_ m) {
     m.def("multiply", [](nb::ndarray<> a, nb::ndarray<> b) {
         return bland::multiply(nb_to_bland(a), nb_to_bland(b));
     });
+    m.def("multiply", [](nb::ndarray<> a, uint8_t b) {
+        return bland::multiply(nb_to_bland(a), b);
+    });
+    m.def("multiply", [](nb::ndarray<> a, uint16_t b) {
+        return bland::multiply(nb_to_bland(a), b);
+    });
+    m.def("multiply", [](nb::ndarray<> a, uint32_t b) {
+        return bland::multiply(nb_to_bland(a), b);
+    });
+    m.def("multiply", [](nb::ndarray<> a, uint64_t b) {
+        return bland::multiply(nb_to_bland(a), b);
+    });
+    m.def("multiply", [](nb::ndarray<> a, int8_t b) {
+        return bland::multiply(nb_to_bland(a), b);
+    });
+    m.def("multiply", [](nb::ndarray<> a, int16_t b) {
+        return bland::multiply(nb_to_bland(a), b);
+    });
+    m.def("multiply", [](nb::ndarray<> a, int32_t b) {
+        return bland::multiply(nb_to_bland(a), b);
+    });
+    m.def("multiply", [](nb::ndarray<> a, int64_t b) {
+        return bland::multiply(nb_to_bland(a), b);
+    });
+    m.def("multiply", [](nb::ndarray<> a, float b) {
+        return bland::multiply(nb_to_bland(a), b);
+    });
+    m.def("multiply", [](nb::ndarray<> a, double b) {
+        return bland::multiply(nb_to_bland(a), b);
+    });
+
+
     m.def("divide", [](nb::ndarray<> a, nb::ndarray<> b) {
         return bland::divide(nb_to_bland(a), nb_to_bland(b));
+    });
+
+    m.def("less_than", [](nb::ndarray<> a, uint8_t b) {
+        return bland::less_than(nb_to_bland(a), b);
+    });
+    m.def("less_than", [](nb::ndarray<> a, uint16_t b) {
+        return bland::less_than(nb_to_bland(a), b);
+    });
+    m.def("less_than", [](nb::ndarray<> a, uint32_t b) {
+        return bland::less_than(nb_to_bland(a), b);
+    });
+    m.def("less_than", [](nb::ndarray<> a, uint64_t b) {
+        return bland::less_than(nb_to_bland(a), b);
+    });
+    m.def("less_than", [](nb::ndarray<> a, float b) {
+        return bland::less_than(nb_to_bland(a), b);
+    });
+    m.def("less_than", [](nb::ndarray<> a, int64_t b) {
+        return bland::less_than(nb_to_bland(a), b);
+    });
+
+    m.def("greater_than", [](nb::ndarray<> a, uint8_t b) {
+        return bland::greater_than(nb_to_bland(a), b);
+    });
+    m.def("greater_than", [](nb::ndarray<> a, uint16_t b) {
+        return bland::greater_than(nb_to_bland(a), b);
+    });
+    m.def("greater_than", [](nb::ndarray<> a, uint32_t b) {
+        return bland::greater_than(nb_to_bland(a), b);
+    });
+    m.def("greater_than", [](nb::ndarray<> a, uint64_t b) {
+        return bland::greater_than(nb_to_bland(a), b);
+    });
+    m.def("greater_than", [](nb::ndarray<> a, float b) {
+        return bland::greater_than(nb_to_bland(a), b);
+    });
+    m.def("greater_than", [](nb::ndarray<> a, int64_t b) {
+        return bland::greater_than(nb_to_bland(a), b);
     });
 
 

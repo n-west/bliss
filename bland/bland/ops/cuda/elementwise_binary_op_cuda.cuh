@@ -13,6 +13,8 @@
 
 namespace bland {
 
+// TODO: have a safe default if ndim > MAX_NDIM
+constexpr int BINARY_MAX_NDIM=4;
 
 template <typename Out, typename A, typename B, class Op>
 __global__ void
@@ -20,18 +22,11 @@ elementwise_binary_op_cuda_impl(Out* out_data, int64_t* out_shape, int64_t* out_
                                 A* a_data, int64_t* a_shape, int64_t* a_strides,
                                 B* b_data, int64_t* b_shape, int64_t* b_strides,
                                 int64_t ndim, int64_t numel) {
-    auto worker_id = gridDim.x * blockIdx.x + threadIdx.x;
+    auto worker_id = blockIdx.x * blockDim.x + threadIdx.x;
     auto grid_size = gridDim.x * blockDim.x;
 
-    // printf("out_shape is %lld and stride is %lld\n", out_shape[0], out_strides[0]);
-    // printf("a_shape is %lld and stride is %lld\n", a_shape[0], a_strides[0]);
-    // printf("b_shape is %lld and stride is %lld\n", b_shape[0], b_strides[0]);
-    // int64_t out_index = 0; // TODO: get the offsets in (can be done on cpu)
-    // int64_t a_index   = 0;
-    // int64_t b_index   = 0;
-    // Initialize nd index based on work ids. The last dim may not have enough work
-    // for the entire grid, so have to check for wrap-around to other dimensions
-    int64_t* nd_index = (int64_t*) malloc(ndim * sizeof(int64_t));
+    int64_t nd_index[BINARY_MAX_NDIM] = {0};
+
     auto flattened_work_item = worker_id;
     for (int dim = ndim - 1; dim >= 0; --dim) {
         nd_index[dim] = flattened_work_item % out_shape[dim];
@@ -64,7 +59,6 @@ elementwise_binary_op_cuda_impl(Out* out_data, int64_t* out_shape, int64_t* out_
             }
         }
     }
-    free(nd_index);
 }
 
 
@@ -91,20 +85,25 @@ struct elementwise_binary_op_impl_wrapper_cuda {
         }
         auto a_data = a.data_ptr<A_type>();
         auto b_data = b.data_ptr<B_type>();
-        
+        auto out_data = out.data_ptr<Out>();
+
         const auto a_offset   = a.offsets();
+        int64_t a_ptr_offset = std::accumulate(a_offset.begin(), a_offset.end(), 0);
+        a_data += a_ptr_offset;
         const auto b_offset   = b.offsets();
+        int64_t b_ptr_offset = std::accumulate(b_offset.begin(), b_offset.end(), 0);
+        b_data += b_ptr_offset;
         const auto out_offset = out.offsets();
-        
-        auto       out_data  = out.data_ptr<Out>();
+        int64_t out_ptr_offset = std::accumulate(out_offset.begin(), out_offset.end(), 0);
+        out_data += out_ptr_offset;
+
         const auto out_shape = out.shape();
-        
+        a_shape = compute_broadcast_shape(a_shape, out_shape);
+        b_shape = compute_broadcast_shape(b_shape, out_shape);
+
         const auto a_strides   = compute_broadcast_strides(a.shape(), a.strides(), out_shape);
         const auto b_strides   = compute_broadcast_strides(b.shape(), b.strides(), out_shape);
         const auto out_strides = out.strides();
-        
-        a_shape = compute_broadcast_shape(a_shape, out_shape);
-        b_shape = compute_broadcast_shape(b_shape, out_shape);
         
         thrust::device_vector<int64_t> dev_out_shape(out_shape.begin(), out_shape.end());
         thrust::device_vector<int64_t> dev_out_strides(out_strides.begin(), out_strides.end());
@@ -115,10 +114,10 @@ struct elementwise_binary_op_impl_wrapper_cuda {
         thrust::device_vector<int64_t> dev_b_shape(b_shape.begin(), b_shape.end());
         thrust::device_vector<int64_t> dev_b_strides(b_strides.begin(), b_strides.end());
         
-        int block_size = 256; // TODO: for some small numels we might still want to reduce this
+        int block_size = 512; // TODO: for some small numels we might still want to reduce this
         auto numel = out.numel();
         // TODO: do some benchmarking to get a better default max number of blocks
-        int num_blocks = std::min<int>(16, (numel+block_size-1) / block_size);
+        int num_blocks = std::min<int>(32, (numel+block_size-1) / block_size);
         // cudaDeviceSynchronize();
         elementwise_binary_op_cuda_impl<Out, A_type, B_type, Op><<<num_blocks, block_size>>>(out_data, thrust::raw_pointer_cast(dev_out_shape.data()), thrust::raw_pointer_cast(dev_out_strides.data()),
                                                                 a_data, thrust::raw_pointer_cast(dev_a_shape.data()), thrust::raw_pointer_cast(dev_a_strides.data()),

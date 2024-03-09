@@ -145,63 +145,64 @@ bland::ndarray::ndarray(std::vector<int64_t> dims, T initial_value, datatype dty
         stride *= _tensor.shape[j];               // Update stride for the next dimension
     }
 
-    switch (dtype.code) {
-    case kDLFloat: {
-        switch (dtype.bits) {
-        case 32:
-            initialize_memory(data_ptr<float>(), numel(), static_cast<float>(initial_value));
-            break;
-        case 64:
-            initialize_memory(data_ptr<double>(), numel(), static_cast<double>(initial_value));
-            break;
-        default:
-            throw std::runtime_error("Unsupported float bitwidth");
-        }
-        break;
-    }
-    case kDLInt: {
-        switch (dtype.bits) {
-        case 8:
-            initialize_memory(data_ptr<int8_t>(), numel(), static_cast<int8_t>(initial_value));
-            break;
-        case 16:
-            initialize_memory(data_ptr<int16_t>(), numel(), static_cast<int16_t>(initial_value));
-            break;
-        case 32:
-            initialize_memory(data_ptr<int32_t>(), numel(), static_cast<int32_t>(initial_value));
-            break;
-        case 64:
-            initialize_memory(data_ptr<int64_t>(), numel(), static_cast<int64_t>(initial_value));
-            break;
-        default:
-            throw std::runtime_error("Unsupported int bitwidth");
-        }
-        break;
-    }
-    case kDLUInt: {
-        switch (dtype.bits) {
-        case 8:
-            initialize_memory(data_ptr<uint8_t>(), numel(), static_cast<uint8_t>(initial_value));
-            break;
-        case 16:
-            initialize_memory(data_ptr<uint16_t>(), numel(), static_cast<uint16_t>(initial_value));
-            break;
-        case 32:
-            initialize_memory(data_ptr<uint32_t>(), numel(), static_cast<uint32_t>(initial_value));
-            break;
-        case 64:
-            initialize_memory(data_ptr<uint64_t>(), numel(), static_cast<uint64_t>(initial_value));
-            break;
-        default:
-            throw std::runtime_error("Unsupported uint bitwidth");
-        }
-        break;
-    }
-    default:
-        auto error_message =
-                fmt::format("ndarray (ctor): unsupported datatype code {} with {} bits", dtype.code, dtype.bits);
-        throw std::runtime_error(error_message);
-    }
+    fill(*this, initial_value);
+    // switch (dtype.code) {
+    // case kDLFloat: {
+    //     switch (dtype.bits) {
+    //     case 32:
+    //         initialize_memory(data_ptr<float>(), numel(), static_cast<float>(initial_value));
+    //         break;
+    //     case 64:
+    //         initialize_memory(data_ptr<double>(), numel(), static_cast<double>(initial_value));
+    //         break;
+    //     default:
+    //         throw std::runtime_error("Unsupported float bitwidth");
+    //     }
+    //     break;
+    // }
+    // case kDLInt: {
+    //     switch (dtype.bits) {
+    //     case 8:
+    //         initialize_memory(data_ptr<int8_t>(), numel(), static_cast<int8_t>(initial_value));
+    //         break;
+    //     case 16:
+    //         initialize_memory(data_ptr<int16_t>(), numel(), static_cast<int16_t>(initial_value));
+    //         break;
+    //     case 32:
+    //         initialize_memory(data_ptr<int32_t>(), numel(), static_cast<int32_t>(initial_value));
+    //         break;
+    //     case 64:
+    //         initialize_memory(data_ptr<int64_t>(), numel(), static_cast<int64_t>(initial_value));
+    //         break;
+    //     default:
+    //         throw std::runtime_error("Unsupported int bitwidth");
+    //     }
+    //     break;
+    // }
+    // case kDLUInt: {
+    //     switch (dtype.bits) {
+    //     case 8:
+    //         initialize_memory(data_ptr<uint8_t>(), numel(), static_cast<uint8_t>(initial_value));
+    //         break;
+    //     case 16:
+    //         initialize_memory(data_ptr<uint16_t>(), numel(), static_cast<uint16_t>(initial_value));
+    //         break;
+    //     case 32:
+    //         initialize_memory(data_ptr<uint32_t>(), numel(), static_cast<uint32_t>(initial_value));
+    //         break;
+    //     case 64:
+    //         initialize_memory(data_ptr<uint64_t>(), numel(), static_cast<uint64_t>(initial_value));
+    //         break;
+    //     default:
+    //         throw std::runtime_error("Unsupported uint bitwidth");
+    //     }
+    //     break;
+    // }
+    // default:
+    //     auto error_message =
+    //             fmt::format("ndarray (ctor): unsupported datatype code {} with {} bits", dtype.code, dtype.bits);
+    //     throw std::runtime_error(error_message);
+    // }
 }
 
 template bland::ndarray::ndarray(std::vector<int64_t> dims, float initial_value, datatype dtype, DLDevice device);

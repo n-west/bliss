@@ -48,6 +48,10 @@ template ndarray bland::greater_than<int16_t>(int16_t lhs, ndarray rhs);
 template ndarray bland::greater_than<int32_t>(int32_t lhs, ndarray rhs);
 template ndarray bland::greater_than<int64_t>(int64_t lhs, ndarray rhs);
 
+template ndarray bland::greater_than<uint8_t, ndarray_slice>(uint8_t lhs, ndarray_slice rhs);
+template ndarray bland::greater_than<ndarray_slice, uint8_t>(ndarray_slice lhs, uint8_t rhs);
+
+
 template <typename L, typename R>
 std::enable_if_t<std::is_base_of<ndarray, std::decay_t<L>>::value || std::is_base_of<ndarray, std::decay_t<R>>::value, ndarray>
 bland::operator>(L lhs, R rhs) {
@@ -84,11 +88,11 @@ template ndarray bland::operator><int64_t, ndarray>(int64_t lhs, ndarray rhs);
 template <typename L, typename R>
 ndarray bland::greater_than_equal_to(L lhs, R rhs) {
     return device_dispatch(cpu::greater_than_equal_to<L, R>,
-                            // #if BLAND_CUDA_CODE
-                            // cuda::greater_than<L, R>,
-                            // #else
+                            #if BLAND_CUDA_CODE
+                            cuda::greater_than_equal_to<L, R>,
+                            #else
                             nullptr,
-                            // #endif
+                            #endif
                             lhs, rhs);
 }
 
@@ -153,11 +157,11 @@ template ndarray bland::operator>=<int64_t, ndarray>(int64_t lhs, ndarray rhs);
 template <typename L, typename R>
 ndarray bland::less_than(L lhs, R rhs) {
     return device_dispatch(cpu::less_than<L, R>,
-                            // #if BLAND_CUDA_CODE
-                            // cuda::greater_than<L, R>,
-                            // #else
+                            #if BLAND_CUDA_CODE
+                            cuda::less_than<L, R>,
+                            #else
                             nullptr,
-                            // #endif
+                            #endif
                             lhs, rhs);
 }
 
@@ -222,11 +226,11 @@ template ndarray bland::operator< <int64_t, ndarray>(int64_t lhs, ndarray rhs);
 template <typename L, typename R>
 ndarray bland::less_than_equal_to(L lhs, R rhs) {
     return device_dispatch(cpu::less_than_equal_to<L, R>,
-                            // #if BLAND_CUDA_CODE
-                            // cuda::greater_than<L, R>,
-                            // #else
+                            #if BLAND_CUDA_CODE
+                            cuda::less_than_equal_to<L, R>,
+                            #else
                             nullptr,
-                            // #endif
+                            #endif
                             lhs, rhs);
 }
 
@@ -291,11 +295,11 @@ template ndarray bland::operator<=<int64_t, ndarray>(int64_t lhs, ndarray rhs);
 template <typename L, typename R>
 ndarray bland::logical_and(L lhs, R rhs) {
     return device_dispatch(cpu::logical_and<L, R>,
-                            // #if BLAND_CUDA_CODE
-                            // cuda::greater_than<L, R>,
-                            // #else
+                            #if BLAND_CUDA_CODE
+                            cuda::logical_and<L, R>,
+                            #else
                             nullptr,
-                            // #endif
+                            #endif
                             lhs, rhs);
 }
 
@@ -322,6 +326,10 @@ template ndarray bland::logical_and<int8_t>(int8_t lhs, ndarray rhs);
 template ndarray bland::logical_and<int16_t>(int16_t lhs, ndarray rhs);
 template ndarray bland::logical_and<int32_t>(int32_t lhs, ndarray rhs);
 template ndarray bland::logical_and<int64_t>(int64_t lhs, ndarray rhs);
+
+template ndarray bland::logical_and<uint8_t, ndarray_slice>(uint8_t lhs, ndarray_slice rhs);
+template ndarray bland::logical_and<ndarray_slice, uint8_t>(ndarray_slice lhs, uint8_t rhs);
+
 
 template <typename L, typename R>
 std::enable_if_t<std::is_base_of<ndarray, std::decay_t<L>>::value || std::is_base_of<ndarray, std::decay_t<R>>::value, ndarray>
@@ -353,6 +361,9 @@ template ndarray bland::operator&<int16_t, ndarray>(int16_t lhs, ndarray rhs);
 template ndarray bland::operator&<int32_t, ndarray>(int32_t lhs, ndarray rhs);
 template ndarray bland::operator&<int64_t, ndarray>(int64_t lhs, ndarray rhs);
 
+template ndarray bland::operator&<uint8_t, ndarray_slice>(uint8_t lhs, ndarray_slice rhs);
+template ndarray bland::operator&<ndarray_slice, uint8_t>(ndarray_slice lhs, uint8_t rhs);
+
 
 /**
  * equal_to (==)
@@ -360,11 +371,11 @@ template ndarray bland::operator&<int64_t, ndarray>(int64_t lhs, ndarray rhs);
 template <typename L, typename R>
 ndarray bland::equal_to(L lhs, R rhs) {
     return device_dispatch(cpu::equal_to<L, R>,
-                            // #if BLAND_CUDA_CODE
-                            // cuda::equal_to<L, R>,
-                            // #else
+                            #if BLAND_CUDA_CODE
+                            cuda::equal_to<L, R>,
+                            #else
                             nullptr,
-                            // #endif
+                            #endif
                             lhs, rhs);
 }
 
@@ -422,7 +433,3 @@ template ndarray bland::operator==<int16_t, ndarray>(int16_t lhs, ndarray rhs);
 template ndarray bland::operator==<int32_t, ndarray>(int32_t lhs, ndarray rhs);
 template ndarray bland::operator==<int64_t, ndarray>(int64_t lhs, ndarray rhs);
 
-
-int64_t bland::count_true(ndarray x) {
-    return cpu::count_true(x);
-}

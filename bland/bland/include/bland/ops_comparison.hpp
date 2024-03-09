@@ -65,11 +65,5 @@ operator==(L lhs, R rhs);
 // float absolute_tolerance); template <typename T> std::enable_if_t<std::is_arithmetic<T>::value, ndarray>
 // approx_equal(T lhs, ndarray rhs, float relative_tolerance, float absolute_tolerance);
 
-/**
- * return the number of elements that will evaluate to true
- *
- * TODO: optionally add an dim parameter
- */
-int64_t count_true(ndarray x);
 
 } // namespace bland

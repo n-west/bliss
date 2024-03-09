@@ -6,14 +6,10 @@
 namespace bland {
 struct ndarray;
 
+namespace cpu {
+
 /**
- * 
- * Perform an elementwise binary operation such as add, sub, mul, div as indicated
- * in the Op parameter (which will have the underlying datatypes passed through
- * as template parameters to the op) between two tensors with underlying datatypes
- * A and B.
- *
- * Currently the result datatype will be the same as A, but we should fix that!
+ * Fill out with the value of a cast to the datatype of out.
  */
 template <typename Out, typename S>
 ndarray assignment_op(ndarray &out, const S &a) {
@@ -62,4 +58,5 @@ struct assignment_op_impl_wrapper {
     }
 };
 
+} // namespace cpu
 } // namespace bland

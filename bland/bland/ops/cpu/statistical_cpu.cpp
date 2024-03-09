@@ -798,3 +798,50 @@ struct sum_impl {
 ndarray bland::cpu::sum(const ndarray &a, ndarray &out, std::vector<int64_t> axes) {
     return dispatch_new<sum_impl>(out, a, axes);
 }
+
+
+struct count_impl {
+    template <typename in_datatype>
+    static inline int64_t call(const ndarray &a) {
+
+        auto a_data    = a.data_ptr<in_datatype>();
+        auto a_shape   = a.shape();
+        auto a_strides = a.strides();
+        auto a_offset  = a.offsets();
+
+        std::vector<int64_t> input_index(a_shape.size(), 0);
+        int64_t a_linear_index = std::accumulate(a_offset.begin(), a_offset.end(), 0);
+
+        int64_t count = 0;
+        auto    numel = a.numel();
+        for (int i = 0; i < numel; ++i) {
+            // Make a copy of the current input index, we'll fix the non-summed dims
+            // and iterate over the reduced dims accumulating the total
+            if (a_data[a_linear_index]) {
+                ++count;
+            }
+
+            // Increment the multi-dimensional input index
+            // TODO: I think I can dedupe this with above by checking if axis is in reduce axis but that may actually be
+            // less efficient
+            for (int dim = a_shape.size() - 1; dim >= 0; --dim) {
+                // If we're not at the end of this dim, keep going
+                ++input_index[dim];
+                a_linear_index += a_strides[dim];
+                if (input_index[dim] < a_shape[dim]) {
+                    break;
+                } else {
+                    // Otherwise, set it to 0 and move down to the next dim
+                    input_index[dim] = 0;
+                    a_linear_index -= (a_shape[dim]) * a_strides[dim];
+                }
+            }
+        }
+
+        return count;
+    }
+};
+
+int64_t bland::cpu::count_true(ndarray x) {
+    return dispatch_summary<count_impl>(x);
+}
