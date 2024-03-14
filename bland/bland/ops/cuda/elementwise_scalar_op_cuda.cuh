@@ -34,15 +34,15 @@ __global__ void elementwise_scalar_op_cuda_impl(Out* out_data, int64_t* out_shap
     auto worker_id = blockIdx.x * blockDim.x + threadIdx.x;
     auto grid_size = gridDim.x * blockDim.x;
 
-    int64_t nd_index[SCALAR_MAX_NDIM] = {0};
+    uint32_t nd_index[SCALAR_MAX_NDIM] = {0};
     auto flattened_work_item = worker_id;
     for (int dim = ndim - 1; dim >= 0; --dim) {
         nd_index[dim] = flattened_work_item % out_shape[dim];
         flattened_work_item /= out_shape[dim];
     }
 
-    for (int64_t n = worker_id; n < numel; n += grid_size) {
-        int64_t out_index = 0, a_index = 0;
+    for (uint32_t n = worker_id; n < numel; n += grid_size) {
+        uint32_t out_index = 0, a_index = 0;
         for (int dim = 0; dim < ndim; ++dim) {
             out_index += nd_index[dim] * out_strides[dim];
             a_index += nd_index[dim] * a_strides[dim];
