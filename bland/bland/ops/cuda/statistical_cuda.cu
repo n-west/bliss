@@ -100,6 +100,8 @@ __global__ void reduction_impl(out_datatype* out_data, int64_t* out_shape, int64
 
     using accumulator_type = in_datatype;
     auto tid = threadIdx.x;
+    auto outer_workid = blockIdx.x;
+    auto outer_gridsize = gridDim.x;
 
     // Assume we've been given shared memory with enough space for each thread
     // to hold an accumulator of the in_datatype size (and one for x^2 if stddev or var)
@@ -112,12 +114,31 @@ __global__ void reduction_impl(out_datatype* out_data, int64_t* out_shape, int64
 
     int64_t out_index[MAX_NDIM] = {0};
     int64_t in_index[MAX_NDIM] = {0};
-    // int64_t mask_index[MAX_NDIM] = {0};
     int64_t reduced_nd_index[MAX_NDIM] = {0};
 
-    auto numel = out_numel;
-    for (int64_t i = 0; i < numel; ++i) {
+    // Initialize ndindex per threadblock
+    auto flattened_work_item = outer_workid;
+    for (int dim = out_ndim - 1; dim >= 0; --dim) {
+        out_index[dim] = flattened_work_item % out_shape[dim];
+        flattened_work_item /= out_shape[dim];
+    }
+    flattened_work_item = outer_workid;
+    for (int dim = a_ndim - 1; dim >= 0; --dim) {
+        bool reduce_this_dim = false;
+        for (int ra=0; ra < nreduced_dim; ++ra) {
+            if (dim == reduced_axes[ra]) {
+                reduce_this_dim = true;
+                break;
+            }
+        }
+        if (!reduce_this_dim) {
+            in_index[dim] = flattened_work_item % a_shape[dim];
+            flattened_work_item /= a_shape[dim];
+        }
+    }
 
+    auto numel = out_numel;
+    for (int64_t i = outer_workid; i < numel; i+=outer_gridsize) {
         // Reset accumulators
         sdata[tid] = 0;
         if constexpr (Op == reductiontype::stddev || Op == reductiontype::var) {
@@ -182,7 +203,8 @@ __global__ void reduction_impl(out_datatype* out_data, int64_t* out_shape, int64
                     s2data[tid] += x_square;
                 }
             }
-            // Increment nd_indix for reduced dimensions
+
+            // Increment nd_index for reduced dimensions
             auto increment_size = blockDim.x;
             for (int dim = a_ndim - 1; dim >= 0; --dim) {
                 // increment the index if this dim is being reduced
@@ -254,14 +276,19 @@ __global__ void reduction_impl(out_datatype* out_data, int64_t* out_shape, int64
             }
         }
 
+        increment_size = gridDim.x;
         // Increment out and in pointers to next non-reduced dims
         for (int dim = out_ndim - 1; dim >= 0; --dim) {
-            if (++out_index[dim] != out_shape[dim]) {
+            out_index[dim] += increment_size;
+            if (out_index[dim] < out_shape[dim]) {
                 break;
             } else {
-                out_index[dim] = 0;
+                increment_size = out_index[dim] / out_shape[dim];
+                out_index[dim] = out_index[dim] % out_shape[dim];
             }
         }
+
+        increment_size = gridDim.x;
         for (int dim = a_ndim - 1; dim >= 0; --dim) {
             // increment the index if this dim is being reduced
             bool reduce_this_dim = false;
@@ -272,10 +299,12 @@ __global__ void reduction_impl(out_datatype* out_data, int64_t* out_shape, int64
                 }
             }
             if (!reduce_this_dim) {
-                if (++in_index[dim] != a_shape[dim]) {
+                in_index[dim] += increment_size;
+                if (in_index[dim] < a_shape[dim]) {
                     break;
                 } else {
-                    in_index[dim] = 0;
+                    increment_size = in_index[dim] / a_shape[dim];
+                    in_index[dim] = in_index[dim] % a_shape[dim];
                 }
             }
         }
@@ -291,6 +320,8 @@ __global__ void reduction_impl(out_datatype* out_data, int64_t* out_shape, int64
 
     using accumulator_type = in_datatype;
     auto tid = threadIdx.x;
+    auto outer_workid = blockIdx.x;
+    auto outer_gridsize = gridDim.x;
 
     // Assume we've been given shared memory with enough space for each thread
     // to hold an accumulator of the in_datatype size (and one for x^2 if stddev or var)
@@ -310,8 +341,29 @@ __global__ void reduction_impl(out_datatype* out_data, int64_t* out_shape, int64
     int64_t in_index[MAX_NDIM] = {0};
     int64_t reduced_nd_index[MAX_NDIM] = {0};
 
+    // Initialize ndindex per threadblock
+    auto flattened_work_item = outer_workid;
+    for (int dim = out_ndim - 1; dim >= 0; --dim) {
+        out_index[dim] = flattened_work_item % out_shape[dim];
+        flattened_work_item /= out_shape[dim];
+    }
+    flattened_work_item = outer_workid;
+    for (int dim = a_ndim - 1; dim >= 0; --dim) {
+        bool reduce_this_dim = false;
+        for (int ra=0; ra < nreduced_dim; ++ra) {
+            if (dim == reduced_axes[ra]) {
+                reduce_this_dim = true;
+                break;
+            }
+        }
+        if (!reduce_this_dim) {
+            in_index[dim] = flattened_work_item % a_shape[dim];
+            flattened_work_item /= a_shape[dim];
+        }
+    }
+
     auto numel = out_numel;
-    for (int64_t i = 0; i < numel; ++i) {
+    for (int64_t i = outer_workid; i < numel; i+=outer_gridsize) {
         // Reset accumulators
         sdata[tid] = 0;
         scount[tid] = 0;
@@ -456,14 +508,19 @@ __global__ void reduction_impl(out_datatype* out_data, int64_t* out_shape, int64
             }
         }
 
+        increment_size = gridDim.x;
         // Increment out and in pointers to next non-reduced dims
         for (int dim = out_ndim - 1; dim >= 0; --dim) {
-            if (++out_index[dim] != out_shape[dim]) {
+            out_index[dim] += increment_size;
+            if (out_index[dim] < out_shape[dim]) {
                 break;
             } else {
-                out_index[dim] = 0;
+                increment_size = out_index[dim] / out_shape[dim];
+                out_index[dim] = out_index[dim] % out_shape[dim];
             }
         }
+
+        increment_size = gridDim.x;
         for (int dim = a_ndim - 1; dim >= 0; --dim) {
             // increment the index if this dim is being reduced
             bool reduce_this_dim = false;
@@ -474,10 +531,12 @@ __global__ void reduction_impl(out_datatype* out_data, int64_t* out_shape, int64
                 }
             }
             if (!reduce_this_dim) {
-                if (++in_index[dim] != a_shape[dim]) {
+                in_index[dim] += increment_size;
+                if (in_index[dim] < a_shape[dim]) {
                     break;
                 } else {
-                    in_index[dim] = 0;
+                    increment_size = in_index[dim] / a_shape[dim];
+                    in_index[dim] = in_index[dim] % a_shape[dim];
                 }
             }
         }
@@ -514,9 +573,14 @@ struct statistical_launch_wrapper {
         cudaDeviceProp props;
         cudaGetDeviceProperties(&props, a.device().device_id);
 
-        // TODO: could use more elegance here
         int block_size = 512;
-        if (reduced_elements < 512) {
+        int required_smem_per_thread = sizeof(in_datatype);
+        if (Reduction == reductiontype::stddev || Reduction == reductiontype::var) {
+            // need to keep an E[X^2] which will take double the smem
+            required_smem_per_thread += sizeof(in_datatype);
+        }
+        if (reduced_elements < block_size) {
+            // Reduce to a block size that is a power of 2 but less than number of items that need reducing
             block_size = reduced_elements | (reduced_elements >> 1);
             block_size |= (block_size >> 2);
             block_size |= (block_size >> 4);
@@ -525,14 +589,12 @@ struct statistical_launch_wrapper {
             block_size = block_size - (block_size >> 1);
         }
         auto out_numel = out.numel();
-        // TODO: the current way reductions are written limits us to 1 block per reduction. That's actually
-        // fine, but an improvement would be to do multiple reductions at once (if needed), so increase block
-        // size to get parallelized reductions.
-        int num_blocks = 1;
-        int smem_per_block = sizeof(in_datatype) * block_size; // this should be sizeof the accumulator type
+        // TODO (low prio): find a good maximum # blocks
+        int num_blocks = std::min<int64_t>(1024, out_numel);
+        int smem_per_block = required_smem_per_thread * block_size;
         if (Reduction == reductiontype::stddev || Reduction == reductiontype::var) {
             // TODO: Check we have enough smem
-            smem_per_block *= 2; // need to keep an E[X^2] which will take double the smem
+            smem_per_block *= 2; 
         }
         reduction_impl<out_datatype, in_datatype, Reduction><<<num_blocks, block_size, smem_per_block>>>(out_data, thrust::raw_pointer_cast(dev_out_shape.data()), thrust::raw_pointer_cast(dev_out_strides.data()), dev_out_shape.size(), out_numel,
                                                                 a_data, thrust::raw_pointer_cast(dev_a_shape.data()), thrust::raw_pointer_cast(dev_a_strides.data()), dev_a_shape.size(),
@@ -562,8 +624,8 @@ struct statistical_launch_wrapper {
 
         auto a_shape = a.shape();
         auto a_data = a.data_ptr<in_datatype>();
-        const auto a_offset   = a.offsets();
-        const auto a_strides   = a.strides();
+        const auto a_offset  = a.offsets();
+        const auto a_strides = a.strides();
 
         thrust::device_vector<int64_t> dev_a_shape(a_shape.begin(), a_shape.end());
         thrust::device_vector<int64_t> dev_a_strides(a_strides.begin(), a_strides.end());
@@ -575,12 +637,6 @@ struct statistical_launch_wrapper {
 
         thrust::device_vector<int64_t> dev_mask_shape(mask_shape.begin(), mask_shape.end());
         thrust::device_vector<int64_t> dev_mask_strides(mask_strides.begin(), mask_strides.end());
-
-        if (reduced_axes.empty()) {
-            for (int axis = 0; axis < a.ndim(); ++axis) {
-                reduced_axes.push_back(axis);
-            }
-        }
 
         int64_t reduced_elements = 1;
         for (auto &d : reduced_axes) {
@@ -595,17 +651,8 @@ struct statistical_launch_wrapper {
         int block_size = 512;
         int required_smem_per_thread = sizeof(in_datatype) + 4; // 4B for the mask count
         if (Reduction == reductiontype::stddev || Reduction == reductiontype::var) {
+            // need to keep an E[X^2] which will take double the smem
             required_smem_per_thread += sizeof(in_datatype);
-            if constexpr (sizeof(in_datatype) == 8) {
-                // Need 8B for X accum, 8B for X^2 accum, 4B for count = 20B/thread -> ~200
-                block_size = 192;
-            } else if (sizeof(in_datatype) == 4) {
-                // Need 4B for X accum, 4B for X^2 accum, 4B for count = 12B/thread -> ~341
-                block_size = 320;
-            }
-        } else if constexpr (sizeof(in_datatype) == 8) {
-            // Need 8B for X accum, 4B for count = 12B/thread -> ~341
-            block_size = 320;
         }
 
         if (reduced_elements < block_size) {
@@ -618,15 +665,12 @@ struct statistical_launch_wrapper {
             block_size = block_size - (block_size >> 1);
         }
         auto out_numel = out.numel();
-        // TODO: the current way reductions are written limits us to 1 block per reduction. That's actually
-        // fine, but an improvement would be to do multiple reductions at once (if needed), so increase block
-        // size to get parallelized reductions.
-        int num_blocks = 1;
-        int smem_per_block = required_smem_per_thread * block_size; // this should be sizeof the accumulator type
+        // TODO (low prio): find a good maximum # blocks
+        int num_blocks = std::min<int64_t>(1024, out_numel);
+        int smem_per_block = required_smem_per_thread * block_size;
         reduction_impl<out_datatype, in_datatype, Reduction><<<num_blocks, block_size, smem_per_block>>>(out_data, thrust::raw_pointer_cast(dev_out_shape.data()), thrust::raw_pointer_cast(dev_out_strides.data()), dev_out_shape.size(), out_numel,
                                                                 a_data, thrust::raw_pointer_cast(dev_a_shape.data()), thrust::raw_pointer_cast(dev_a_strides.data()), dev_a_shape.size(),
                                                                 mask_data, thrust::raw_pointer_cast(dev_mask_shape.data()), thrust::raw_pointer_cast(dev_mask_strides.data()), dev_mask_shape.size(),
-                                                                // mask_data, nullptr, nullptr, mask_shape.size(),
                                                                 thrust::raw_pointer_cast(dev_reduced_axes.data()), dev_reduced_axes.size(), reduced_elements
                                                                 );
         // auto launch_ret = cudaDeviceSynchronize();
