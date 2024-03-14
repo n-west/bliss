@@ -28,8 +28,7 @@ __global__ void elementwise_unary_op_impl(Out* out_data, int64_t* out_shape, int
     auto worker_id = blockIdx.x * blockDim.x + threadIdx.x;
     auto grid_size = gridDim.x * blockDim.x;
 
-    // int64_t* nd_index = (int64_t*) malloc(ndim * sizeof(int64_t));
-    int64_t nd_index[MAX_NDIM] = {0};
+    uint32_t nd_index[MAX_NDIM] = {0};
     auto flattened_work_item = worker_id;
     for (int dim = ndim - 1; dim >= 0; --dim) {
         nd_index[dim] = flattened_work_item % out_shape[dim];
@@ -37,8 +36,8 @@ __global__ void elementwise_unary_op_impl(Out* out_data, int64_t* out_shape, int
     }
     // printf("initial index: [%i]: [%lld, %lld]\n", worker_id, nd_index[0], nd_index[1]);
 
-    for (int64_t n = worker_id; n < numel; n += grid_size) {
-        int64_t out_index = 0, a_index = 0;
+    for (uint32_t n = worker_id; n < numel; n += grid_size) {
+        uint32_t out_index = 0, a_index = 0;
         for (int dim = 0; dim < ndim; ++dim) {
             out_index += nd_index[dim] * out_strides[dim];
             a_index += nd_index[dim] * a_strides[dim];
@@ -61,8 +60,8 @@ __global__ void elementwise_unary_op_impl(Out* out_data, int64_t* out_shape, int
             }
         }
     }
-    // free(nd_index);
 }
+
 /**
  * template wrapper around a template function which calls the function
  * with the given template datatypes
