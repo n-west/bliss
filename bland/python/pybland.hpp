@@ -16,7 +16,8 @@ bland::ndarray nb_to_bland(nb::ndarray<> t);
 void bind_pybland(nb::module_ m) {
 
     // Define ndarray type
-    nb::class_<bland::ndarray>(m, "ndarray")
+    auto pyndarray = nb::class_<bland::ndarray>(m, "ndarray");
+    pyndarray
     .def(nb::init<std::vector<int64_t>>())
     .def("__repr__", &bland::ndarray::repr)
     .def("__dlpack__", [](bland::ndarray &self) {
@@ -58,9 +59,11 @@ void bind_pybland(nb::module_ m) {
     )
     ;
 
-    nb::class_<bland::ndarray::dev>(m, "device")
+    nb::class_<bland::ndarray::dev>(pyndarray, "dev")
     .def(nb::init<std::string_view>())
-    ;
+    .def_rw("device_type", &bland::ndarray::dev::device_type)
+    .def_rw("device_id", &bland::ndarray::dev::device_id)
+    .def("__repr__", &bland::ndarray::dev::repr);
 
 
     m.def("arange", [](float start, float end, float step) {
