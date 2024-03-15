@@ -49,6 +49,22 @@ bliss::observation_target bliss::observation_target::slice_observation_channels(
     return target_coarse_channel;
 }
 
+bland::ndarray::dev bliss::observation_target::device() {
+    return _device;
+}
+
+void bliss::observation_target::set_device(bland::ndarray::dev& device) {
+    for (auto &target_scan : _scans) {
+        target_scan.set_device(device);
+    }
+}
+
+void bliss::observation_target::set_device(std::string_view dev_str) {
+    bland::ndarray::dev device = dev_str;
+    set_device(device);
+}
+
+
 bliss::cadence::cadence(std::vector<observation_target> observations) : _observations(observations) {}
 
 bliss::cadence::cadence(std::vector<std::vector<std::string_view>> observations) {
@@ -63,4 +79,19 @@ bliss::cadence bliss::cadence::slice_cadence_channels(int start_channel, int cou
         cadence_coarse_channel._observations.push_back(obs.slice_observation_channels(start_channel, count));
     }
     return cadence_coarse_channel;
+}
+
+bland::ndarray::dev bliss::cadence::device() {
+    return _device;
+}
+
+void bliss::cadence::set_device(bland::ndarray::dev& device) {
+    for (auto &target : _observations) {
+        target.set_device(device);
+    }
+}
+
+void bliss::cadence::set_device(std::string_view dev_str) {
+    bland::ndarray::dev device = dev_str;
+    set_device(device);
 }

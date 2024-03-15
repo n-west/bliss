@@ -182,5 +182,5 @@ bland::ndarray bliss::integrate_linear_rounded_bins_cpu(const bland::ndarray    
                                                         integrate_drifts_options options) {
     auto dummy_rfi_mask = bland::ndarray({1, 1});
     auto drift_plane = integrate_linear_rounded_bins_cpu(spectrum_grid, dummy_rfi_mask, options);
-    return drift_plane._integrated_drifts;
+    return drift_plane.integrated_drift_plane();
 }

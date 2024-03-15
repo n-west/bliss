@@ -9,7 +9,8 @@
 
 namespace bliss {
 
-struct frequency_drift_plane {
+class frequency_drift_plane {
+    public:
     struct drift_rate {
             int index_in_plane;
             double drift_rate_slope = 0.0F;
@@ -17,12 +18,25 @@ struct frequency_drift_plane {
             int desmeared_bins=1; // number of bins per spectra used to desmear
     };
 
-    frequency_drift_plane(bland::ndarray drift_plane, integrated_flags drift_rfi) : _integrated_drifts(drift_plane), _dedrifted_rfi(drift_rfi) {}
-    frequency_drift_plane(bland::ndarray drift_plane, integrated_flags drift_rfi, int64_t integration_steps, std::vector<drift_rate> dri) : 
-        _integrated_drifts(drift_plane), _dedrifted_rfi(drift_rfi), _integration_steps(integration_steps), _drift_rate_info(dri) {
-    }
-    
+    frequency_drift_plane(bland::ndarray drift_plane, integrated_flags drift_rfi);
+    frequency_drift_plane(bland::ndarray drift_plane, integrated_flags drift_rfi, int64_t integration_steps, std::vector<drift_rate> dri);
 
+    int64_t integration_steps();
+    // void set_integration_steps(int64_t integration_steps);
+
+    std::vector<drift_rate> drift_rate_info();
+    // void set_drift_rate_info(std::vector<drift_rate> drift_rate_info);
+
+    bland::ndarray integrated_drift_plane();
+    // void set_integrated_drift_plane(bland::ndarray integrated_drifts);
+
+    integrated_flags integrated_rfi();
+
+    void set_device(bland::ndarray::dev dev);
+
+    void set_device(std::string_view dev_str);
+
+    private:
     // slow-time steps passed through for a complete integration, the total number
     // of bins contributing to this integration is demsear_bins * integration_steps
     int64_t _integration_steps;
@@ -34,6 +48,7 @@ struct frequency_drift_plane {
 
     integrated_flags _dedrifted_rfi;
 
+    bland::ndarray::dev _device;
 };
 
 } // namespace bliss

@@ -3,6 +3,7 @@ add_library(bliss_core
     cadence.cpp
     coarse_channel.cpp
     event.cpp
+    frequency_drift_plane.cpp
     hit.cpp
     noise_power.cpp
     scan.cpp
