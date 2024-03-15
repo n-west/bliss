@@ -13,6 +13,13 @@ target_link_libraries(drift_search_kernels
     fmt::fmt-header-only
 )
 
+if (WITH_CUDA)
+    target_link_libraries(drift_search_kernels
+        PRIVATE
+        CUDA::cudart_static
+    )
+endif()
+
 set_target_properties(drift_search_kernels PROPERTIES POSITION_INDEPENDENT_CODE TRUE)
 
 

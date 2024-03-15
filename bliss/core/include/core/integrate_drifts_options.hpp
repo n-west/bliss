@@ -29,12 +29,30 @@ struct integrated_flags {
     bland::ndarray high_spectral_kurtosis;
     bland::ndarray magnitude;
     bland::ndarray sigma_clip;
+    bland::ndarray::dev _device = default_device;
+
     integrated_flags(int64_t drifts, int64_t channels, bland::ndarray::dev device = default_device) :
             filter_rolloff(bland::ndarray({drifts, channels}, 0, bland::ndarray::datatype::uint8, device)),
             low_spectral_kurtosis(bland::ndarray({drifts, channels}, 0, bland::ndarray::datatype::uint8, device)),
-            high_spectral_kurtosis(bland::ndarray({drifts, channels}, 0, bland::ndarray::datatype::uint8, device)),
-            magnitude(bland::ndarray({drifts, channels}, 0, bland::ndarray::datatype::uint8, device)),
-            sigma_clip(bland::ndarray({drifts, channels}, 0, bland::ndarray::datatype::uint8, device)) {}
+            high_spectral_kurtosis(bland::ndarray({drifts, channels}, 0, bland::ndarray::datatype::uint8, device))
+            // magnitude(bland::ndarray({drifts, channels}, 0, bland::ndarray::datatype::uint8, device)),
+            // sigma_clip(bland::ndarray({drifts, channels}, 0, bland::ndarray::datatype::uint8, device))
+            {}
+
+    void set_device(bland::ndarray::dev device) {
+        _device = device;
+        filter_rolloff = filter_rolloff.to(device);
+        low_spectral_kurtosis = low_spectral_kurtosis.to(device);
+        high_spectral_kurtosis = high_spectral_kurtosis.to(device);
+        // magnitude = magnitude.to(device);
+        // sigma_clip = sigma_clip.to(device);
+    }
+
+    void set_device(std::string_view device) {
+        bland::ndarray::dev dev = device;
+        set_device(dev);
+    }
+
 };
 
 } // namespace bliss

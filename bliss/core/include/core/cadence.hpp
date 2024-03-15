@@ -23,12 +23,16 @@ struct observation_target {
     */
     observation_target slice_observation_channels(int start_channel=0, int count=1);
 
-    // bland::ndarray::dev device();
-    // void set_device(bland::ndarray::dev &device);
+    bland::ndarray::dev device();
+    void set_device(bland::ndarray::dev &device);
+    void set_device(std::string_view device_str);
 
     // Is it useful to capture which of ABACAD this is?
     std::vector<scan> _scans;
     std::string       _target_name;
+
+  protected:
+    bland::ndarray::dev _device = default_device;
 };
 
 /**
@@ -60,9 +64,11 @@ struct cadence {
     */
     cadence slice_cadence_channels(int start_channel=0, int count=1);
 
-    // bland::ndarray::dev device();
-    // void set_device(bland::ndarray::dev &device);
+    bland::ndarray::dev device();
+    void set_device(bland::ndarray::dev &device);
+    void set_device(std::string_view device_str);
 
   protected:
+    bland::ndarray::dev _device = default_device;
 };
 } // namespace bliss

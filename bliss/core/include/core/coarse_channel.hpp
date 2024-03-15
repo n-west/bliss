@@ -56,6 +56,7 @@ struct coarse_channel {
      * be sent to this device if it is not already there.
     */
     void set_device(bland::ndarray::dev &device);
+    void set_device(std::string_view device);
 
     double fch1() const;
     // void        fch1(double);

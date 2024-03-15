@@ -67,7 +67,8 @@ std::list<hit> bliss::hit_search(coarse_channel dedrifted_scan, hit_search_optio
     }
     auto noise_stats        = dedrifted_scan.noise_estimate();
     auto dedrifted_plane    = dedrifted_scan.integrated_drift_plane();
-    auto integration_length = dedrifted_plane._integration_steps;
+    auto drift_rate_info    = dedrifted_plane.drift_rate_info();
+    auto integration_length = dedrifted_plane.integration_steps();
 
     // Do we need a "component to hit" for each type of search?
     for (const auto &c : components) {
@@ -81,8 +82,8 @@ std::list<hit> bliss::hit_search(coarse_channel dedrifted_scan, hit_search_optio
         auto freq_offset        = dedrifted_scan.foff() * this_hit.start_freq_index;
         this_hit.start_freq_MHz = dedrifted_scan.fch1() + freq_offset;
 
-        this_hit.drift_rate_Hz_per_sec = dedrifted_plane._drift_rate_info[this_hit.rate_index].drift_rate_slope *
-                                         dedrifted_scan.foff() * 1e6 / dedrifted_scan.tsamp();
+        this_hit.drift_rate_Hz_per_sec = drift_rate_info[this_hit.rate_index].drift_rate_slope * dedrifted_scan.foff() *
+                                         1e6 / dedrifted_scan.tsamp();
 
         auto signal_power = (c.max_integration - noise_stats.noise_floor());
 

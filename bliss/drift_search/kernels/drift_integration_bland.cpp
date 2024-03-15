@@ -10,6 +10,7 @@
 
 #include <cmath> // std::round, std::abs
 
+
 using namespace bliss;
 
 /**
@@ -24,7 +25,6 @@ using namespace bliss;
  */
 
 constexpr bool collect_rfi = true;
-// template <bool collect_rfi>
 [[nodiscard]] frequency_drift_plane
 bliss::integrate_linear_rounded_bins_bland(const bland::ndarray &spectrum_grid,
                                      const bland::ndarray       &rfi_mask,
@@ -240,5 +240,5 @@ bland::ndarray bliss::integrate_linear_rounded_bins_bland(const bland::ndarray  
                                                     integrate_drifts_options options) {
     auto dummy_rfi_mask                      = bland::ndarray({1, 1});
     auto drift_plane = integrate_linear_rounded_bins_bland(spectrum_grid, dummy_rfi_mask, options);
-    return drift_plane._integrated_drifts;
+    return drift_plane.integrated_drift_plane();
 }

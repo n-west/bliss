@@ -270,7 +270,7 @@ std::list<hit> bliss::scan::hits() {
             auto this_channel_hits = cc->hits();
             all_hits.insert(all_hits.end(), this_channel_hits.cbegin(), this_channel_hits.cend());
         } catch (const std::bad_optional_access &e) {
-            fmt::print("no hits available from coarse channel {}\n", cc_index);
+            fmt::print("WARN: no hits available from coarse channel {}\n", cc_index);
             // TODO: catch specific exception we know might be thrown
         }
     }
@@ -284,12 +284,14 @@ bland::ndarray::dev bliss::scan::device() {
 
 void bliss::scan::set_device(bland::ndarray::dev &device) {
     _device = device;
-    // TODO: what to do about data already in our "cache"?
+    for (auto &[channel_index, cc] : _coarse_channels) {
+        cc->set_device(device);
+    }
 }
 
-void bliss::scan::set_device(std::string_view device) {
-    _device = device;
-    // TODO: what to do about data already in our "cache"?
+void bliss::scan::set_device(std::string_view dev_str) {
+    bland::ndarray::dev device = dev_str;
+    set_device(device);
 }
 
 bliss::scan bliss::scan::slice_scan_channels(int start_channel, int count) {

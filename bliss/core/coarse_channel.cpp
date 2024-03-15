@@ -53,7 +53,7 @@ bland::ndarray bliss::coarse_channel::mask() {
 }
 
 void bliss::coarse_channel::set_mask(bland::ndarray new_mask) {
-    _mask = new_mask;
+    _mask = new_mask; // TODO: should we send _mask to _device?
 }
 
 noise_stats bliss::coarse_channel::noise_estimate() const {
@@ -82,8 +82,13 @@ bland::ndarray::dev bliss::coarse_channel::device() {
 
 void bliss::coarse_channel::set_device(bland::ndarray::dev &device) {
     _device = device;
-    // TODO: what to do about data already read? Maybe just wait until it's been rerequested
-    // defer as much as possible
+    if (_integrated_drift_plane.has_value()) {
+        _integrated_drift_plane.value().set_device(_device);
+    }
+}
+
+void bliss::coarse_channel::set_device(std::string_view device) {
+    _device = device;
 }
 
 double bliss::coarse_channel::fch1() const {
@@ -192,9 +197,11 @@ double bliss::coarse_channel::za_start() const {
 // }
 
 frequency_drift_plane bliss::coarse_channel::integrated_drift_plane() {
-    return _integrated_drift_plane.value();
+    auto ddp = _integrated_drift_plane.value();
+    ddp.set_device(_device);
+    return ddp;
 }
 
 void bliss::coarse_channel::set_integrated_drift_plane(frequency_drift_plane integrated_plane) {
-    _integrated_drift_plane = integrated_plane;
+    _integrated_drift_plane = integrated_plane; // TODO: should we call set_device(_device)
 }

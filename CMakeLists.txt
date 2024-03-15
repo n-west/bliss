@@ -12,6 +12,9 @@ project(
     VERSION 0.0.0
     LANGUAGES CXX
 )
+
+include(CMakeDependentOption)
+include(FeatureSummary)
 # We don't actually need C, but there's an issue with debian packaging of cap'n proto
 # that causes gcc to fail
 # https://github.com/chaincodelabs/libmultiprocess/issues/68
@@ -22,6 +25,25 @@ enable_language(C)
 
 include(CheckLanguage)
 check_language(CUDA)
+
+find_package(CUDAToolkit)
+if (CUDAToolkit_FOUND)
+    message("CUDAToolkit_FOUND")
+endif()
+
+cmake_dependent_option(WITH_CUDA "Enable CUDA for bliss operations" ON "CMAKE_CUDA_COMPILER;CUDAToolkit_FOUND" OFF)
+add_feature_info(CUDA WITH_CUDA "Enabling bliss-specific CUDA operations")
+
+if (WITH_CUDA)
+  message("**BLISS:: enabling cuda (the language)")
+  if(NOT DEFINED CMAKE_CUDA_ARCHITECTURES)
+    set(CMAKE_CUDA_ARCHITECTURES native)
+  endif()
+  enable_language(CUDA)
+  add_definitions("-DBLISS_CUDA=1")
+else()
+  message("**BLISS:: CUDA not found, building without it")
+endif()
 
 ##
 # options
@@ -88,11 +110,8 @@ include(CheckIPOSupported)
 check_ipo_supported(RESULT IPO_AVAILABLE)
 
 if (${IPO_AVAILABLE})
-  message("Can add flto")
+  message("**BLISS:: Can add flto")
 endif()
-
-include(CMakeDependentOption)
-include(FeatureSummary)
 
 find_program(CCACHE_PROGRAM ccache)
 if(CCACHE_PROGRAM)
@@ -116,7 +135,7 @@ if (NOT CapnProto_FOUND)
   # TODO: try to scope these better
   set(CMAKE_CXX_EXTENSIONS ON)
   set(CMAKE_POSITION_INDEPENDENT_CODE ON CACHE BOOL "Enable position independent code")
-  message("**BLISS: capn proto not found. Attempting to pull in as an external project (and enabling CXX extensions)")
+  message("**BLISS:: capn proto not found. Attempting to pull in as an external project (and enabling CXX extensions)")
   # Cap'n proto (de)serialization library
   FetchContent_Declare(
     external_capnproto

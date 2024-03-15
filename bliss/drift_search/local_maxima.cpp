@@ -33,13 +33,13 @@ std::vector<component> bliss::find_local_maxima_above_threshold(coarse_channel  
     auto noise_stats = dedrifted_coarse_channel.noise_estimate();
     
     auto drift_plane = dedrifted_coarse_channel.integrated_drift_plane();
-    auto integration_length = drift_plane._integration_steps;
+    auto integration_length = drift_plane.integration_steps();
 
-    const auto noise_and_thresholds_per_drift = compute_noise_and_snr_thresholds(noise_stats, integration_length, drift_plane._drift_rate_info, snr_threshold);
+    const auto noise_and_thresholds_per_drift = compute_noise_and_snr_thresholds(noise_stats, integration_length, drift_plane.drift_rate_info(), snr_threshold);
 
     std::vector<component> maxima;
     
-    auto doppler_spectrum = drift_plane._integrated_drifts;
+    auto doppler_spectrum = drift_plane.integrated_drift_plane();
     if (doppler_spectrum.dtype() != bland::ndarray::datatype::float32) {
         throw std::runtime_error(
                 "find_local_maxima_above_threshold: dedrifted doppler spectrum was not float. Only cpu "
@@ -114,16 +114,18 @@ std::vector<component> bliss::find_local_maxima_above_threshold(coarse_channel  
                     c.max_integration = candidate_maxima_val;
                     c.desmeared_noise = noise_and_thresholds_per_drift[curr_coord[0]].second;
 
+                    auto dedrifted_rfi = drift_plane.integrated_rfi();
+
                     c.rfi_counts[flag_values::low_spectral_kurtosis] =
-                            drift_plane._dedrifted_rfi.low_spectral_kurtosis.scalarize<uint8_t>(curr_coord);
+                            dedrifted_rfi.low_spectral_kurtosis.scalarize<uint8_t>(curr_coord);
                     c.rfi_counts[flag_values::high_spectral_kurtosis] =
-                            drift_plane._dedrifted_rfi.high_spectral_kurtosis.scalarize<uint8_t>(curr_coord);
+                            dedrifted_rfi.high_spectral_kurtosis.scalarize<uint8_t>(curr_coord);
                     c.rfi_counts[flag_values::filter_rolloff] =
-                            drift_plane._dedrifted_rfi.filter_rolloff.scalarize<uint8_t>(curr_coord);
-                    c.rfi_counts[flag_values::magnitude] =
-                            drift_plane._dedrifted_rfi.magnitude.scalarize<uint8_t>(curr_coord);
-                    c.rfi_counts[flag_values::sigma_clip] =
-                            drift_plane._dedrifted_rfi.sigma_clip.scalarize<uint8_t>(curr_coord);
+                            dedrifted_rfi.filter_rolloff.scalarize<uint8_t>(curr_coord);
+                    // c.rfi_counts[flag_values::magnitude] =
+                    //         dedrifted_rfi.magnitude.scalarize<uint8_t>(curr_coord);
+                    // c.rfi_counts[flag_values::sigma_clip] =
+                    //         dedrifted_rfi.sigma_clip.scalarize<uint8_t>(curr_coord);
 
                     // Wow, this very conceptually simple thing of adding a bandwidth estimate to local maxima hits
                     // wound up being some ugly code... rethink it
