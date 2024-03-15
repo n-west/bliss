@@ -83,6 +83,11 @@ bool bland::ndarray::dev::operator!=(const dev &other) {
     return !(*this == other);
 }
 
+std::string bland::ndarray::dev::repr() {
+    auto r = fmt::format("ndarray::dev (.device_type={}, .device_id={})\n", device_type, device_id);
+    return r;
+}
+
 bland::ndarray::dev::dev(std::string_view dev_str) {
     if (dev_str == "cpu") {
 		device_type = DLDeviceType::kDLCPU;

@@ -52,6 +52,7 @@ class ndarray {
         bool operator==(const dev &other);
         bool operator==(const DLDevice &other);
         bool operator!=(const dev &other);
+        std::string repr();
 
         static constexpr DLDevice cpu          = DLDevice{.device_type = kDLCPU, .device_id = 0};
         static constexpr DLDevice cuda         = DLDevice{.device_type = kDLCUDA, .device_id = 0};
