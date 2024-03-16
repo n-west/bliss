@@ -1,9 +1,11 @@
+#include "bland/ops/ops_statistical.hpp"
+
 #include "bland/ndarray.hpp"
-#include "bland/ops_statistical.hpp"
+#include "bland/ndarray_slice.hpp"
 
-#include "device_dispatch.hpp"
+#include "bland/ops/ops.hpp" // square (used for var)
 
-#include "shape_helpers.hpp"
+#include "internal/shape_helpers.hpp"
 
 #include "cpu/statistical_cpu.hpp"
 #if BLAND_CUDA_CODE

@@ -1,8 +1,8 @@
 
 
 #include "estimators/noise_estimate.hpp"
-#include <bland/ops.hpp>
-#include <bland/ops_statistical.hpp>
+#include <bland/ops/ops.hpp>
+#include <bland/ops/ops_statistical.hpp>
 
 #include <fmt/core.h>
 #include <fmt/ranges.h>

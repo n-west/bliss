@@ -3,7 +3,7 @@
 
 #include "arithmetic_cuda_impl.cuh"
 #include "elementwise_unary_op.cuh"
-#include "dispatcher.hpp"
+#include "internal/dispatcher.hpp"
 
 #include "bland/ndarray.hpp"
 

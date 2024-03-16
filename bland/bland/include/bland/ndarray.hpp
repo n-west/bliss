@@ -2,7 +2,7 @@
 
 #include "detail/bland_tensor_internals.hpp"
 
-#include "ops.hpp"
+// #include "ops/ops.hpp"
 
 #include <string_view>
 #include <vector>
@@ -14,6 +14,9 @@ namespace bland {
 
 #define default_dtype                                                                                                  \
     DLDataType { .code = kDLFloat, .bits = 32 }
+
+// Forward declare
+class ndarray_slice;
 
 /**
  * `ndarray` is an array with n dimensions backed by an opaque data buffer existing on `device` interpreted as a runtime
@@ -198,23 +201,6 @@ class ndarray {
     // TODO: make this a ptr type so we can hide definition of blandDLTensor (could make some types of assignment and
     // sharing easier too)
     detail::blandDLTensor _tensor;
-};
-
-/**
- * An ndarray_slice is type-system syntactic sugar that allows storing results in to
- * and existing array. This is especially convenient when we've sliced an array and
- * want to store results in the slice of that array.
- */
-class ndarray_slice : public ndarray {
-  public:
-    ndarray_slice(const ndarray &other);
-
-    ndarray_slice &operator=(const ndarray_slice &rhs);
-
-    ndarray_slice &operator=(const ndarray &rhs);
-
-  protected:
-    friend ndarray_slice slice(const ndarray &, int64_t, int64_t, int64_t, int64_t);
 };
 
 /**

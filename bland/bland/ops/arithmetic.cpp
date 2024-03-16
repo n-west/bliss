@@ -1,6 +1,9 @@
+#include "bland/ops/ops_arithmetic.hpp"
 
 #include "bland/ndarray.hpp"
-#include "bland/ops_arithmetic.hpp"
+#include "bland/ndarray_slice.hpp"
+
+#include "internal/shape_helpers.hpp"
 #include "device_dispatch.hpp"
 
 #if BLAND_CUDA_CODE
@@ -8,7 +11,6 @@
 #endif // BLAND_CUDA_CODE
 #include "cpu/arithmetic_cpu.hpp"
 
-#include <shape_helpers.hpp>
 
 using namespace bland;
 

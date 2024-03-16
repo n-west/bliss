@@ -1,7 +1,7 @@
 #pragma once
 
 #include "bland/ndarray.hpp"
-#include "shape_helpers.hpp"
+#include "internal/shape_helpers.hpp"
 
 #include "fmt/format.h"
 #include "fmt/ranges.h"

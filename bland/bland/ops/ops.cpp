@@ -1,11 +1,11 @@
+#include "bland/ops/ops.hpp"
 
-
-#include "bland/ops.hpp"
 #include "bland/ndarray.hpp"
+#include "bland/ndarray_slice.hpp"
 
 #include "device_dispatch.hpp"
-#include "dispatcher.hpp"
-#include "shape_helpers.hpp"
+// #include "internal/dispatcher.hpp"
+#include "internal/shape_helpers.hpp"
 #include <dlpack/dlpack.h> // consider if bland_tensor_internals.hpp which includes this is more appropriate
 
 #include "cpu/elementwise_unary_op.hpp"

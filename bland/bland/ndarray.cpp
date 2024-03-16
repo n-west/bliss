@@ -1,8 +1,8 @@
 
 #include "bland/ndarray.hpp"
-
-#include "bland/ops.hpp"
-#include "bland/ops_statistical.hpp"
+#include "bland/ndarray_slice.hpp"
+#include "bland/ops/ops_arithmetic.hpp"
+#include "bland/ops/ops.hpp" // to, fill
 
 #include <fmt/core.h>
 #include <fmt/ranges.h>
@@ -151,63 +151,6 @@ bland::ndarray::ndarray(std::vector<int64_t> dims, T initial_value, datatype dty
     }
 
     fill(*this, initial_value);
-    // switch (dtype.code) {
-    // case kDLFloat: {
-    //     switch (dtype.bits) {
-    //     case 32:
-    //         initialize_memory(data_ptr<float>(), numel(), static_cast<float>(initial_value));
-    //         break;
-    //     case 64:
-    //         initialize_memory(data_ptr<double>(), numel(), static_cast<double>(initial_value));
-    //         break;
-    //     default:
-    //         throw std::runtime_error("Unsupported float bitwidth");
-    //     }
-    //     break;
-    // }
-    // case kDLInt: {
-    //     switch (dtype.bits) {
-    //     case 8:
-    //         initialize_memory(data_ptr<int8_t>(), numel(), static_cast<int8_t>(initial_value));
-    //         break;
-    //     case 16:
-    //         initialize_memory(data_ptr<int16_t>(), numel(), static_cast<int16_t>(initial_value));
-    //         break;
-    //     case 32:
-    //         initialize_memory(data_ptr<int32_t>(), numel(), static_cast<int32_t>(initial_value));
-    //         break;
-    //     case 64:
-    //         initialize_memory(data_ptr<int64_t>(), numel(), static_cast<int64_t>(initial_value));
-    //         break;
-    //     default:
-    //         throw std::runtime_error("Unsupported int bitwidth");
-    //     }
-    //     break;
-    // }
-    // case kDLUInt: {
-    //     switch (dtype.bits) {
-    //     case 8:
-    //         initialize_memory(data_ptr<uint8_t>(), numel(), static_cast<uint8_t>(initial_value));
-    //         break;
-    //     case 16:
-    //         initialize_memory(data_ptr<uint16_t>(), numel(), static_cast<uint16_t>(initial_value));
-    //         break;
-    //     case 32:
-    //         initialize_memory(data_ptr<uint32_t>(), numel(), static_cast<uint32_t>(initial_value));
-    //         break;
-    //     case 64:
-    //         initialize_memory(data_ptr<uint64_t>(), numel(), static_cast<uint64_t>(initial_value));
-    //         break;
-    //     default:
-    //         throw std::runtime_error("Unsupported uint bitwidth");
-    //     }
-    //     break;
-    // }
-    // default:
-    //     auto error_message =
-    //             fmt::format("ndarray (ctor): unsupported datatype code {} with {} bits", dtype.code, dtype.bits);
-    //     throw std::runtime_error(error_message);
-    // }
 }
 
 template bland::ndarray::ndarray(std::vector<int64_t> dims, float initial_value, datatype dtype, DLDevice device);
@@ -618,22 +561,6 @@ template ndarray bland::operator/<uint16_t>(const uint16_t &lhs, const ndarray &
 template ndarray bland::operator/<uint32_t>(const uint32_t &lhs, const ndarray &rhs);
 template ndarray bland::operator/<uint64_t>(const uint64_t &lhs, const ndarray &rhs);
 
-// template <typename T>
-// ndarray bland::ndarray::operator>(T lhs) const {
-//     return greater_than(*this, lhs);
-// }
-
-// template ndarray bland::ndarray::operator><ndarray>(ndarray rhs);
-// template ndarray bland::ndarray::operator><double>(double rhs);
-// template ndarray bland::ndarray::operator><float>(float rhs);
-// template ndarray bland::ndarray::operator><uint8_t>(uint8_t rhs);
-// template ndarray bland::ndarray::operator><uint16_t>(uint16_t rhs);
-// template ndarray bland::ndarray::operator><uint32_t>(uint32_t rhs);
-// template ndarray bland::ndarray::operator><uint64_t>(uint64_t rhs);
-// template ndarray bland::ndarray::operator><int8_t>(int8_t rhs);
-// template ndarray bland::ndarray::operator><int16_t>(int16_t rhs);
-// template ndarray bland::ndarray::operator><int32_t>(int32_t rhs);
-// template ndarray bland::ndarray::operator><int64_t>(int64_t rhs);
 
 ndarray bland::ndarray::reshape(const std::vector<int64_t> &new_shape) {
     int64_t num_elements = std::accumulate(new_shape.begin(), new_shape.end(), 1, std::multiplies<int64_t>());
@@ -756,60 +683,3 @@ ndarray bland::ndarray::unsqueeze(const int64_t unsqueeze_axis) {
     return *this;
 }
 
-template <typename... Args>
-ndarray_slice bland::ndarray::slice(Args... args) {
-    return bland::slice(*this, args...);
-}
-
-template ndarray_slice bland::ndarray::slice(slice_spec);
-template ndarray_slice bland::ndarray::slice(slice_spec, slice_spec);
-template ndarray_slice bland::ndarray::slice(slice_spec, slice_spec, slice_spec);
-template ndarray_slice bland::ndarray::slice(slice_spec, slice_spec, slice_spec, slice_spec);
-template ndarray_slice bland::ndarray::slice(slice_spec, slice_spec, slice_spec, slice_spec, slice_spec);
-template ndarray_slice bland::ndarray::slice(slice_spec, slice_spec, slice_spec, slice_spec, slice_spec, slice_spec);
-template ndarray_slice
-        bland::ndarray::slice(slice_spec, slice_spec, slice_spec, slice_spec, slice_spec, slice_spec, slice_spec);
-template ndarray_slice bland::ndarray::slice(slice_spec,
-                                             slice_spec,
-                                             slice_spec,
-                                             slice_spec,
-                                             slice_spec,
-                                             slice_spec,
-                                             slice_spec,
-                                             slice_spec);
-template ndarray_slice bland::ndarray::slice(slice_spec,
-                                             slice_spec,
-                                             slice_spec,
-                                             slice_spec,
-                                             slice_spec,
-                                             slice_spec,
-                                             slice_spec,
-                                             slice_spec,
-                                             slice_spec);
-template ndarray_slice bland::ndarray::slice(slice_spec,
-                                             slice_spec,
-                                             slice_spec,
-                                             slice_spec,
-                                             slice_spec,
-                                             slice_spec,
-                                             slice_spec,
-                                             slice_spec,
-                                             slice_spec,
-                                             slice_spec);
-
-/*******************************
- ******* ndarray_slice *********
- ********************************/
-
-ndarray_slice::ndarray_slice(const ndarray &other) : ndarray(other) {}
-
-ndarray_slice &ndarray_slice::operator=(const ndarray_slice &rhs) {
-
-    copy(rhs, *this);
-    return *this;
-};
-
-ndarray_slice &ndarray_slice::operator=(const ndarray &rhs) {
-    copy(rhs, *this);
-    return *this;
-};

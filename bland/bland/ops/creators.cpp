@@ -1,7 +1,8 @@
 
-#include <bland/creators.hpp>
+#include <bland/ops/creators.hpp>
 
-#include <bland/ndarray.hpp>
+#include "bland/ndarray.hpp"
+#include "bland/ndarray_slice.hpp"
 
 #include <random>
 #include <stdexcept>

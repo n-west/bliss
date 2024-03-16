@@ -1,6 +1,6 @@
 #pragma once
 
-#include <bland/ndarray.hpp>
+#include <bland/bland.hpp>
 
 namespace bliss {
 

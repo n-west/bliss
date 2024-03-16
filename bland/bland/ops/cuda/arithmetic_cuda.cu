@@ -1,9 +1,9 @@
 #include "arithmetic_cuda.cuh"
 
 #include "bland/ndarray.hpp"
-#include "bland/ops_arithmetic.hpp"
+#include "bland/ndarray_slice.hpp"
 
-#include "dispatcher.hpp"
+#include "internal/dispatcher.hpp"
 #include "elementwise_binary_op_cuda.cuh"
 
 #include "arithmetic_cuda_impl.cuh"

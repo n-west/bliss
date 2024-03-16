@@ -2,7 +2,7 @@
 #include <core/flag_values.hpp>
 #include <flaggers/magnitude.hpp>
 
-#include <bland/ops.hpp>
+#include <bland/ops/ops.hpp>
 
 using namespace bliss;
 

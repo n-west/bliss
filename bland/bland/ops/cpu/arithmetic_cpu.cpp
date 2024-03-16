@@ -1,12 +1,12 @@
 #include "arithmetic_cpu.hpp"
 
 #include "bland/ndarray.hpp"
-#include "bland/ops_arithmetic.hpp"
+#include "bland/ndarray_slice.hpp"
+#include "bland/ops/ops_arithmetic.hpp"
 
-#include "dispatcher.hpp"
+#include "internal/dispatcher.hpp"
 #include "elementwise_binary_op.hpp"
 
-// TODO: will eventually want to move this to this directory
 #include "arithmetic_cpu_impl.hpp"
 
 

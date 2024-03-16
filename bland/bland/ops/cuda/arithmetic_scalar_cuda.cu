@@ -1,10 +1,10 @@
 
 #include "bland/ndarray.hpp"
-#include "bland/ops_arithmetic.hpp"
+// #include "bland/ops_arithmetic.hpp"
 
 #include "arithmetic_cuda.cuh"
 
-#include "dispatcher.hpp"
+#include "internal/dispatcher.hpp"
 #include "elementwise_scalar_op_cuda.cuh"
 #include "arithmetic_cuda_impl.cuh"
 

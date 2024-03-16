@@ -3,7 +3,7 @@
 #include <flaggers/spectral_kurtosis.hpp>
 #include <estimators/spectral_kurtosis.hpp>
 
-#include <bland/ops.hpp>
+#include <bland/ops/ops.hpp>
 
 #include <fmt/core.h>
 #include <fmt/ranges.h>

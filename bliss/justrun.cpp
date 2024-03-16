@@ -14,7 +14,6 @@
 
 #include "fmt/core.h"
 #include <fmt/ranges.h>
-
 #include <cstdint>
 #include <string>
 #include <vector>
@@ -34,39 +33,55 @@ int main(int argc, char **argv) {
     //                  {"/datag/public/seti_benchmarking/mlc4/spliced_blc0001020304050607_guppi_57517_10836_HIP53839_0014.gpuspec.0000.h5"}});
 
 
-    auto voyager_cadence = bliss::cadence({{"/home/nathan/datasets/voyager_2020_data/single_coarse_guppi_59046_80036_DIAG_VOYAGER-1_0011.rawspec.0000.h5",
-                    "/home/nathan/datasets/voyager_2020_data/single_coarse_guppi_59046_80672_DIAG_VOYAGER-1_0013.rawspec.0000.h5",
-                    "/home/nathan/datasets/voyager_2020_data/single_coarse_guppi_59046_81310_DIAG_VOYAGER-1_0015.rawspec.0000.h5"
+    auto voyager_cadence = bliss::cadence({{"/datag/public/voyager_2020/single_coarse_channel/old_single_coarse/single_coarse_guppi_59046_80036_DIAG_VOYAGER-1_0011.rawspec.0000.h5",
+                    "/datag/public/voyager_2020/single_coarse_channel/old_single_coarse/single_coarse_guppi_59046_80672_DIAG_VOYAGER-1_0013.rawspec.0000.h5",
+                    "/datag/public/voyager_2020/single_coarse_channel/old_single_coarse/single_coarse_guppi_59046_81310_DIAG_VOYAGER-1_0015.rawspec.0000.h5"
                     },
-                    {"/home/nathan/datasets/voyager_2020_data/single_coarse_guppi_59046_80354_DIAG_VOYAGER-1_0012.rawspec.0000.h5"},
-                    {"/home/nathan/datasets/voyager_2020_data/single_coarse_guppi_59046_80989_DIAG_VOYAGER-1_0014.rawspec.0000.h5"},
-                    {"/home/nathan/datasets/voyager_2020_data/single_coarse_guppi_59046_81628_DIAG_VOYAGER-1_0016.rawspec.0000.h5"}});
+                    {"/datag/public/voyager_2020/single_coarse_channel/old_single_coarse/single_coarse_guppi_59046_80354_DIAG_VOYAGER-1_0012.rawspec.0000.h5"},
+                    {"/datag/public/voyager_2020/single_coarse_channel/old_single_coarse/single_coarse_guppi_59046_80989_DIAG_VOYAGER-1_0014.rawspec.0000.h5"},
+                    {"/datag/public/voyager_2020/single_coarse_channel/old_single_coarse/single_coarse_guppi_59046_81628_DIAG_VOYAGER-1_0016.rawspec.0000.h5"}});
 
     // auto cadence = voyager_cadence.slice_cadence_channels(188);
     auto cadence = voyager_cadence;
 
-    cadence = bliss::flag_filter_rolloff(cadence, 0.2);
-    cadence = bliss::flag_spectral_kurtosis(cadence, 0.02, 25);
+    auto scan = cadence._observations[0]._scans[0];
+//     scan.set_device("cpu");
+    scan.set_device("cuda:0");
 
-    cadence = bliss::estimate_noise_power(
-            cadence,
+    scan = bliss::flag_filter_rolloff(scan, 0.2);
+    scan = bliss::flag_spectral_kurtosis(scan, 0.1, 15);
+
+    scan = bliss::estimate_noise_power(
+            scan,
             bliss::noise_power_estimate_options{.estimator_method=bliss::noise_power_estimator::STDDEV, .masked_estimate = true}); // estimate noise power of unflagged data
 
-    cadence = bliss::integrate_drifts(
-            cadence,
-            bliss::integrate_drifts_options{.desmear        = false,
-                                            .low_rate       = -48,
-                                            .high_rate      = 48,
+    fmt::print("{}\n", scan.get_coarse_channel(0)->noise_estimate().repr());
+
+    scan = bliss::integrate_drifts(
+            scan,
+            bliss::integrate_drifts_options{.desmear        = true,
+                                            .low_rate       = -400,
+                                            .high_rate      = 400,
                                             .rate_step_size = 1});
+    scan.set_device("cpu");
 
-    cadence = bliss::hit_search(cadence, {.method=bliss::hit_search_methods::CONNECTED_COMPONENTS, .snr_threshold=10.0f});
+    auto scan_with_hits = bliss::hit_search(scan, {.method=bliss::hit_search_methods::CONNECTED_COMPONENTS, .snr_threshold=10.0f});
 
-    bliss::write_cadence_hits_to_files(cadence, "hits");
+//     cadence = bliss::integrate_drifts(
+//             cadence,
+//             bliss::integrate_drifts_options{.desmear        = false,
+//                                             .low_rate       = -48,
+//                                             .high_rate      = 48,
+//                                             .rate_step_size = 1});
 
-    auto events = bliss::event_search(cadence);
+//     cadence = bliss::hit_search(cadence, {.method=bliss::hit_search_methods::CONNECTED_COMPONENTS, .snr_threshold=10.0f});
 
-    // cadence = bliss::filter_hits(cadence, {});
+//     bliss::write_cadence_hits_to_files(cadence, "hits");
 
-    bliss::write_events_to_file(events, "events_output");
+//     auto events = bliss::event_search(cadence);
+
+//     // cadence = bliss::filter_hits(cadence, {});
+
+//     bliss::write_events_to_file(events, "events_output");
 
 }

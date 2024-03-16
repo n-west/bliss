@@ -1,10 +1,10 @@
 
 #include "bland/ndarray.hpp"
-#include "bland/ops_arithmetic.hpp"
+// #include "bland/ops_arithmetic.hpp"
 
 #include "arithmetic_cpu.hpp"
 
-#include "dispatcher.hpp"
+#include "internal/dispatcher.hpp"
 #include "elementwise_scalar_op.hpp"
 #include "arithmetic_cpu_impl.hpp"
 

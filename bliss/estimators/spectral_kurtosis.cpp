@@ -1,6 +1,6 @@
 #include "estimators/spectral_kurtosis.hpp"
 
-#include <bland/ops.hpp>
+#include <bland/ops/ops.hpp>
 
 #include <fmt/format.h>
 

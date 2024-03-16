@@ -1,12 +1,14 @@
-#include "bland/ndarray.hpp"
 #include "statistical_cpu.hpp"
+#include "ops_cpu.hpp" // square (for var), copy (standardized_moment)
 
-#include "dispatcher.hpp"
+#include "bland/ndarray.hpp"
+
+#include "internal/dispatcher.hpp"
 
 #include "elementwise_binary_op.hpp"
 #include "elementwise_scalar_op.hpp"
 
-#include "shape_helpers.hpp"
+#include "internal/shape_helpers.hpp"
 
 #include <fmt/core.h>
 #include <fmt/ranges.h>
@@ -532,12 +534,12 @@ ndarray bland::cpu::masked_stddev(const ndarray &a, const ndarray &mask, ndarray
 
 ndarray bland::cpu::var(const ndarray &a, ndarray &out, std::vector<int64_t> reduced_axes) {
     cpu::stddev(a, out, reduced_axes);
-    return square(out);
+    return cpu::square(out, out);
 }
 
 ndarray bland::cpu::masked_var(const ndarray &a, const ndarray &mask, ndarray &out, std::vector<int64_t> reduced_axes) {
     cpu::masked_stddev(a, mask, out, reduced_axes);
-    return square(out);
+    return cpu::square(out, out);
 }
 
 struct standardized_moment_impl {
@@ -678,7 +680,8 @@ ndarray bland::cpu::standardized_moment(const ndarray &a, int degree, ndarray &o
 float bland::cpu::median(const ndarray &x, std::vector<int64_t> axes) {
     const size_t size = x.numel();
 
-    auto x_copy = copy(x);
+    auto x_copy = bland::ndarray(x.shape(), x.dtype(), x.device());
+    x_copy = cpu::copy(x, x_copy);
     auto x_data = x_copy.data_ptr<float>();
     // Compute the position of the median
     auto mid = x_data + size / 2;

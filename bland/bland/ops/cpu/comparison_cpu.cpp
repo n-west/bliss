@@ -1,8 +1,9 @@
 #include "comparison_cpu.hpp"
 
 #include "bland/ndarray.hpp"
+#include "bland/ndarray_slice.hpp"
 
-#include "dispatcher.hpp"
+#include "internal/dispatcher.hpp"
 #include "elementwise_binary_op.hpp"
 #include "elementwise_scalar_op.hpp"
 
