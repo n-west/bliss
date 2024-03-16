@@ -3,6 +3,8 @@
 
 #include "core/frequency_drift_plane.hpp"
 
+#include "bland/ops/ops.hpp" // fill
+
 #include <fmt/core.h>
 #include <fmt/format.h>
 

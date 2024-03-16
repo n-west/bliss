@@ -5,7 +5,7 @@
 #include "elementwise_unary_op.hpp"
 #include "assignment_op.hpp"
 
-#include "dispatcher.hpp"
+#include "internal/dispatcher.hpp"
 
 #include "bland/ndarray.hpp"
 

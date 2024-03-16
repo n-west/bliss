@@ -2,7 +2,7 @@
 
 #include "bland/ndarray.hpp"
 
-#include <shape_helpers.hpp>
+#include "internal/shape_helpers.hpp"
 
 #include <stdexcept>
 #include <type_traits>

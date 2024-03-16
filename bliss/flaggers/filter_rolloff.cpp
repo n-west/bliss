@@ -2,7 +2,7 @@
 
 #include <core/flag_values.hpp>
 
-#include <bland/ops.hpp>
+#include <bland/ops/ops.hpp>
 
 #include <fmt/core.h>
 #include <fmt/ranges.h>

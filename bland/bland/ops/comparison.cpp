@@ -1,6 +1,8 @@
+#include "bland/ops/ops_comparison.hpp"
 
 #include "bland/ndarray.hpp"
-#include "bland/ops_comparison.hpp"
+#include "bland/ndarray_slice.hpp"
+
 #include "device_dispatch.hpp"
 
 #if BLAND_CUDA_CODE

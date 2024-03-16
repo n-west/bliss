@@ -216,13 +216,20 @@ std::shared_ptr<coarse_channel> bliss::scan::get_coarse_channel(int coarse_chann
                    global_offset_in_file,
                    data_offset,
                    data_count);
-        auto new_coarse_channel_data = _h5_file_handle->read_data(data_offset, data_count);
-        auto new_coarse_channel_mask = _h5_file_handle->read_mask(data_offset, data_count);
+        auto data_reader = [h5_file_handle=this->_h5_file_handle, data_offset, data_count](){
+            return h5_file_handle->read_data(data_offset, data_count);
+        };
+        auto mask_reader = [h5_file_handle=this->_h5_file_handle, data_offset, data_count](){
+            return h5_file_handle->read_mask(data_offset, data_count);
+        };
+        
+        // auto new_coarse_channel_data = _h5_file_handle->read_data(data_offset, data_count);
+        // auto new_coarse_channel_mask = _h5_file_handle->read_mask(data_offset, data_count);
         auto relative_start_fine_channel = std::get<0>(_inferred_channelization) * coarse_channel_index;
         auto coarse_fch1             = _fch1 + _foff * relative_start_fine_channel;
 
-        auto new_coarse = std::make_shared<coarse_channel>(new_coarse_channel_data,
-                                                           new_coarse_channel_mask,
+        auto new_coarse = std::make_shared<coarse_channel>(data_reader,
+                                                           mask_reader,
                                                            coarse_fch1,
                                                            _foff,
                                                            _machine_id,

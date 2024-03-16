@@ -2,8 +2,8 @@
 
 #include "bland/ndarray.hpp"
 
-#include "dispatcher.hpp"
-#include "shape_helpers.hpp"
+#include "internal/dispatcher.hpp"
+#include "internal/shape_helpers.hpp"
 
 #include "count.cuh" // kernel definition for count
 

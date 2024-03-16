@@ -1,6 +1,6 @@
 #pragma once
 
-#include "ndarray.hpp"
+#include "bland/ndarray.hpp"
 
 namespace bland {
 

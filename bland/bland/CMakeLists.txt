@@ -3,6 +3,10 @@
 add_library(bland
     bland_tensor_internals.cpp
     ndarray.cpp
+    ndarray_slice.cpp
+    ndarray_deferred.cpp
+    internal/include/internal/shape_helpers.cpp
+
     ops/ops.cpp
     ops/arithmetic.cpp
     ops/cpu/arithmetic_cpu.cpp
@@ -13,7 +17,6 @@ add_library(bland
     ops/comparison.cpp
     ops/creators.cpp
     ops/statistical.cpp
-    internal/shape_helpers.cpp
 )
 
 if (WITH_CUDA)
@@ -35,7 +38,7 @@ target_include_directories(bland
     PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/include
     PRIVATE
-    ${CMAKE_CURRENT_SOURCE_DIR}/internal
+    ${CMAKE_CURRENT_SOURCE_DIR}/internal/include
 )
 
 # target_precompile_headers(bland
