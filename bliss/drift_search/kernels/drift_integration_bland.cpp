@@ -26,8 +26,8 @@ using namespace bliss;
 
 constexpr bool collect_rfi = true;
 [[nodiscard]] frequency_drift_plane
-bliss::integrate_linear_rounded_bins_bland(const bland::ndarray &spectrum_grid,
-                                     const bland::ndarray       &rfi_mask,
+bliss::integrate_linear_rounded_bins_bland(bland::ndarray spectrum_grid,
+                                     bland::ndarray       rfi_mask,
                                      integrate_drifts_options    options) {
 
     auto number_drifts = (options.high_rate - options.low_rate) / options.rate_step_size;
@@ -236,7 +236,7 @@ bliss::integrate_linear_rounded_bins_bland(const bland::ndarray &spectrum_grid,
     return freq_drift;
 }
 
-bland::ndarray bliss::integrate_linear_rounded_bins_bland(const bland::ndarray    &spectrum_grid,
+bland::ndarray bliss::integrate_linear_rounded_bins_bland(bland::ndarray     spectrum_grid,
                                                     integrate_drifts_options options) {
     auto dummy_rfi_mask                      = bland::ndarray({1, 1});
     auto drift_plane = integrate_linear_rounded_bins_bland(spectrum_grid, dummy_rfi_mask, options);

@@ -25,22 +25,31 @@ bland::ndarray bliss::flag_spectral_kurtosis(const bland::ndarray &data,
     return rfi;
 }
 
+// bland::ndarray_deferred bliss::flag_spectral_kurtosis(const bland::ndarray_deferred &data)
+
 coarse_channel bliss::flag_spectral_kurtosis(coarse_channel cc_data, float lower_threshold, float upper_threshold) {
-    auto spectrum_grid = cc_data.data();
-    auto rfi_flags     = cc_data.mask();
 
-    // 1. Compute params for SK estimate
-    auto M  = spectrum_grid.size(0);
-    auto d  = 1;
-    auto Fs = std::abs(1.0 / (1e6 * cc_data.foff()));
-    auto N  = std::round(cc_data.tsamp() / Fs);
+    auto cc_ptr = std::make_shared<coarse_channel>(cc_data);
+    
+    auto deferred_accumulated_rfi = bland::ndarray_deferred([cc_data = cc_ptr, lower_threshold, upper_threshold]() {
+        bland::ndarray spectrum_grid = cc_data->data();
+        bland::ndarray rfi_flags     = cc_data->mask();
 
-    // 2. Generate SK flag
-    auto rfi = flag_spectral_kurtosis(spectrum_grid, N, M, d, lower_threshold, upper_threshold);
+        // 1. Compute params for SK estimate
+        auto M  = spectrum_grid.size(0);
+        auto d  = 1;
+        auto Fs = std::abs(1.0 / (1e6 * cc_data->foff()));
+        auto N  = std::round(cc_data->tsamp() / Fs);
 
-    auto accumulated_rfi = rfi_flags + rfi;
+        // 2. Generate SK flag
+        auto rfi = flag_spectral_kurtosis(spectrum_grid, N, M, d, lower_threshold, upper_threshold);
+
+        auto accumulated_rfi = rfi_flags + rfi; // a | operator would be more appropriate
+        return accumulated_rfi;
+    });
+
     // 3. Store back accumulated rfi
-    cc_data.set_mask(accumulated_rfi);
+    cc_data.set_mask(deferred_accumulated_rfi);
 
     return cc_data;
 }

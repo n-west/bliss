@@ -36,8 +36,8 @@ void bind_pycore(nb::module_ m) {
         .def_ro("index_in_plane", &bliss::frequency_drift_plane::drift_rate::index_in_plane);
 
     nb::class_<bliss::coarse_channel>(m, "coarse_channel")
-        .def_prop_ro("data", &bliss::coarse_channel::data)
-        .def_prop_ro("mask", &bliss::coarse_channel::mask)
+        .def_prop_ro("data", [](bliss::coarse_channel &self){return bland::ndarray(self.data());})
+        .def_prop_ro("mask", [](bliss::coarse_channel &self){return bland::ndarray(self.mask());})
         .def_prop_ro("hits", &bliss::coarse_channel::hits)
         .def_prop_ro("az_start", &bliss::coarse_channel::az_start)
         .def_prop_ro("data_type", &bliss::coarse_channel::data_type)
@@ -139,5 +139,8 @@ void bind_pycore(nb::module_ m) {
         .def(nb::init<std::vector<bliss::observation_target>>())
         .def(nb::init<std::vector<std::vector<std::string_view>>>())
         .def("slice_cadence_channels", &bliss::cadence::slice_cadence_channels, "start"_a=0, "count"_a=1)
-        .def_rw("observations", &bliss::cadence::_observations);
+        .def_rw("observations", &bliss::cadence::_observations)
+        .def("device", &bliss::cadence::device)
+        .def("set_device", nb::overload_cast<bland::ndarray::dev&>(&bliss::cadence::set_device))
+        .def("set_device", nb::overload_cast<std::string_view>(&bliss::cadence::set_device));
 }

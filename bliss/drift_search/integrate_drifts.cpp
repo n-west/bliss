@@ -31,11 +31,12 @@ bland::ndarray bliss::integrate_drifts(const bland::ndarray &spectrum_grid, inte
 coarse_channel bliss::integrate_drifts(coarse_channel cc_data, integrate_drifts_options options) {
     auto compute_device = cc_data.device();
 
+    auto cc_copy = std::make_shared<coarse_channel>(cc_data);
     if (compute_device.device_type == kDLCPU) {
-        auto integrated_dedrift = integrate_linear_rounded_bins_cpu(cc_data.data(), cc_data.mask(), options);
+        auto integrated_dedrift = [cc_data = cc_copy, options](){return integrate_linear_rounded_bins_cpu(cc_data->data(), cc_data->mask(), options);};
         cc_data.set_integrated_drift_plane(integrated_dedrift);
     } else if (compute_device.device_type == kDLCUDA) {
-        auto integrated_dedrift = integrate_linear_rounded_bins_bland(cc_data.data(), cc_data.mask(), options);
+        auto integrated_dedrift = [cc_data = cc_copy, options](){return integrate_linear_rounded_bins_bland(cc_data->data(), cc_data->mask(), options);};
         cc_data.set_integrated_drift_plane(integrated_dedrift);
     }
 

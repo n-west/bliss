@@ -10,7 +10,7 @@
 
 using namespace bliss;
 
-float bliss::compute_signal_threshold(const noise_stats &noise_stats, int64_t integration_length, float snr_threshold) {
+float bliss::compute_signal_threshold(noise_stats &noise_stats, int64_t integration_length, float snr_threshold) {
     // When the signal amplitude is snr_threshold above the noise floor, we have a 'prehit' (a signal that naively
     // passes a hard threshold) that is when S/N > snr_threshold Given a noise floor estimate of nf, signal power above
     // threshold S, noise power N...
@@ -23,7 +23,7 @@ float bliss::compute_signal_threshold(const noise_stats &noise_stats, int64_t in
     return threshold;
 }
 
-std::vector<std::pair<float, float>> bliss::compute_noise_and_snr_thresholds(const noise_stats &noise_stats,
+std::vector<std::pair<float, float>> bliss::compute_noise_and_snr_thresholds(noise_stats &noise_stats,
                                             int64_t            integration_length,
                                             std::vector<frequency_drift_plane::drift_rate> drift_rates,
                                             float snr_threshold) {
@@ -45,7 +45,7 @@ std::vector<std::pair<float, float>> bliss::compute_noise_and_snr_thresholds(con
 }
 
 bland::ndarray bliss::hard_threshold_drifts(const bland::ndarray &dedrifted_spectrum,
-                                            const noise_stats    &noise_stats,
+                                            noise_stats    &noise_stats,
                                             int64_t               integration_length,
                                             float                 snr_threshold) {
 
@@ -57,6 +57,8 @@ bland::ndarray bliss::hard_threshold_drifts(const bland::ndarray &dedrifted_spec
 }
 
 std::list<hit> bliss::hit_search(coarse_channel dedrifted_scan, hit_search_options options) {
+    // We have to be on cpu for now
+    dedrifted_scan.set_device("cpu");
     std::list<hit> hits;
 
     std::vector<component> components;

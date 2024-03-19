@@ -1,5 +1,7 @@
 #pragma once
 
+#include <bland/ndarray_deferred.hpp>
+
 #include <tuple>
 #include <string>
 
@@ -14,24 +16,27 @@ namespace bliss {
  * var: the variance of noise power, i.e., how much we expect an individual sample of noise power to vary by
  */
 struct noise_stats {
-    float _noise_floor;
-    float _noise_power;
 
     public:
-    float noise_power() const;
+    float noise_power();
+    void set_noise_power(bland::ndarray_deferred noise_power);
 
-    float noise_amplitude() const;
+    float noise_amplitude();
 
-    float noise_floor() const;
+    float noise_floor();
+    void set_noise_floor(bland::ndarray_deferred noise_floor);
 
     std::string repr() const;
 
-    using state_tuple = std::tuple<float, float>;
+    // using state_tuple = std::tuple<float, float>;
 
-    state_tuple get_state() const;
+    // state_tuple get_state() const;
 
-    void set_state(state_tuple);
+    // void set_state(state_tuple);
 
+    protected:
+    bland::ndarray_deferred _noise_floor;
+    bland::ndarray_deferred _noise_power;
 };
 
 } // namespace bliss

@@ -14,10 +14,10 @@ namespace bliss {
 */
 constexpr bool collect_rfi = true;
 [[nodiscard]] frequency_drift_plane
-integrate_linear_rounded_bins_cpu(const bland::ndarray    &spectrum_grid,
-                                  const bland::ndarray    &rfi_mask,
+integrate_linear_rounded_bins_cpu(bland::ndarray    spectrum_grid,
+                                  bland::ndarray    rfi_mask,
                                   integrate_drifts_options options);
 
-bland::ndarray integrate_linear_rounded_bins_cpu(const bland::ndarray &spectrum_grid, integrate_drifts_options options);
+bland::ndarray integrate_linear_rounded_bins_cpu(bland::ndarray spectrum_grid, integrate_drifts_options options);
 
 } // namespace bliss

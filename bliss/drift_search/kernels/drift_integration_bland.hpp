@@ -22,10 +22,10 @@ namespace bliss {
  * value 0/7, 1/7, 2/7, 3/7, 4/7, 5/7, 6/7, 7/7.
  */
 [[nodiscard]] frequency_drift_plane
-integrate_linear_rounded_bins_bland(const bland::ndarray &spectrum_grid,
-                              const bland::ndarray       &rfi_mask,
+integrate_linear_rounded_bins_bland(bland::ndarray spectrum_grid,
+                              bland::ndarray       rfi_mask,
                               integrate_drifts_options   options);
 
-bland::ndarray integrate_linear_rounded_bins_bland(const bland::ndarray &spectrum_grid, integrate_drifts_options options);
+bland::ndarray integrate_linear_rounded_bins_bland(bland::ndarray spectrum_grid, integrate_drifts_options options);
 
 } // namespace bliss
