@@ -15,11 +15,18 @@ namespace detail {
  * Compute noise floor as the mean of the population
  * Compute noise power as the variance of the population
  */
-noise_stats noise_power_estimate_stddev(const bland::ndarray &x) {
+noise_stats noise_power_estimate_stddev(bland::ndarray_deferred x) {
     noise_stats estimated_stats;
-
-    estimated_stats._noise_floor = bland::mean(x).scalarize<float>();
-    estimated_stats._noise_power = bland::stddev(x).scalarize<float>();
+    auto x_copy = std::make_shared<bland::ndarray_deferred>(x);
+    auto delayed_mean = bland::ndarray_deferred([x = x_copy]() {
+        return bland::mean(*x);
+    });
+    estimated_stats.set_noise_floor(delayed_mean);
+    
+    auto delayed_power = bland::ndarray_deferred([x = x_copy]() {
+        return bland::stddev(*x);
+    });
+    estimated_stats.set_noise_power(delayed_power);
 
     return estimated_stats;
 }
@@ -28,11 +35,21 @@ noise_stats noise_power_estimate_stddev(const bland::ndarray &x) {
  * Compute noise floor as the mean of the population where the mask == 0
  * Compute noise power as the variance of the population where the mask == 0
  */
-noise_stats noise_power_estimate_stddev(const bland::ndarray &x, const bland::ndarray &mask) {
+noise_stats noise_power_estimate_stddev(bland::ndarray_deferred x, bland::ndarray_deferred mask) {
     noise_stats estimated_stats;
 
-    estimated_stats._noise_floor = bland::masked_mean(x, mask).scalarize<float>();
-    estimated_stats._noise_power = bland::masked_stddev(x, mask).scalarize<float>();
+    auto x_copy = std::make_shared<bland::ndarray_deferred>(x);
+    auto mask_copy = std::make_shared<bland::ndarray_deferred>(mask);
+
+    auto delayed_mean = bland::ndarray_deferred([x = x_copy, mask = mask_copy]() {
+        return bland::masked_mean(*x, *mask);
+    });
+    estimated_stats.set_noise_floor(delayed_mean);
+
+    auto delayed_power = bland::ndarray_deferred([x = x_copy, mask = mask_copy]() {
+        return bland::masked_stddev(*x, *mask);
+    });
+    estimated_stats.set_noise_power(delayed_power);
 
     return estimated_stats;
 }
@@ -44,11 +61,12 @@ noise_stats noise_power_estimate_stddev(const bland::ndarray &x, const bland::nd
 noise_stats noise_power_estimate_mad(const bland::ndarray &x) {
     noise_stats estimated_stats;
 
-    // bland needs some TLC to do this Right (TM)
-    estimated_stats._noise_floor = bland::median(x);
-    // median absolute deviation is median(|Xi - median|)
-    auto median_absolute_deviation = bland::median(bland::abs(x - estimated_stats._noise_floor));
-    estimated_stats._noise_power   = median_absolute_deviation;
+    // TODO: do medians right (TM)
+    // // bland needs some TLC to do this Right (TM)
+    // estimated_stats._noise_floor = bland::median(x);
+    // // median absolute deviation is median(|Xi - median|)
+    // auto median_absolute_deviation = bland::median(bland::abs(x - estimated_stats._noise_floor));
+    // estimated_stats._noise_power   = median_absolute_deviation;
 
     return estimated_stats;
 }
@@ -62,19 +80,19 @@ noise_stats noise_power_estimate_mad(const bland::ndarray &x, const bland::ndarr
     throw std::runtime_error("masked noise power estimation with mad is not implemented yet");
     noise_stats estimated_stats;
 
-    // bland needs some TLC to do this Right (TM) and until then
-    // it's pretty hard to do the masked_median
-    estimated_stats._noise_floor = bland::median(x);
-    // median absolute deviation is median(|Xi - median|)
-    auto stddev                  = bland::median(bland::abs(x - estimated_stats._noise_floor));
-    estimated_stats._noise_power = std::pow(stddev, 2);
+    // // bland needs some TLC to do this Right (TM) and until then
+    // // it's pretty hard to do the masked_median
+    // estimated_stats._noise_floor = bland::median(x);
+    // // median absolute deviation is median(|Xi - median|)
+    // auto stddev                  = bland::median(bland::abs(x - estimated_stats._noise_floor));
+    // estimated_stats._noise_power = std::pow(stddev, 2);
 
     return estimated_stats;
 }
 
 } // namespace detail
 
-noise_stats bliss::estimate_noise_power(const bland::ndarray &x, noise_power_estimate_options options) {
+noise_stats bliss::estimate_noise_power(bland::ndarray_deferred x, noise_power_estimate_options options) {
     noise_stats estimated_stats;
 
     if (options.masked_estimate) {
@@ -101,31 +119,36 @@ noise_stats bliss::estimate_noise_power(const bland::ndarray &x, noise_power_est
  *
  * If the mask has no free flags
  */
-bland::ndarray correct_mask(const bland::ndarray &mask) {
-    auto unmasked_samples = bland::count_true(mask == 0);
-    if (unmasked_samples == 0) {
-        // TODO: issue warning & "correct" the mask in some intelligent way
-        fmt::format("correct_mask: the mask is completely flagged, so a flagged noise estimate is not possible.");
-        /*
-         * This is a pretty strange condition where the entire scan is flagged which makes estimating noise using
-         * unflagged samples pretty awkward... There's not an obviously right way to handle this and anyone caring
-         * about this pipeline output should probably be made aware of it, but it's also not fatal.
-         * Known instances of this condition occurring:
-         * * Voyager 2020 data from GBT experiences a sudden increase in noise floor/power of ~ 3dB in the B target scan
-         *   which generates high spectral kurtosis across the entire band
-         *   filename w/in BL: single_coarse_guppi_59046_80354_DIAG_VOYAGER-1_0012.rawspec.0000.h5
-         */
-        // TODO: we can attempt to correct this, since it's only been known to occur based on SK with high thresholds of
-        // ~5 that threshold can be increased. Some ideas:
-        // * have an "auto" mode for SK that starts with threshold of 5 and iteratively increases until the whole
-        // channel
-        //   is not falled
-        // * ignore high SK here (or try to identify what flag is causing issues and ignore it)
-        // * warn earlier in flagging step
-        throw std::runtime_error("correct_mask: the mask is completely flagged");
-    }
-    auto corrected_mask = bland::copy(mask);
-    return mask;
+bland::ndarray_deferred correct_mask(const bland::ndarray_deferred &mask) {
+    auto mask_copy = std::make_shared<bland::ndarray_deferred>(mask);
+
+    auto updated_mask = bland::ndarray_deferred([mask = mask_copy](){
+        auto unmasked_samples = bland::count_true(bland::ndarray(*mask) == 0);
+        if (unmasked_samples == 0) {
+            // TODO: issue warning & "correct" the mask in some intelligent way
+            fmt::format("correct_mask: the mask is completely flagged, so a flagged noise estimate is not possible.");
+            /*
+            * This is a pretty strange condition where the entire scan is flagged which makes estimating noise using
+            * unflagged samples pretty awkward... There's not an obviously right way to handle this and anyone caring
+            * about this pipeline output should probably be made aware of it, but it's also not fatal.
+            * Known instances of this condition occurring:
+            * * Voyager 2020 data from GBT experiences a sudden increase in noise floor/power of ~ 3dB in the B target scan
+            *   which generates high spectral kurtosis across the entire band
+            *   filename w/in BL: single_coarse_guppi_59046_80354_DIAG_VOYAGER-1_0012.rawspec.0000.h5
+            */
+            // TODO: we can attempt to correct this, since it's only been known to occur based on SK with high thresholds of
+            // ~5 that threshold can be increased. Some ideas:
+            // * have an "auto" mode for SK that starts with threshold of 5 and iteratively increases until the whole
+            // channel
+            //   is not falled
+            // * ignore high SK here (or try to identify what flag is causing issues and ignore it)
+            // * warn earlier in flagging step
+            throw std::runtime_error("correct_mask: the mask is completely flagged");
+        }
+        return *mask;
+    });
+
+    return updated_mask;
 }
 
 

@@ -13,8 +13,8 @@
 using namespace bliss;
 
 [[nodiscard]] frequency_drift_plane
-bliss::integrate_linear_rounded_bins_cpu(const bland::ndarray    &spectrum_grid,
-                                         const bland::ndarray    &rfi_mask,
+bliss::integrate_linear_rounded_bins_cpu(bland::ndarray    spectrum_grid,
+                                         bland::ndarray    rfi_mask,
                                          integrate_drifts_options options) {
     auto spectrum_ptr     = spectrum_grid.data_ptr<float>();
     auto spectrum_strides = spectrum_grid.strides();
@@ -180,7 +180,7 @@ bliss::integrate_linear_rounded_bins_cpu(const bland::ndarray    &spectrum_grid,
     return freq_drift;
 }
 
-bland::ndarray bliss::integrate_linear_rounded_bins_cpu(const bland::ndarray    &spectrum_grid,
+bland::ndarray bliss::integrate_linear_rounded_bins_cpu(bland::ndarray    spectrum_grid,
                                                         integrate_drifts_options options) {
     auto dummy_rfi_mask = bland::ndarray({1, 1});
     auto drift_plane = integrate_linear_rounded_bins_cpu(spectrum_grid, dummy_rfi_mask, options);

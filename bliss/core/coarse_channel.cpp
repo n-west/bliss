@@ -88,30 +88,22 @@ coarse_channel::coarse_channel(bland::ndarray data,
 }
 
 
-bland::ndarray bliss::coarse_channel::data() {
-    if (std::holds_alternative<bland::ndarray>(_data)) {
-        _data = std::get<bland::ndarray>(_data).to(_device);
-    } else {
-        auto read_data = std::get<std::function<bland::ndarray()>>(_data)();
-        _data = read_data;
-    }
-    _data = std::get<bland::ndarray>(_data).to(_device);
-    return std::get<bland::ndarray>(_data);
+bland::ndarray_deferred bliss::coarse_channel::data() {
+    _data = _data.to(_device);
+    return _data;
 }
 
-bland::ndarray bliss::coarse_channel::mask() {
-    if (std::holds_alternative<bland::ndarray>(_mask)) {
-        _mask = std::get<bland::ndarray>(_mask).to(_device);
-    } else {
-        auto read_data = std::get<std::function<bland::ndarray()>>(_mask)();
-        _mask = read_data;
-    }
-    _mask = std::get<bland::ndarray>(_mask).to(_device);
-    return std::get<bland::ndarray>(_mask);
+bland::ndarray_deferred bliss::coarse_channel::mask() {
+    _mask = _mask.to(_device);
+    return _mask;
 }
 
 void bliss::coarse_channel::set_mask(bland::ndarray new_mask) {
     _mask = new_mask; // TODO: should we send _mask to _device?
+}
+
+void bliss::coarse_channel::set_mask(bland::ndarray_deferred deferred_mask) {
+    _mask = deferred_mask; // TODO: should we send _mask to _device?
 }
 
 noise_stats bliss::coarse_channel::noise_estimate() const {
@@ -140,9 +132,9 @@ bland::ndarray::dev bliss::coarse_channel::device() {
 
 void bliss::coarse_channel::set_device(bland::ndarray::dev &device) {
     _device = device;
-    if (_integrated_drift_plane.has_value()) {
-        _integrated_drift_plane.value().set_device(_device);
-    }
+    // if (_integrated_drift_plane.has_value()) {
+    //     _integrated_drift_plane.value().set_device(_device);
+    // }
 }
 
 void bliss::coarse_channel::set_device(std::string_view device) {
@@ -255,11 +247,28 @@ double bliss::coarse_channel::za_start() const {
 // }
 
 frequency_drift_plane bliss::coarse_channel::integrated_drift_plane() {
-    auto ddp = _integrated_drift_plane.value();
+    if (_integrated_drift_plane == nullptr) {
+        throw std::runtime_error("integrated_drift_plane not set");
+    }
+    if (std::holds_alternative<std::function<frequency_drift_plane()>>(*_integrated_drift_plane)) {
+        *_integrated_drift_plane = std::get<std::function<frequency_drift_plane()>>(*_integrated_drift_plane)();
+    }
+    auto& ddp = std::get<frequency_drift_plane>(*_integrated_drift_plane);
     ddp.set_device(_device);
     return ddp;
 }
 
 void bliss::coarse_channel::set_integrated_drift_plane(frequency_drift_plane integrated_plane) {
-    _integrated_drift_plane = integrated_plane; // TODO: should we call set_device(_device)
+    _integrated_drift_plane = std::make_shared<std::variant<frequency_drift_plane, std::function<frequency_drift_plane()>>>(
+        integrated_plane
+    );
+    // _integrated_drift_plane = integrated_plane; // TODO: should we call set_device(_device)
+}
+
+void bliss::coarse_channel::set_integrated_drift_plane(std::function<frequency_drift_plane()> integrated_plane_generator) {
+    _integrated_drift_plane = std::make_shared<std::variant<frequency_drift_plane, std::function<frequency_drift_plane()>>>(
+        integrated_plane_generator
+    );
+
+    // _integrated_drift_plane = integrated_plane; // TODO: should we call set_device(_device)
 }

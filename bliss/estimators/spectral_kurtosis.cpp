@@ -15,7 +15,7 @@ bland::ndarray bliss::estimate_spectral_kurtosis(const bland::ndarray &spectrum_
 }
 
 bland::ndarray bliss::estimate_spectral_kurtosis(coarse_channel &cc_data) {
-    const auto spectrum_grid = cc_data.data();
+    const bland::ndarray spectrum_grid = cc_data.data();
 
     // 1. Compute spectral kurtosis along each channel
     auto M  = spectrum_grid.size(0);

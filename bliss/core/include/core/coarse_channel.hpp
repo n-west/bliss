@@ -72,12 +72,15 @@ struct coarse_channel {
                    int64_t        data_type,
                    double         az_start,
                    double         za_start);
-    bland::ndarray data();
-    bland::ndarray mask();
+
+    bland::ndarray_deferred data();
+    bland::ndarray_deferred mask();
     void           set_mask(bland::ndarray new_mask);
+    void           set_mask(bland::ndarray_deferred new_mask);
 
     frequency_drift_plane integrated_drift_plane();
     void set_integrated_drift_plane(frequency_drift_plane integrated_plane);
+    void set_integrated_drift_plane(std::function<frequency_drift_plane()> integrated_plane);
 
     noise_stats noise_estimate() const;
     void        set_noise_estimate(noise_stats estimate);
@@ -145,18 +148,14 @@ struct coarse_channel {
     double  _az_start;
     double  _za_start;
 
-    //    bland::ndarray _data;
-    //    bland::ndarray _mask;
-
-    std::variant<bland::ndarray, std::function<bland::ndarray()>> _data;
-    std::variant<bland::ndarray, std::function<bland::ndarray()>> _mask;
+    bland::ndarray_deferred _data;
+    bland::ndarray_deferred _mask;
+    // std::variant<bland::ndarray, std::function<bland::ndarray()>> _data;
+    // std::variant<bland::ndarray, std::function<bland::ndarray()>> _mask;
 
     std::optional<noise_stats> _noise_stats;
 
-    std::optional<frequency_drift_plane> _integrated_drift_plane;
-
-    std::optional<bland::ndarray>           _dedrifted_spectrum;
-    std::optional<integrated_flags>         _dedrifted_rfi;
+    std::shared_ptr<std::variant<frequency_drift_plane, std::function<frequency_drift_plane()>>> _integrated_drift_plane = nullptr;
 
     bland::ndarray::dev _device = bland::ndarray::dev::cpu;
 

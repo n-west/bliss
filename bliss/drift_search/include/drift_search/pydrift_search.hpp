@@ -64,7 +64,7 @@ void bind_pydrift_search(nb::module_ m) {
     m.def("hard_threshold_drifts", &bliss::hard_threshold_drifts);
     m.def("hard_threshold_drifts",
           [](const nb::ndarray<>      &dedrifted_coarse_channel,
-             const bliss::noise_stats &noise_stats,
+             bliss::noise_stats &noise_stats,
              int64_t                   integration_length,
              float                     snr_threshold) {
               return bliss::hard_threshold_drifts(

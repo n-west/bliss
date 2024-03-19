@@ -19,7 +19,7 @@ bland::ndarray bliss::flag_magnitude(const bland::ndarray &data, float threshold
 coarse_channel bliss::flag_magnitude(coarse_channel cc_data, float threshold) {
     auto magnitude_mask = flag_magnitude(cc_data.data(), threshold);
 
-    auto mask = cc_data.mask();
+    bland::ndarray mask = cc_data.mask();
     mask = mask + magnitude_mask;
     cc_data.set_mask(mask);
     return cc_data;

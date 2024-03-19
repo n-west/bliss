@@ -2,6 +2,7 @@
 #pragma once
 
 #include <bland/ndarray.hpp>
+#include <bland/ndarray_deferred.hpp>
 #include <core/cadence.hpp>
 #include <core/scan.hpp>
 #include <core/noise_power.hpp>
@@ -32,7 +33,7 @@ struct noise_power_estimate_options {
  * * noise power: the noise power (how much noise deviates from the noise floor)
  *
  */
-[[nodiscard]] noise_stats estimate_noise_power(const bland::ndarray &x, noise_power_estimate_options options);
+[[nodiscard]] noise_stats estimate_noise_power(bland::ndarray_deferred x, noise_power_estimate_options options);
 
 /**
  * Estimate noise power statistics of a coarse channel (this can include a flagged/masked estimate)
