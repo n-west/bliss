@@ -12,10 +12,10 @@ namespace bliss {
 class frequency_drift_plane {
     public:
     struct drift_rate {
-            int index_in_plane;
-            double drift_rate_slope = 0.0F;
-            double drift_rate_Hz_per_sec = 0.0F;
-            int desmeared_bins=1; // number of bins per spectra used to desmear
+        int index_in_plane;
+        double drift_rate_slope = 0.0F;
+        double drift_rate_Hz_per_sec = 0.0F;
+        int desmeared_bins=1; // number of bins per spectra used to desmear
     };
 
     frequency_drift_plane(bland::ndarray_deferred drift_plane, integrated_flags drift_rfi);

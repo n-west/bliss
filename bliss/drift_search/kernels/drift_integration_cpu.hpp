@@ -9,10 +9,11 @@
 
 namespace bliss {
 
+constexpr bool collect_rfi = true;
+
 /**
  * linear-rounded integration kernel implemented for cpu
 */
-constexpr bool collect_rfi = true;
 [[nodiscard]] frequency_drift_plane
 integrate_linear_rounded_bins_cpu(bland::ndarray    spectrum_grid,
                                   bland::ndarray    rfi_mask,

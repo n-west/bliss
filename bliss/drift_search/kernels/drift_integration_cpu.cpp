@@ -71,21 +71,17 @@ bliss::integrate_linear_rounded_bins_cpu(bland::ndarray    spectrum_grid,
 
         for (int t = 0; t < time_steps; ++t) {
             int freq_offset_at_time  = std::round(m * t);
-            int freq_offset_at_time2 = std::round(m * (t + time_steps / 2));
+            // int freq_offset_at_time2 = std::round(m * (t + time_steps / 2));
 
             for (int desmear_channel = 0; desmear_channel < desmear_bandwidth; ++desmear_channel) {
-
                 if (m >= 0) {
                     // The accumulator (drift spectrum) stays fixed at 0 while the spectrum start increments
                     auto channel_offset  = freq_offset_at_time + desmear_channel;
-                    auto channel_offset2 = freq_offset_at_time2 + desmear_channel;
 
                     int64_t drift_freq_slice_start = 0;
                     int64_t drift_freq_slice_end   = number_channels - channel_offset;
-                    int64_t drift_freq_slice_end2  = number_channels - channel_offset2;
 
                     int64_t spectrum_freq_slice_start  = channel_offset;
-                    int64_t spectrum_freq_slice_start2 = channel_offset2;
                     int64_t spectrum_freq_slice_end    = number_channels;
                     if (spectrum_freq_slice_start > spectrum_shape[1]) {
                         fmt::print("ERROR: drift integration might be going out of bounds. Report this condition");

@@ -4,6 +4,12 @@ add_library(drift_search_kernels
     kernels/drift_integration_cpu.cpp
 )
 
+if (WITH_CUDA)
+    target_sources(drift_search_kernels
+        PRIVATE
+        kernels/drift_integration_cuda.cu
+    )
+endif()
 
 target_link_libraries(drift_search_kernels
     PUBLIC
