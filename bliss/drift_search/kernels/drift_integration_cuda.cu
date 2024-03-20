@@ -104,10 +104,14 @@ __global__ void integrate_drifts(float* drift_plane_data,
                     }
                 }
             }
-            drift_plane_data[drift_plane_index] = accumulated_spectrum / accumulated_bins;
-            low_sk_rfi_data[drift_plane_index] = accumulated_low_sk;
-            high_sk_rfi_data[drift_plane_index] = accumulated_high_sk;
-            rolloff_data[drift_plane_index] = accumulated_rolloff;
+            if (accumulated_bins = 0) {
+                drift_plane_data[drift_plane_index] = 0;
+            } else {
+                drift_plane_data[drift_plane_index] = accumulated_spectrum / accumulated_bins;
+                low_sk_rfi_data[drift_plane_index] = accumulated_low_sk;
+                high_sk_rfi_data[drift_plane_index] = accumulated_high_sk;
+                rolloff_data[drift_plane_index] = accumulated_rolloff;
+            }
         }
     }
 }
