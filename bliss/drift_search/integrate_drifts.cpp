@@ -2,16 +2,14 @@
 #include "drift_search/integrate_drifts.hpp"
 #include "kernels/drift_integration_bland.hpp"
 #include "kernels/drift_integration_cpu.hpp"
+#if BLISS_CUDA
 #include "kernels/drift_integration_cuda.cuh"
-
-#include <core/flag_values.hpp>
+#endif
 
 #include <bland/bland.hpp>
 
 #include <fmt/core.h>
 #include <fmt/ranges.h>
-
-#include <thread>
 
 using namespace bliss;
 
@@ -21,9 +19,11 @@ bland::ndarray bliss::integrate_drifts(const bland::ndarray &spectrum_grid, inte
     if (compute_device.device_type == kDLCPU) {
         auto drift_grid = integrate_linear_rounded_bins_cpu(spectrum_grid, options);
         return drift_grid;
+#if BLISS_CUDA
     } else if (compute_device.device_type == kDLCUDA) {
         auto drift_grid = integrate_linear_rounded_bins_cuda(spectrum_grid, options);
         return drift_grid;
+#endif
     } else {
         auto drift_grid = integrate_linear_rounded_bins_bland(spectrum_grid, options);
         return drift_grid;
@@ -38,9 +38,11 @@ coarse_channel bliss::integrate_drifts(coarse_channel cc_data, integrate_drifts_
     if (compute_device.device_type == kDLCPU) {
         auto integrated_dedrift = [cc_data = cc_copy, options](){return integrate_linear_rounded_bins_cpu(cc_data->data(), cc_data->mask(), options);};
         cc_data.set_integrated_drift_plane(integrated_dedrift);
+#if BLISS_CUDA
     } else if (compute_device.device_type == kDLCUDA) {
         auto integrated_dedrift = [cc_data = cc_copy, options](){return integrate_linear_rounded_bins_cuda(cc_data->data(), cc_data->mask(), options);};
         cc_data.set_integrated_drift_plane(integrated_dedrift);
+#endif
     } else {
         auto integrated_dedrift = [cc_data = cc_copy, options](){return integrate_linear_rounded_bins_bland(cc_data->data(), cc_data->mask(), options);};
         cc_data.set_integrated_drift_plane(integrated_dedrift);
