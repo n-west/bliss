@@ -18,11 +18,11 @@ std::vector<bliss::frequency_drift_plane::drift_rate> bliss::frequency_drift_pla
     return _drift_rate_info;
 }
 
-bland::ndarray bliss::frequency_drift_plane::integrated_drift_plane(){
+bland::ndarray bliss::frequency_drift_plane::integrated_drift_plane() {
     return _integrated_drifts;
 }
 
-integrated_flags bliss::frequency_drift_plane::integrated_rfi(){
+integrated_flags bliss::frequency_drift_plane::integrated_rfi() {
     return _dedrifted_rfi;
 }
 

@@ -57,5 +57,9 @@ bland::ndarray_deferred::operator ndarray() {
 }
 
 std::string bland::ndarray_deferred::repr() const {
-    return "ndarray_deferred";
+    if (std::holds_alternative<ndarray>(*_deferred_data)) {
+        return std::get<ndarray>(*_deferred_data).repr();
+    } else {
+        return "ndarray_deferred";
+    }
 }

@@ -24,6 +24,9 @@ void bind_pydrift_search(nb::module_ m) {
     });
 
     m.def("integrate_drifts",
+        nb::overload_cast<bliss::coarse_channel, bliss::integrate_drifts_options>(&bliss::integrate_drifts));
+
+    m.def("integrate_drifts",
           nb::overload_cast<bliss::scan, bliss::integrate_drifts_options>(&bliss::integrate_drifts));
 
     m.def("integrate_drifts",
