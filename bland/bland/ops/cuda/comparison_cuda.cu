@@ -33,27 +33,27 @@ ndarray bland::cuda::greater_than(L lhs, R rhs) {
 // Explicit instantiations
 template ndarray bland::cuda::greater_than<ndarray, ndarray>(ndarray lhs, ndarray rhs);
 
-template ndarray bland::cuda::greater_than<ndarray, double>(ndarray lhs, double rhs);
+// template ndarray bland::cuda::greater_than<ndarray, double>(ndarray lhs, double rhs);
 template ndarray bland::cuda::greater_than<ndarray, float>(ndarray lhs, float rhs);
 template ndarray bland::cuda::greater_than<ndarray, uint8_t>(ndarray lhs, uint8_t rhs);
-template ndarray bland::cuda::greater_than<ndarray, uint16_t>(ndarray lhs, uint16_t rhs);
+// template ndarray bland::cuda::greater_than<ndarray, uint16_t>(ndarray lhs, uint16_t rhs);
 template ndarray bland::cuda::greater_than<ndarray, uint32_t>(ndarray lhs, uint32_t rhs);
-template ndarray bland::cuda::greater_than<ndarray, uint64_t>(ndarray lhs, uint64_t rhs);
-template ndarray bland::cuda::greater_than<ndarray, int8_t>(ndarray lhs, int8_t rhs);
-template ndarray bland::cuda::greater_than<ndarray, int16_t>(ndarray lhs, int16_t rhs);
+// template ndarray bland::cuda::greater_than<ndarray, uint64_t>(ndarray lhs, uint64_t rhs);
+// template ndarray bland::cuda::greater_than<ndarray, int8_t>(ndarray lhs, int8_t rhs);
+// template ndarray bland::cuda::greater_than<ndarray, int16_t>(ndarray lhs, int16_t rhs);
 template ndarray bland::cuda::greater_than<ndarray, int32_t>(ndarray lhs, int32_t rhs);
-template ndarray bland::cuda::greater_than<ndarray, int64_t>(ndarray lhs, int64_t rhs);
+// template ndarray bland::cuda::greater_than<ndarray, int64_t>(ndarray lhs, int64_t rhs);
 
-template ndarray bland::cuda::greater_than<double, ndarray>(double lhs, ndarray rhs);
+// template ndarray bland::cuda::greater_than<double, ndarray>(double lhs, ndarray rhs);
 template ndarray bland::cuda::greater_than<float, ndarray>(float lhs, ndarray rhs);
 template ndarray bland::cuda::greater_than<uint8_t, ndarray>(uint8_t lhs, ndarray rhs);
-template ndarray bland::cuda::greater_than<uint16_t, ndarray>(uint16_t lhs, ndarray rhs);
+// template ndarray bland::cuda::greater_than<uint16_t, ndarray>(uint16_t lhs, ndarray rhs);
 template ndarray bland::cuda::greater_than<uint32_t, ndarray>(uint32_t lhs, ndarray rhs);
-template ndarray bland::cuda::greater_than<uint64_t, ndarray>(uint64_t lhs, ndarray rhs);
-template ndarray bland::cuda::greater_than<int8_t, ndarray>(int8_t lhs, ndarray rhs);
-template ndarray bland::cuda::greater_than<int16_t, ndarray>(int16_t lhs, ndarray rhs);
+// template ndarray bland::cuda::greater_than<uint64_t, ndarray>(uint64_t lhs, ndarray rhs);
+// template ndarray bland::cuda::greater_than<int8_t, ndarray>(int8_t lhs, ndarray rhs);
+// template ndarray bland::cuda::greater_than<int16_t, ndarray>(int16_t lhs, ndarray rhs);
 template ndarray bland::cuda::greater_than<int32_t, ndarray>(int32_t lhs, ndarray rhs);
-template ndarray bland::cuda::greater_than<int64_t, ndarray>(int64_t lhs, ndarray rhs);
+// template ndarray bland::cuda::greater_than<int64_t, ndarray>(int64_t lhs, ndarray rhs);
 
 template ndarray bland::cuda::greater_than<uint8_t, ndarray_slice>(uint8_t lhs, ndarray_slice rhs);
 template ndarray bland::cuda::greater_than<ndarray_slice, uint8_t>(ndarray_slice lhs, uint8_t rhs);
@@ -80,27 +80,27 @@ ndarray bland::cuda::greater_than_equal_to(L lhs, R rhs) {
 // Explicit instantiations
 template ndarray bland::cuda::greater_than_equal_to<ndarray, ndarray>(ndarray lhs, ndarray rhs);
 
-template ndarray bland::cuda::greater_than_equal_to<ndarray, double>(ndarray lhs, double rhs);
+// template ndarray bland::cuda::greater_than_equal_to<ndarray, double>(ndarray lhs, double rhs);
 template ndarray bland::cuda::greater_than_equal_to<ndarray, float>(ndarray lhs, float rhs);
 template ndarray bland::cuda::greater_than_equal_to<ndarray, uint8_t>(ndarray lhs, uint8_t rhs);
-template ndarray bland::cuda::greater_than_equal_to<ndarray, uint16_t>(ndarray lhs, uint16_t rhs);
+// template ndarray bland::cuda::greater_than_equal_to<ndarray, uint16_t>(ndarray lhs, uint16_t rhs);
 template ndarray bland::cuda::greater_than_equal_to<ndarray, uint32_t>(ndarray lhs, uint32_t rhs);
-template ndarray bland::cuda::greater_than_equal_to<ndarray, uint64_t>(ndarray lhs, uint64_t rhs);
-template ndarray bland::cuda::greater_than_equal_to<ndarray, int8_t>(ndarray lhs, int8_t rhs);
-template ndarray bland::cuda::greater_than_equal_to<ndarray, int16_t>(ndarray lhs, int16_t rhs);
+// template ndarray bland::cuda::greater_than_equal_to<ndarray, uint64_t>(ndarray lhs, uint64_t rhs);
+// template ndarray bland::cuda::greater_than_equal_to<ndarray, int8_t>(ndarray lhs, int8_t rhs);
+// template ndarray bland::cuda::greater_than_equal_to<ndarray, int16_t>(ndarray lhs, int16_t rhs);
 template ndarray bland::cuda::greater_than_equal_to<ndarray, int32_t>(ndarray lhs, int32_t rhs);
-template ndarray bland::cuda::greater_than_equal_to<ndarray, int64_t>(ndarray lhs, int64_t rhs);
+// template ndarray bland::cuda::greater_than_equal_to<ndarray, int64_t>(ndarray lhs, int64_t rhs);
 
-template ndarray bland::cuda::greater_than_equal_to<double, ndarray>(double lhs, ndarray rhs);
+// template ndarray bland::cuda::greater_than_equal_to<double, ndarray>(double lhs, ndarray rhs);
 template ndarray bland::cuda::greater_than_equal_to<float, ndarray>(float lhs, ndarray rhs);
 template ndarray bland::cuda::greater_than_equal_to<uint8_t, ndarray>(uint8_t lhs, ndarray rhs);
-template ndarray bland::cuda::greater_than_equal_to<uint16_t, ndarray>(uint16_t lhs, ndarray rhs);
+// template ndarray bland::cuda::greater_than_equal_to<uint16_t, ndarray>(uint16_t lhs, ndarray rhs);
 template ndarray bland::cuda::greater_than_equal_to<uint32_t, ndarray>(uint32_t lhs, ndarray rhs);
-template ndarray bland::cuda::greater_than_equal_to<uint64_t, ndarray>(uint64_t lhs, ndarray rhs);
-template ndarray bland::cuda::greater_than_equal_to<int8_t, ndarray>(int8_t lhs, ndarray rhs);
-template ndarray bland::cuda::greater_than_equal_to<int16_t, ndarray>(int16_t lhs, ndarray rhs);
+// template ndarray bland::cuda::greater_than_equal_to<uint64_t, ndarray>(uint64_t lhs, ndarray rhs);
+// template ndarray bland::cuda::greater_than_equal_to<int8_t, ndarray>(int8_t lhs, ndarray rhs);
+// template ndarray bland::cuda::greater_than_equal_to<int16_t, ndarray>(int16_t lhs, ndarray rhs);
 template ndarray bland::cuda::greater_than_equal_to<int32_t, ndarray>(int32_t lhs, ndarray rhs);
-template ndarray bland::cuda::greater_than_equal_to<int64_t, ndarray>(int64_t lhs, ndarray rhs);
+// template ndarray bland::cuda::greater_than_equal_to<int64_t, ndarray>(int64_t lhs, ndarray rhs);
 
 
 /**
@@ -124,27 +124,27 @@ ndarray bland::cuda::less_than(L lhs, R rhs) {
 // Explicit instantiations
 template ndarray bland::cuda::less_than<ndarray, ndarray>(ndarray lhs, ndarray rhs);
 
-template ndarray bland::cuda::less_than<ndarray, double>(ndarray lhs, double rhs);
+// template ndarray bland::cuda::less_than<ndarray, double>(ndarray lhs, double rhs);
 template ndarray bland::cuda::less_than<ndarray, float>(ndarray lhs, float rhs);
 template ndarray bland::cuda::less_than<ndarray, uint8_t>(ndarray lhs, uint8_t rhs);
-template ndarray bland::cuda::less_than<ndarray, uint16_t>(ndarray lhs, uint16_t rhs);
+// template ndarray bland::cuda::less_than<ndarray, uint16_t>(ndarray lhs, uint16_t rhs);
 template ndarray bland::cuda::less_than<ndarray, uint32_t>(ndarray lhs, uint32_t rhs);
-template ndarray bland::cuda::less_than<ndarray, uint64_t>(ndarray lhs, uint64_t rhs);
-template ndarray bland::cuda::less_than<ndarray, int8_t>(ndarray lhs, int8_t rhs);
-template ndarray bland::cuda::less_than<ndarray, int16_t>(ndarray lhs, int16_t rhs);
+// template ndarray bland::cuda::less_than<ndarray, uint64_t>(ndarray lhs, uint64_t rhs);
+// template ndarray bland::cuda::less_than<ndarray, int8_t>(ndarray lhs, int8_t rhs);
+// template ndarray bland::cuda::less_than<ndarray, int16_t>(ndarray lhs, int16_t rhs);
 template ndarray bland::cuda::less_than<ndarray, int32_t>(ndarray lhs, int32_t rhs);
-template ndarray bland::cuda::less_than<ndarray, int64_t>(ndarray lhs, int64_t rhs);
+// template ndarray bland::cuda::less_than<ndarray, int64_t>(ndarray lhs, int64_t rhs);
 
-template ndarray bland::cuda::less_than<double, ndarray>(double lhs, ndarray rhs);
+// template ndarray bland::cuda::less_than<double, ndarray>(double lhs, ndarray rhs);
 template ndarray bland::cuda::less_than<float, ndarray>(float lhs, ndarray rhs);
 template ndarray bland::cuda::less_than<uint8_t, ndarray>(uint8_t lhs, ndarray rhs);
-template ndarray bland::cuda::less_than<uint16_t, ndarray>(uint16_t lhs, ndarray rhs);
+// template ndarray bland::cuda::less_than<uint16_t, ndarray>(uint16_t lhs, ndarray rhs);
 template ndarray bland::cuda::less_than<uint32_t, ndarray>(uint32_t lhs, ndarray rhs);
-template ndarray bland::cuda::less_than<uint64_t, ndarray>(uint64_t lhs, ndarray rhs);
-template ndarray bland::cuda::less_than<int8_t, ndarray>(int8_t lhs, ndarray rhs);
-template ndarray bland::cuda::less_than<int16_t, ndarray>(int16_t lhs, ndarray rhs);
+// template ndarray bland::cuda::less_than<uint64_t, ndarray>(uint64_t lhs, ndarray rhs);
+// template ndarray bland::cuda::less_than<int8_t, ndarray>(int8_t lhs, ndarray rhs);
+// template ndarray bland::cuda::less_than<int16_t, ndarray>(int16_t lhs, ndarray rhs);
 template ndarray bland::cuda::less_than<int32_t, ndarray>(int32_t lhs, ndarray rhs);
-template ndarray bland::cuda::less_than<int64_t, ndarray>(int64_t lhs, ndarray rhs);
+// template ndarray bland::cuda::less_than<int64_t, ndarray>(int64_t lhs, ndarray rhs);
 
 
 /**
@@ -168,27 +168,27 @@ ndarray bland::cuda::less_than_equal_to(L lhs, R rhs) {
 // Explicit instantiations
 template ndarray bland::cuda::less_than_equal_to<ndarray, ndarray>(ndarray lhs, ndarray rhs);
 
-template ndarray bland::cuda::less_than_equal_to<ndarray, double>(ndarray lhs, double rhs);
+// template ndarray bland::cuda::less_than_equal_to<ndarray, double>(ndarray lhs, double rhs);
 template ndarray bland::cuda::less_than_equal_to<ndarray, float>(ndarray lhs, float rhs);
 template ndarray bland::cuda::less_than_equal_to<ndarray, uint8_t>(ndarray lhs, uint8_t rhs);
-template ndarray bland::cuda::less_than_equal_to<ndarray, uint16_t>(ndarray lhs, uint16_t rhs);
+// template ndarray bland::cuda::less_than_equal_to<ndarray, uint16_t>(ndarray lhs, uint16_t rhs);
 template ndarray bland::cuda::less_than_equal_to<ndarray, uint32_t>(ndarray lhs, uint32_t rhs);
-template ndarray bland::cuda::less_than_equal_to<ndarray, uint64_t>(ndarray lhs, uint64_t rhs);
-template ndarray bland::cuda::less_than_equal_to<ndarray, int8_t>(ndarray lhs, int8_t rhs);
-template ndarray bland::cuda::less_than_equal_to<ndarray, int16_t>(ndarray lhs, int16_t rhs);
+// template ndarray bland::cuda::less_than_equal_to<ndarray, uint64_t>(ndarray lhs, uint64_t rhs);
+// template ndarray bland::cuda::less_than_equal_to<ndarray, int8_t>(ndarray lhs, int8_t rhs);
+// template ndarray bland::cuda::less_than_equal_to<ndarray, int16_t>(ndarray lhs, int16_t rhs);
 template ndarray bland::cuda::less_than_equal_to<ndarray, int32_t>(ndarray lhs, int32_t rhs);
-template ndarray bland::cuda::less_than_equal_to<ndarray, int64_t>(ndarray lhs, int64_t rhs);
+// template ndarray bland::cuda::less_than_equal_to<ndarray, int64_t>(ndarray lhs, int64_t rhs);
 
-template ndarray bland::cuda::less_than_equal_to<double, ndarray>(double lhs, ndarray rhs);
+// template ndarray bland::cuda::less_than_equal_to<double, ndarray>(double lhs, ndarray rhs);
 template ndarray bland::cuda::less_than_equal_to<float, ndarray>(float lhs, ndarray rhs);
 template ndarray bland::cuda::less_than_equal_to<uint8_t, ndarray>(uint8_t lhs, ndarray rhs);
-template ndarray bland::cuda::less_than_equal_to<uint16_t, ndarray>(uint16_t lhs, ndarray rhs);
+// template ndarray bland::cuda::less_than_equal_to<uint16_t, ndarray>(uint16_t lhs, ndarray rhs);
 template ndarray bland::cuda::less_than_equal_to<uint32_t, ndarray>(uint32_t lhs, ndarray rhs);
-template ndarray bland::cuda::less_than_equal_to<uint64_t, ndarray>(uint64_t lhs, ndarray rhs);
-template ndarray bland::cuda::less_than_equal_to<int8_t, ndarray>(int8_t lhs, ndarray rhs);
-template ndarray bland::cuda::less_than_equal_to<int16_t, ndarray>(int16_t lhs, ndarray rhs);
+// template ndarray bland::cuda::less_than_equal_to<uint64_t, ndarray>(uint64_t lhs, ndarray rhs);
+// template ndarray bland::cuda::less_than_equal_to<int8_t, ndarray>(int8_t lhs, ndarray rhs);
+// template ndarray bland::cuda::less_than_equal_to<int16_t, ndarray>(int16_t lhs, ndarray rhs);
 template ndarray bland::cuda::less_than_equal_to<int32_t, ndarray>(int32_t lhs, ndarray rhs);
-template ndarray bland::cuda::less_than_equal_to<int64_t, ndarray>(int64_t lhs, ndarray rhs);
+// template ndarray bland::cuda::less_than_equal_to<int64_t, ndarray>(int64_t lhs, ndarray rhs);
 
 
 /**
@@ -212,27 +212,27 @@ ndarray bland::cuda::logical_and(L lhs, R rhs) {
 // Explicit instantiations
 template ndarray bland::cuda::logical_and<ndarray, ndarray>(ndarray lhs, ndarray rhs);
 
-template ndarray bland::cuda::logical_and<ndarray, double>(ndarray lhs, double rhs);
+// template ndarray bland::cuda::logical_and<ndarray, double>(ndarray lhs, double rhs);
 template ndarray bland::cuda::logical_and<ndarray, float>(ndarray lhs, float rhs);
 template ndarray bland::cuda::logical_and<ndarray, uint8_t>(ndarray lhs, uint8_t rhs);
-template ndarray bland::cuda::logical_and<ndarray, uint16_t>(ndarray lhs, uint16_t rhs);
+// template ndarray bland::cuda::logical_and<ndarray, uint16_t>(ndarray lhs, uint16_t rhs);
 template ndarray bland::cuda::logical_and<ndarray, uint32_t>(ndarray lhs, uint32_t rhs);
-template ndarray bland::cuda::logical_and<ndarray, uint64_t>(ndarray lhs, uint64_t rhs);
-template ndarray bland::cuda::logical_and<ndarray, int8_t>(ndarray lhs, int8_t rhs);
-template ndarray bland::cuda::logical_and<ndarray, int16_t>(ndarray lhs, int16_t rhs);
+// template ndarray bland::cuda::logical_and<ndarray, uint64_t>(ndarray lhs, uint64_t rhs);
+// template ndarray bland::cuda::logical_and<ndarray, int8_t>(ndarray lhs, int8_t rhs);
+// template ndarray bland::cuda::logical_and<ndarray, int16_t>(ndarray lhs, int16_t rhs);
 template ndarray bland::cuda::logical_and<ndarray, int32_t>(ndarray lhs, int32_t rhs);
-template ndarray bland::cuda::logical_and<ndarray, int64_t>(ndarray lhs, int64_t rhs);
+// template ndarray bland::cuda::logical_and<ndarray, int64_t>(ndarray lhs, int64_t rhs);
 
-template ndarray bland::cuda::logical_and<double, ndarray>(double lhs, ndarray rhs);
+// template ndarray bland::cuda::logical_and<double, ndarray>(double lhs, ndarray rhs);
 template ndarray bland::cuda::logical_and<float, ndarray>(float lhs, ndarray rhs);
 template ndarray bland::cuda::logical_and<uint8_t, ndarray>(uint8_t lhs, ndarray rhs);
-template ndarray bland::cuda::logical_and<uint16_t, ndarray>(uint16_t lhs, ndarray rhs);
+// template ndarray bland::cuda::logical_and<uint16_t, ndarray>(uint16_t lhs, ndarray rhs);
 template ndarray bland::cuda::logical_and<uint32_t, ndarray>(uint32_t lhs, ndarray rhs);
-template ndarray bland::cuda::logical_and<uint64_t, ndarray>(uint64_t lhs, ndarray rhs);
-template ndarray bland::cuda::logical_and<int8_t, ndarray>(int8_t lhs, ndarray rhs);
-template ndarray bland::cuda::logical_and<int16_t, ndarray>(int16_t lhs, ndarray rhs);
+// template ndarray bland::cuda::logical_and<uint64_t, ndarray>(uint64_t lhs, ndarray rhs);
+// template ndarray bland::cuda::logical_and<int8_t, ndarray>(int8_t lhs, ndarray rhs);
+// template ndarray bland::cuda::logical_and<int16_t, ndarray>(int16_t lhs, ndarray rhs);
 template ndarray bland::cuda::logical_and<int32_t, ndarray>(int32_t lhs, ndarray rhs);
-template ndarray bland::cuda::logical_and<int64_t, ndarray>(int64_t lhs, ndarray rhs);
+// template ndarray bland::cuda::logical_and<int64_t, ndarray>(int64_t lhs, ndarray rhs);
 
 template ndarray bland::cuda::logical_and<uint8_t, ndarray_slice>(uint8_t lhs, ndarray_slice rhs);
 template ndarray bland::cuda::logical_and<ndarray_slice, uint8_t>(ndarray_slice lhs, uint8_t rhs);
@@ -258,25 +258,25 @@ ndarray bland::cuda::equal_to(L lhs, R rhs) {
 // Explicit instantiations
 template ndarray bland::cuda::equal_to<ndarray, ndarray>(ndarray lhs, ndarray rhs);
 
-template ndarray bland::cuda::equal_to<ndarray, double>(ndarray lhs, double rhs);
+// template ndarray bland::cuda::equal_to<ndarray, double>(ndarray lhs, double rhs);
 template ndarray bland::cuda::equal_to<ndarray, float>(ndarray lhs, float rhs);
 template ndarray bland::cuda::equal_to<ndarray, uint8_t>(ndarray lhs, uint8_t rhs);
-template ndarray bland::cuda::equal_to<ndarray, uint16_t>(ndarray lhs, uint16_t rhs);
+// template ndarray bland::cuda::equal_to<ndarray, uint16_t>(ndarray lhs, uint16_t rhs);
 template ndarray bland::cuda::equal_to<ndarray, uint32_t>(ndarray lhs, uint32_t rhs);
-template ndarray bland::cuda::equal_to<ndarray, uint64_t>(ndarray lhs, uint64_t rhs);
-template ndarray bland::cuda::equal_to<ndarray, int8_t>(ndarray lhs, int8_t rhs);
-template ndarray bland::cuda::equal_to<ndarray, int16_t>(ndarray lhs, int16_t rhs);
+// template ndarray bland::cuda::equal_to<ndarray, uint64_t>(ndarray lhs, uint64_t rhs);
+// template ndarray bland::cuda::equal_to<ndarray, int8_t>(ndarray lhs, int8_t rhs);
+// template ndarray bland::cuda::equal_to<ndarray, int16_t>(ndarray lhs, int16_t rhs);
 template ndarray bland::cuda::equal_to<ndarray, int32_t>(ndarray lhs, int32_t rhs);
-template ndarray bland::cuda::equal_to<ndarray, int64_t>(ndarray lhs, int64_t rhs);
+// template ndarray bland::cuda::equal_to<ndarray, int64_t>(ndarray lhs, int64_t rhs);
 
-template ndarray bland::cuda::equal_to<double, ndarray>(double lhs, ndarray rhs);
+// template ndarray bland::cuda::equal_to<double, ndarray>(double lhs, ndarray rhs);
 template ndarray bland::cuda::equal_to<float, ndarray>(float lhs, ndarray rhs);
 template ndarray bland::cuda::equal_to<uint8_t, ndarray>(uint8_t lhs, ndarray rhs);
-template ndarray bland::cuda::equal_to<uint16_t, ndarray>(uint16_t lhs, ndarray rhs);
+// template ndarray bland::cuda::equal_to<uint16_t, ndarray>(uint16_t lhs, ndarray rhs);
 template ndarray bland::cuda::equal_to<uint32_t, ndarray>(uint32_t lhs, ndarray rhs);
-template ndarray bland::cuda::equal_to<uint64_t, ndarray>(uint64_t lhs, ndarray rhs);
-template ndarray bland::cuda::equal_to<int8_t, ndarray>(int8_t lhs, ndarray rhs);
-template ndarray bland::cuda::equal_to<int16_t, ndarray>(int16_t lhs, ndarray rhs);
+// template ndarray bland::cuda::equal_to<uint64_t, ndarray>(uint64_t lhs, ndarray rhs);
+// template ndarray bland::cuda::equal_to<int8_t, ndarray>(int8_t lhs, ndarray rhs);
+// template ndarray bland::cuda::equal_to<int16_t, ndarray>(int16_t lhs, ndarray rhs);
 template ndarray bland::cuda::equal_to<int32_t, ndarray>(int32_t lhs, ndarray rhs);
-template ndarray bland::cuda::equal_to<int64_t, ndarray>(int64_t lhs, ndarray rhs);
+// template ndarray bland::cuda::equal_to<int64_t, ndarray>(int64_t lhs, ndarray rhs);
 

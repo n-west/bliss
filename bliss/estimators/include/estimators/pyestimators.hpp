@@ -17,7 +17,7 @@ using namespace nb::literals;
 void bind_pyestimators(nb::module_ m) {
 
     m.def("estimate_spectral_kurtosis",
-          nb::overload_cast<const bland::ndarray &, int64_t, int64_t, float>(&bliss::estimate_spectral_kurtosis),
+          nb::overload_cast<const bland::ndarray &, int32_t, int32_t, float>(&bliss::estimate_spectral_kurtosis),
           "spectrum_grid"_a,
           "N"_a,
           "M"_a,

@@ -27,7 +27,7 @@ bliss::integrate_linear_rounded_bins_cpu(bland::ndarray    spectrum_grid,
     auto number_drifts = (options.high_rate - options.low_rate) / options.rate_step_size;
     std::vector<frequency_drift_plane::drift_rate> drift_rate_info;
 
-    auto time_steps      = spectrum_grid.size(0);
+    int32_t time_steps      = spectrum_grid.size(0);
     auto number_channels = spectrum_grid.size(1);
 
     auto maximum_drift_span = time_steps - 1;
