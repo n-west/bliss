@@ -37,7 +37,9 @@ add_feature_info(CUDA WITH_CUDA "Enabling bliss-specific CUDA operations")
 if (WITH_CUDA)
   message("**BLISS:: enabling cuda (the language)")
   if(NOT DEFINED CMAKE_CUDA_ARCHITECTURES)
-    set(CMAKE_CUDA_ARCHITECTURES native)
+    # Generate binary code for 61 and 52, but PTX for 70
+    set(CUDA_SEPARABLE_COMPILATION ON)
+    set(CUDA_ARCHITECTURES 61-real;52-real;70)
   endif()
   enable_language(CUDA)
   add_definitions("-DBLISS_CUDA=1")
@@ -121,6 +123,7 @@ endif()
 
 
 # HDF5
+# set(HDF5_USE_STATIC_LIBRARIES ON)
 find_package(HDF5 QUIET REQUIRED COMPONENTS CXX)
 set_package_properties(HDF5 PROPERTIES
     URL "https://www.hdfgroup.org/solutions/hdf5/"

@@ -1,5 +1,4 @@
 
-
 add_library(bland
     bland_tensor_internals.cpp
     ndarray.cpp
@@ -30,8 +29,9 @@ if (WITH_CUDA)
     )
 
     target_link_libraries(bland
-    PRIVATE
-    CUDA::cudart_static)
+        PRIVATE
+        CUDA::cudart_static
+    )
 endif ()
 
 target_include_directories(bland
@@ -40,16 +40,6 @@ target_include_directories(bland
     PRIVATE
     ${CMAKE_CURRENT_SOURCE_DIR}/internal/include
 )
-
-# target_precompile_headers(bland
-#   PRIVATE
-#     [["bland/bland.hpp"]]
-#     [["bland/ndarray.hpp"]]
-#     [["bland/ops.hpp"]]
-#     [["dispatcher.hpp"]]
-#     [["elementwise_binary_op.hpp"]]
-#     [["elementwise_scalar_op.hpp"]]
-# )
 
 target_link_libraries(bland
     PUBLIC
