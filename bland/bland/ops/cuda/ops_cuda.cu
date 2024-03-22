@@ -44,27 +44,43 @@ __global__ void assignment_kernel(Out* out_data, int64_t* out_shape, int64_t* ou
     auto worker_id = blockIdx.x * blockDim.x + threadIdx.x;
     auto grid_size = gridDim.x * blockDim.x;
 
+    extern __shared__ char smem[];
+    int64_t* sh_out_shape = reinterpret_cast<int64_t*>(smem);
+    int smem_end = sizeof(int64_t) * ndim;
+
+    int64_t* sh_out_strides = reinterpret_cast<int64_t*>(smem + smem_end);
+    smem_end += sizeof(int64_t) * ndim;
+
+    for (int sh_index = threadIdx.x; sh_index < ndim * 2; sh_index += blockDim.x) {
+        if (sh_index < ndim) {
+            sh_out_shape[sh_index] = out_shape[sh_index];
+        } else if (sh_index < ndim*2) {
+            sh_out_strides[sh_index - ndim] = out_strides[sh_index - ndim];
+        }
+    }
+    __syncthreads();
+
     int64_t nd_index[ASSIGN_MAX_NDIM] = {0};
     auto flattened_work_item = worker_id;
     for (int dim = ndim - 1; dim >= 0; --dim) {
-        nd_index[dim] = flattened_work_item % out_shape[dim];
-        flattened_work_item /= out_shape[dim];
+        nd_index[dim] = flattened_work_item % sh_out_shape[dim];
+        flattened_work_item /= sh_out_shape[dim];
     }
     for (int64_t n = worker_id; n < numel; n += grid_size) {
         int64_t out_index = 0;
         for (int dim = 0; dim < ndim; ++dim) {
-            out_index += nd_index[dim] * out_strides[dim];
+            out_index += nd_index[dim] * sh_out_strides[dim];
         }
         out_data[out_index] = value;
         auto increment_amount = grid_size;
         for (int dim = ndim - 1; dim >= 0; --dim) {
             nd_index[dim] += increment_amount;
-            if (nd_index[dim] < out_shape[dim]) {
+            if (nd_index[dim] < sh_out_shape[dim]) {
                 break;
             } else {
                 // The remainder might be multiples of dim sizes
-                increment_amount = nd_index[dim] / out_shape[dim];
-                nd_index[dim] = nd_index[dim] % out_shape[dim];
+                increment_amount = nd_index[dim] / sh_out_shape[dim];
+                nd_index[dim] = nd_index[dim] % sh_out_shape[dim];
             }
         }
     }
@@ -83,13 +99,13 @@ struct assignment_op_impl_wrapper {
         thrust::device_vector<int64_t> dev_out_shape(out_shape.begin(), out_shape.end());
         thrust::device_vector<int64_t> dev_out_strides(out_strides.begin(), out_strides.end());
 
-        int block_size = 512; // TODO: for some small numels we might still want to reduce this
+        int block_size = 256; // TODO: for some small numels we might still want to reduce this
         auto numel = out.numel();
         // TODO: do some benchmarking to get a better default max number of blocks
-        int num_blocks = std::min<int>(32, (numel+block_size-1) / block_size);
+        int num_blocks = std::min<int>(112, (numel+block_size-1) / block_size);
         // cudaDeviceSynchronize();
-
-        assignment_kernel<Out, S><<<num_blocks, block_size>>>(out_data, thrust::raw_pointer_cast(dev_out_shape.data()), thrust::raw_pointer_cast(dev_out_strides.data()),
+        auto smem = sizeof(int64_t) * out.ndim()*2;
+        assignment_kernel<Out, S><<<num_blocks, block_size, smem>>>(out_data, thrust::raw_pointer_cast(dev_out_shape.data()), thrust::raw_pointer_cast(dev_out_strides.data()),
 value,
                                                                 out.ndim(), numel);
         // // Synchronize the device
@@ -118,12 +134,12 @@ ndarray bland::cuda::fill(ndarray out, T value) {
 }
 
 template ndarray bland::cuda::fill<float>(ndarray out, float v);
-template ndarray bland::cuda::fill<double>(ndarray out, double v);
-template ndarray bland::cuda::fill<int8_t>(ndarray out, int8_t v);
-template ndarray bland::cuda::fill<int16_t>(ndarray out, int16_t v);
+// template ndarray bland::cuda::fill<double>(ndarray out, double v);
+// template ndarray bland::cuda::fill<int8_t>(ndarray out, int8_t v);
+// template ndarray bland::cuda::fill<int16_t>(ndarray out, int16_t v);
 template ndarray bland::cuda::fill<int32_t>(ndarray out, int32_t v);
-template ndarray bland::cuda::fill<int64_t>(ndarray out, int64_t v);
+// template ndarray bland::cuda::fill<int64_t>(ndarray out, int64_t v);
 template ndarray bland::cuda::fill<uint8_t>(ndarray out, uint8_t v);
-template ndarray bland::cuda::fill<uint16_t>(ndarray out, uint16_t v);
+// template ndarray bland::cuda::fill<uint16_t>(ndarray out, uint16_t v);
 template ndarray bland::cuda::fill<uint32_t>(ndarray out, uint32_t v);
-template ndarray bland::cuda::fill<uint64_t>(ndarray out, uint64_t v);
+// template ndarray bland::cuda::fill<uint64_t>(ndarray out, uint64_t v);

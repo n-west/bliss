@@ -23,7 +23,7 @@ namespace bliss {
  * "Radio Frequency Interference Excision Using Spectral-Domain Statistics"
  *
  */
-[[nodiscard]] bland::ndarray estimate_spectral_kurtosis(const bland::ndarray &spectrum_grid, int64_t N, int64_t M, float d = 1.0);
+[[nodiscard]] bland::ndarray estimate_spectral_kurtosis(const bland::ndarray &spectrum_grid, int32_t N, int32_t M, float d = 1.0);
 
 [[nodiscard]] bland::ndarray estimate_spectral_kurtosis(coarse_channel &cc_data);
 

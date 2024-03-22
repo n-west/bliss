@@ -154,15 +154,15 @@ bland::ndarray::ndarray(std::vector<int64_t> dims, T initial_value, datatype dty
 }
 
 template bland::ndarray::ndarray(std::vector<int64_t> dims, float initial_value, datatype dtype, DLDevice device);
-template bland::ndarray::ndarray(std::vector<int64_t> dims, double initial_value, datatype dtype, DLDevice device);
-template bland::ndarray::ndarray(std::vector<int64_t> dims, int8_t initial_value, datatype dtype, DLDevice device);
-template bland::ndarray::ndarray(std::vector<int64_t> dims, int16_t initial_value, datatype dtype, DLDevice device);
+// template bland::ndarray::ndarray(std::vector<int64_t> dims, double initial_value, datatype dtype, DLDevice device);
+// template bland::ndarray::ndarray(std::vector<int64_t> dims, int8_t initial_value, datatype dtype, DLDevice device);
+// template bland::ndarray::ndarray(std::vector<int64_t> dims, int16_t initial_value, datatype dtype, DLDevice device);
 template bland::ndarray::ndarray(std::vector<int64_t> dims, int32_t initial_value, datatype dtype, DLDevice device);
-template bland::ndarray::ndarray(std::vector<int64_t> dims, int64_t initial_value, datatype dtype, DLDevice device);
+// template bland::ndarray::ndarray(std::vector<int64_t> dims, int64_t initial_value, datatype dtype, DLDevice device);
 template bland::ndarray::ndarray(std::vector<int64_t> dims, uint8_t initial_value, datatype dtype, DLDevice device);
-template bland::ndarray::ndarray(std::vector<int64_t> dims, uint16_t initial_value, datatype dtype, DLDevice device);
+// template bland::ndarray::ndarray(std::vector<int64_t> dims, uint16_t initial_value, datatype dtype, DLDevice device);
 template bland::ndarray::ndarray(std::vector<int64_t> dims, uint32_t initial_value, datatype dtype, DLDevice device);
-template bland::ndarray::ndarray(std::vector<int64_t> dims, uint64_t initial_value, datatype dtype, DLDevice device);
+// template bland::ndarray::ndarray(std::vector<int64_t> dims, uint64_t initial_value, datatype dtype, DLDevice device);
 
 DLManagedTensor *bland::ndarray::get_managed_tensor() {
     return _tensor.to_dlpack();
@@ -405,15 +405,15 @@ ndarray bland::ndarray::operator+(const T &b) const {
 template ndarray bland::ndarray::operator+<ndarray>(const ndarray &b) const;
 template ndarray bland::ndarray::operator+<ndarray_slice>(const ndarray_slice &b) const;
 template ndarray bland::ndarray::operator+<float>(const float &b) const;
-template ndarray bland::ndarray::operator+<double>(const double &b) const;
-template ndarray bland::ndarray::operator+<int8_t>(const int8_t &b) const;
-template ndarray bland::ndarray::operator+<int16_t>(const int16_t &b) const;
+// template ndarray bland::ndarray::operator+<double>(const double &b) const;
+// template ndarray bland::ndarray::operator+<int8_t>(const int8_t &b) const;
+// template ndarray bland::ndarray::operator+<int16_t>(const int16_t &b) const;
 template ndarray bland::ndarray::operator+<int32_t>(const int32_t &b) const;
-template ndarray bland::ndarray::operator+<int64_t>(const int64_t &b) const;
+// template ndarray bland::ndarray::operator+<int64_t>(const int64_t &b) const;
 template ndarray bland::ndarray::operator+<uint8_t>(const uint8_t &b) const;
-template ndarray bland::ndarray::operator+<uint16_t>(const uint16_t &b) const;
+// template ndarray bland::ndarray::operator+<uint16_t>(const uint16_t &b) const;
 template ndarray bland::ndarray::operator+<uint32_t>(const uint32_t &b) const;
-template ndarray bland::ndarray::operator+<uint64_t>(const uint64_t &b) const;
+// template ndarray bland::ndarray::operator+<uint64_t>(const uint64_t &b) const;
 
 template <typename T>
 typename std::enable_if<std::is_arithmetic<T>::value, ndarray>::type bland::operator+(const T       &lhs,
@@ -422,15 +422,15 @@ typename std::enable_if<std::is_arithmetic<T>::value, ndarray>::type bland::oper
 }
 
 template ndarray bland::operator+<float>(const float &lhs, const ndarray &rhs);
-template ndarray bland::operator+<double>(const double &lhs, const ndarray &rhs);
-template ndarray bland::operator+<int8_t>(const int8_t &lhs, const ndarray &rhs);
-template ndarray bland::operator+<int16_t>(const int16_t &lhs, const ndarray &rhs);
+// template ndarray bland::operator+<double>(const double &lhs, const ndarray &rhs);
+// template ndarray bland::operator+<int8_t>(const int8_t &lhs, const ndarray &rhs);
+// template ndarray bland::operator+<int16_t>(const int16_t &lhs, const ndarray &rhs);
 template ndarray bland::operator+<int32_t>(const int32_t &lhs, const ndarray &rhs);
-template ndarray bland::operator+<int64_t>(const int64_t &lhs, const ndarray &rhs);
+// template ndarray bland::operator+<int64_t>(const int64_t &lhs, const ndarray &rhs);
 template ndarray bland::operator+<uint8_t>(const uint8_t &lhs, const ndarray &rhs);
-template ndarray bland::operator+<uint16_t>(const uint16_t &lhs, const ndarray &rhs);
+// template ndarray bland::operator+<uint16_t>(const uint16_t &lhs, const ndarray &rhs);
 template ndarray bland::operator+<uint32_t>(const uint32_t &lhs, const ndarray &rhs);
-template ndarray bland::operator+<uint64_t>(const uint64_t &lhs, const ndarray &rhs);
+// template ndarray bland::operator+<uint64_t>(const uint64_t &lhs, const ndarray &rhs);
 
 template <typename T>
 ndarray bland::ndarray::subtract(const T &b) const {
@@ -444,15 +444,15 @@ ndarray bland::ndarray::operator-(const T &b) const {
 
 template ndarray bland::ndarray::operator-<ndarray>(const ndarray &b) const;
 template ndarray bland::ndarray::operator-<float>(const float &b) const;
-template ndarray bland::ndarray::operator-<double>(const double &b) const;
-template ndarray bland::ndarray::operator-<int8_t>(const int8_t &b) const;
-template ndarray bland::ndarray::operator-<int16_t>(const int16_t &b) const;
+// template ndarray bland::ndarray::operator-<double>(const double &b) const;
+// template ndarray bland::ndarray::operator-<int8_t>(const int8_t &b) const;
+// template ndarray bland::ndarray::operator-<int16_t>(const int16_t &b) const;
 template ndarray bland::ndarray::operator-<int32_t>(const int32_t &b) const;
-template ndarray bland::ndarray::operator-<int64_t>(const int64_t &b) const;
+// template ndarray bland::ndarray::operator-<int64_t>(const int64_t &b) const;
 template ndarray bland::ndarray::operator-<uint8_t>(const uint8_t &b) const;
-template ndarray bland::ndarray::operator-<uint16_t>(const uint16_t &b) const;
+// template ndarray bland::ndarray::operator-<uint16_t>(const uint16_t &b) const;
 template ndarray bland::ndarray::operator-<uint32_t>(const uint32_t &b) const;
-template ndarray bland::ndarray::operator-<uint64_t>(const uint64_t &b) const;
+// template ndarray bland::ndarray::operator-<uint64_t>(const uint64_t &b) const;
 
 template <typename T>
 typename std::enable_if<std::is_arithmetic<T>::value, ndarray>::type bland::operator-(const T       &lhs,
@@ -461,15 +461,15 @@ typename std::enable_if<std::is_arithmetic<T>::value, ndarray>::type bland::oper
 }
 
 template ndarray bland::operator-<float>(const float &lhs, const ndarray &rhs);
-template ndarray bland::operator-<double>(const double &lhs, const ndarray &rhs);
-template ndarray bland::operator-<int8_t>(const int8_t &lhs, const ndarray &rhs);
-template ndarray bland::operator-<int16_t>(const int16_t &lhs, const ndarray &rhs);
+// template ndarray bland::operator-<double>(const double &lhs, const ndarray &rhs);
+// template ndarray bland::operator-<int8_t>(const int8_t &lhs, const ndarray &rhs);
+// template ndarray bland::operator-<int16_t>(const int16_t &lhs, const ndarray &rhs);
 template ndarray bland::operator-<int32_t>(const int32_t &lhs, const ndarray &rhs);
-template ndarray bland::operator-<int64_t>(const int64_t &lhs, const ndarray &rhs);
+// template ndarray bland::operator-<int64_t>(const int64_t &lhs, const ndarray &rhs);
 template ndarray bland::operator-<uint8_t>(const uint8_t &lhs, const ndarray &rhs);
-template ndarray bland::operator-<uint16_t>(const uint16_t &lhs, const ndarray &rhs);
+// template ndarray bland::operator-<uint16_t>(const uint16_t &lhs, const ndarray &rhs);
 template ndarray bland::operator-<uint32_t>(const uint32_t &lhs, const ndarray &rhs);
-template ndarray bland::operator-<uint64_t>(const uint64_t &lhs, const ndarray &rhs);
+// template ndarray bland::operator-<uint64_t>(const uint64_t &lhs, const ndarray &rhs);
 
 template <typename T>
 ndarray bland::ndarray::multiply(const T &b) const {
@@ -478,15 +478,15 @@ ndarray bland::ndarray::multiply(const T &b) const {
 
 template ndarray bland::ndarray::multiply<ndarray>(const ndarray &b) const;
 template ndarray bland::ndarray::multiply<float>(const float &b) const;
-template ndarray bland::ndarray::multiply<double>(const double &b) const;
-template ndarray bland::ndarray::multiply<int8_t>(const int8_t &b) const;
-template ndarray bland::ndarray::multiply<int16_t>(const int16_t &b) const;
+// template ndarray bland::ndarray::multiply<double>(const double &b) const;
+// template ndarray bland::ndarray::multiply<int8_t>(const int8_t &b) const;
+// template ndarray bland::ndarray::multiply<int16_t>(const int16_t &b) const;
 template ndarray bland::ndarray::multiply<int32_t>(const int32_t &b) const;
-template ndarray bland::ndarray::multiply<int64_t>(const int64_t &b) const;
+// template ndarray bland::ndarray::multiply<int64_t>(const int64_t &b) const;
 template ndarray bland::ndarray::multiply<uint8_t>(const uint8_t &b) const;
-template ndarray bland::ndarray::multiply<uint16_t>(const uint16_t &b) const;
+// template ndarray bland::ndarray::multiply<uint16_t>(const uint16_t &b) const;
 template ndarray bland::ndarray::multiply<uint32_t>(const uint32_t &b) const;
-template ndarray bland::ndarray::multiply<uint64_t>(const uint64_t &b) const;
+// template ndarray bland::ndarray::multiply<uint64_t>(const uint64_t &b) const;
 
 template <typename T>
 ndarray bland::ndarray::operator*(const T &b) const {
@@ -495,15 +495,15 @@ ndarray bland::ndarray::operator*(const T &b) const {
 
 template ndarray bland::ndarray::operator*<ndarray>(const ndarray &b) const;
 template ndarray bland::ndarray::operator*<float>(const float &b) const;
-template ndarray bland::ndarray::operator*<double>(const double &b) const;
-template ndarray bland::ndarray::operator*<int8_t>(const int8_t &b) const;
-template ndarray bland::ndarray::operator*<int16_t>(const int16_t &b) const;
+// template ndarray bland::ndarray::operator*<double>(const double &b) const;
+// template ndarray bland::ndarray::operator*<int8_t>(const int8_t &b) const;
+// template ndarray bland::ndarray::operator*<int16_t>(const int16_t &b) const;
 template ndarray bland::ndarray::operator*<int32_t>(const int32_t &b) const;
-template ndarray bland::ndarray::operator*<int64_t>(const int64_t &b) const;
+// template ndarray bland::ndarray::operator*<int64_t>(const int64_t &b) const;
 template ndarray bland::ndarray::operator*<uint8_t>(const uint8_t &b) const;
-template ndarray bland::ndarray::operator*<uint16_t>(const uint16_t &b) const;
+// template ndarray bland::ndarray::operator*<uint16_t>(const uint16_t &b) const;
 template ndarray bland::ndarray::operator*<uint32_t>(const uint32_t &b) const;
-template ndarray bland::ndarray::operator*<uint64_t>(const uint64_t &b) const;
+// template ndarray bland::ndarray::operator*<uint64_t>(const uint64_t &b) const;
 
 template <typename T>
 typename std::enable_if<std::is_arithmetic<T>::value, ndarray>::type bland::operator*(const T       &lhs,
@@ -512,15 +512,15 @@ typename std::enable_if<std::is_arithmetic<T>::value, ndarray>::type bland::oper
 }
 
 template ndarray bland::operator*<float>(const float &lhs, const ndarray &rhs);
-template ndarray bland::operator*<double>(const double &lhs, const ndarray &rhs);
-template ndarray bland::operator*<int8_t>(const int8_t &lhs, const ndarray &rhs);
-template ndarray bland::operator*<int16_t>(const int16_t &lhs, const ndarray &rhs);
+// template ndarray bland::operator*<double>(const double &lhs, const ndarray &rhs);
+// template ndarray bland::operator*<int8_t>(const int8_t &lhs, const ndarray &rhs);
+// template ndarray bland::operator*<int16_t>(const int16_t &lhs, const ndarray &rhs);
 template ndarray bland::operator*<int32_t>(const int32_t &lhs, const ndarray &rhs);
-template ndarray bland::operator*<int64_t>(const int64_t &lhs, const ndarray &rhs);
+// template ndarray bland::operator*<int64_t>(const int64_t &lhs, const ndarray &rhs);
 template ndarray bland::operator*<uint8_t>(const uint8_t &lhs, const ndarray &rhs);
-template ndarray bland::operator*<uint16_t>(const uint16_t &lhs, const ndarray &rhs);
+// template ndarray bland::operator*<uint16_t>(const uint16_t &lhs, const ndarray &rhs);
 template ndarray bland::operator*<uint32_t>(const uint32_t &lhs, const ndarray &rhs);
-template ndarray bland::operator*<uint64_t>(const uint64_t &lhs, const ndarray &rhs);
+// template ndarray bland::operator*<uint64_t>(const uint64_t &lhs, const ndarray &rhs);
 
 template <typename T>
 ndarray bland::ndarray::divide(const T &b) const {
@@ -534,15 +534,15 @@ ndarray bland::ndarray::operator/(const T &b) const {
 
 template ndarray bland::ndarray::operator/<ndarray>(const ndarray &b) const;
 template ndarray bland::ndarray::operator/<float>(const float &b) const;
-template ndarray bland::ndarray::operator/<double>(const double &b) const;
-template ndarray bland::ndarray::operator/<int8_t>(const int8_t &b) const;
-template ndarray bland::ndarray::operator/<int16_t>(const int16_t &b) const;
+// template ndarray bland::ndarray::operator/<double>(const double &b) const;
+// template ndarray bland::ndarray::operator/<int8_t>(const int8_t &b) const;
+// template ndarray bland::ndarray::operator/<int16_t>(const int16_t &b) const;
 template ndarray bland::ndarray::operator/<int32_t>(const int32_t &b) const;
-template ndarray bland::ndarray::operator/<int64_t>(const int64_t &b) const;
+// template ndarray bland::ndarray::operator/<int64_t>(const int64_t &b) const;
 template ndarray bland::ndarray::operator/<uint8_t>(const uint8_t &b) const;
-template ndarray bland::ndarray::operator/<uint16_t>(const uint16_t &b) const;
+// template ndarray bland::ndarray::operator/<uint16_t>(const uint16_t &b) const;
 template ndarray bland::ndarray::operator/<uint32_t>(const uint32_t &b) const;
-template ndarray bland::ndarray::operator/<uint64_t>(const uint64_t &b) const;
+// template ndarray bland::ndarray::operator/<uint64_t>(const uint64_t &b) const;
 
 template <typename T>
 typename std::enable_if<std::is_arithmetic<T>::value, ndarray>::type bland::operator/(const T       &lhs,
@@ -551,15 +551,15 @@ typename std::enable_if<std::is_arithmetic<T>::value, ndarray>::type bland::oper
 }
 
 template ndarray bland::operator/<float>(const float &lhs, const ndarray &rhs);
-template ndarray bland::operator/<double>(const double &lhs, const ndarray &rhs);
-template ndarray bland::operator/<int8_t>(const int8_t &lhs, const ndarray &rhs);
-template ndarray bland::operator/<int16_t>(const int16_t &lhs, const ndarray &rhs);
+// template ndarray bland::operator/<double>(const double &lhs, const ndarray &rhs);
+// template ndarray bland::operator/<int8_t>(const int8_t &lhs, const ndarray &rhs);
+// template ndarray bland::operator/<int16_t>(const int16_t &lhs, const ndarray &rhs);
 template ndarray bland::operator/<int32_t>(const int32_t &lhs, const ndarray &rhs);
-template ndarray bland::operator/<int64_t>(const int64_t &lhs, const ndarray &rhs);
+// template ndarray bland::operator/<int64_t>(const int64_t &lhs, const ndarray &rhs);
 template ndarray bland::operator/<uint8_t>(const uint8_t &lhs, const ndarray &rhs);
-template ndarray bland::operator/<uint16_t>(const uint16_t &lhs, const ndarray &rhs);
+// template ndarray bland::operator/<uint16_t>(const uint16_t &lhs, const ndarray &rhs);
 template ndarray bland::operator/<uint32_t>(const uint32_t &lhs, const ndarray &rhs);
-template ndarray bland::operator/<uint64_t>(const uint64_t &lhs, const ndarray &rhs);
+// template ndarray bland::operator/<uint64_t>(const uint64_t &lhs, const ndarray &rhs);
 
 
 ndarray bland::ndarray::reshape(const std::vector<int64_t> &new_shape) {

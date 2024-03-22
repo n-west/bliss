@@ -387,25 +387,26 @@ ndarray bland::linspace(T start, T end, size_t number_steps, DLDevice device) {
     return linspace(start, end, number_steps, dtype, device);
 }
 
-template ndarray
-bland::linspace<int8_t>(int8_t start, int8_t end, size_t number_steps, DLDevice device = default_device);
-template ndarray
-bland::linspace<int16_t>(int16_t start, int16_t end, size_t number_steps, DLDevice device = default_device);
+// template ndarray
+// bland::linspace<int8_t>(int8_t start, int8_t end, size_t number_steps, DLDevice device = default_device);
+// template ndarray
+// bland::linspace<int16_t>(int16_t start, int16_t end, size_t number_steps, DLDevice device = default_device);
 template ndarray
 bland::linspace<int32_t>(int32_t start, int32_t end, size_t number_steps, DLDevice device = default_device);
 template ndarray
 bland::linspace<int64_t>(int64_t start, int64_t end, size_t number_steps, DLDevice device = default_device);
 template ndarray
 bland::linspace<uint8_t>(uint8_t start, uint8_t end, size_t number_steps, DLDevice device = default_device);
-template ndarray
-bland::linspace<uint16_t>(uint16_t start, uint16_t end, size_t number_steps, DLDevice device = default_device);
+// template ndarray
+// bland::linspace<uint16_t>(uint16_t start, uint16_t end, size_t number_steps, DLDevice device = default_device);
 template ndarray
 bland::linspace<uint32_t>(uint32_t start, uint32_t end, size_t number_steps, DLDevice device = default_device);
 template ndarray
 bland::linspace<uint64_t>(uint64_t start, uint64_t end, size_t number_steps, DLDevice device = default_device);
-template ndarray bland::linspace<float>(float start, float end, size_t number_steps, DLDevice device = default_device);
 template ndarray
-bland::linspace<double>(double start, double end, size_t number_steps, DLDevice device = default_device);
+bland::linspace<float>(float start, float end, size_t number_steps, DLDevice device = default_device);
+// template ndarray
+// bland::linspace<double>(double start, double end, size_t number_steps, DLDevice device = default_device);
 
 ndarray bland::zeros(std::vector<int64_t> shape, DLDataType dtype, DLDevice device) {
     return ndarray(shape, 0, dtype, device);
@@ -497,21 +498,21 @@ ndarray bland::rand_uniform(std::vector<int64_t> shape, T low, T high, DLDataTyp
 
 template ndarray
 bland::rand_uniform(std::vector<int64_t> shape, float low, float high, DLDataType dtype, DLDevice device);
-template ndarray
-bland::rand_uniform(std::vector<int64_t> shape, double low, double high, DLDataType dtype, DLDevice device);
-template ndarray
-bland::rand_uniform(std::vector<int64_t> shape, int8_t low, int8_t high, DLDataType dtype, DLDevice device);
-template ndarray
-bland::rand_uniform(std::vector<int64_t> shape, int16_t low, int16_t high, DLDataType dtype, DLDevice device);
+// template ndarray
+// bland::rand_uniform(std::vector<int64_t> shape, double low, double high, DLDataType dtype, DLDevice device);
+// template ndarray
+// bland::rand_uniform(std::vector<int64_t> shape, int8_t low, int8_t high, DLDataType dtype, DLDevice device);
+// template ndarray
+// bland::rand_uniform(std::vector<int64_t> shape, int16_t low, int16_t high, DLDataType dtype, DLDevice device);
 template ndarray
 bland::rand_uniform(std::vector<int64_t> shape, int32_t low, int32_t high, DLDataType dtype, DLDevice device);
-template ndarray
-bland::rand_uniform(std::vector<int64_t> shape, int64_t low, int64_t high, DLDataType dtype, DLDevice device);
+// template ndarray
+// bland::rand_uniform(std::vector<int64_t> shape, int64_t low, int64_t high, DLDataType dtype, DLDevice device);
 template ndarray
 bland::rand_uniform(std::vector<int64_t> shape, uint8_t low, uint8_t high, DLDataType dtype, DLDevice device);
-template ndarray
-bland::rand_uniform(std::vector<int64_t> shape, uint16_t low, uint16_t high, DLDataType dtype, DLDevice device);
+// template ndarray
+// bland::rand_uniform(std::vector<int64_t> shape, uint16_t low, uint16_t high, DLDataType dtype, DLDevice device);
 template ndarray
 bland::rand_uniform(std::vector<int64_t> shape, uint32_t low, uint32_t high, DLDataType dtype, DLDevice device);
-template ndarray
-bland::rand_uniform(std::vector<int64_t> shape, uint64_t low, uint64_t high, DLDataType dtype, DLDevice device);
+// template ndarray
+// bland::rand_uniform(std::vector<int64_t> shape, uint64_t low, uint64_t high, DLDataType dtype, DLDevice device);

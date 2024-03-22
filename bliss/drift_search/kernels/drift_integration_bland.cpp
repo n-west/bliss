@@ -33,7 +33,7 @@ bliss::integrate_linear_rounded_bins_bland(bland::ndarray spectrum_grid,
     auto number_drifts = (options.high_rate - options.low_rate) / options.rate_step_size;
     std::vector<frequency_drift_plane::drift_rate> drift_rate_info;
 
-    auto time_steps      = spectrum_grid.size(0);
+    int32_t time_steps      = spectrum_grid.size(0);
     auto number_channels = spectrum_grid.size(1);
 
     auto maximum_drift_span = time_steps - 1;
@@ -65,7 +65,7 @@ bliss::integrate_linear_rounded_bins_bland(bland::ndarray spectrum_grid,
         }
         drift_rate_info.push_back(rate);
 
-        for (int t = 0; t < time_steps; ++t) {
+        for (int32_t t = 0; t < time_steps; ++t) {
             int freq_offset_at_time = std::round(m * t);
 
             for (int desmear_channel = 0; desmear_channel < desmear_bandwidth; ++desmear_channel) {

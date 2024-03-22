@@ -20,15 +20,46 @@ using namespace bliss;
  * This kernel will parallelize such that a single cuda thread handles integration for all drifts
  * of a frequency channel.
 */
+
+struct kernel_drift_info {
+    double slope;
+    int desmeared_bins;
+};
+
 __global__ void integrate_drifts(float* drift_plane_data,
                             uint8_t* rolloff_data,
                             uint8_t* low_sk_rfi_data, 
                             uint8_t* high_sk_rfi_data,
-                            uint32_t* drift_plane_shape, uint32_t* drift_plane_strides,
+                            int32_t* drift_plane_shape, int32_t* drift_plane_strides,
                             float* spectrum_grid_data,
                             uint8_t* rfi_mask_data,
-                            uint32_t* spectrum_grid_shape, uint32_t* spectrum_grid_strides,
-                            frequency_drift_plane::drift_rate* drifts, uint32_t number_drifts, bool desmear) {
+                            int32_t* spectrum_grid_shape, int32_t* spectrum_grid_strides,
+                            kernel_drift_info* drifts, int32_t number_drifts, bool desmear) {
+
+    extern __shared__ char smem[];
+    kernel_drift_info* sdrifts = reinterpret_cast<kernel_drift_info*>(smem);
+    auto smem_end = number_drifts * sizeof(kernel_drift_info);
+
+    int32_t* sdrift_plane_strides = reinterpret_cast<int32_t*>(smem + smem_end);
+    smem_end += sizeof(int32_t) * 2; // 2 dims
+
+    int32_t* sspectrum_grid_strides = reinterpret_cast<int32_t*>(smem + smem_end);
+    smem_end += sizeof(int32_t) * 2; // 2 dims
+
+    for (int rate_index = threadIdx.x; rate_index < number_drifts + 8; rate_index += blockDim.x) {
+        if (rate_index < number_drifts) {
+            sdrifts[rate_index] = drifts[rate_index];
+        } else if (rate_index < number_drifts + 2) {
+            sdrift_plane_strides[rate_index-number_drifts] = drift_plane_strides[rate_index-number_drifts];
+        } else if (rate_index < number_drifts + 4) {
+            sspectrum_grid_strides[rate_index-number_drifts - 2] = spectrum_grid_strides[rate_index-number_drifts - 2];
+        }
+    }
+    __syncthreads();
+
+
+    // The strategy in this kernel is each thread does the entire dedrift for a single channel
+    // and grid-strides until all channels are good
 
     auto tid = blockIdx.x * blockDim.x + threadIdx.x;
     auto grid_size = gridDim.x * blockDim.x;
@@ -38,11 +69,11 @@ __global__ void integrate_drifts(float* drift_plane_data,
 
     for (uint32_t freq_channel = tid; freq_channel < number_channels; freq_channel += grid_size) {
         for (uint32_t drift_index=0; drift_index < number_drifts; ++drift_index) {
-            auto m = drifts[drift_index].drift_rate_slope;
-            auto desmear_bandwidth = drifts[drift_index].desmeared_bins;
+            auto m = sdrifts[drift_index].slope;
+            auto desmear_bandwidth = sdrifts[drift_index].desmeared_bins;
             
-            int64_t drift_plane_index =
-                    drift_index * drift_plane_strides[0] + freq_channel * drift_plane_strides[1];
+            int32_t drift_plane_index =
+                    drift_index * sdrift_plane_strides[0] + freq_channel * sdrift_plane_strides[1];
 
             uint8_t accumulated_low_sk = 0;
             uint8_t accumulated_high_sk = 0;
@@ -54,14 +85,14 @@ __global__ void integrate_drifts(float* drift_plane_data,
             for (int t=0; t < time_steps; ++t) {
                 int freq_offset_at_time = lroundf(m*t);
 
-                for (uint32_t desmear_channel=0; desmear_channel < desmear_bandwidth; ++desmear_channel) {
+                for (int32_t desmear_channel=0; desmear_channel < desmear_bandwidth; ++desmear_channel) {
                     if (m >= 0) {
-                        int channel_offset = freq_offset_at_time + desmear_channel;
+                        int32_t channel_offset = freq_offset_at_time + desmear_channel;
 
-                        int64_t spectrum_freq_index = freq_channel + channel_offset;
+                        int32_t spectrum_freq_index = freq_channel + channel_offset;
 
-                        if (spectrum_freq_index < spectrum_grid_shape[1] && freq_channel < drift_plane_shape[1]) {
-                            uint32_t spectrum_index  = t * spectrum_grid_strides[0] + spectrum_freq_index * spectrum_grid_strides[1];
+                        if (spectrum_freq_index < number_channels && freq_channel < number_channels) {
+                            int32_t spectrum_index  = t * sspectrum_grid_strides[0] + spectrum_freq_index * sspectrum_grid_strides[1];
 
                             accumulated_spectrum += spectrum_grid_data[spectrum_index];
                             accumulated_bins += 1;
@@ -81,10 +112,10 @@ __global__ void integrate_drifts(float* drift_plane_data,
                     } else {
                         int channel_offset = freq_offset_at_time - desmear_channel;
 
-                        int64_t spectrum_freq_index = freq_channel + channel_offset;
+                        int32_t spectrum_freq_index = freq_channel + channel_offset;
 
-                        if (spectrum_freq_index > 0 && spectrum_freq_index < spectrum_grid_shape[1] && freq_channel < drift_plane_shape[1]) {
-                            uint32_t spectrum_index = t * spectrum_grid_strides[0] + spectrum_freq_index * spectrum_grid_strides[1];
+                        if (spectrum_freq_index > 0 && spectrum_freq_index < number_channels && freq_channel < number_channels) {
+                            int32_t spectrum_index = t * sspectrum_grid_strides[0] + spectrum_freq_index * sspectrum_grid_strides[1];
 
                             accumulated_spectrum += spectrum_grid_data[spectrum_index];
                             accumulated_bins += 1;
@@ -104,7 +135,7 @@ __global__ void integrate_drifts(float* drift_plane_data,
                     }
                 }
             }
-            if (accumulated_bins = 0) {
+            if (accumulated_bins == 0) {
                 drift_plane_data[drift_plane_index] = 0;
             } else {
                 drift_plane_data[drift_plane_index] = accumulated_spectrum / accumulated_bins;
@@ -115,6 +146,8 @@ __global__ void integrate_drifts(float* drift_plane_data,
         }
     }
 }
+
+
 
 [[nodiscard]] frequency_drift_plane
 bliss::integrate_linear_rounded_bins_cuda(bland::ndarray    spectrum_grid,
@@ -130,13 +163,13 @@ bliss::integrate_linear_rounded_bins_cuda(bland::ndarray    spectrum_grid,
 
     auto number_drifts = (options.high_rate - options.low_rate) / options.rate_step_size;
     std::vector<frequency_drift_plane::drift_rate> drift_rate_info;
+    std::vector<kernel_drift_info> device_rates;
 
     auto time_steps      = spectrum_grid.size(0);
     auto number_channels = spectrum_grid.size(1);
 
     auto maximum_drift_span = time_steps - 1;
-    std::vector<float> drift_slopes;
-    drift_slopes.reserve(number_drifts);
+    device_rates.reserve(number_drifts);
     drift_rate_info.reserve(number_drifts);
     for (int drift_index = 0; drift_index < number_drifts; ++drift_index) {
         // Drift in number of channels over the entire time extent
@@ -146,7 +179,9 @@ bliss::integrate_linear_rounded_bins_cuda(bland::ndarray    spectrum_grid,
 
         // The actual slope of that drift (number channels / time)
         auto m = static_cast<float>(drift_channels) / static_cast<float>(maximum_drift_span);
-        drift_slopes.push_back(m);
+        auto drift_info_for_device = kernel_drift_info();
+        drift_info_for_device.slope = m;
+
         rate.drift_rate_slope = m;
         // If a single time step crosses more than 1 channel, there is smearing over multiple channels
         auto smeared_channels = std::round(std::abs(m));
@@ -156,7 +191,10 @@ bliss::integrate_linear_rounded_bins_cuda(bland::ndarray    spectrum_grid,
             desmear_bandwidth = std::max(1.0f, smeared_channels);
         }
         rate.desmeared_bins = desmear_bandwidth;
+        drift_info_for_device.desmeared_bins = desmear_bandwidth;
+
         drift_rate_info.push_back(rate);
+        device_rates.push_back(drift_info_for_device);
     }
 
 
@@ -177,17 +215,18 @@ bliss::integrate_linear_rounded_bins_cuda(bland::ndarray    spectrum_grid,
     auto drift_plane_strides = drift_plane.strides();
 
 
-    thrust::device_vector<uint32_t> dev_drift_plane_shape(drift_plane_shape.begin(), drift_plane_shape.end());
-    thrust::device_vector<uint32_t> dev_drift_plane_strides(drift_plane_strides.begin(), drift_plane_strides.end());
+    thrust::device_vector<int32_t> dev_drift_plane_shape(drift_plane_shape.begin(), drift_plane_shape.end());
+    thrust::device_vector<int32_t> dev_drift_plane_strides(drift_plane_strides.begin(), drift_plane_strides.end());
 
-    thrust::device_vector<uint32_t> dev_spectrum_shape(spectrum_shape.begin(), spectrum_shape.end());
-    thrust::device_vector<uint32_t> dev_spectrum_strides(spectrum_strides.begin(), spectrum_strides.end());
+    thrust::device_vector<int32_t> dev_spectrum_shape(spectrum_shape.begin(), spectrum_shape.end());
+    thrust::device_vector<int32_t> dev_spectrum_strides(spectrum_strides.begin(), spectrum_strides.end());
 
-    thrust::device_vector<frequency_drift_plane::drift_rate> dev_drift_slopes(drift_rate_info.begin(), drift_rate_info.end());
+    thrust::device_vector<kernel_drift_info> dev_drift_slopes(device_rates.begin(), device_rates.end());
 
-    int block_size = 256;
+    int block_size = 512;
     int number_blocks = 112;
-    integrate_drifts<<<number_blocks, block_size>>>(
+    auto smem = sizeof(kernel_drift_info) * number_drifts + sizeof(int32_t) * 4;
+    integrate_drifts<<<number_blocks, block_size, smem>>>(
         drift_plane_ptr, rolloff_rfi_ptr,
         lowsk_rfi_ptr,
         highsk_rfi_ptr,
