@@ -1,5 +1,5 @@
 [project]
-name = "bliss"
+name = "dedrift"
 readme = "README.md"
 requires-python = ">=3.8"
 license = { "file" = "LICENSE" }
@@ -24,7 +24,7 @@ dynamic = ["version", "description"]
 
 
 [build-system]
-requires = ["py-build-cmake~=0.2.0a7"]
+requires = ["py-build-cmake~=0.2.0a7", "cmake~=3.28", "ninja~=1.11"]
 build-backend = "py_build_cmake.build"
 
 [tool.py-build-cmake.module]
@@ -37,7 +37,7 @@ exclude = []
 
 [tool.py-build-cmake.cmake]
 minimum_version = "3.18"
-build_type = "Release"
+build_type = "RelWithDebInfo"
 source_path = "." # Containing CMakeLists.txt
 build_path = "build"
 options = { "WITH_PY_STUBS:BOOL" = "On" }
@@ -47,13 +47,12 @@ build_args = []
 build_tool_args = []
 install_args = ["--verbose"]
 install_components = ["python_modules"]
-# env = { "CUDA_DIR"="/usr/local/cuda-11.7.1" }
 
 [tool.py-build-cmake.linux.cmake] # Linux-specific options
-generator = "Ninja Multi-Config"
-config = ["Debug", "Release"]
-options = { "CMAKE_DEBUG_POSTFIX" = "_d" }
-env = { "CMAKE_PREFIX_PATH" = "${HOME}/.local" }
+#generator = "Ninja Multi-Config"
+generator = "Ninja"
+config = ["RelWithDebInfo"]
+#env = { "CMAKE_PREFIX_PATH" = "${HOME}/.local" }
 
 [tool.py-build-cmake.editable]
 mode = "symlink"  # Choose the desired mode (wrapper, hook, or symlink)
