@@ -308,7 +308,7 @@ bliss::scan bliss::scan::slice_scan_channels(int start_channel, int count) {
     sliced_scan._coarse_channel_offset += start_channel;
     sliced_scan._num_coarse_channels = count;
 
-    int fine_channels_per_coarse = std::get<0>(_inferred_channelization);
+    int64_t fine_channels_per_coarse = std::get<0>(_inferred_channelization);
 
     sliced_scan._fch1 = _fch1 + _foff * fine_channels_per_coarse * start_channel;
     sliced_scan._nchans = count * fine_channels_per_coarse;
