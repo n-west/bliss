@@ -9,7 +9,6 @@
 name: Build and upload python package
 
 on:
-  push:
   release:
     types: [published]
 
