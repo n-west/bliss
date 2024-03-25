@@ -6,3 +6,5 @@ __version__ = '0.0.1'
 
 from .pybliss import *
 from . import pybland as bland
+
+from . import plot_utils

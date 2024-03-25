@@ -4,6 +4,8 @@
 #include "fmt/format.h"
 #include "fmt/ranges.h"
 
+#include <variant>
+
 using namespace bliss;
 
 coarse_channel::coarse_channel(
@@ -132,13 +134,20 @@ bland::ndarray::dev bliss::coarse_channel::device() {
 
 void bliss::coarse_channel::set_device(bland::ndarray::dev &device) {
     _device = device;
-    // if (_integrated_drift_plane.has_value()) {
-    //     _integrated_drift_plane.value().set_device(_device);
-    // }
 }
 
 void bliss::coarse_channel::set_device(std::string_view device) {
     _device = device;
+}
+
+void bliss::coarse_channel::push_device() {
+    _mask = _mask.to(_device);
+    _data = _mask.to(_device);
+    if (std::holds_alternative<frequency_drift_plane>(*_integrated_drift_plane)) {
+        auto idp = std::get<frequency_drift_plane>(*_integrated_drift_plane);
+        idp.set_device(_device);
+        idp.push_device();
+    }
 }
 
 double bliss::coarse_channel::fch1() const {

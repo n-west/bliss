@@ -29,60 +29,6 @@ class scan {
      */
     scan(std::string_view file_path);
 
-    scan(bland::ndarray data,
-                    bland::ndarray mask,
-                    double         fch1,
-                    double         foff,
-                    int64_t        machine_id,
-                    int64_t        nbits,
-                    int64_t        nchans,
-                    int64_t        nifs,
-                    std::string    source_name,
-                    double         src_dej,
-                    double         src_raj,
-                    int64_t        telescope_id,
-                    double         tsamp,
-                    double         tstart,
-                    int64_t        data_type,
-                    double         az_start,
-                    double         za_start);
-
-    scan(double      fch1,
-                    double      foff,
-                    int64_t     machine_id,
-                    int64_t     nbits,
-                    int64_t     nchans,
-                    int64_t     nifs,
-                    std::string source_name,
-                    double      src_dej,
-                    double      src_raj,
-                    int64_t     telescope_id,
-                    double      tsamp,
-                    double      tstart,
-                    int64_t     data_type,
-                    double      az_start,
-                    double      za_start);
-
-    using state_tuple = std::tuple<std::map<int, bland::ndarray>,
-                                   std::map<int, bland::ndarray>,
-                                   double,
-                                   double,
-                                   int64_t,
-                                   int64_t,
-                                   int64_t,
-                                   int64_t,
-                                   std::string,
-                                   double,
-                                   double,
-                                   int64_t,
-                                   double,
-                                   double,
-                                   int64_t,
-                                   double,
-                                   double>;
-
-    template <bool POPULATE_DATA_AND_MASK = false>
-    state_tuple get_state();
 
     /**
      * filter_channelization_revs describes the channelization configuration known to
@@ -112,7 +58,14 @@ class scan {
      * disk access. The cache may remove a `coarse_channel` without notice so
      * ownership of `coarse_channels` is shared.
      */
-    std::shared_ptr<coarse_channel> get_coarse_channel(int coarse_channel_index = 0);
+    std::shared_ptr<coarse_channel> read_coarse_channel(int coarse_channel_index = 0);
+
+    /**
+     * Similar to `get_coarse_channel` but returns nullptr if the coarse_channel isn't
+     * already in memory (has not been read from disk / used yet). This is useful for
+     * gathering results / operating on all coarse channels that are already loaded
+    */
+    std::shared_ptr<coarse_channel> peak_coarse_channel(int coarse_channel_index = 0);
 
     filterbank_channelization_revs get_channelization();
 
@@ -141,6 +94,7 @@ class scan {
     bland::ndarray::dev device();
     void set_device(bland::ndarray::dev &device);
     void set_device(std::string_view device);
+    void push_device();
 
     /**
      * create a new scan consisting of the selected coarse channel
@@ -185,7 +139,12 @@ class scan {
     double tduration_secs() const;
 
   protected:
-    std::map<int, std::shared_ptr<coarse_channel>> _coarse_channels;
+    // TODO (design note): This shared_ptr is shared between all slices which means set_device
+    // on higher layers or slices of this scan will effect every slice (or even the global) which
+    // may inadverdently increase vmem. It's a bit more work and not worth it right now because
+    // it's not an active issue, but we can also keep track of "active_coarse_channels" which are
+    // only those within the current slice / copy and only have set_device, etc effect those channels
+    std::shared_ptr<std::map<int, std::shared_ptr<coarse_channel>>> _coarse_channels = nullptr;
     std::shared_ptr<h5_filterbank_file>            _h5_file_handle = nullptr;
 
     // Read from h5 file

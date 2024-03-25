@@ -98,6 +98,8 @@ struct coarse_channel {
     void set_device(bland::ndarray::dev &device);
     void set_device(std::string_view device);
 
+    void push_device();
+
     double fch1() const;
     // void        fch1(double);
     double foff() const;

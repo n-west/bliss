@@ -36,6 +36,8 @@ class frequency_drift_plane {
 
     void set_device(std::string_view dev_str);
 
+    void push_device();
+
     private:
     // slow-time steps passed through for a complete integration, the total number
     // of bins contributing to this integration is demsear_bins * integration_steps
