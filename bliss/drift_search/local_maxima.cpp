@@ -49,6 +49,9 @@ std::vector<component> bliss::find_local_maxima_above_threshold(coarse_channel  
     auto          doppler_spectrum_strides = doppler_spectrum.strides();
     stride_helper doppler_spectrum_strider(doppler_spectrum.shape(), doppler_spectrum_strides);
 
+    fmt::print("doppler_spectrum is on device {}\n", doppler_spectrum.device().repr());
+
+
     // Use 1 to mark visited, then we can potentially replace this creation with a mask of above thresh to speed things
     // up a bit
     auto visited = bland::ndarray(doppler_spectrum.shape(),

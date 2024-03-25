@@ -40,7 +40,7 @@ coarse_channel bliss::flag_magnitude(coarse_channel cc_data) {
 scan bliss::flag_magnitude(scan fil_data, float threshold) {
     auto number_coarse_channels = fil_data.get_number_coarse_channels();
     for (auto cc_index = 0; cc_index < number_coarse_channels; ++cc_index) {
-        auto cc = fil_data.get_coarse_channel(cc_index);
+        auto cc = fil_data.read_coarse_channel(cc_index);
         *cc = flag_magnitude(*cc, threshold);
     }
     return fil_data;
@@ -49,7 +49,7 @@ scan bliss::flag_magnitude(scan fil_data, float threshold) {
 scan bliss::flag_magnitude(scan fil_data) {
     auto number_coarse_channels = fil_data.get_number_coarse_channels();
     for (auto cc_index = 0; cc_index < number_coarse_channels; ++cc_index) {
-        auto cc = fil_data.get_coarse_channel(cc_index);
+        auto cc = fil_data.read_coarse_channel(cc_index);
         *cc = flag_magnitude(*cc);
     }
     return fil_data;

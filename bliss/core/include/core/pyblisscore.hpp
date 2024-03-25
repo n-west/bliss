@@ -25,6 +25,7 @@ void bind_pycore(nb::module_ m) {
     nb::class_<bliss::frequency_drift_plane> pyfrequency_drift_plane(m, "frequency_drift_plane");
     pyfrequency_drift_plane
         .def("set_device", nb::overload_cast<std::string_view>(&bliss::frequency_drift_plane::set_device))
+        .def("push_device", (&bliss::frequency_drift_plane::push_device))
         .def_prop_ro("integrated_drifts", &bliss::frequency_drift_plane::integrated_drift_plane)
         .def_prop_ro("integrated_rfi", &bliss::frequency_drift_plane::integrated_rfi)
         .def("drift_rate_info", &bliss::frequency_drift_plane::drift_rate_info);
@@ -57,12 +58,14 @@ void bind_pycore(nb::module_ m) {
         .def("integrated_drift_plane", &bliss::coarse_channel::integrated_drift_plane)
         .def("device", &bliss::coarse_channel::device)
         .def("set_device", nb::overload_cast<bland::ndarray::dev&>(&bliss::coarse_channel::set_device))
-        .def("set_device", nb::overload_cast<std::string_view>(&bliss::coarse_channel::set_device));
+        .def("set_device", nb::overload_cast<std::string_view>(&bliss::coarse_channel::set_device))
+        .def("push_device", (&bliss::coarse_channel::push_device));
 
 
     nb::class_<bliss::scan>(m, "scan")
         .def(nb::init<std::string_view>(), "file_path"_a)
-        .def("get_coarse_channel", &bliss::scan::get_coarse_channel)
+        .def("read_coarse_channel", &bliss::scan::read_coarse_channel)
+        .def("peak_coarse_channel", &bliss::scan::peak_coarse_channel)
         .def("get_channelization", &bliss::scan::get_channelization)
         .def("get_coarse_channel_with_frequency", &bliss::scan::get_coarse_channel_with_frequency, "frequency"_a)
         .def("slice_scan_channels", &bliss::scan::slice_scan_channels, "start"_a=0, "count"_a=1)
@@ -84,7 +87,8 @@ void bind_pycore(nb::module_ m) {
         .def_prop_ro("za_start", &bliss::scan::za_start)
         .def("device", &bliss::scan::device)
         .def("set_device", nb::overload_cast<bland::ndarray::dev&>(&bliss::scan::set_device))
-        .def("set_device", nb::overload_cast<std::string_view>(&bliss::scan::set_device));
+        .def("set_device", nb::overload_cast<std::string_view>(&bliss::scan::set_device))
+        .def("push_device", (&bliss::scan::push_device));
         //     .def_prop_rw("device", &bliss::scan::device,
         //                            [](bliss::scan &t, std::variant<int, std::string_view> value) {
         //                                if (std::holds_alternative<std::string_view>(value)) {

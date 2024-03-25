@@ -50,7 +50,7 @@ infer_number_coarse_channels(int number_fine_channels, double foff, double tsamp
 
 scan::scan(h5_filterbank_file fb_file) {
     _h5_file_handle = std::make_shared<h5_filterbank_file>(fb_file);
-
+    _coarse_channels = std::make_shared<std::map<int, std::shared_ptr<coarse_channel>>>();
     // double      fch1;
     _fch1 = fb_file.read_data_attr<double>("fch1");
     // double      foff;
@@ -88,119 +88,17 @@ scan::scan(h5_filterbank_file fb_file) {
             infer_number_coarse_channels(_nchans, 1e6 * _foff, _tsamp);
 }
 
+
 scan::scan(std::string_view file_path) : scan(h5_filterbank_file(file_path)) {}
 
-scan::scan(bland::ndarray data,
-                                 bland::ndarray mask,
-                                 double         fch1,
-                                 double         foff,
-                                 int64_t        machine_id,
-                                 int64_t        nbits,
-                                 int64_t        nchans,
-                                 int64_t        nifs,
-                                 std::string    source_name,
-                                 double         src_dej,
-                                 double         src_raj,
-                                 int64_t        telescope_id,
-                                 double         tsamp,
-                                 double         tstart,
-                                 int64_t        data_type,
-                                 double         az_start,
-                                 double         za_start) :
-        _fch1(fch1),
-        _foff(foff),
-        _machine_id(machine_id),
-        _nbits(nbits),
-        _nchans(nchans),
-        _nifs(nifs),
-        _source_name(source_name),
-        _src_dej(src_dej),
-        _src_raj(src_raj),
-        _telescope_id(telescope_id),
-        _tsamp(tsamp),
-        _tstart(tstart),
-        _data_type(data_type),
-        _az_start(az_start),
-        _za_start(za_start) {}
 
-scan::scan(double      fch1,
-                                 double      foff,
-                                 int64_t     machine_id,
-                                 int64_t     nbits,
-                                 int64_t     nchans,
-                                 int64_t     nifs,
-                                 std::string source_name,
-                                 double      src_dej,
-                                 double      src_raj,
-                                 int64_t     telescope_id,
-                                 double      tsamp,
-                                 double      tstart,
-                                 int64_t     data_type,
-                                 double      az_start,
-                                 double      za_start) :
-        _fch1(fch1),
-        _foff(foff),
-        _machine_id(machine_id),
-        _nbits(nbits),
-        _nchans(nchans),
-        _nifs(nifs),
-        _source_name(source_name),
-        _src_dej(src_dej),
-        _src_raj(src_raj),
-        _telescope_id(telescope_id),
-        _tsamp(tsamp),
-        _tstart(tstart),
-        _data_type(data_type),
-        _az_start(az_start),
-        _za_start(za_start) {
-    // Find the number of coarse channels
-    std::tie(_num_coarse_channels, _inferred_channelization) =
-            infer_number_coarse_channels(_nchans, 1e6 * _foff, _tsamp);
-
-    auto shape      = _h5_file_handle->get_data_shape(); // should we just hold on to the shape?
-    _slow_time_bins = shape[0];
-    // This assumes there is no overlap which needs to be confirmed with data paper
-    _tduration_secs = _slow_time_bins * _tsamp;
-}
-
-template <bool POPULATE_DATA_AND_MASK>
-scan::state_tuple bliss::scan::get_state() {
-    std::map<int, bland::ndarray> data_state;
-    std::map<int, bland::ndarray> mask_state;
-    if (POPULATE_DATA_AND_MASK) {
-        // data_state = _data;
-        // mask_state = _mask;
-    }
-    auto state = std::make_tuple(data_state,
-                                 mask_state,
-                                 _fch1,
-                                 _foff,
-                                 _machine_id,
-                                 _nbits,
-                                 _nchans,
-                                 _nifs,
-                                 _source_name,
-                                 _src_dej,
-                                 _src_raj,
-                                 _telescope_id,
-                                 _tsamp,
-                                 _tstart,
-                                 _data_type,
-                                 _az_start,
-                                 _za_start);
-    return state;
-}
-
-template scan::state_tuple bliss::scan::get_state<true>();
-template scan::state_tuple bliss::scan::get_state<false>();
-
-std::shared_ptr<coarse_channel> bliss::scan::get_coarse_channel(int coarse_channel_index) {
+std::shared_ptr<coarse_channel> bliss::scan::read_coarse_channel(int coarse_channel_index) {
     if (coarse_channel_index < 0 || coarse_channel_index > _num_coarse_channels) {
         throw std::out_of_range("ERROR: invalid coarse channel");
     }
 
     auto global_offset_in_file = coarse_channel_index + _coarse_channel_offset;
-    if (_coarse_channels.find(global_offset_in_file) == _coarse_channels.end()) {
+    if (_coarse_channels->find(global_offset_in_file) == _coarse_channels->end()) {
         // TODO: decide if we should evict an old coarse channel from the cache (might need
         // to stop returning references to keep that safe)
 
@@ -246,12 +144,29 @@ std::shared_ptr<coarse_channel> bliss::scan::get_coarse_channel(int coarse_chann
                                                            _az_start,
                                                            _za_start);
         new_coarse->set_device(_device);
-        _coarse_channels.insert({global_offset_in_file, new_coarse});
+        _coarse_channels->insert({global_offset_in_file, new_coarse});
     }
-    auto cc = _coarse_channels.at(global_offset_in_file);
+    auto cc = _coarse_channels->at(global_offset_in_file);
     cc->set_device(_device);
     return cc;
 }
+
+
+std::shared_ptr<coarse_channel> bliss::scan::peak_coarse_channel(int coarse_channel_index) {
+    if (coarse_channel_index < 0 || coarse_channel_index > _num_coarse_channels) {
+        throw std::out_of_range("ERROR: invalid coarse channel");
+    }
+
+    auto global_offset_in_file = coarse_channel_index + _coarse_channel_offset;
+    if (_coarse_channels->find(global_offset_in_file) != _coarse_channels->end()) {
+        auto cc = _coarse_channels->at(global_offset_in_file);
+        cc->set_device(_device);
+        return cc;
+    } else {
+        return nullptr;
+    }
+}
+
 
 bliss::scan::filterbank_channelization_revs bliss::scan::get_channelization() {
     return _inferred_channelization;
@@ -272,13 +187,15 @@ std::list<hit> bliss::scan::hits() {
     std::list<hit> all_hits;
     int            number_coarse_channels = get_number_coarse_channels();
     for (int cc_index = 0; cc_index < number_coarse_channels; ++cc_index) {
-        auto cc = get_coarse_channel(cc_index);
-        try {
-            auto this_channel_hits = cc->hits();
-            all_hits.insert(all_hits.end(), this_channel_hits.cbegin(), this_channel_hits.cend());
-        } catch (const std::bad_optional_access &e) {
-            fmt::print("WARN: no hits available from coarse channel {}\n", cc_index);
-            // TODO: catch specific exception we know might be thrown
+        auto cc = peak_coarse_channel(cc_index);
+        if (cc != nullptr) {
+            try {
+                auto this_channel_hits = cc->hits();
+                all_hits.insert(all_hits.end(), this_channel_hits.cbegin(), this_channel_hits.cend());
+            } catch (const std::bad_optional_access &e) {
+                fmt::print("WARN: no hits available from coarse channel {}\n", cc_index);
+                // TODO: catch specific exception we know might be thrown
+            }
         }
     }
     return all_hits;
@@ -291,7 +208,7 @@ bland::ndarray::dev bliss::scan::device() {
 
 void bliss::scan::set_device(bland::ndarray::dev &device) {
     _device = device;
-    for (auto &[channel_index, cc] : _coarse_channels) {
+    for (auto &[channel_index, cc] : *_coarse_channels) {
         cc->set_device(device);
     }
 }
@@ -299,6 +216,13 @@ void bliss::scan::set_device(bland::ndarray::dev &device) {
 void bliss::scan::set_device(std::string_view dev_str) {
     bland::ndarray::dev device = dev_str;
     set_device(device);
+}
+
+void bliss::scan::push_device() {
+    for (auto &[channel_index, cc] : *_coarse_channels) {
+        cc->set_device(_device);
+        cc->push_device();
+    }
 }
 
 bliss::scan bliss::scan::slice_scan_channels(int start_channel, int count) {

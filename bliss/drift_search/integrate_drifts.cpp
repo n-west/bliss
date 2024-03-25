@@ -55,7 +55,7 @@ coarse_channel bliss::integrate_drifts(coarse_channel cc_data, integrate_drifts_
 scan bliss::integrate_drifts(scan scan_data, integrate_drifts_options options) {
     auto number_coarse_channels = scan_data.get_number_coarse_channels();
     for (auto cc_index = 0; cc_index < number_coarse_channels; ++cc_index) {
-        auto cc = scan_data.get_coarse_channel(cc_index);
+        auto cc = scan_data.read_coarse_channel(cc_index);
         *cc = integrate_drifts(*cc, options);
     }
     return scan_data;

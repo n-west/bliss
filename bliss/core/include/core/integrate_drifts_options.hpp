@@ -41,16 +41,19 @@ struct integrated_flags {
 
     void set_device(bland::ndarray::dev device) {
         _device = device;
-        filter_rolloff = filter_rolloff.to(device);
-        low_spectral_kurtosis = low_spectral_kurtosis.to(device);
-        high_spectral_kurtosis = high_spectral_kurtosis.to(device);
-        // magnitude = magnitude.to(device);
-        // sigma_clip = sigma_clip.to(device);
     }
 
     void set_device(std::string_view device) {
         bland::ndarray::dev dev = device;
         set_device(dev);
+    }
+
+    void push_device() {
+        filter_rolloff = filter_rolloff.to(_device);
+        low_spectral_kurtosis = low_spectral_kurtosis.to(_device);
+        high_spectral_kurtosis = high_spectral_kurtosis.to(_device);
+        // magnitude = magnitude.to(device);
+        // sigma_clip = sigma_clip.to(device);
     }
 
 };

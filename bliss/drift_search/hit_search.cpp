@@ -59,7 +59,9 @@ bland::ndarray bliss::hard_threshold_drifts(const bland::ndarray &dedrifted_spec
 std::list<hit> bliss::hit_search(coarse_channel dedrifted_scan, hit_search_options options) {
     // We have to be on cpu for now
     dedrifted_scan.set_device("cpu");
+    dedrifted_scan.push_device();
     std::list<hit> hits;
+    fmt::print("Pushed device for dedrifted scan\n");
 
     std::vector<component> components;
     if (options.method == hit_search_methods::CONNECTED_COMPONENTS) {
@@ -131,7 +133,7 @@ std::list<hit> bliss::hit_search(coarse_channel dedrifted_scan, hit_search_optio
 scan bliss::hit_search(scan dedrifted_scan, hit_search_options options) {
     auto number_coarse_channels = dedrifted_scan.get_number_coarse_channels();
     for (auto cc_index = 0; cc_index < number_coarse_channels; ++cc_index) {
-        auto cc   = dedrifted_scan.get_coarse_channel(cc_index);
+        auto cc   = dedrifted_scan.read_coarse_channel(cc_index);
         auto hits = hit_search(*cc, options);
         cc->add_hits(hits);
     }
