@@ -35,12 +35,12 @@ void bind_pydrift_search(nb::module_ m) {
     m.def("integrate_drifts",
           nb::overload_cast<bliss::cadence, bliss::integrate_drifts_options>(&bliss::integrate_drifts));
 
-    // General "component" class as intermediate between dedrifted clusters of prehits and hits
-    nb::class_<bliss::component>(m, "component")
-            .def_rw("locations", &bliss::component::locations)
-            .def_rw("index_max", &bliss::component::index_max)
-            .def_rw("max_integration", &bliss::component::max_integration)
-            .def_rw("rfi_counts", &bliss::component::rfi_counts);
+    // General "protohit" class as intermediate between dedrifted clusters of prehits and hits
+    nb::class_<bliss::protohit>(m, "protohit")
+            .def_rw("locations", &bliss::protohit::locations)
+            .def_rw("index_max", &bliss::protohit::index_max)
+            .def_rw("max_integration", &bliss::protohit::max_integration)
+            .def_rw("rfi_counts", &bliss::protohit::rfi_counts);
 
     // hit definition (pre-capnproto serialized version)
     nb::class_<bliss::hit>(m, "hit")

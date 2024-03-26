@@ -11,13 +11,13 @@
 
 using namespace bliss;
 
-std::vector<component>
+std::vector<protohit>
 bliss::find_local_maxima_above_threshold_cpu(bland::ndarray                       doppler_spectrum,
                                              integrated_flags                     dedrifted_rfi,
                                              std::vector<std::pair<float, float>> noise_and_thresholds_per_drift,
                                              std::vector<bland::nd_coords>        max_neighborhood) {
 
-    std::vector<component> maxima;
+    std::vector<protohit> maxima;
     if (doppler_spectrum.dtype() != bland::ndarray::datatype::float32) {
         throw std::runtime_error(
                 "find_local_maxima_above_threshold: dedrifted doppler spectrum was not float. Only cpu "
@@ -87,7 +87,7 @@ bliss::find_local_maxima_above_threshold_cpu(bland::ndarray                     
 
                 // 3. Add to list of local maxima
                 if (neighborhood_max) {
-                    component c;
+                    protohit c;
                     c.index_max = curr_coord;
                     c.locations.push_back(curr_coord);
                     c.max_integration = candidate_maxima_val;
@@ -184,7 +184,7 @@ bliss::find_local_maxima_above_threshold_cpu(bland::ndarray                     
 
                     } while (expand_band_up);
 
-                    // TODO: this doesn't have the concept of a "component" the same way connected_components does... do
+                    // TODO: this doesn't have the concept of a "protohit" the same way connected_components does... do
                     // we care?
                     maxima.push_back(c);
                 }

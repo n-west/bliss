@@ -1,11 +1,12 @@
 #pragma once
 
-#include "hit_search.hpp"
+#include "protohit_search.hpp"
 
 namespace bliss {
 
-std::vector<component> find_local_maxima_above_threshold(coarse_channel        &dedrifted_coarse_channel,
-                                                         float                  snr_threshold,
-                                                         std::vector<bland::nd_coords> max_neighborhoods);
+std::vector<protohit> find_local_maxima_above_threshold(bland::ndarray   doppler_spectrum,
+                                    integrated_flags                     dedrifted_rfi,
+                                    std::vector<std::pair<float, float>> noise_and_thresholds_per_drift,
+                                    std::vector<bland::nd_coords>        max_neighborhood);
 
 } // namespace bliss

@@ -1,6 +1,8 @@
 
 #include "bland/ndarray.hpp"
 #include <drift_search/connected_components.hpp>
+
+#include <drift_search/protohit_search.hpp>
 #include <drift_search/hit_search.hpp>
 #include <drift_search/local_maxima.hpp>
 
@@ -57,36 +59,20 @@ bland::ndarray bliss::hard_threshold_drifts(const bland::ndarray &dedrifted_spec
 }
 
 std::list<hit> bliss::hit_search(coarse_channel dedrifted_scan, hit_search_options options) {
+
+    auto protohits = protohit_search(dedrifted_scan, options);
+
     // We have to be on cpu for now
     dedrifted_scan.set_device("cpu");
     dedrifted_scan.push_device();
-    std::list<hit> hits;
-    fmt::print("Pushed device for dedrifted scan\n");
 
-    std::vector<component> components;
-
-    auto neighborhood = options.neighborhood;
-    if (neighborhood.empty()) {
-        neighborhood = {
-                {-1, 0},
-                {1, 0},
-                {0, -1},
-                {0, 1},
-        };
-    }
-
-    if (options.method == hit_search_methods::CONNECTED_COMPONENTS) {
-        components = find_components_above_threshold(dedrifted_scan, options.snr_threshold, neighborhood);
-    } else if (options.method == hit_search_methods::LOCAL_MAXIMA) {
-        components = find_local_maxima_above_threshold(dedrifted_scan, options.snr_threshold, neighborhood);
-    }
     auto noise_stats        = dedrifted_scan.noise_estimate();
     auto dedrifted_plane    = dedrifted_scan.integrated_drift_plane();
     auto drift_rate_info    = dedrifted_plane.drift_rate_info();
     auto integration_length = dedrifted_plane.integration_steps();
 
-    // Do we need a "component to hit" for each type of search?
-    for (const auto &c : components) {
+    std::list<hit> hits;
+    for (const auto &c : protohits) {
         // Assume dims size 2 for now :-| (we'll get beam stuff sorted eventually)
         hit this_hit;
         this_hit.rate_index       = c.index_max[0];
@@ -103,12 +89,10 @@ std::list<hit> bliss::hit_search(coarse_channel dedrifted_scan, hit_search_optio
         auto signal_power = (c.max_integration - noise_stats.noise_floor());
 
         // This is the unsmeared SNR
-        // auto noise_power  = (noise_stats.noise_power() / std::sqrt(integration_length));
         this_hit.power    = signal_power;
-        // this_hit.snr      = signal_power / noise_power;
         this_hit.snr      = signal_power / c.desmeared_noise;
 
-        // At the drift rate with max SNR, find the width of this component
+        // At the drift rate with max SNR, find the width of this protohit
         // We can also integrate signal power over the entire bandwidth / noise power over bandwidth to get
         // a better picture of actual SNR rather than SNR/Hz @ peak
         // This concept of the bandwidth currently doesn't fit well with the local maxima option, but maybe we can come

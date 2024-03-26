@@ -1,6 +1,9 @@
 #pragma once
 
 #include "hit_search.hpp"
+
+#include <drift_search/protohit_search.hpp>
+
 #include <bland/ndarray.hpp>
 #include <core/scan.hpp>
 #include <core/noise_power.hpp>
@@ -15,12 +18,15 @@ namespace bliss {
  *
  * Accepts a binary mask (1) of dtype uint8
  */
-std::vector<component> find_components_in_binary_mask(const bland::ndarray &threshold_mask, std::vector<bland::nd_coords> neighborhood);
+std::vector<protohit> find_components_in_binary_mask(const bland::ndarray &threshold_mask, std::vector<bland::nd_coords> neighborhood);
 
 /**
  * Given noise stats do a combined threshold and cluster of nearby components
  */
-std::vector<component>
-find_components_above_threshold(coarse_channel &dedrifted_coarse_channel, float snr_threshold, std::vector<bland::nd_coords> neighborhood);
+std::vector<protohit>
+find_components_above_threshold(bland::ndarray                           doppler_spectrum,
+                                    integrated_flags                     dedrifted_rfi,
+                                    std::vector<std::pair<float, float>> noise_and_thresholds_per_drift,
+                                    std::vector<bland::nd_coords>        max_neighborhood);
 
 } // namespace bliss

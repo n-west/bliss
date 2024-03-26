@@ -12,7 +12,7 @@ if (WITH_CUDA)
     target_sources(drift_search_kernels
         PRIVATE
         kernels/drift_integration_cuda.cu
-        # kernels/local_maxima_cuda.cu
+        kernels/local_maxima_cuda.cu
         # kernels/connected_components_cpu.cu
         )
 endif()
@@ -37,11 +37,13 @@ set_target_properties(drift_search_kernels PROPERTIES POSITION_INDEPENDENT_CODE 
 
 
 add_library(drift_search
-    connected_components.cpp
     integrate_drifts.cpp
-    event_search.cpp
-    filter_hits.cpp
+    protohit_search.cpp
     hit_search.cpp
+    filter_hits.cpp
+    event_search.cpp
+    # hit search kernels
+    connected_components.cpp
     local_maxima.cpp
 )
 

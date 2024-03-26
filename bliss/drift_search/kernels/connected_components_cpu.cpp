@@ -11,7 +11,7 @@
 
 using namespace bliss;
 
-std::vector<component> bliss::find_components_in_binary_mask_cpu(const bland::ndarray         &mask,
+std::vector<protohit> bliss::find_components_in_binary_mask_cpu(const bland::ndarray         &mask,
                                                                  std::vector<bland::nd_coords> neighborhood) {
     // We're going to change values, so get a copy
     auto threshold_mask = bland::copy(mask);
@@ -25,7 +25,7 @@ std::vector<component> bliss::find_components_in_binary_mask_cpu(const bland::nd
     }
     // Thresholded_mask holds binary information on which bins passed a threshold. Group adjacent
     // bins that passed the threshold together (connected components)
-    std::vector<component> components;
+    std::vector<protohit> components;
 
     auto                 thresholded_data    = threshold_mask.data_ptr<uint8_t>();
     auto                 thresholded_shape   = threshold_mask.shape();
@@ -42,7 +42,7 @@ std::vector<component> bliss::find_components_in_binary_mask_cpu(const bland::nd
         auto curr_linear = strider.to_linear_offset(curr_coord);
         if (thresholded_data[curr_linear] > 0) {
             coord_queue.push(curr_coord);
-            component this_component;
+            protohit this_component;
 
             while (!coord_queue.empty()) {
                 bland::nd_coords idx = coord_queue.front();
@@ -50,7 +50,7 @@ std::vector<component> bliss::find_components_in_binary_mask_cpu(const bland::nd
 
                 auto linear_index = strider.to_linear_offset(idx);
 
-                // Assume in bounds and if above threshold, add it to the component
+                // Assume in bounds and if above threshold, add it to the protohit
                 if (thresholded_data[linear_index] > 0) {
                     this_component.locations.push_back(idx);
                     thresholded_data[linear_index] = 0;
@@ -78,7 +78,7 @@ std::vector<component> bliss::find_components_in_binary_mask_cpu(const bland::nd
                 }
             }
 
-            components.push_back(this_component); // Assuming 's' is some statistic you compute for each component
+            components.push_back(this_component); // Assuming 's' is some statistic you compute for each protohit
         }
         // Increment the nd_index
         for (int dim = curr_coord.size() - 1; dim >= 0; --dim) {
@@ -94,13 +94,13 @@ std::vector<component> bliss::find_components_in_binary_mask_cpu(const bland::nd
     return components;
 }
 
-std::vector<component>
+std::vector<protohit>
 bliss::find_components_above_threshold_cpu(bland::ndarray                       doppler_spectrum,
                                            integrated_flags                     dedrifted_rfi,
                                            std::vector<std::pair<float, float>> noise_and_thresholds_per_drift,
                                            std::vector<bland::nd_coords>        max_neighborhood) {
 
-    std::vector<component> components;
+    std::vector<protohit> components;
 
     if (doppler_spectrum.dtype() != bland::ndarray::datatype::float32) {
         throw std::runtime_error("find_components_above_threshold: dedrifted doppler spectrum was not float. Only cpu "
@@ -131,7 +131,7 @@ bliss::find_components_above_threshold_cpu(bland::ndarray                       
         auto hard_threshold = noise_and_thresholds_per_drift[curr_coord[0]].first;
         if (visited_data[visited_linear] == 0 && doppler_spectrum_data[doppler_spectrum_linear] > hard_threshold) {
             coord_queue.push(curr_coord);
-            component this_component;
+            protohit this_component;
             this_component.max_integration = 0;
 
             while (!coord_queue.empty()) {
@@ -146,7 +146,7 @@ bliss::find_components_above_threshold_cpu(bland::ndarray                       
                 // TODO, add some more to greedily merge clusters split by noise / minor signal power drops at off
                 // integrations by testing a distance metric We might even want to pass a callable if we can define this
                 // well (and expose to python as callable!)
-                // Assume in bounds and if above threshold, add it to the component
+                // Assume in bounds and if above threshold, add it to the protohit
                 if (visited_data[this_coord_visited_linear] == 0 &&
                     doppler_spectrum_data[this_coord_doppler_spectrum_linear] > hard_threshold) {
 
@@ -195,7 +195,7 @@ bliss::find_components_above_threshold_cpu(bland::ndarray                       
                 }
             }
 
-            components.push_back(this_component); // Assuming 's' is some statistic you compute for each component
+            components.push_back(this_component); // Assuming 's' is some statistic you compute for each protohit
         }
         // Increment the nd_index
         for (int dim = curr_coord.size() - 1; dim >= 0; --dim) {
