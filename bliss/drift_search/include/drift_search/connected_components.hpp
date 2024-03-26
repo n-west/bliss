@@ -15,12 +15,12 @@ namespace bliss {
  *
  * Accepts a binary mask (1) of dtype uint8
  */
-std::vector<component> find_components_in_binary_mask(const bland::ndarray &threshold_mask, std::vector<nd_coords> neighborhood);
+std::vector<component> find_components_in_binary_mask(const bland::ndarray &threshold_mask, std::vector<bland::nd_coords> neighborhood);
 
 /**
  * Given noise stats do a combined threshold and cluster of nearby components
  */
 std::vector<component>
-find_components_above_threshold(coarse_channel &dedrifted_coarse_channel, float snr_threshold, std::vector<nd_coords> neighborhood);
+find_components_above_threshold(coarse_channel &dedrifted_coarse_channel, float snr_threshold, std::vector<bland::nd_coords> neighborhood);
 
 } // namespace bliss

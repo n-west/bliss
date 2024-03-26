@@ -6,19 +6,20 @@
 #include <core/noise_power.hpp>
 #include <core/scan.hpp>
 
+#include <bland/stride_helper.hpp>
+
 #include <list>
 
 namespace bliss {
 
-using nd_coords = std::vector<int64_t>;
 using rfi       = std::map<flag_values, uint8_t>; // TODO: not so elegant, but OKish?
 
 struct component {
-    std::vector<nd_coords> locations;
+    std::vector<bland::nd_coords> locations;
     float                  max_integration = std::numeric_limits<float>::lowest();
     float                  desmeared_noise;
     rfi                    rfi_counts;
-    nd_coords              index_max;
+    bland::nd_coords       index_max;
 };
 
 /**
@@ -59,7 +60,7 @@ struct hit_search_options {
      */
     float snr_threshold = 10.0f;
 
-    std::vector<nd_coords> neighborhood = {
+    std::vector<bland::nd_coords> neighborhood = {
             // clang-format off
    {-7,  7}, {-6,  7}, {-5,  7}, {-4,  7}, {-3,  7},{-2,  7},  {-1, 7},  {0, 7},  {1, 7}, {2,  7}, {3,  7}, {4,  7}, {5,  7}, {6,  7}, {7,  7},
    {-7,  6}, {-6,  6}, {-5,  6}, {-4,  6}, {-3,  6},{-2,  6},  {-1, 6},  {0, 6},  {1, 6}, {2,  6}, {3,  6}, {4,  6}, {5,  6}, {6,  6}, {7,  6},

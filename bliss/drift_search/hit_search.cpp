@@ -64,10 +64,21 @@ std::list<hit> bliss::hit_search(coarse_channel dedrifted_scan, hit_search_optio
     fmt::print("Pushed device for dedrifted scan\n");
 
     std::vector<component> components;
+
+    auto neighborhood = options.neighborhood;
+    if (neighborhood.empty()) {
+        neighborhood = {
+                {-1, 0},
+                {1, 0},
+                {0, -1},
+                {0, 1},
+        };
+    }
+
     if (options.method == hit_search_methods::CONNECTED_COMPONENTS) {
-        components = find_components_above_threshold(dedrifted_scan, options.snr_threshold, options.neighborhood);
+        components = find_components_above_threshold(dedrifted_scan, options.snr_threshold, neighborhood);
     } else if (options.method == hit_search_methods::LOCAL_MAXIMA) {
-        components = find_local_maxima_above_threshold(dedrifted_scan, options.snr_threshold, options.neighborhood);
+        components = find_local_maxima_above_threshold(dedrifted_scan, options.snr_threshold, neighborhood);
     }
     auto noise_stats        = dedrifted_scan.noise_estimate();
     auto dedrifted_plane    = dedrifted_scan.integrated_drift_plane();

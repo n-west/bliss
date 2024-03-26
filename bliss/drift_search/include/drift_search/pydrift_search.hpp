@@ -86,7 +86,7 @@ void bind_pydrift_search(nb::module_ m) {
 
     m.def("find_components_in_binary_mask", &bliss::find_components_in_binary_mask);
     m.def("find_components_in_binary_mask",
-          [](nb::ndarray<> threshold_mask, std::vector<bliss::nd_coords> neighborhood) {
+          [](nb::ndarray<> threshold_mask, std::vector<bland::nd_coords> neighborhood) {
               return bliss::find_components_in_binary_mask(nb_to_bland(threshold_mask), neighborhood);
           });
 

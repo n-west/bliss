@@ -1,14 +1,20 @@
 
 add_library(drift_search_kernels
+    # dedoppler integration
     kernels/drift_integration_bland.cpp
     kernels/drift_integration_cpu.cpp
+    # hit search
+    kernels/local_maxima_cpu.cpp
+    kernels/connected_components_cpu.cpp
 )
 
 if (WITH_CUDA)
     target_sources(drift_search_kernels
         PRIVATE
         kernels/drift_integration_cuda.cu
-    )
+        # kernels/local_maxima_cuda.cu
+        # kernels/connected_components_cpu.cu
+        )
 endif()
 
 target_link_libraries(drift_search_kernels
@@ -17,6 +23,7 @@ target_link_libraries(drift_search_kernels
     bliss_core
     PRIVATE
     fmt::fmt-header-only
+    drift_search # this makes it circular, primarily because of bliss::component
 )
 
 if (WITH_CUDA)
