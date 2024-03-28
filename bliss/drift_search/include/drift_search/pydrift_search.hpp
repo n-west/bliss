@@ -63,16 +63,6 @@ void bind_pydrift_search(nb::module_ m) {
                 self.set_state(state);
             });
 
-    // Generic thresholding methods
-    m.def("hard_threshold_drifts", &bliss::hard_threshold_drifts);
-    m.def("hard_threshold_drifts",
-          [](const nb::ndarray<>      &dedrifted_coarse_channel,
-             bliss::noise_stats &noise_stats,
-             int64_t                   integration_length,
-             float                     snr_threshold) {
-              return bliss::hard_threshold_drifts(
-                      nb_to_bland(dedrifted_coarse_channel), noise_stats, integration_length, snr_threshold);
-          });
 
     nb::class_<bliss::filter_options>(m, "filter_options")
     .def(nb::init<>());

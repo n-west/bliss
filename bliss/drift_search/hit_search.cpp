@@ -12,51 +12,7 @@
 
 using namespace bliss;
 
-float bliss::compute_signal_threshold(noise_stats &noise_stats, int64_t integration_length, float snr_threshold) {
-    // When the signal amplitude is snr_threshold above the noise floor, we have a 'prehit' (a signal that naively
-    // passes a hard threshold) that is when S/N > snr_threshold Given a noise floor estimate of nf, signal power above
-    // threshold S, noise power N...
-    // (S - noise_floor) / N > snr_threshold
-    // S - noise_floor > N * snr_threshold
-    // S > noise_floor + N * snr_threshold
-    // We have incoherently integrated (with mean) l bins, so adjust the noise power by sqrt(l)
-    float integration_adjusted_noise_power = noise_stats.noise_power() / std::sqrt(integration_length);
-    auto  threshold = noise_stats.noise_floor() + integration_adjusted_noise_power * snr_threshold;
-    return threshold;
-}
 
-std::vector<std::pair<float, float>> bliss::compute_noise_and_snr_thresholds(noise_stats &noise_stats,
-                                            int64_t            integration_length,
-                                            std::vector<frequency_drift_plane::drift_rate> drift_rates,
-                                            float snr_threshold) {
-    // When the signal amplitude is snr_threshold above the noise floor, we have a 'prehit' (a signal that naively
-    // passes a hard threshold) that is when S/N > snr_threshold Given a noise floor estimate of nf, signal power above
-    // threshold S, noise power N...
-    // (S - noise_floor) / N > snr_threshold
-    // S - noise_floor > N * snr_threshold
-    // S > noise_floor + N * snr_threshold
-    // We have incoherently integrated (with mean) l bins, so adjust the noise power by sqrt(l)
-    std::vector<std::pair<float, float>> thresholds;
-    for (auto &drift : drift_rates) {
-        float integration_adjusted_noise_power = noise_stats.noise_power() / std::sqrt(integration_length * drift.desmeared_bins);
-        auto  threshold = noise_stats.noise_floor() + integration_adjusted_noise_power * snr_threshold;
-        thresholds.push_back({threshold, integration_adjusted_noise_power});
-    }
-
-    return thresholds;
-}
-
-bland::ndarray bliss::hard_threshold_drifts(const bland::ndarray &dedrifted_spectrum,
-                                            noise_stats    &noise_stats,
-                                            int64_t               integration_length,
-                                            float                 snr_threshold) {
-
-    auto hard_threshold = compute_signal_threshold(noise_stats, integration_length, snr_threshold);
-
-    auto threshold_mask = dedrifted_spectrum > hard_threshold;
-
-    return threshold_mask;
-}
 
 std::list<hit> bliss::hit_search(coarse_channel dedrifted_scan, hit_search_options options) {
 
@@ -94,31 +50,9 @@ std::list<hit> bliss::hit_search(coarse_channel dedrifted_scan, hit_search_optio
         this_hit.power    = signal_power;
         this_hit.snr      = signal_power / c.desmeared_noise;
 
-        // At the drift rate with max SNR, find the width of this protohit
-        // We can also integrate signal power over the entire bandwidth / noise power over bandwidth to get
-        // a better picture of actual SNR rather than SNR/Hz @ peak
-        // This concept of the bandwidth currently doesn't fit well with the local maxima option, but maybe we can come
-        // up with something
-        // this_hit.binwidth                = 1;
-        // int64_t lower_freq_index_at_rate = this_hit.start_freq_index;
-        // int64_t upper_freq_index_at_rate = this_hit.start_freq_index;
-        // for (const auto &l : c.locations) {
-        //     if (l.drift_index == this_hit.rate_index) {
-        //         if (l.frequency_channel > upper_freq_index_at_rate) {
-        //             upper_freq_index_at_rate = l.frequency_channel;
-        //         } else if (l.frequency_channel < lower_freq_index_at_rate) {
-        //             lower_freq_index_at_rate = l.frequency_channel;
-        //         }
-        //     }
-        // }
-        // this_hit.binwidth  = upper_freq_index_at_rate - lower_freq_index_at_rate;
         this_hit.binwidth = c.binwidth;
         this_hit.bandwidth = this_hit.binwidth * std::abs(1e6 * dedrifted_scan.foff());
 
-        // TODO: consider if we should focus hits on the "center" or keep it on strongest frequency that triggered
-        // the hit. For local maxima they should be similar but can deviate quite a bit for connected components
-        // auto center_bin         = (upper_freq_index_at_rate + lower_freq_index_at_rate) / 2;
-        // freq_offset             = dedrifted_scan.foff() * center_bin;
         freq_offset = dedrifted_scan.foff() * c.index_center.frequency_channel;
         this_hit.start_freq_MHz = dedrifted_scan.fch1() + freq_offset;
         this_hit.start_time_sec = dedrifted_scan.tstart() * 24 * 60 * 60; // convert MJD to seconds since MJ
