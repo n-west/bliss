@@ -12,10 +12,12 @@ std::vector<protohit> bliss::find_components_in_binary_mask(const bland::ndarray
 }
 
 std::vector<protohit>
-bliss::find_components_above_threshold(bland::ndarray                       doppler_spectrum,
-                                       integrated_flags                     dedrifted_rfi,
-                                       std::vector<std::pair<float, float>> noise_and_thresholds_per_drift,
-                                       std::vector<bland::nd_coords>        neighborhood) {
+bliss::find_components_above_threshold(bland::ndarray doppler_spectrum,
+                                        integrated_flags                      dedrifted_rfi,
+                                        float                                 noise_floor,
+                                        std::vector<protohit_drift_info>      noise_per_drift,
+                                        float                                 snr_threshold,
+                                        std::vector<bland::nd_coords>         max_neighborhood) {
     return find_components_above_threshold_cpu(
-            doppler_spectrum, dedrifted_rfi, noise_and_thresholds_per_drift, neighborhood);
+            doppler_spectrum, dedrifted_rfi, noise_floor, noise_per_drift, snr_threshold, max_neighborhood);
 }

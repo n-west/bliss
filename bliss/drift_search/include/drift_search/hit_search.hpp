@@ -2,6 +2,7 @@
 
 #include "hit_search_options.hpp"
 
+#include <core/protohit.hpp> // using rfi = map<>
 #include <core/cadence.hpp>
 #include <core/flag_values.hpp>
 #include <core/hit.hpp>

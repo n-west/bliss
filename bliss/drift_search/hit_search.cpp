@@ -60,7 +60,9 @@ bland::ndarray bliss::hard_threshold_drifts(const bland::ndarray &dedrifted_spec
 
 std::list<hit> bliss::hit_search(coarse_channel dedrifted_scan, hit_search_options options) {
 
+    fmt::print("hit_search: calling protohit_search\n");
     auto protohits = protohit_search(dedrifted_scan, options);
+    fmt::print("hit_search: back from protohit_search\n");
 
     // We have to be on cpu for now
     dedrifted_scan.set_device("cpu");
@@ -75,9 +77,9 @@ std::list<hit> bliss::hit_search(coarse_channel dedrifted_scan, hit_search_optio
     for (const auto &c : protohits) {
         // Assume dims size 2 for now :-| (we'll get beam stuff sorted eventually)
         hit this_hit;
-        this_hit.rate_index       = c.index_max[0];
+        this_hit.rate_index       = c.index_max.drift_index;
         this_hit.rfi_counts       = c.rfi_counts;
-        this_hit.start_freq_index = c.index_max[1];
+        this_hit.start_freq_index = c.index_max.frequency_channel;
 
         // Start frequency in Hz is bin * Hz/bin
         auto freq_offset        = dedrifted_scan.foff() * this_hit.start_freq_index;
@@ -97,25 +99,27 @@ std::list<hit> bliss::hit_search(coarse_channel dedrifted_scan, hit_search_optio
         // a better picture of actual SNR rather than SNR/Hz @ peak
         // This concept of the bandwidth currently doesn't fit well with the local maxima option, but maybe we can come
         // up with something
-        this_hit.binwidth                = 1;
-        int64_t lower_freq_index_at_rate = this_hit.start_freq_index;
-        int64_t upper_freq_index_at_rate = this_hit.start_freq_index;
-        for (const auto &l : c.locations) {
-            if (l[0] == this_hit.rate_index) {
-                if (l[1] > upper_freq_index_at_rate) {
-                    upper_freq_index_at_rate = l[1];
-                } else if (l[1] < lower_freq_index_at_rate) {
-                    lower_freq_index_at_rate = l[1];
-                }
-            }
-        }
-        this_hit.binwidth  = upper_freq_index_at_rate - lower_freq_index_at_rate;
+        // this_hit.binwidth                = 1;
+        // int64_t lower_freq_index_at_rate = this_hit.start_freq_index;
+        // int64_t upper_freq_index_at_rate = this_hit.start_freq_index;
+        // for (const auto &l : c.locations) {
+        //     if (l.drift_index == this_hit.rate_index) {
+        //         if (l.frequency_channel > upper_freq_index_at_rate) {
+        //             upper_freq_index_at_rate = l.frequency_channel;
+        //         } else if (l.frequency_channel < lower_freq_index_at_rate) {
+        //             lower_freq_index_at_rate = l.frequency_channel;
+        //         }
+        //     }
+        // }
+        // this_hit.binwidth  = upper_freq_index_at_rate - lower_freq_index_at_rate;
+        this_hit.binwidth = c.binwidth;
         this_hit.bandwidth = this_hit.binwidth * std::abs(1e6 * dedrifted_scan.foff());
 
         // TODO: consider if we should focus hits on the "center" or keep it on strongest frequency that triggered
         // the hit. For local maxima they should be similar but can deviate quite a bit for connected components
-        auto center_bin         = (upper_freq_index_at_rate + lower_freq_index_at_rate) / 2;
-        freq_offset             = dedrifted_scan.foff() * center_bin;
+        // auto center_bin         = (upper_freq_index_at_rate + lower_freq_index_at_rate) / 2;
+        // freq_offset             = dedrifted_scan.foff() * center_bin;
+        freq_offset = dedrifted_scan.foff() * c.index_center.frequency_channel;
         this_hit.start_freq_MHz = dedrifted_scan.fch1() + freq_offset;
         this_hit.start_time_sec = dedrifted_scan.tstart() * 24 * 60 * 60; // convert MJD to seconds since MJ
         this_hit.duration_sec   = dedrifted_scan.tsamp() * integration_length;
