@@ -1,13 +1,13 @@
 #pragma once
 
 #include "flag_values.hpp"
+#include "protohit.hpp"
 
 #include <map>
 #include <string>
 #include <tuple>
 
 namespace bliss {
-using rfi = std::map<flag_values, uint8_t>; // TODO: not so elegant, but OKish?
 
 struct hit {
     // we need a start time

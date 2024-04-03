@@ -35,12 +35,12 @@ void bind_pydrift_search(nb::module_ m) {
     m.def("integrate_drifts",
           nb::overload_cast<bliss::cadence, bliss::integrate_drifts_options>(&bliss::integrate_drifts));
 
-    // General "component" class as intermediate between dedrifted clusters of prehits and hits
-    nb::class_<bliss::component>(m, "component")
-            .def_rw("locations", &bliss::component::locations)
-            .def_rw("index_max", &bliss::component::index_max)
-            .def_rw("max_integration", &bliss::component::max_integration)
-            .def_rw("rfi_counts", &bliss::component::rfi_counts);
+    // General "protohit" class as intermediate between dedrifted clusters of prehits and hits
+    nb::class_<bliss::protohit>(m, "protohit")
+            .def_rw("locations", &bliss::protohit::locations)
+            .def_rw("index_max", &bliss::protohit::index_max)
+            .def_rw("max_integration", &bliss::protohit::max_integration)
+            .def_rw("rfi_counts", &bliss::protohit::rfi_counts);
 
     // hit definition (pre-capnproto serialized version)
     nb::class_<bliss::hit>(m, "hit")
@@ -63,16 +63,6 @@ void bind_pydrift_search(nb::module_ m) {
                 self.set_state(state);
             });
 
-    // Generic thresholding methods
-    m.def("hard_threshold_drifts", &bliss::hard_threshold_drifts);
-    m.def("hard_threshold_drifts",
-          [](const nb::ndarray<>      &dedrifted_coarse_channel,
-             bliss::noise_stats &noise_stats,
-             int64_t                   integration_length,
-             float                     snr_threshold) {
-              return bliss::hard_threshold_drifts(
-                      nb_to_bland(dedrifted_coarse_channel), noise_stats, integration_length, snr_threshold);
-          });
 
     nb::class_<bliss::filter_options>(m, "filter_options")
     .def(nb::init<>());
@@ -86,7 +76,7 @@ void bind_pydrift_search(nb::module_ m) {
 
     m.def("find_components_in_binary_mask", &bliss::find_components_in_binary_mask);
     m.def("find_components_in_binary_mask",
-          [](nb::ndarray<> threshold_mask, std::vector<bliss::nd_coords> neighborhood) {
+          [](nb::ndarray<> threshold_mask, std::vector<bland::nd_coords> neighborhood) {
               return bliss::find_components_in_binary_mask(nb_to_bland(threshold_mask), neighborhood);
           });
 

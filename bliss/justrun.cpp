@@ -20,8 +20,8 @@
 
 int main(int argc, char **argv) {
 
-
-    std::string fil_path = "/datag/public/voyager_2020/single_coarse_channel/old_single_coarse/single_coarse_guppi_59046_80036_DIAG_VOYAGER-1_0011.rawspec.0000.h5";
+    std::string fil_path = "/datax/scratch/nwest/data/single_coarse_guppi_59046_80036_DIAG_VOYAGER-1_0011.rawspec.0000.h5";
+    // std::string fil_path = "/datag/public/voyager_2020/single_coarse_channel/old_single_coarse/single_coarse_guppi_59046_80036_DIAG_VOYAGER-1_0011.rawspec.0000.h5";
     if (argc == 2) {
         fil_path = argv[1];
     }
@@ -51,7 +51,7 @@ int main(int argc, char **argv) {
     scan.set_device("cuda:0");
 
     scan = bliss::flag_filter_rolloff(scan, 0.2);
-    scan = bliss::flag_spectral_kurtosis(scan, 0.1, 15);
+    scan = bliss::flag_spectral_kurtosis(scan, 0.1, 25);
 
     scan = bliss::estimate_noise_power(
             scan,
@@ -60,16 +60,18 @@ int main(int argc, char **argv) {
     scan = bliss::integrate_drifts(
             scan,
             bliss::integrate_drifts_options{.desmear        = true,
-                                            .low_rate       = -100,
-                                            .high_rate      = 100,
+                                            .low_rate       = -500,
+                                            .high_rate      = 500,
                                             .rate_step_size = 1});
-    scan.set_device("cpu");
+    // scan.set_device("cpu");
 
     auto coarse_channel = scan.read_coarse_channel(0);
     coarse_channel->integrated_drift_plane();
 
+    scan.set_device("cpu");
+    fmt::print("justrun: Starting hit search!\n");
 
-    auto scan_with_hits = bliss::hit_search(scan, {.method=bliss::hit_search_methods::LOCAL_MAXIMA,
+    auto scan_with_hits = bliss::hit_search(scan, {.method=bliss::hit_search_methods::CONNECTED_COMPONENTS,
                                                         .snr_threshold=10.0f});
 
     fmt::print("{}\n", scan.read_coarse_channel(0)->noise_estimate().repr());

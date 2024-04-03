@@ -19,27 +19,26 @@ ndarray assignment_op(ndarray &out, const S &a) {
     auto out_strides = out.strides();
     auto out_offset  = out.offsets();
 
-    // Current (multi-dimensional) index to read into a
-    std::vector<int64_t> out_index(out_shape.size(), 0);
+    // Current (multi-dimensional) index to read into out
+    auto ndim = out_shape.size();
+    std::vector<int64_t> nd_index(ndim, 0);
+    int64_t out_linear_index = std::accumulate(out_offset.begin(), out_offset.end(), 0);
 
-    for (int64_t n = 0; n < out.numel(); ++n) {
-        // Compute the linear index for a by accumulating stride over the given multi-dim index
-        // this is very important for broadcasting and for any
-        int64_t out_linear_index = 0;
-        for (int i = 0; i < out_shape.size(); ++i) {
-            out_linear_index += out_offset[i] + (out_index[i] % out_shape[i]) * out_strides[i];
-        }
-        // Finally... do the actual op
+    auto numel = out.numel();
+    for (int64_t n = 0; n < numel; ++n) {
+        // do the actual op
         out_data[out_linear_index] = static_cast<Out>(a);
 
         // Increment the multi-dimensional index
-        for (int i = out_shape.size() - 1; i >= 0; --i) {
+        for (int i = ndim - 1; i >= 0; --i) {
             // If we're not at the end of this dim, keep going
-            if (++out_index[i] != out_shape[i]) {
+            if (++nd_index[i] != out_shape[i]) {
+                out_linear_index += out_strides[i];
                 break;
             } else {
                 // Otherwise, set it to 0 and move down to the next dim
-                out_index[i] = 0;
+                out_linear_index -= (out_shape[i] - 1) * out_strides[i];
+                nd_index[i] = 0;
             }
         }
     }
@@ -54,6 +53,9 @@ ndarray assignment_op(ndarray &out, const S &a) {
 struct assignment_op_impl_wrapper {
     template <typename Out, typename S>
     static inline ndarray call(ndarray &out, const S &value) {
+        // TODO: there's a common case of out being contiguous that can likely be
+        // much faster than this general implementation handling striding.
+        // implement that.
         return assignment_op<Out, S>(out, value);
     }
 };

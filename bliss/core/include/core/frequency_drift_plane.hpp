@@ -9,6 +9,10 @@
 
 namespace bliss {
 
+struct protohit_drift_info {
+    float integration_adjusted_noise;
+};
+
 class frequency_drift_plane {
     public:
     struct drift_rate {

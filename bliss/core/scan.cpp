@@ -99,9 +99,6 @@ std::shared_ptr<coarse_channel> bliss::scan::read_coarse_channel(int coarse_chan
 
     auto global_offset_in_file = coarse_channel_index + _coarse_channel_offset;
     if (_coarse_channels->find(global_offset_in_file) == _coarse_channels->end()) {
-        // TODO: decide if we should evict an old coarse channel from the cache (might need
-        // to stop returning references to keep that safe)
-
         // This is expected to be [time, feed, freq]
         auto data_count = _h5_file_handle->get_data_shape();
         std::vector<int64_t> data_offset(3, 0);
@@ -115,14 +112,13 @@ std::shared_ptr<coarse_channel> bliss::scan::read_coarse_channel(int coarse_chan
                    data_offset,
                    data_count);
         auto data_reader = [h5_file_handle=this->_h5_file_handle, data_offset, data_count](){
-            return h5_file_handle->read_data(data_offset, data_count);
+            auto data = h5_file_handle->read_data(data_offset, data_count);
+            return data;
         };
         auto mask_reader = [h5_file_handle=this->_h5_file_handle, data_offset, data_count](){
             return h5_file_handle->read_mask(data_offset, data_count);
         };
-        
-        // auto new_coarse_channel_data = _h5_file_handle->read_data(data_offset, data_count);
-        // auto new_coarse_channel_mask = _h5_file_handle->read_mask(data_offset, data_count);
+
         auto relative_start_fine_channel = std::get<0>(_inferred_channelization) * coarse_channel_index;
         auto coarse_fch1             = _fch1 + _foff * relative_start_fine_channel;
 
