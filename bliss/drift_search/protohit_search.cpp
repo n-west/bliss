@@ -55,7 +55,6 @@ std::vector<protohit> bliss::protohit_search(coarse_channel &dedrifted_coarse_ch
                 "float is supported right now");
     }
 
-    fmt::print("protohit_search: calling the specific protohit search\n");
     std::vector<protohit> components;
     if (options.method == hit_search_methods::CONNECTED_COMPONENTS) {
         components = find_components_above_threshold(

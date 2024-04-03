@@ -41,7 +41,6 @@ std::vector<protohit> bliss::find_components_in_binary_mask_cpu(const bland::nda
                 auto idx = coord_queue.front();
                 coord_queue.pop();
 
-                // auto linear_index = strider.to_linear_offset(idx);
                 auto linear_index = idx.drift_index * thresholded_strides[0] + idx.frequency_channel * thresholded_strides[1];
 
                 // Assume in bounds and if above threshold, add it to the protohit
@@ -51,13 +50,14 @@ std::vector<protohit> bliss::find_components_in_binary_mask_cpu(const bland::nda
 
                     // Then add all of the neighbors as candidates
                     for (auto &neighbor_offset : neighborhood) {
-                        bool in_bounds      = true;
                         auto neighbor_coord = idx;
+                        neighbor_coord.drift_index += neighbor_offset[0];
+                        neighbor_coord.frequency_channel += neighbor_offset[1];
 
                         // If this is in bounds, above threshold, not visited add it
                         if (neighbor_coord.drift_index >= 0 && neighbor_coord.drift_index < thresholded_shape[0] &&
                                 neighbor_coord.frequency_channel >= 0 && neighbor_coord.frequency_channel < thresholded_shape[1]) {
-                        // if (in_bounds) {
+                            // TODO: add back in that we have not visited this
                             coord_queue.push(neighbor_coord);
                         }
                     }

@@ -60,8 +60,8 @@ int main(int argc, char **argv) {
     scan = bliss::integrate_drifts(
             scan,
             bliss::integrate_drifts_options{.desmear        = true,
-                                            .low_rate       = -100,
-                                            .high_rate      = 100,
+                                            .low_rate       = -500,
+                                            .high_rate      = 500,
                                             .rate_step_size = 1});
     // scan.set_device("cpu");
 

@@ -19,7 +19,7 @@ __global__ void local_maxima_kernel(float* doppler_spectrum_data,
     int neighborhood_size,
     device_protohit* protohits,
     int* number_protohits) {
-    
+
     // Strategy:
     // Each thread will compare a candidate local_max (every point in grid) to its neighborhood
 

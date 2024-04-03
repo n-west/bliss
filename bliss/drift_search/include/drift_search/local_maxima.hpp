@@ -1,8 +1,11 @@
 #pragma once
 
-#include "protohit_search.hpp"
+#include <core/protohit.hpp>
 
 #include <core/frequency_drift_plane.hpp>
+
+#include <bland/ndarray.hpp>
+#include <bland/stride_helper.hpp> // bland::nd_coord
 
 namespace bliss {
 

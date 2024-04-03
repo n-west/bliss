@@ -197,9 +197,10 @@ bliss::integrate_linear_rounded_bins_cuda(bland::ndarray    spectrum_grid,
         device_rates.push_back(drift_info_for_device);
     }
 
-
+    fmt::print("integrate_linear_rounded_bins_cuda:: creating drift plane\n");
     bland::ndarray drift_plane({number_drifts, number_channels}, spectrum_grid.dtype(), spectrum_grid.device());
 
+    fmt::print("integrate_linear_rounded_bins_cuda:: creating integrated_flags\n");
     auto rfi_in_drift    = integrated_flags(number_drifts, number_channels, rfi_mask.device());
     auto rolloff_rfi_ptr = rfi_in_drift.filter_rolloff.data_ptr<uint8_t>();
     auto lowsk_rfi_ptr   = rfi_in_drift.low_spectral_kurtosis.data_ptr<uint8_t>();
@@ -209,7 +210,9 @@ bliss::integrate_linear_rounded_bins_cuda(bland::ndarray    spectrum_grid,
     auto lowsk_rfi_strides = rfi_in_drift.low_spectral_kurtosis.strides();
     auto highsk_rfi_strides = rfi_in_drift.high_spectral_kurtosis.strides();
 
+    fmt::print("integrate_linear_rounded_bins_cuda:: filling drift plane with 0\n");
     bland::fill(drift_plane, 0.0f);
+    fmt::print("integrate_linear_rounded_bins_cuda:: off to the races\n");
     auto drift_plane_ptr     = drift_plane.data_ptr<float>();
     auto drift_plane_shape   = drift_plane.shape();
     auto drift_plane_strides = drift_plane.strides();

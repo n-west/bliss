@@ -11,9 +11,11 @@ add_library(drift_search_kernels
 if (WITH_CUDA)
     target_sources(drift_search_kernels
         PRIVATE
+        # dedoppler integration
         kernels/drift_integration_cuda.cu
+        # hit searches
+        kernels/connected_components_cuda.cu
         kernels/local_maxima_cuda.cu
-        # kernels/connected_components_cpu.cu
         )
 endif()
 

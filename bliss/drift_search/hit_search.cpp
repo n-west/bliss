@@ -16,9 +16,7 @@ using namespace bliss;
 
 std::list<hit> bliss::hit_search(coarse_channel dedrifted_scan, hit_search_options options) {
 
-    fmt::print("hit_search: calling protohit_search\n");
     auto protohits = protohit_search(dedrifted_scan, options);
-    fmt::print("hit_search: back from protohit_search\n");
 
     // We have to be on cpu for now
     dedrifted_scan.set_device("cpu");

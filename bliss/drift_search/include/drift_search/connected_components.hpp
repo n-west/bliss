@@ -1,12 +1,11 @@
 #pragma once
 
-#include "hit_search.hpp"
+#include <core/protohit.hpp>
 
 #include <drift_search/protohit_search.hpp>
 
 #include <bland/ndarray.hpp>
-#include <core/scan.hpp>
-#include <core/noise_power.hpp>
+
 #include <limits>
 #include <vector>
 

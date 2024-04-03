@@ -1,8 +1,14 @@
 
 #include <drift_search/connected_components.hpp>
-#include <drift_search/hit_search.hpp> // component
 
 #include "kernels/connected_components_cpu.hpp"
+#if BLISS_CUDA
+#include "kernels/connected_components_cuda.cuh"
+#endif // BLISS_CUDA
+
+#include <fmt/format.h>
+
+#include <stdexcept>
 
 using namespace bliss;
 
@@ -18,6 +24,16 @@ bliss::find_components_above_threshold(bland::ndarray doppler_spectrum,
                                         std::vector<protohit_drift_info>      noise_per_drift,
                                         float                                 snr_threshold,
                                         std::vector<bland::nd_coords>         max_neighborhood) {
-    return find_components_above_threshold_cpu(
-            doppler_spectrum, dedrifted_rfi, noise_floor, noise_per_drift, snr_threshold, max_neighborhood);
+
+    auto compute_device = doppler_spectrum.device();
+#if BLISS_CUDA
+    if (compute_device.device_type == bland::ndarray::dev::cuda.device_type) {
+        return find_components_above_threshold_cuda(doppler_spectrum, dedrifted_rfi, noise_floor, noise_per_drift, snr_threshold, max_neighborhood);
+    } else
+#endif // BLISS_CUDA
+    if (compute_device.device_type == bland::ndarray::dev::cpu.device_type) {
+        return find_components_above_threshold_cpu(doppler_spectrum, dedrifted_rfi, noise_floor, noise_per_drift, snr_threshold, max_neighborhood);
+    } else {
+        throw std::runtime_error("Unsupported device for find_components_above_threshold");
+    }
 }
