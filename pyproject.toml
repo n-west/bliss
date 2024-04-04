@@ -24,7 +24,7 @@ dynamic = ["version", "description"]
 
 
 [build-system]
-requires = ["py-build-cmake~=0.2.0a7", "cmake<3.23", "ninja~=1.11"]
+requires = ["py-build-cmake~=0.2.0a7", "cmake~=3.29.0", "ninja~=1.11"]
 build-backend = "py_build_cmake.build"
 
 [tool.py-build-cmake.module]
