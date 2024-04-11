@@ -67,6 +67,9 @@ scan bliss::hit_search(scan dedrifted_scan, hit_search_options options) {
         auto cc   = dedrifted_scan.read_coarse_channel(cc_index);
         auto find_coarse_channel_hits_func = [cc, options]() {
             auto hits = hit_search(*cc, options);
+            if (options.detach_graph) {
+                cc->detach_drift_plane();
+            }
             return hits;
         };
         cc->add_hits(find_coarse_channel_hits_func);

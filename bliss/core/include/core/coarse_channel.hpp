@@ -81,6 +81,7 @@ struct coarse_channel {
     frequency_drift_plane integrated_drift_plane();
     void set_integrated_drift_plane(frequency_drift_plane integrated_plane);
     void set_integrated_drift_plane(std::function<frequency_drift_plane()> integrated_plane);
+    void detach_drift_plane();
 
     noise_stats noise_estimate() const;
     void        set_noise_estimate(noise_stats estimate);

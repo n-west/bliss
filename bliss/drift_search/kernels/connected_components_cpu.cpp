@@ -85,7 +85,6 @@ bliss::find_components_above_threshold_cpu(bland::ndarray                    dop
                                             std::vector<protohit_drift_info> noise_per_drift,
                                             float                            snr_threshold,
                                             std::vector<bland::nd_coords>    max_neighborhood) {
-    fmt::print("find_components_above_threshold_cpu: starting...\n");
 
     std::vector<protohit> components;
 

@@ -286,13 +286,14 @@ void bliss::coarse_channel::set_integrated_drift_plane(frequency_drift_plane int
     _integrated_drift_plane = std::make_shared<std::variant<frequency_drift_plane, std::function<frequency_drift_plane()>>>(
         integrated_plane
     );
-    // _integrated_drift_plane = integrated_plane; // TODO: should we call set_device(_device)
 }
 
 void bliss::coarse_channel::set_integrated_drift_plane(std::function<frequency_drift_plane()> integrated_plane_generator) {
     _integrated_drift_plane = std::make_shared<std::variant<frequency_drift_plane, std::function<frequency_drift_plane()>>>(
         integrated_plane_generator
     );
+}
 
-    // _integrated_drift_plane = integrated_plane; // TODO: should we call set_device(_device)
+void bliss::coarse_channel::detach_drift_plane() {
+    _integrated_drift_plane = nullptr;
 }
