@@ -144,7 +144,7 @@ bliss::find_components_above_threshold_cpu(bland::ndarray                    dop
                     auto this_drift_noise = noise_per_drift[idx.drift_index].integration_adjusted_noise;
                     auto this_coord_snr = (this_coord_val - noise_floor) / this_drift_noise;
 
-                    if (this_coord_snr > snr_threshold) {
+                    if (this_coord_snr > snr_threshold/2) {
                         // Track some stats for this cluster like the maximum value and where it is
                         if (this_coord_snr > this_component.snr) {
                             this_component.index_max = idx;
