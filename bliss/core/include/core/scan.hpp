@@ -50,7 +50,7 @@ class scan {
      * read the coarse channel at given index and return shared ownership of it.
      *
      * The `coarse_channel` has similar metadata to a `scan` object
-     * but is specific to the `corase_channel`, for example `fch1` and `nchan`
+     * but is specific to the `coarse_channel`, for example `fch1` and `nchan`
      * represent the frequency of the first fine channel in this coarse channel
      * and the number of fine channels in this channel.
      *

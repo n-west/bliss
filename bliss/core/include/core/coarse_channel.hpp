@@ -88,6 +88,7 @@ struct coarse_channel {
     bool           has_hits();
     std::list<hit> hits() const;
     void           add_hits(std::list<hit> new_hits);
+    void           add_hits(std::function<std::list<hit>()> find_hits_func);
 
     bland::ndarray::dev device();
 
@@ -152,16 +153,15 @@ struct coarse_channel {
 
     bland::ndarray_deferred _data;
     bland::ndarray_deferred _mask;
-    // std::variant<bland::ndarray, std::function<bland::ndarray()>> _data;
-    // std::variant<bland::ndarray, std::function<bland::ndarray()>> _mask;
 
     std::optional<noise_stats> _noise_stats;
 
     std::shared_ptr<std::variant<frequency_drift_plane, std::function<frequency_drift_plane()>>> _integrated_drift_plane = nullptr;
 
+    std::shared_ptr<std::variant<std::list<hit>, std::function<std::list<hit>()>>> _hits = nullptr;
+
     bland::ndarray::dev _device = bland::ndarray::dev::cpu;
 
-    std::optional<std::list<hit>> _hits;
 };
 
 } // namespace bliss

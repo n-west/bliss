@@ -117,15 +117,30 @@ void bliss::coarse_channel::set_noise_estimate(noise_stats estimate) {
 }
 
 bool bliss::coarse_channel::has_hits() {
-    return _hits.has_value();
+    if (_hits == nullptr) {
+        return false;
+    } else {
+        return true;
+    }
 }
 
 std::list<hit> bliss::coarse_channel::hits() const {
-    return _hits.value();
+    if (_hits == nullptr) {
+        throw std::runtime_error("hits not set");
+    }
+    if (std::holds_alternative<std::function<std::list<hit>()>>(*_hits)) {
+        *_hits = std::get<std::function<std::list<hit>()>>(*_hits)();
+    }
+    auto requested_hits = std::get<std::list<hit>>(*_hits);
+    return requested_hits;
 }
 
 void bliss::coarse_channel::add_hits(std::list<hit> new_hits) {
-    _hits = new_hits;
+    _hits = std::make_shared<std::variant<std::list<hit>, std::function<std::list<hit>()>>>(new_hits);
+}
+
+void bliss::coarse_channel::add_hits(std::function<std::list<hit>()> find_hits_func) {
+    _hits = std::make_shared<std::variant<std::list<hit>, std::function<std::list<hit>()>>>(find_hits_func);
 }
 
 bland::ndarray::dev bliss::coarse_channel::device() {
@@ -142,9 +157,9 @@ void bliss::coarse_channel::set_device(std::string_view device) {
 
 void bliss::coarse_channel::push_device() {
     _mask = _mask.to(_device);
-    _data = _mask.to(_device);
-    if (std::holds_alternative<frequency_drift_plane>(*_integrated_drift_plane)) {
-        auto idp = std::get<frequency_drift_plane>(*_integrated_drift_plane);
+    _data = _data.to(_device);
+    if (_integrated_drift_plane != nullptr && std::holds_alternative<frequency_drift_plane>(*_integrated_drift_plane)) {
+        auto &idp = std::get<frequency_drift_plane>(*_integrated_drift_plane);
         idp.set_device(_device);
         idp.push_device();
     }

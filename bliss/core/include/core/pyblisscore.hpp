@@ -135,8 +135,11 @@ void bind_pycore(nb::module_ m) {
     nb::class_<bliss::observation_target>(m, "observation_target")
         .def(nb::init<std::vector<bliss::scan>>())
         .def(nb::init<std::vector<std::string_view>>())
-        .def_rw("scans", &bliss::observation_target::_scans)
         .def("slice_observation_channels", &bliss::observation_target::slice_observation_channels, "start"_a=0, "count"_a=1)
+        .def("device", &bliss::observation_target::device)
+        .def("set_device", nb::overload_cast<bland::ndarray::dev&>(&bliss::observation_target::set_device))
+        .def("set_device", nb::overload_cast<std::string_view>(&bliss::observation_target::set_device))
+        .def_rw("scans", &bliss::observation_target::_scans)
         .def_rw("target_name", &bliss::observation_target::_target_name);
 
     nb::class_<bliss::cadence>(m, "cadence")

@@ -24,6 +24,9 @@ bland::ndarray_deferred::ndarray_deferred(ndarray pod)
 
 ndarray_deferred bland::ndarray_deferred::to(bland::ndarray::dev device) {
     _device = device;
+    if (std::holds_alternative<ndarray>(*_deferred_data)) {
+        *_deferred_data = std::get<ndarray>(*_deferred_data).to(_device.value());
+    }
     return *this;
 }
 

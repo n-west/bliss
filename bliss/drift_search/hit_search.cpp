@@ -29,7 +29,6 @@ std::list<hit> bliss::hit_search(coarse_channel dedrifted_scan, hit_search_optio
 
     std::list<hit> hits;
     for (const auto &c : protohits) {
-        // Assume dims size 2 for now :-| (we'll get beam stuff sorted eventually)
         hit this_hit;
         this_hit.rate_index       = c.index_max.drift_index;
         this_hit.rfi_counts       = c.rfi_counts;
@@ -45,13 +44,13 @@ std::list<hit> bliss::hit_search(coarse_channel dedrifted_scan, hit_search_optio
         auto signal_power = (c.max_integration - noise_stats.noise_floor());
 
         // This is the unsmeared SNR
-        this_hit.power    = signal_power;
-        this_hit.snr      = signal_power / c.desmeared_noise;
+        this_hit.power = signal_power;
+        this_hit.snr   = signal_power / c.desmeared_noise;
 
-        this_hit.binwidth = c.binwidth;
+        this_hit.binwidth  = c.binwidth;
         this_hit.bandwidth = this_hit.binwidth * std::abs(1e6 * dedrifted_scan.foff());
 
-        freq_offset = dedrifted_scan.foff() * c.index_center.frequency_channel;
+        freq_offset             = dedrifted_scan.foff() * c.index_center.frequency_channel;
         this_hit.start_freq_MHz = dedrifted_scan.fch1() + freq_offset;
         this_hit.start_time_sec = dedrifted_scan.tstart() * 24 * 60 * 60; // convert MJD to seconds since MJ
         this_hit.duration_sec   = dedrifted_scan.tsamp() * integration_length;
@@ -61,12 +60,16 @@ std::list<hit> bliss::hit_search(coarse_channel dedrifted_scan, hit_search_optio
     return hits;
 }
 
+// TODO: defer execution of hit search until hits from a specific cc are requested
 scan bliss::hit_search(scan dedrifted_scan, hit_search_options options) {
     auto number_coarse_channels = dedrifted_scan.get_number_coarse_channels();
     for (auto cc_index = 0; cc_index < number_coarse_channels; ++cc_index) {
         auto cc   = dedrifted_scan.read_coarse_channel(cc_index);
-        auto hits = hit_search(*cc, options);
-        cc->add_hits(hits);
+        auto find_coarse_channel_hits_func = [cc, options]() {
+            auto hits = hit_search(*cc, options);
+            return hits;
+        };
+        cc->add_hits(find_coarse_channel_hits_func);
     }
     return dedrifted_scan;
 }
