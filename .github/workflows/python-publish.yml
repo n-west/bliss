@@ -11,17 +11,18 @@ name: Build and upload python package
 on:
   release:
     types: [published]
+  push:
 
 permissions:
   contents: read
 
 jobs:
   build_wheels:
-    name: Build wheels on ${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
+    name: Build wheels on ${{ matrix.cuda_ver }}
+    runs-on: ubuntu-latest
     strategy:
       matrix:
-        os: [ubuntu-latest]
+        cuda_ver: ['none', '11.4', '12.4']
 
     steps:
       - uses: actions/checkout@v3
@@ -45,7 +46,14 @@ jobs:
         env:
           CIBW_BUILD: "cp*-*64"
           #CIBW_MANYLINUX_X86_64_IMAGE: manylinux1
-          CIBW_BEFORE_BUILD: git submodule update --init --recursive && pip install .
+          CIBW_BEFORE_BUILD: |
+            if [[ "${{ matrix.cuda_ver }}" != "none" ]]; then
+              yum-config-manager --add-repo https://developer.download.nvidia.com/compute/cuda/repos/rhel7/x86_64/cuda-rhel7.repo
+              yum clean all
+              yum install -y cuda-toolkit-${{ matrix.cuda_ver }}.x86_64
+              export PATH=$PATH:/usr/local/cuda/bin
+            fi
+            git submodule update --init --recursive && pip install .
           # Install system library
           CIBW_BEFORE_BUILD_LINUX: (yum install -y hdf5-devel || apt-get install -y libhdf5-dev || apk add --update --no-cache hdf5-dev || true) && true
           CIBW_SKIP: "*musllinux*"
