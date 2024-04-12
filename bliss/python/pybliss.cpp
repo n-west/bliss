@@ -12,10 +12,28 @@
 #include "estimators/pyestimators.hpp"
 #include "drift_search/pydrift_search.hpp"
 
+#if BLISS_CUDA
+#include <cuda_runtime.h>
+#endif
+
+#include <fmt/format.h>
+
 namespace nb = nanobind;
 using namespace nb::literals;
 
 NB_MODULE(pybliss, m) {
+
+    int cuda_runtime_version = 0;
+#if BLISS_CUDA
+    cudaRuntimeGetVersion(&cuda_runtime_version);
+#endif
+    std::string cuda_version_string = "none";
+    if (cuda_runtime_version != 0) {
+        int cuda_major = cuda_runtime_version/1000;
+        int cuda_minor = (cuda_runtime_version - 1000 * cuda_major)/10;
+        cuda_version_string = fmt::format("{}.{}", cuda_major, cuda_minor);
+    }
+    m.attr("_cuda_version") = cuda_version_string;
 
     bind_pycore(m);
 

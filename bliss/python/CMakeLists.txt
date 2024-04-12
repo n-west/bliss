@@ -8,7 +8,13 @@ target_link_libraries(pybliss
     pyestimators
     pyfile_types
     pyflaggers
+    PRIVATE
+    fmt::fmt-header-only
 )
+
+if (WITH_CUDA)
+    target_link_libraries(pybliss PRIVATE CUDA::cudart_static)
+endif()
 
 # Check if PY_BUILD_CMAKE_MODULE_NAME is defined
 if(DEFINED PY_BUILD_CMAKE_MODULE_NAME)

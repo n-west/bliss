@@ -44,7 +44,7 @@ jobs:
         run: |
           python3 -m cibuildwheel --output-dir dist
         env:
-          CIBW_BUILD: "cp*-*64+cuda${{ matrix.cuda_ver }}"
+          CUDA_VER: ${{ matrix.cuda_ver }}
           #CIBW_MANYLINUX_X86_64_IMAGE: manylinux1
           CIBW_BEFORE_BUILD: |
             if [[ "${{ matrix.cuda_ver }}" != "none" ]]; then
