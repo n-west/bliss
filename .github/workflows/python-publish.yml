@@ -48,8 +48,6 @@ jobs:
           #CIBW_MANYLINUX_X86_64_IMAGE: manylinux1
           CIBW_BEFORE_BUILD: |
             git submodule update --init --recursive && pip install .
-          # Install system library
-          CIBW_BEFORE_BUILD_LINUX: |
             (yum install -y hdf5-devel || apt-get install -y libhdf5-dev || apk add --update --no-cache hdf5-dev || true) && true
             if [[ "${{ matrix.cuda_ver }}" != "none" ]]; then
               yum-config-manager --add-repo https://developer.download.nvidia.com/compute/cuda/repos/rhel7/x86_64/cuda-rhel7.repo
