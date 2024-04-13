@@ -44,9 +44,11 @@ jobs:
         run: |
           python3 -m cibuildwheel --output-dir dist
         env:
+          CIBW_BUILD: "cp*-*64"
+          CIBW_SKIP: "*musllinux*"
           CUDA_VER: ${{ matrix.cuda_ver }}
           #CIBW_MANYLINUX_X86_64_IMAGE: manylinux1
-          CIBW_BEFORE_BUILD: |
+          CIBW_BEFORE_BUILD_LINUX: |
             git submodule update --init --recursive && pip install .
             (yum install -y hdf5-devel || apt-get install -y libhdf5-dev || apk add --update --no-cache hdf5-dev || true) && true
             if [[ "${{ matrix.cuda_ver }}" != "none" ]]; then
@@ -56,7 +58,6 @@ jobs:
               export PATH=$PATH:/usr/local/cuda/bin
             fi
             sed -i "s/__version__ = '\([0-9.]*\)'/__version__ = '\1+cuda${{ matrix.cuda_ver }}'/g" /project/bliss/python/bliss/__init__.py
-          CIBW_SKIP: "*musllinux*"
 
       - uses: actions/upload-artifact@v2
         with:
