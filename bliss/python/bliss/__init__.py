@@ -8,4 +8,4 @@ from . import pybland as bland
 
 from . import plot_utils
 
-__version__ = f'0.0.1+cuda-{_cuda_version}'
+__version__ = '0.0.1'
