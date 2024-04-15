@@ -38,7 +38,7 @@ jobs:
 
       - name: Install cibuildwheel
         run: |
-          python3 -m pip install cibuildwheel
+          python3 -m pip install cibuildwheel==2.17.0
 
       - name: Build wheels for CPython
         run: |
@@ -57,7 +57,6 @@ jobs:
               export PATH=$PATH:/usr/local/cuda/bin
             fi
             sed -i "s/__version__ = '\([0-9.]*\)'/__version__ = '\1+cuda${{ matrix.cuda_ver }}'/g" /project/bliss/python/bliss/__init__.py
-            git submodule update --init --recursive && pip install .
 
       - uses: actions/upload-artifact@v2
         with:
