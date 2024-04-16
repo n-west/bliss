@@ -42,7 +42,9 @@ jobs:
 
       - name: Build wheels for CPython
         run: |
-          sed -i "s/name = \"dedrift\"/name = \"dedrift-${{ matrix.cuda_ver }}\"/g" pyproject.toml
+          if [[ "${{ matrix.cuda_ver }}" != "none" ]]; then
+            sed -i "s/name = \"dedrift\"/name = \"dedrift-cuda${{ matrix.cuda_ver }}\"/g" pyproject.toml
+          fi
           python3 -m cibuildwheel --output-dir dist/${{ env.CUDA_VER }}/
         env:
           CIBW_BUILD: "cp*-*64"
