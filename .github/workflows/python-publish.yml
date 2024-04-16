@@ -73,16 +73,6 @@ jobs:
         with:
           name: artifact
           path: dist
-	  - name: Rename wheels
-	    run: |
-	      for dir in dist/*; do
-	        cuda_ver=$(basename $dir)
-	        for wheel in $dir/*.whl; do
-	          wheel_name=$(basename $wheel)
-	          new_wheel_name="${wheel_name//dedrift-/dedrift-$cuda_ver-}"
-	          mv "$wheel" "$dir/$new_wheel_name"
-	        done
-	      done
 
       - name: Publish package
         uses: pypa/gh-action-pypi-publish@release/v1.8
