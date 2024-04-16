@@ -45,8 +45,12 @@ jobs:
           python3 -m cibuildwheel --output-dir dist/${{ env.CUDA_VER }}/
           ls dist
           ls dist/*
-          wheel=$(ls dist/${{ env.CUDA_VER }}/dedrift-*.whl)
-          mv "$wheel" "${wheel/dedrift-/dedrift-${{ env.CUDA_VER }}-}"
+          for wheel in dist/${{ env.CUDA_VER }}/dedrift-*.whl; do
+            wheel_name=$(basename "$wheel")
+            new_wheel_name="${wheel_name/-/-${{ env.CUDA_VER }}-}"
+            mv "$wheel" "dist/$new_wheel_name"
+          done
+
         env:
           CIBW_BUILD: "cp*-*64"
           CIBW_SKIP: "*musllinux*"
