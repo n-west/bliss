@@ -42,7 +42,7 @@ jobs:
 
       - name: Build wheels for CPython
         run: |
-          python3 -m cibuildwheel --output-dir dist
+          python3 -m cibuildwheel --output-dir dist/{{ matrix.cuda_ver }}/
         env:
           CIBW_BUILD: "cp*-*64"
           CIBW_SKIP: "*musllinux*"
@@ -57,11 +57,12 @@ jobs:
               yum install -y cuda-toolkit-${{ matrix.cuda_ver }}.x86_64
               export PATH=$PATH:/usr/local/cuda/bin
             fi
-            sed -i "s/__version__ = '\([0-9.]*\)'/__version__ = '\1+cuda${{ matrix.cuda_ver }}'/g" /project/bliss/python/bliss/__init__.py
 
       - uses: actions/upload-artifact@v2
         with:
           path: dist
+
+
 
   upload:
     name: Upload to PyPi and create release
@@ -73,10 +74,21 @@ jobs:
           name: artifact
           path: dist
 
+	  - name: Rename wheels
+	    run: |
+	      for dir in dist/*; do
+	        cuda_ver=$(basename $dir)
+	        for wheel in $dir/*.whl; do
+	          wheel_name=$(basename $wheel)
+	          new_wheel_name="${wheel_name//dedrift-/dedrift-$cuda_ver-}"
+	          mv "$wheel" "$dir/$new_wheel_name"
+	        done
+	      done
+
       - name: Publish package
         uses: pypa/gh-action-pypi-publish@release/v1.8
         with:
           repository-url: https://test.pypi.org/legacy/
-          skip-existing: True
+          skip-existing: False
           user: __token__
           password: ${{ secrets.TEST_PYPI_API_TOKEN }}
