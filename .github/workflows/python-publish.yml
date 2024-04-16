@@ -43,6 +43,10 @@ jobs:
       - name: Build wheels for CPython
         run: |
           python3 -m cibuildwheel --output-dir dist/${{ env.CUDA_VER }}/
+          ls dist
+          ls dist/*
+          wheel=$(ls dist/${{ env.CUDA_VER }}/dedrift-*.whl)
+          mv "$wheel" "${wheel/dedrift-/dedrift-${{ env.CUDA_VER }}-}"
         env:
           CIBW_BUILD: "cp*-*64"
           CIBW_SKIP: "*musllinux*"
@@ -58,12 +62,10 @@ jobs:
               export PATH=$PATH:/usr/local/cuda/bin
             fi
 
-      - name: Rename wheel
-        run: |
-          wheel=$(ls dist/${{ env.CUDA_VER }}/dedrift-*.whl)
-          mv "$wheel" "${wheel/dedrift-/dedrift-${{ env.CUDA_VER }}-}"
-        env:
-          CUDA_VER: ${{ matrix.cuda_ver }}
+            #- name: Rename wheel
+            #  run: |
+            #  env:
+            #    CUDA_VER: ${{ matrix.cuda_ver }}
 
       - uses: actions/upload-artifact@v2
         with:
