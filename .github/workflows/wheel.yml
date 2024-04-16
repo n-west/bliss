@@ -42,8 +42,14 @@ jobs:
 
       - name: Build wheels for CPython
         run: |
+          # For cuda versions, rename the project with -cudaMAJORVER
           if [[ "${{ matrix.cuda_ver }}" != "none" ]]; then
-            sed -i "s/name = \"dedrift\"/name = \"dedrift-cuda${{ matrix.cuda_ver }}\"/g" pyproject.toml
+            if [[ "${{ matrix.cuda_ver }}" == 11.* ]]; then
+              sed -i "s/name = \"dedrift\"/name = \"dedrift-cuda11x\"/g" pyproject.toml
+            elif [[ "${{ matrix.cuda_ver }}" == 12.* ]]; then
+              sed -i "s/name = \"dedrift\"/name = \"dedrift-cuda12x\"/g" pyproject.toml
+            fi
+            # sed -i "s/name = \"dedrift\"/name = \"dedrift-cuda${{ matrix.cuda_ver }}\"/g" pyproject.toml
           fi
           python3 -m cibuildwheel --output-dir dist/
         env:
@@ -53,6 +59,8 @@ jobs:
           #CIBW_MANYLINUX_X86_64_IMAGE: manylinux1
           CIBW_BEFORE_BUILD_LINUX: |
             (yum install -y hdf5-devel || apt-get install -y libhdf5-dev || apk add --update --no-cache hdf5-dev || true) && true
+            # cibuildwheel uses --no-dep, but docs suggest build-system.requires should be installed...
+            # copying a version of fairseq approach https://github.com/facebookresearch/fairseq/blob/main/.github/workflows/release.yml#L128
             python3 -m pip install py-build-cmake~=0.2.0a7 cmake~=3.29.0 ninja~=1.11
             if [[ "${{ matrix.cuda_ver }}" != "none" ]]; then
               yum-config-manager --add-repo https://developer.download.nvidia.com/compute/cuda/repos/rhel7/x86_64/cuda-rhel7.repo
@@ -60,7 +68,6 @@ jobs:
               yum install -y cuda-toolkit-${{ matrix.cuda_ver }}.x86_64
               export PATH=$PATH:/usr/local/cuda/bin
             fi
-            #sed -i "s/__version__ = '\([0-9.]*\)'/__version__ = '\1+cuda${{ matrix.cuda_ver }}'/g" /project/pyproject.toml
 
       - uses: actions/upload-artifact@v2
         with:
