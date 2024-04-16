@@ -43,14 +43,6 @@ jobs:
       - name: Build wheels for CPython
         run: |
           python3 -m cibuildwheel --output-dir dist/${{ env.CUDA_VER }}/
-          ls dist
-          ls dist/*
-          for wheel in dist/${{ env.CUDA_VER }}/dedrift-*.whl; do
-            wheel_name=$(basename "$wheel")
-            new_wheel_name="${wheel_name/-/-${{ env.CUDA_VER }}-}"
-            mv "$wheel" "dist/$new_wheel_name"
-          done
-
         env:
           CIBW_BUILD: "cp*-*64"
           CIBW_SKIP: "*musllinux*"
@@ -64,12 +56,12 @@ jobs:
               yum clean all
               yum install -y cuda-toolkit-${{ matrix.cuda_ver }}.x86_64
               export PATH=$PATH:/usr/local/cuda/bin
+              python -c "import toml; \
+  p = toml.load('pyproject.toml'); \
+  p['project']['name'] = f\"dedrift-${{ matrix.cuda_ver }}\"; \
+  toml.dump(p, open('pyproject.toml', 'w'))"
             fi
-
-            #- name: Rename wheel
-            #  run: |
-            #  env:
-            #    CUDA_VER: ${{ matrix.cuda_ver }}
+            #sed -i "s/__version__ = '\([0-9.]*\)'/__version__ = '\1+cuda${{ matrix.cuda_ver }}'/g" /project/pyproject.toml
 
       - uses: actions/upload-artifact@v2
         with:
