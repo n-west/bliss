@@ -1,5 +1,5 @@
 
-cmake_minimum_required(VERSION 3.9)
+cmake_minimum_required(VERSION 3.18)
 # Future version upgrades:
 # 3.9 required for check_ipo_supported
 # 3.14 adds FetchContent
@@ -9,7 +9,7 @@ cmake_minimum_required(VERSION 3.9)
 
 project(
     Bliss
-    VERSION 0.0.0
+    VERSION 0.0.1
     LANGUAGES CXX
 )
 
