@@ -56,10 +56,7 @@ jobs:
               yum clean all
               yum install -y cuda-toolkit-${{ matrix.cuda_ver }}.x86_64
               export PATH=$PATH:/usr/local/cuda/bin
-              python -c "import toml; \
-  p = toml.load('pyproject.toml'); \
-  p['project']['name'] = f\"dedrift-${{ matrix.cuda_ver }}\"; \
-  toml.dump(p, open('pyproject.toml', 'w'))"
+              python -c "import toml;p = toml.load('pyproject.toml');p['project']['name'] = f\"dedrift-${{ matrix.cuda_ver }}\";toml.dump(p, open('pyproject.toml', 'w'))"
             fi
             #sed -i "s/__version__ = '\([0-9.]*\)'/__version__ = '\1+cuda${{ matrix.cuda_ver }}'/g" /project/pyproject.toml
 
