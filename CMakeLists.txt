@@ -39,7 +39,7 @@ if (WITH_CUDA)
   if(NOT DEFINED CMAKE_CUDA_ARCHITECTURES)
     # Generate binary code for 61 and 52, but PTX for 70
     set(CUDA_SEPARABLE_COMPILATION ON)
-    set(CUDA_ARCHITECTURES 61-real;52-real;70)
+    set(CUDA_ARCHITECTURES all-major)
   endif()
   enable_language(CUDA)
   add_definitions("-DBLISS_CUDA=1")
