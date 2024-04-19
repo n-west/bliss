@@ -9,12 +9,20 @@
 
 using namespace bliss;
 
-// "The Breakthrough Listen Search for Intelligent Life: Public Data, Formats, Reduction and Archiving"
-// Lebofsky, et al, 2020
-// https://arxiv.org/pdf/1906.07391.pdf
-// Fine channels, freq resolution (Hz), time resolution (sec), name
+
+/* The tuple order is
+ * * number of fine channels per coarse channel
+ * * frequency resolution (equivalent to foff filterbank md and inverse of Fs)
+ * * time resolution (equivalent to tsamp filterbank md)
+ * * name of revision from Lebofsky et al
+ *
+ * The best paper reference for this information is
+ * "The Breakthrough Listen Search for Intelligent Life: Public Data, Formats, Reduction and Archiving"
+ * available @ https://arxiv.org/abs/1906.07391
+ * We can infer some fine channels per coarse using fil md when it matches one of these schemes
+ */
 // clang-format off
-constexpr std::array<scan::filterbank_channelization_revs, 9> known_channelizations = {{
+constexpr std::array<std::tuple<int, double, double, const char*>, 9> known_channelizations = {{
     {1033216,      2.84, 17.98,       "HSR-Rev1A"},
     {      8, 366210.0,   0.00034953, "HTR-Rev1A"},
     {   1024,   2860.0,   1.06,       "MR-Rev1A"},
@@ -29,7 +37,11 @@ constexpr std::array<scan::filterbank_channelization_revs, 9> known_channelizati
 }};
 // clang-format on
 
-std::tuple<int, scan::filterbank_channelization_revs>
+
+/**
+ * returned tuple is {number of coarse channels, number of fine channels per coarse}
+*/
+std::tuple<int, int>
 infer_number_coarse_channels(int number_fine_channels, double foff, double tsamp) {
     for (const auto &channelization : known_channelizations) {
         auto [fine_channels_per_coarse, freq_res, time_res, version] = channelization;
@@ -39,13 +51,13 @@ infer_number_coarse_channels(int number_fine_channels, double foff, double tsamp
         // to expected
         if (num_coarse_channels * fine_channels_per_coarse == number_fine_channels &&
             std::abs(std::abs(foff) - freq_res) < .1 && std::abs(std::abs(tsamp) - time_res) < .1) {
-            return std::make_tuple(num_coarse_channels, channelization);
+            return std::make_tuple(num_coarse_channels, std::get<0>(channelization));
         }
     }
     fmt::print("WARN: scan with {} fine channels could not be matched with a known channelization scheme. "
-               "Assuming 1 coarse channel\n",
-               number_fine_channels);
-    return {1, scan::filterbank_channelization_revs{}};
+               "Assuming 1 coarse channel with {} channels\n",
+               number_fine_channels, number_fine_channels);
+    return {1, number_fine_channels};
 }
 
 scan::scan(h5_filterbank_file fb_file) {
@@ -84,12 +96,59 @@ scan::scan(h5_filterbank_file fb_file) {
     _za_start = fb_file.read_data_attr<double>("za_start");
 
     // Find the number of coarse channels
-    std::tie(_num_coarse_channels, _inferred_channelization) =
+    std::tie(_num_coarse_channels, _fine_channels_per_coarse) =
             infer_number_coarse_channels(_nchans, 1e6 * _foff, _tsamp);
 }
 
 
+scan::scan(h5_filterbank_file fb_file, int num_fine_channels_per_coarse) {
+    // This is mostly duplicate of the inferred version and it would be useful to think
+    // about better deferal method that allows inferring channelization OR this version
+    _h5_file_handle = std::make_shared<h5_filterbank_file>(fb_file);
+    _coarse_channels = std::make_shared<std::map<int, std::shared_ptr<coarse_channel>>>();
+    // double      fch1;
+    _fch1 = fb_file.read_data_attr<double>("fch1");
+    // double      foff;
+    _foff = fb_file.read_data_attr<double>("foff");
+    // int64_t     machine_id;
+    _machine_id = fb_file.read_data_attr<int64_t>("machine_id");
+    // int64_t     nbits;
+    _nbits = fb_file.read_data_attr<int64_t>("nbits");
+    // int64_t     nchans;
+    _nchans = fb_file.read_data_attr<int64_t>("nchans");
+    // int64_t     nifs;
+    _nifs = fb_file.read_data_attr<int64_t>("nifs");
+    // std::string source_name;
+    _source_name = fb_file.read_data_attr<std::string>("source_name");
+    // double      src_dej;
+    _src_dej = fb_file.read_data_attr<double>("src_dej");
+    // double      src_raj;
+    _src_raj = fb_file.read_data_attr<double>("src_raj");
+    // int64_t     telescope_id;
+    _telescope_id = fb_file.read_data_attr<int64_t>("telescope_id");
+    // double      tstamp;
+    _tsamp = fb_file.read_data_attr<double>("tsamp");
+    // double      tstart;
+    _tstart = fb_file.read_data_attr<double>("tstart");
+
+    // int64_t data_type;
+    _data_type = fb_file.read_data_attr<int64_t>("data_type");
+    // double  az_start;
+    _az_start = fb_file.read_data_attr<double>("az_start");
+    // double  za_start;
+    _za_start = fb_file.read_data_attr<double>("za_start");
+
+    _num_coarse_channels = _nchans / num_fine_channels_per_coarse;
+    _fine_channels_per_coarse = num_fine_channels_per_coarse;
+    if (_num_coarse_channels * _fine_channels_per_coarse != _nchans) {
+        fmt::print("WARN: the provided number of fine channels per coarse ({}) is not divisible by the total number of channels ({})\n", num_fine_channels_per_coarse, _nchans);
+    }
+}
+
+
 scan::scan(std::string_view file_path) : scan(h5_filterbank_file(file_path)) {}
+
+scan::scan(std::string_view file_path, int num_fine_channels_per_coarse) : scan(h5_filterbank_file(file_path), num_fine_channels_per_coarse) {}
 
 
 std::shared_ptr<coarse_channel> bliss::scan::read_coarse_channel(int coarse_channel_index) {
@@ -103,8 +162,8 @@ std::shared_ptr<coarse_channel> bliss::scan::read_coarse_channel(int coarse_chan
         auto data_count = _h5_file_handle->get_data_shape();
         std::vector<int64_t> data_offset(3, 0);
 
-        data_count[2] = std::get<0>(_inferred_channelization);
-        auto global_start_fine_channel = std::get<0>(_inferred_channelization) * global_offset_in_file;
+        data_count[2] = _fine_channels_per_coarse;
+        auto global_start_fine_channel = _fine_channels_per_coarse * global_offset_in_file;
         data_offset[2] = global_start_fine_channel;
 
         fmt::print("DEBUG: reading data from coarse channel {} which translates to offset {} + count {}\n",
@@ -119,7 +178,7 @@ std::shared_ptr<coarse_channel> bliss::scan::read_coarse_channel(int coarse_chan
             return h5_file_handle->read_mask(data_offset, data_count);
         };
 
-        auto relative_start_fine_channel = std::get<0>(_inferred_channelization) * coarse_channel_index;
+        auto relative_start_fine_channel = _fine_channels_per_coarse * coarse_channel_index;
         auto coarse_fch1             = _fch1 + _foff * relative_start_fine_channel;
 
         auto new_coarse = std::make_shared<coarse_channel>(data_reader,
@@ -128,7 +187,7 @@ std::shared_ptr<coarse_channel> bliss::scan::read_coarse_channel(int coarse_chan
                                                            _foff,
                                                            _machine_id,
                                                            _nbits,
-                                                           std::get<0>(_inferred_channelization),
+                                                           _fine_channels_per_coarse,
                                                            _nifs,
                                                            _source_name,
                                                            _src_dej,
@@ -163,10 +222,6 @@ std::shared_ptr<coarse_channel> bliss::scan::peak_coarse_channel(int coarse_chan
     }
 }
 
-
-bliss::scan::filterbank_channelization_revs bliss::scan::get_channelization() {
-    return _inferred_channelization;
-}
 
 int bliss::scan::get_coarse_channel_with_frequency(double frequency) {
     auto band_fraction = ((frequency - _fch1) / _foff / static_cast<double>(_nchans));
@@ -228,10 +283,8 @@ bliss::scan bliss::scan::slice_scan_channels(int start_channel, int count) {
     sliced_scan._coarse_channel_offset += start_channel;
     sliced_scan._num_coarse_channels = count;
 
-    int64_t fine_channels_per_coarse = std::get<0>(_inferred_channelization);
-
-    sliced_scan._fch1 = _fch1 + _foff * fine_channels_per_coarse * start_channel;
-    sliced_scan._nchans = count * fine_channels_per_coarse;
+    sliced_scan._fch1 = _fch1 + _foff * _fine_channels_per_coarse * start_channel;
+    sliced_scan._nchans = count * _fine_channels_per_coarse;
 
     return sliced_scan;
 }
