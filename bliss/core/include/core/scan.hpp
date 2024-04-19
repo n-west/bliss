@@ -23,28 +23,13 @@ class scan {
      * new scan backed by the given `h5_filterbank_file`
      */
     scan(h5_filterbank_file fb_file);
+    scan(h5_filterbank_file fb_file, int num_fine_channels_per_coarse);
 
     /**
      * new scan backed by the filterbank file at `file_path`
      */
     scan(std::string_view file_path);
-
-
-    /**
-     * filter_channelization_revs describes the channelization configuration known to
-     * be used in BL backends and data. The tuple order is
-     * * number of fine channels per coarse channel
-     * * frequency resolution (equivalent to foff filterbank md and inverse of Fs)
-     * * time resolution (equivalent to tsamp filterbank md)
-     * * name of revision from Lebofsky et al
-     *
-     * The best paper reference for this information is
-     * "The Breakthrough Listen Search for Intelligent Life: Public Data, Formats, Reduction and Archiving"
-     * available @ https://arxiv.org/abs/1906.07391
-     *
-     * This may eventually require it's own POD class
-     */
-    using filterbank_channelization_revs = std::tuple<int, double, double, const char *>;
+    scan(std::string_view file_path, int num_fine_channels_per_coarse);
 
     /**
      * read the coarse channel at given index and return shared ownership of it.
@@ -66,8 +51,6 @@ class scan {
      * gathering results / operating on all coarse channels that are already loaded
     */
     std::shared_ptr<coarse_channel> peak_coarse_channel(int coarse_channel_index = 0);
-
-    filterbank_channelization_revs get_channelization();
 
     /**
      * return the coarse channel index that the given frequency is in
@@ -165,11 +148,13 @@ class scan {
     double  _az_start;
     double  _za_start;
 
+    // filterbank_channelization_revs _inferred_channelization;
+    // Derived OR inferred
+    int _fine_channels_per_coarse;
     // Derived values at read-time
     int64_t _num_coarse_channels;
     int64_t _coarse_channel_offset = 0;
 
-    filterbank_channelization_revs _inferred_channelization;
     // slow time is number of spectra
     int64_t _slow_time_bins;
     double  _tduration_secs;
