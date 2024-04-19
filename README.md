@@ -9,29 +9,39 @@
 
 ![alien teaching signals](docs/alien-teaching-signals.jpeg)
 
-## Building and Experimenting
+BLISS is a toolkit for finding narrowband doppler-drifting signals. This is frequently used to search for [technosignatures](https://en.wikipedia.org/wiki/Technosignature). 
 
-This project builds with cmake. Building and running depend on the following libraries/tools:
+BLISS is able to use cuda-accelerated kernels with deferred execution and memoization for flagging, noise estimation, integration, and hit search.
 
-### build:
+## Installation
 
-* cmake
-* gcc / clang capable of C++17
-* libhdf5-dev
-* libcapnp-dev
-
-
-### runtime:
+Running bliss requires
 
 * libhdf5-cpp-103 (double check!)
 * hdf5-filter-plugin
 * bitshuffle
 
+### Binary package
 
-### Building
+Prebuilt wheels are available for the following runtimes:
 
-The build system uses cmake with a few dependencies listed below. I recommend building as follows (from the project source folder)
+* **cpu only**: `pip install dedrift`
+* **cuda 11**: `pip install dedrift-cuda11x`
+* **cuda 12**: `pip install dedrift-cuda12x`
 
+
+### Building from source
+
+This project builds with cmake and is set up to be built as a python package with `pyproject.toml`. Building and running depend on the following libraries/tools:
+
+* cmake
+* gcc / clang capable of C++17 and supporting your version of cuda
+* libhdf5-dev
+* (optional) libcapnp-dev
+
+#### CMake-based (dev) builds:
+
+The standard cmake workflow should configure everything for a build:
 ```
 mkdir build
 cd build
@@ -39,38 +49,105 @@ cmake .. # -G Ninja # if you prefer ninja
 make -j $(($(nproc)/2)) # replace with make -j CORES if you don't have nproc
 ```
 
+The python package is partially set up in `bliss/python/bliss`. During the build process, the C++ extensions are built and placed in this package. In cmake development mode, this is placed in build/bliss/python/bliss and configured to be updated with any file changes as they occur (each file is symlinked) and new files will be added at the next build.
+
+
+#### Python package build
+
+`pyproject.toml` configures the python package and uses `py-cmake-build` as the build backend to get the required C++ extensions built and packaged appropriately. You can build this package with standard tools such as `pip install .` and `python -m build`.
+
+
+## Tests
 Inside `build/bland/tests` you will have a `test_bland` executable. You can run those tests to sanity check everything works as expected.
 
 Inside `build/bliss/` you will have a `justrun` executable. You can pass a fil file to that, but right now this is a useful debugging and sanity check target, the output will be underwhelming.
 
 Inside `build/bliss/python` you should have a `pybliss.cpython-311-x86_64-linux-gnu.so` or similarly named `pybliss` shared library. This can be imported in python and exposes functions and classes for dedoppler searches. Inside the `notebooks` directory there is an `rfi mitigation visual.ipynb` jupyter notebook that walks through several of the functions with plots showing results. That is the best way to get a feel for functionality.
 
-#### Python-only
 
-(...this is a work in progress and doesn't work super well yet... Battling the ol' setuptools.)
+## Usage
 
-The easiest/less path-fiddly way to get the python extensions running is to run `setup.py develop`. This will (should) build the extension module and install it in "editable mode". I suggest setting up a virtualenv for this project, then doing this. The result should be pybliss in your python path ready to run.
+### Python
 
-`setup.py develop` # A normal build, will take a few minutes but run faster
+The following is example usage for Voayger-1 recordings from the Green Bank Telescope
+
+```python
+import bliss
+
+data_loc = "/datag/public/voyager_2020/single_coarse_channel/old_single_coarse/"
+cadence = bliss.cadence([[f"{data_loc}/single_coarse_guppi_59046_80036_DIAG_VOYAGER-1_0011.rawspec.0000.h5",
+                    f"{data_loc}/single_coarse_guppi_59046_80672_DIAG_VOYAGER-1_0013.rawspec.0000.h5",
+                    f"{data_loc}/single_coarse_guppi_59046_81310_DIAG_VOYAGER-1_0015.rawspec.0000.h5"
+                    ],
+                    [f"{data_loc}/single_coarse_guppi_59046_80354_DIAG_VOYAGER-1_0012.rawspec.0000.h5"],
+                    [f"{data_loc}/single_coarse_guppi_59046_80989_DIAG_VOYAGER-1_0014.rawspec.0000.h5"],
+                    [f"{data_loc}/single_coarse_guppi_59046_81628_DIAG_VOYAGER-1_0016.rawspec.0000.h5"]])
 
 
-If you have setuptools 49.2.0 or later, supposedly something like this would work... (this is a TODO to make fiddling with this easier)
+cadence.set_device("cuda:0")
+
+working_cadence = cadence
+working_cadence = bliss.flaggers.flag_filter_rolloff(working_cadence, .2)
+working_cadence = bliss.flaggers.flag_spectral_kurtosis(working_cadence, .05, 25)
+
+
+noise_est_options = bliss.estimators.noise_power_estimate_options()
+noise_est_options.masked_estimate = True
+noise_est_options.estimator_method = bliss.estimators.noise_power_estimator.stddev
+
+working_cadence = bliss.estimators.estimate_noise_power(working_cadence, noise_est_options)
+
+int_options = bliss.integrate_drifts_options()
+int_options.desmear = True
+int_options.low_rate = -500
+int_options.high_rate = 500
+
+working_cadence = bliss.drift_search.integrate_drifts(working_cadence, int_options)
+
+working_cadence.set_device("cpu")
+
+hit_options = bliss.drift_search.hit_search_options()
+hit_options.snr_threshold = 10
+cadence_with_hits = bliss.drift_search.hit_search(working_cadence, hit_options)
+
+hits_dict = bliss.plot_utils.get_hits_list(cadence_with_hits)
 ```
-python setup.py develop --config-setting="build_ext --debug"
+
+### C++
+
+```c++
+    auto voyager_cadence = bliss::cadence({{"/datag/public/voyager_2020/single_coarse_channel/old_single_coarse/single_coarse_guppi_59046_80036_DIAG_VOYAGER-1_0011.rawspec.0000.h5",
+                    "/datag/public/voyager_2020/single_coarse_channel/old_single_coarse/single_coarse_guppi_59046_80672_DIAG_VOYAGER-1_0013.rawspec.0000.h5",
+                    "/datag/public/voyager_2020/single_coarse_channel/old_single_coarse/single_coarse_guppi_59046_81310_DIAG_VOYAGER-1_0015.rawspec.0000.h5"
+                    },
+                    {"/datag/public/voyager_2020/single_coarse_channel/old_single_coarse/single_coarse_guppi_59046_80354_DIAG_VOYAGER-1_0012.rawspec.0000.h5"},
+                    {"/datag/public/voyager_2020/single_coarse_channel/old_single_coarse/single_coarse_guppi_59046_80989_DIAG_VOYAGER-1_0014.rawspec.0000.h5"},
+                    {"/datag/public/voyager_2020/single_coarse_channel/old_single_coarse/single_coarse_guppi_59046_81628_DIAG_VOYAGER-1_0016.rawspec.0000.h5"}});
+
+    auto cadence = voyager_cadence;
+
+    cadence.set_device("cuda:0");
+
+    cadence = bliss::flag_filter_rolloff(cadence, 0.2);
+    cadence = bliss::flag_spectral_kurtosis(cadence, 0.1, 25);
+
+    cadence = bliss::estimate_noise_power(
+            cadence,
+            bliss::noise_power_estimate_options{.estimator_method=bliss::noise_power_estimator::STDDEV, .masked_estimate = true}); // estimate noise power of unflagged data
+
+    cadence = bliss::integrate_drifts(
+            cadence,
+            bliss::integrate_drifts_options{.desmear        = true,
+                                            .low_rate       = -500,
+                                            .high_rate      = 500,
+                                            .rate_step_size = 1});
+
+    cadence.set_device("cpu");
+
+    auto cadence_with_hits = bliss::hit_search(cadence, {.method=bliss::hit_search_methods::CONNECTED_COMPONENTS,
+                                                        .snr_threshold=10.0f});
+
+    auto events = bliss::event_search(cadence);
+
+    bliss::write_events_to_file(events, "events_output");
 ```
-
-The library should now be available with `from bliss import pybliss`. I'd like to fix this to avoid to nested module before release.
-
-When you're done, run python `setup.py develop --uninstall`
-
-
-### Optimizations
-
-The backing compute library, bland, is set up for flexibility in running different "ops" on opaquely typed and shaped `ndarray` type objects. This uses C++ templating pretty heavily to define what the operation is mostly independent of how to do broadcasting and indexing to traverse ndarrays which may have strides and arbitrary shapes. This use of templating generates a lot of code which all benefits greatly from compiler optimizations. Turning on a `RelWithDebInfo` or `Release` build will make everything run much faster than a `Debug` build, but also takes several more minutes to compile.
-
-Tips:
- * I nearly always build and develop in Debug mode because it's much faster to build and I can wait the moment longer for results
- * I build Release builds when profiling and tuning optimizations
- * We'll build binary distributions with Release build types
-
-Additionally, the cuda backend is not (yet) in place. That's a near-top priority over the next week or two once all algorithmic and API choices are beginning to settle.
