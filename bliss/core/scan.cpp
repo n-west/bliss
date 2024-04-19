@@ -6,6 +6,8 @@
 #include "fmt/ranges.h"
 
 #include <array>
+#include <tuple>
+
 
 using namespace bliss;
 
@@ -243,9 +245,8 @@ std::list<hit> bliss::scan::hits() {
             try {
                 auto this_channel_hits = cc->hits();
                 all_hits.insert(all_hits.end(), this_channel_hits.cbegin(), this_channel_hits.cend());
-            } catch (const std::bad_optional_access &e) {
+            } catch (const std::runtime_error &e) {
                 fmt::print("WARN: no hits available from coarse channel {}\n", cc_index);
-                // TODO: catch specific exception we know might be thrown
             }
         }
     }
