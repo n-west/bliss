@@ -19,9 +19,8 @@ add_feature_info(CUDA WITH_CUDA "Using CUDA as a backend for array storage and c
 if (WITH_CUDA)
   message("BLAND:: enabling cuda (the language)")
   if(NOT DEFINED CMAKE_CUDA_ARCHITECTURES)
-    # Generate binary code for 61 and 52, but PTX for 70
-    set(CUDA_SEPARABLE_COMPILATION ON)
-    set(CUDA_ARCHITECTURES 61-real;52-real;70)
+    # set(CUDA_SEPARABLE_COMPILATION ON)
+    set(CUDA_ARCHITECTURES all-major)
   endif()
   enable_language(CUDA)
   add_definitions("-DBLAND_CUDA_CODE=1")
