@@ -20,12 +20,6 @@ target_link_libraries(justrun
     flaggers
     fmt::fmt-header-only
     )
-
-add_executable(read_hits read_hits.cpp)
-target_link_libraries(read_hits
-    bliss_serialization
-    fmt::fmt-header-only
-    )
     
 add_executable(event_search event_search.cpp)
 target_link_libraries(event_search

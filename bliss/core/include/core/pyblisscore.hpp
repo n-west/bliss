@@ -64,6 +64,7 @@ void bind_pycore(nb::module_ m) {
 
     nb::class_<bliss::scan>(m, "scan")
         .def(nb::init<std::string_view>(), "file_path"_a)
+        .def(nb::init<std::string_view, int>(), "file_path"_a, "fine_channels_per_coarse"_a)
         .def("read_coarse_channel", &bliss::scan::read_coarse_channel)
         .def("peak_coarse_channel", &bliss::scan::peak_coarse_channel)
         .def("get_coarse_channel_with_frequency", &bliss::scan::get_coarse_channel_with_frequency, "frequency"_a)
@@ -88,32 +89,6 @@ void bind_pycore(nb::module_ m) {
         .def("set_device", nb::overload_cast<bland::ndarray::dev&>(&bliss::scan::set_device))
         .def("set_device", nb::overload_cast<std::string_view>(&bliss::scan::set_device))
         .def("push_device", (&bliss::scan::push_device));
-        //     .def_prop_rw("device", &bliss::scan::device,
-        //                            [](bliss::scan &t, std::variant<int, std::string_view> value) {
-        //                                if (std::holds_alternative<std::string_view>(value)) {
-        //                                     t.set_device(std::get<std::string_view>(value));
-        //                                } else if (std::holds_alternative<int>(value)) {
-        //                                     // TODO: handle the case its actually a dev object
-        //                                     //t.set_device(std::get<bland::ndarray::dev>(value));
-        //                                }
-        //                            });
-
-    //  * *DIMENSION_LABELS
-    //  * *az_start
-    //  * *data_type
-    //  * *fch1
-    //  * *foff
-    //  * *machine_id
-    //  * *nbits
-    //  * *nchans
-    //  * *nifs
-    //  * *source_name
-    //  * *src_dej
-    //  * *src_raj
-    //  * *telescope_id
-    //  * *tsamp
-    //  * *tstart
-    //  * *za_start
 
     nb::class_<bliss::integrate_drifts_options>(m, "integrate_drifts_options")
         .def(nb::init<>())
@@ -134,6 +109,9 @@ void bind_pycore(nb::module_ m) {
     nb::class_<bliss::observation_target>(m, "observation_target")
         .def(nb::init<std::vector<bliss::scan>>())
         .def(nb::init<std::vector<std::string_view>>())
+        .def("validate_scan_consistency", &bliss::observation_target::validate_scan_consistency)
+        .def("get_coarse_channel_with_frequency", &bliss::observation_target::get_coarse_channel_with_frequency, "frequency"_a)
+        .def_prop_ro("number_coarse_channels", &bliss::observation_target::get_number_coarse_channels)
         .def("slice_observation_channels", &bliss::observation_target::slice_observation_channels, "start"_a=0, "count"_a=1)
         .def("device", &bliss::observation_target::device)
         .def("set_device", nb::overload_cast<bland::ndarray::dev&>(&bliss::observation_target::set_device))
@@ -144,6 +122,9 @@ void bind_pycore(nb::module_ m) {
     nb::class_<bliss::cadence>(m, "cadence")
         .def(nb::init<std::vector<bliss::observation_target>>())
         .def(nb::init<std::vector<std::vector<std::string_view>>>())
+        .def("validate_scan_consistency", &bliss::cadence::validate_scan_consistency)
+        .def("get_coarse_channel_with_frequency", &bliss::cadence::get_coarse_channel_with_frequency, "frequency"_a)
+        .def_prop_ro("number_coarse_channels", &bliss::cadence::get_number_coarse_channels)
         .def("slice_cadence_channels", &bliss::cadence::slice_cadence_channels, "start"_a=0, "count"_a=1)
         .def_rw("observations", &bliss::cadence::_observations)
         .def("device", &bliss::cadence::device)
