@@ -19,6 +19,37 @@ struct observation_target {
     observation_target(std::vector<std::string_view> filterbank_paths);
 
     /**
+     * Create an observation target from a list of scan filepaths and a number of fine channels per
+     * coarse channel to assume each scan has.
+    */
+    observation_target(std::vector<std::string_view> filterbank_paths, int fine_channels_per_coarse);
+
+    /**
+     * Validate consistency of scans in this observation target. Each scan should:
+     * * have the same number of coarse channels
+     * * have the same fch1
+     * * have the same foff
+    */
+    bool validate_scan_consistency();
+
+    /**
+     * return the coarse channel index that the given frequency is in
+     * 
+     * useful for reinvestigating hits by looking up frequency
+     * 
+     * In the future this may change name or return the actual coarse channel
+    */
+    int get_coarse_channel_with_frequency(double frequency);
+
+    /**
+     * get the number of coarse channels in underlying filterbanks (per scan)
+     *
+     * This value is derived from known channelizations of BL backends and
+     * the actual number of fine channels in this filterbank
+     */
+    int get_number_coarse_channels();
+
+    /**
      * create a new observation_target consisting of a slice of coarse channels
     */
     observation_target slice_observation_channels(int start_channel=0, int count=1);
@@ -53,11 +84,42 @@ struct cadence {
      * Build a cadence by reading file paths to scans
      */
     cadence(std::vector<std::vector<std::string_view>> observations);
+
+    /**
+     * Build a cadence by reading file paths to scans assuming the given number of fine channels per coarse
+     * in each scan
+    */
+    cadence(std::vector<std::vector<std::string_view>> observations, int fine_channels_per_coarse);
     // TODO might be nice to be able to just give a list of scan, then look at that metadata to autosort
     // targets
 
     // Is it useful to capture any data about a "primary target?"
     std::vector<observation_target> _observations;
+
+    /**
+     * Validate consistency of scans in this cadence. Each scan should:
+     * * have the same number of coarse channels
+     * * have the same fch1
+     * * have same foff
+    */
+    bool validate_scan_consistency();
+
+    /**
+     * return the coarse channel index that the given frequency is in
+     *
+     * useful for reinvestigating hits by looking up frequency
+     *
+     * In the future this may change name or return the actual coarse channel
+    */
+    int get_coarse_channel_with_frequency(double frequency);
+
+    /**
+     * get the number of coarse channels in underlying filterbanks (per scan)
+     *
+     * This value is derived from known channelizations of BL backends and
+     * the actual number of fine channels in this filterbank
+     */
+    int get_number_coarse_channels();
 
     /**
      * create a new cadence consisting of a slice of coarse channels

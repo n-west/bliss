@@ -225,14 +225,14 @@ std::shared_ptr<coarse_channel> bliss::scan::peak_coarse_channel(int coarse_chan
 }
 
 
-int bliss::scan::get_coarse_channel_with_frequency(double frequency) {
+int bliss::scan::get_coarse_channel_with_frequency(double frequency) const {
     auto band_fraction = ((frequency - _fch1) / _foff / static_cast<double>(_nchans));
     // TODO: if band_fraction is < 0 or > 1 then it's not in this filterbank. Throw an error
     auto fractional_channel = band_fraction * _num_coarse_channels;
     return std::floor(fractional_channel);
 }
 
-int bliss::scan::get_number_coarse_channels() {
+int bliss::scan::get_number_coarse_channels() const {
     return _num_coarse_channels;
 }
 

@@ -41,6 +41,56 @@ bliss::observation_target::observation_target(std::vector<std::string_view> filt
     _target_name = extract_source_name_from_scans(_scans);
 }
 
+bliss::observation_target::observation_target(std::vector<std::string_view> filterbank_paths, int fine_channels_per_coarse) {
+    for (const auto &filterbank_path : filterbank_paths) {
+        _scans.emplace_back(filterbank_path, fine_channels_per_coarse);
+    }
+    _target_name = extract_source_name_from_scans(_scans);
+}
+
+bool bliss::observation_target::validate_scan_consistency() {
+    // Validate consistency of scans in this observation target. Each scan should:
+    // * have the same number of coarse channels
+    // * have the same fch1
+    // * have the same foff
+
+    double fch1;
+    double foff;
+    int nchans;
+    if (!_scans.empty()) {
+        fch1 = _scans[0].fch1();
+        foff = _scans[0].foff();
+        nchans = _scans[0].nchans();
+    }
+    for (const auto &sc : _scans) {
+        // For double comparison can probably lower epsilon, but this field is
+        // in MHz which gives us 1 Hz error and should be sufficient
+        if ((std::abs(sc.fch1() - fch1) < 1e-6) || (std::abs(sc.foff() - foff) < 1e-6) || (sc.nchans() != nchans)) {
+            fmt::print("INFO: observation_target::validate_scan_consistency: one of `fch1`, `foff`, `nchans` does not match");
+            return false;
+        }
+    }
+
+    return true;
+}
+
+int bliss::observation_target::get_coarse_channel_with_frequency(double frequency) {
+    if (validate_scan_consistency()) {
+        // Since they're consistent we can use any of them...
+        return _scans[0].get_coarse_channel_with_frequency(frequency);
+    } else {
+        throw std::runtime_error("scans inside observation target are not consistent enough to return a channel index");
+    }
+}
+
+int bliss::observation_target::get_number_coarse_channels() {
+    if (validate_scan_consistency()) {
+        return _scans[0].get_number_coarse_channels();
+    } else {
+        throw std::runtime_error("scans inside observation target are not consistent enough to return a number of channels");
+    }
+}
+
 bliss::observation_target bliss::observation_target::slice_observation_channels(int start_channel, int count) {
     observation_target target_coarse_channel;
     for (auto &sc : _scans) {
@@ -71,6 +121,65 @@ bliss::cadence::cadence(std::vector<std::vector<std::string_view>> observations)
     for (const auto &target : observations) {
         _observations.emplace_back(target);
     }
+}
+
+bliss::cadence::cadence(std::vector<std::vector<std::string_view>> observations, int fine_channels_per_coarse) {
+    for (const auto &target : observations) {
+        _observations.emplace_back(target, fine_channels_per_coarse);
+    }
+}
+
+bool bliss::cadence::validate_scan_consistency() {
+    // Validate consistency of scans in this observation target. Each scan should:
+    // * have the same number of coarse channels
+    // * have the same fch1
+
+    double fch1;
+    double foff;
+    int nchans;
+    bool found_valid_scan = false;
+    for (auto &obs: _observations) {
+        if (!obs._scans.empty()) {
+            fch1 = obs._scans[0].fch1();
+            nchans = obs._scans[0].nchans();
+            foff = obs._scans[0].foff();
+            found_valid_scan = true;
+            break;
+        }
+    }
+    for (auto &obs: _observations) {
+        for (auto & sc : obs._scans) {
+            if ((std::abs(sc.fch1() - fch1) < 1e-6) || (std::abs(sc.foff() - foff) < 1e-6) || sc.nchans() != nchans) {
+                fmt::print("INFO: cadence::validate_scan_consistency: one of `fch1`, `foff`, `nchans` does not match");
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
+int bliss::cadence::get_coarse_channel_with_frequency(double frequency) {
+    if (validate_scan_consistency()) {
+        // Since they're consistent we can use any of them...
+        for (auto &obs: _observations) {
+            if (!obs._scans.empty()) {
+                return obs._scans[0].get_coarse_channel_with_frequency(frequency);
+            }
+        }
+    }
+    throw std::runtime_error("scans inside observation target are not consistent enough to return a channel index");
+}
+
+int bliss::cadence::get_number_coarse_channels() {
+    if (validate_scan_consistency()) {
+        // Since they're consistent we can use any of them...
+        for (auto &obs: _observations) {
+            if (!obs._scans.empty()) {
+                return obs._scans[0].get_number_coarse_channels();
+            }
+        }
+    }
+    throw std::runtime_error("scans inside observation target are not consistent enough to return a number of channels");
 }
 
 bliss::cadence bliss::cadence::slice_cadence_channels(int start_channel, int count) {

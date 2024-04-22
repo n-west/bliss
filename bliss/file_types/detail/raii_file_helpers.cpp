@@ -8,7 +8,7 @@ bliss::detail::raii_file_for_write::raii_file_for_write(std::string_view file_pa
     if (_fd == -1) {
         auto str_err = strerror(errno);
         auto err_msg =
-                fmt::format("write_hits_to_file: could not open file for writing (fd={}, error={})", _fd, str_err);
+                fmt::format("raii_file_for_write: could not open file for writing (fd={}, error={})", _fd, str_err);
         throw std::runtime_error(err_msg);
     }
 }

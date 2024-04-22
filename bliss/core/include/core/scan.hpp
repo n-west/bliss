@@ -57,7 +57,7 @@ class scan {
      * 
      * In the future this may change name or return the actual coarse channel
     */
-    int get_coarse_channel_with_frequency(double frequency);
+    int get_coarse_channel_with_frequency(double frequency) const;
 
     /**
      * get the number of coarse channels in this filterbank
@@ -65,7 +65,7 @@ class scan {
      * This value is derived from known channelizations of BL backends and
      * the actual number of fine channels in this filterbank
      */
-    int get_number_coarse_channels();
+    int get_number_coarse_channels() const;
 
     /**
      * gather hits in all coarse channels of this scan and return as a single list
