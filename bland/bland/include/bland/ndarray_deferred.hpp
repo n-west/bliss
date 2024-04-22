@@ -23,12 +23,18 @@ namespace bland {
 */
 class ndarray_deferred {
     public:
+    enum class eval_policy {
+        memoize, // hold on to a callable and keep the value around once called
+        lazy, // always use the callable and never hold on to (memoize) the result
+        eager // evaluate callable immediately and store its value
+    };
+
     ndarray_deferred() = default;
     /**
      * create a deferred tensor from a function that will be called when this
      * ndarray_deferred is converted to an ndarray
     */
-    ndarray_deferred(std::function<ndarray()> callable);
+    ndarray_deferred(std::function<ndarray()> callable, eval_policy policy=eval_policy::memoize);
     
     /**
      * create a deferred tensor that is actual data. This allows treating an ndarray_deferred
@@ -46,6 +52,7 @@ class ndarray_deferred {
     private:
     std::shared_ptr<std::variant<ndarray, std::function<ndarray()>>> _deferred_data = nullptr;
     std::optional<ndarray::dev> _device;
+    eval_policy _policy = eval_policy::memoize;
 
 };
 
