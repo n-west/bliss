@@ -25,9 +25,6 @@ std::vector<protohit> bliss::protohit_search(coarse_channel &dedrifted_coarse_ch
         };
     }
 
-    // dedrifted_coarse_channel.set_device("cpu");
-    // dedrifted_coarse_channel.push_device();
-
     auto noise_stats = dedrifted_coarse_channel.noise_estimate();
 
     auto drift_plane        = dedrifted_coarse_channel.integrated_drift_plane();
@@ -38,14 +35,11 @@ std::vector<protohit> bliss::protohit_search(coarse_channel &dedrifted_coarse_ch
     for (auto &drift_rate : drift_plane.drift_rate_info()) {
         float integration_adjusted_noise_power = noise_stats.noise_power() / std::sqrt(integration_length * drift_rate.desmeared_bins);
         noise_per_drift.push_back(protohit_drift_info{.integration_adjusted_noise=integration_adjusted_noise_power});
-        // auto  threshold = noise_stats.noise_floor() + integration_adjusted_noise_power * snr_threshold;
-        // thresholds.push_back({threshold, integration_adjusted_noise_power});
     }
 
-
-    // const auto noise_and_thresholds_per_drift = compute_noise_and_snr_thresholds(
-    //         noise_stats, integration_length, drift_plane.drift_rate_info(), options.snr_threshold);
-
+    if (options.method == hit_search_methods::CONNECTED_COMPONENTS) {
+        dedrifted_coarse_channel.set_device("cpu");
+    }
     auto doppler_spectrum = drift_plane.integrated_drift_plane();
     auto dedrifted_rfi    = drift_plane.integrated_rfi();
 
