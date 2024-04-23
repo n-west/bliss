@@ -275,11 +275,17 @@ frequency_drift_plane bliss::coarse_channel::integrated_drift_plane() {
         throw std::runtime_error("integrated_drift_plane not set");
     }
     if (std::holds_alternative<std::function<frequency_drift_plane()>>(*_integrated_drift_plane)) {
-        *_integrated_drift_plane = std::get<std::function<frequency_drift_plane()>>(*_integrated_drift_plane)();
+        // *_integrated_drift_plane = std::get<std::function<frequency_drift_plane()>>(*_integrated_drift_plane)();
+        auto integrated_drift_plane = std::get<std::function<frequency_drift_plane()>>(*_integrated_drift_plane)();
+
+        // auto& ddp = integrated_drift_plane;
+        integrated_drift_plane.set_device(_device);
+        return integrated_drift_plane;
+    } else {
+        auto& ddp = std::get<frequency_drift_plane>(*_integrated_drift_plane);
+        ddp.set_device(_device);
+        return ddp;
     }
-    auto& ddp = std::get<frequency_drift_plane>(*_integrated_drift_plane);
-    ddp.set_device(_device);
-    return ddp;
 }
 
 void bliss::coarse_channel::set_integrated_drift_plane(frequency_drift_plane integrated_plane) {
@@ -295,5 +301,5 @@ void bliss::coarse_channel::set_integrated_drift_plane(std::function<frequency_d
 }
 
 void bliss::coarse_channel::detach_drift_plane() {
-    _integrated_drift_plane = nullptr;
+    // _integrated_drift_plane = nullptr;
 }

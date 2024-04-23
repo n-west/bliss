@@ -48,7 +48,6 @@ coarse_channel bliss::integrate_drifts(coarse_channel cc_data, integrate_drifts_
         cc_data.set_integrated_drift_plane(integrated_dedrift);
     }
 
-    // cc_data.set_integrated_drift_plane(integrated_dedrift);
     return cc_data;
 }
 
