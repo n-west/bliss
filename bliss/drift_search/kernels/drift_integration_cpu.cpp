@@ -59,6 +59,10 @@ bliss::integrate_linear_rounded_bins_cpu(bland::ndarray    spectrum_grid,
         // The actual slope of that drift (number channels / time)
         auto m = static_cast<float>(drift_channels) / static_cast<float>(maximum_drift_span);
         rate.drift_rate_slope = m;
+        // We don't have access to foff or tsamp here... It might be useful
+        // to pass in the drifts as an argument rather than computing it in each kernel
+        // (https://github.com/n-west/bliss/issues/41)
+        // rate.drift_rate_Hz_per_sec = m * dedrifted_scan.foff() * 1e6 / dedrifted_scan.tsamp()
         // If a single time step crosses more than 1 channel, there is smearing over multiple channels
         auto smeared_channels = std::round(std::abs(m));
 

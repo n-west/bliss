@@ -43,13 +43,14 @@ bland::ndarray_deferred::operator ndarray() {
         actual_data = std::get<ndarray>(*_deferred_data);
     }
 
+    if (_device.has_value()) {
+        actual_data = actual_data.to(_device.value());
+    }
+
     if (_policy == eval_policy::memoize) {
         *_deferred_data = actual_data;
     }
 
-    if (_device.has_value()) {
-        actual_data = actual_data.to(_device.value());
-    }
     return actual_data;
 }
 
