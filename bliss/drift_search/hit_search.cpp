@@ -64,11 +64,15 @@ std::list<hit> bliss::hit_search(coarse_channel dedrifted_scan, hit_search_optio
 scan bliss::hit_search(scan dedrifted_scan, hit_search_options options) {
     auto number_coarse_channels = dedrifted_scan.get_number_coarse_channels();
     for (auto cc_index = 0; cc_index < number_coarse_channels; ++cc_index) {
-        auto cc   = dedrifted_scan.read_coarse_channel(cc_index);
-        auto find_coarse_channel_hits_func = [cc, options]() {
-            auto hits = hit_search(*cc, options);
+        // We need a copy of this coarse_channel so that the current device settings
+        // in the channel stick around even if something downstream changes the device
+        // before we process this function.
+        auto cc = dedrifted_scan.read_coarse_channel(cc_index);
+        auto cc_copy = std::make_shared<coarse_channel>(*cc);
+        auto find_coarse_channel_hits_func = [cc_copy, options]() {
+            auto hits = hit_search(*cc_copy, options);
             if (options.detach_graph) {
-                cc->detach_drift_plane();
+                cc_copy->detach_drift_plane();
             }
             return hits;
         };

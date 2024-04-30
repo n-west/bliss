@@ -91,7 +91,7 @@ __global__ void integrate_drifts(float* drift_plane_data,
 
                         int32_t spectrum_freq_index = freq_channel + channel_offset;
 
-                        if (spectrum_freq_index < number_channels && freq_channel < number_channels) {
+                        if (spectrum_freq_index >= 0 && spectrum_freq_index < number_channels && freq_channel < number_channels) {
                             int32_t spectrum_index  = t * sspectrum_grid_strides[0] + spectrum_freq_index * sspectrum_grid_strides[1];
 
                             accumulated_spectrum += spectrum_grid_data[spectrum_index];
@@ -114,7 +114,7 @@ __global__ void integrate_drifts(float* drift_plane_data,
 
                         int32_t spectrum_freq_index = freq_channel + channel_offset;
 
-                        if (spectrum_freq_index > 0 && spectrum_freq_index < number_channels && freq_channel < number_channels) {
+                        if (spectrum_freq_index >= 0 && spectrum_freq_index < number_channels && freq_channel < number_channels) {
                             int32_t spectrum_index = t * sspectrum_grid_strides[0] + spectrum_freq_index * sspectrum_grid_strides[1];
 
                             accumulated_spectrum += spectrum_grid_data[spectrum_index];
@@ -236,14 +236,14 @@ bliss::integrate_linear_rounded_bins_cuda(bland::ndarray    spectrum_grid,
         thrust::raw_pointer_cast(dev_drift_slopes.data()), number_drifts, options.desmear
     );
 
-    // auto launch_ret = cudaDeviceSynchronize();
-    // auto kernel_ret = cudaGetLastError();
-    // if (launch_ret != cudaSuccess) {
-    //     fmt::print("cuda launch got error {} ({})\n", launch_ret, cudaGetErrorString(launch_ret));
-    // }
-    // if (kernel_ret != cudaSuccess) {
-    //     fmt::print("cuda launch got error {} ({})\n", kernel_ret, cudaGetErrorString(kernel_ret));
-    // }
+    auto launch_ret = cudaDeviceSynchronize();
+    auto kernel_ret = cudaGetLastError();
+    if (launch_ret != cudaSuccess) {
+        fmt::print("cuda launch got error {} ({})\n", launch_ret, cudaGetErrorString(launch_ret));
+    }
+    if (kernel_ret != cudaSuccess) {
+        fmt::print("cuda launch got error {} ({})\n", kernel_ret, cudaGetErrorString(kernel_ret));
+    }
 
     // auto first_channel = 0; // This needs to be incrememnted by the offset from the most negative drift
     // We use all time available inside this function

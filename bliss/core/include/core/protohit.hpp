@@ -36,6 +36,9 @@ struct device_protohit {
     // freq_drift_coord* locations;
     int binwidth;
     // rfi rfi_counts;
+    uint8_t low_sk_count;
+    uint8_t high_sk_count;
+    bool valid=true;
 };
 
 } // namespace bliss

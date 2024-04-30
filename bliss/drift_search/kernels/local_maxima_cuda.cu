@@ -159,7 +159,8 @@ bliss::find_local_maxima_above_threshold_cuda(bland::ndarray                 dop
     thrust::device_vector<device_protohit> dev_protohits(numel / max_neighborhood.size());
 
     int* dev_num_maxima;
-    cudaMalloc((void**)&dev_num_maxima, sizeof(int));
+    cudaMallocManaged(&dev_num_maxima, sizeof(int));
+    *dev_num_maxima = 0;
 
     int num_maxima = 0;
     cudaMemcpy(dev_num_maxima, &num_maxima, sizeof(int), cudaMemcpyHostToDevice);
@@ -178,10 +179,9 @@ bliss::find_local_maxima_above_threshold_cuda(bland::ndarray                 dop
         dev_num_maxima
     );
 
-    cudaMemcpy(&num_maxima, dev_num_maxima, sizeof(int), cudaMemcpyDeviceToHost);
-    cudaFree(dev_num_maxima);
+    cudaDeviceSynchronize();
 
-    dev_protohits.resize(num_maxima);
+    dev_protohits.resize(*dev_num_maxima);
     thrust::host_vector<device_protohit> host_protohits(dev_protohits.begin(), dev_protohits.end());
 
     std::vector<protohit> export_protohits;

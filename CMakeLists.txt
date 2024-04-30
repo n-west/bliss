@@ -1,5 +1,5 @@
 
-cmake_minimum_required(VERSION 3.18)
+cmake_minimum_required(VERSION 3.23)
 # Future version upgrades:
 # 3.9 required for check_ipo_supported
 # 3.14 adds FetchContent
@@ -35,11 +35,16 @@ cmake_dependent_option(WITH_CUDA "Enable CUDA for bliss operations" ON "CMAKE_CU
 add_feature_info(CUDA WITH_CUDA "Enabling bliss-specific CUDA operations")
 
 if (WITH_CUDA)
+  # set(CMAKE_CUDA_ARCHITECTURES 53)
+  set(CMAKE_CUDA_ARCHITECTURES "35;37;50;52;53;60;61;62;70;72;75;80;86;87")
+  # set_property()
+# set(CUDA_SEPARABLE_COMPILATION ON)
   message("**BLISS:: enabling cuda (the language)")
-  if(NOT DEFINED CMAKE_CUDA_ARCHITECTURES)
-    # set(CUDA_SEPARABLE_COMPILATION ON)
-    set(CUDA_ARCHITECTURES all-major)
-  endif()
+  message("!!**: CMAKE_CUDA_ARCHITECTURES=${CMAKE_CUDA_ARCHITECTURES}")
+  # if(NOT DEFINED CMAKE_CUDA_ARCHITECTURES)
+  #   # set(CUDA_SEPARABLE_COMPILATION ON)
+  #   set(CUDA_ARCHITECTURES all-major)
+  # endif()
   enable_language(CUDA)
   add_definitions("-DBLISS_CUDA=1")
 else()

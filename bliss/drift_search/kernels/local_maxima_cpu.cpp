@@ -42,7 +42,7 @@ bliss::find_local_maxima_above_threshold_cpu(bland::ndarray                  dop
         // 1. Check if this is not visited & above threshold
         auto linear_visited_index = curr_coord.drift_index * visited_strides[0] + curr_coord.frequency_channel * visited_strides[1];
         auto linear_doppler_spectrum_index = curr_coord.drift_index * doppler_spectrum_strides[0] + curr_coord.frequency_channel * doppler_spectrum_strides[1];
-        if (true || visited_data[linear_visited_index] > 0) {
+        if (visited_data[linear_visited_index] > 0) {
             // 2. Mark as visited
             visited_data[linear_visited_index] = 0; // We've been here now!
 

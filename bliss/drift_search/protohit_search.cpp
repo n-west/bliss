@@ -13,7 +13,6 @@
 using namespace bliss;
 
 std::vector<protohit> bliss::protohit_search(coarse_channel &dedrifted_coarse_channel, hit_search_options options) {
-
     // If neighborhood is empty, fill it with L1 distance=1
     auto neighborhood = options.neighborhood;
     if (neighborhood.empty()) {
@@ -37,16 +36,12 @@ std::vector<protohit> bliss::protohit_search(coarse_channel &dedrifted_coarse_ch
         noise_per_drift.push_back(protohit_drift_info{.integration_adjusted_noise=integration_adjusted_noise_power});
     }
 
-    if (options.method == hit_search_methods::CONNECTED_COMPONENTS) {
-        dedrifted_coarse_channel.set_device("cpu");
-    }
     auto doppler_spectrum = drift_plane.integrated_drift_plane();
     auto dedrifted_rfi    = drift_plane.integrated_rfi();
 
     if (doppler_spectrum.dtype() != bland::ndarray::datatype::float32) {
         throw std::runtime_error(
-                "find_local_maxima_above_threshold: dedrifted doppler spectrum was not float. Only cpu "
-                "float is supported right now");
+                "protohit_search: dedrifted doppler spectrum was not float which is the only supported datatype.");
     }
 
     std::vector<protohit> components;

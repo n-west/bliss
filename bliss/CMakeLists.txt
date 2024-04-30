@@ -19,6 +19,7 @@ target_link_libraries(justrun
     bliss_serialization
     flaggers
     fmt::fmt-header-only
+    CUDA::cudart_static
     )
     
 add_executable(event_search event_search.cpp)
@@ -27,4 +28,3 @@ target_link_libraries(event_search
     drift_search
     fmt::fmt-header-only
     )
-    

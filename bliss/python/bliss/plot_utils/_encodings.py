@@ -17,9 +17,9 @@ def get_hits_list(pipeline_object, origin_name=None):
         hits_list = [{
             "start_freq_MHz": hit.start_freq_MHz, "drift_rate_Hz_per_sec": hit.drift_rate_Hz_per_sec,
             "SNR": hit.snr, "power": hit.power, "bandwidth_Hz": hit.bandwidth,
-            "filter_roloff_bins": hit.rfi_counts[flaggers.flag_values.filter_rolloff],
-            "low_sk_bins": hit.rfi_counts[flaggers.flag_values.low_spectral_kurtosis],
-            "high_sk_bins": hit.rfi_counts[flaggers.flag_values.high_spectral_kurtosis],
+            # "filter_rolloff_bins": hit.rfi_counts[flaggers.flag_values.filter_rolloff],
+            # "low_sk_bins": hit.rfi_counts[flaggers.flag_values.low_spectral_kurtosis],
+            # "high_sk_bins": hit.rfi_counts[flaggers.flag_values.high_spectral_kurtosis],
             "origin": origin_name,
         } for hit in hits]
         return hits_list
