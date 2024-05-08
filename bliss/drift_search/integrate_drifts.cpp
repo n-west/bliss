@@ -71,6 +71,10 @@ coarse_channel bliss::integrate_drifts(coarse_channel cc_data, integrate_drifts_
 
     auto drifts = compute_drifts(cc_data.ntsteps(), cc_data.foff(), cc_data.tsamp(), options);
 
+    fmt::print("INFO: Searching drift rates from {}Hz/sec to {}Hz/sec\n",
+               drifts.front().drift_rate_Hz_per_sec,
+               drifts.back().drift_rate_Hz_per_sec);
+
     auto cc_copy = std::make_shared<coarse_channel>(cc_data);
     if (compute_device.device_type == kDLCPU) {
         auto integrated_dedrift = [cc_data = cc_copy, drifts, options]() {
