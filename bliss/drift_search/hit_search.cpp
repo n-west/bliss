@@ -16,14 +16,15 @@ using namespace bliss;
 
 std::list<hit> bliss::hit_search(coarse_channel dedrifted_scan, hit_search_options options) {
 
-    auto protohits = protohit_search(dedrifted_scan, options);
+    auto noise_estimate  = dedrifted_scan.noise_estimate();
+    auto dedrifted_plane = dedrifted_scan.integrated_drift_plane();
+
+    auto protohits = protohit_search(dedrifted_plane, noise_estimate, options);
 
     // We have to be on cpu for now
     dedrifted_scan.set_device("cpu");
     dedrifted_scan.push_device();
 
-    auto noise_stats        = dedrifted_scan.noise_estimate();
-    auto dedrifted_plane    = dedrifted_scan.integrated_drift_plane();
     auto drift_rate_info    = dedrifted_plane.drift_rate_info();
     auto integration_length = dedrifted_plane.integration_steps();
 
@@ -40,7 +41,7 @@ std::list<hit> bliss::hit_search(coarse_channel dedrifted_scan, hit_search_optio
 
         this_hit.drift_rate_Hz_per_sec = drift_rate_info[this_hit.rate_index].drift_rate_Hz_per_sec;
 
-        auto signal_power = (c.max_integration - noise_stats.noise_floor());
+        auto signal_power = (c.max_integration - noise_estimate.noise_floor());
 
         // This is the unsmeared SNR
         this_hit.power = signal_power;

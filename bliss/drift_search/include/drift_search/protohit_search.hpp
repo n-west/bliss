@@ -9,6 +9,6 @@
 namespace bliss {
 
 std::vector<protohit>
-protohit_search(coarse_channel &dedrifted_coarse_channel, hit_search_options options = {});
+protohit_search(bliss::frequency_drift_plane &drift_plane, noise_stats noise_estimate, hit_search_options options = {});
 
 } // namespace bliss

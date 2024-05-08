@@ -12,7 +12,7 @@
 
 using namespace bliss;
 
-std::vector<protohit> bliss::protohit_search(coarse_channel &dedrifted_coarse_channel, hit_search_options options) {
+std::vector<protohit> bliss::protohit_search(bliss::frequency_drift_plane &drift_plane, noise_stats noise_estimate, hit_search_options options) {
     // If neighborhood is empty, fill it with L1 distance=1
     auto neighborhood = options.neighborhood;
     if (neighborhood.empty()) {
@@ -24,15 +24,12 @@ std::vector<protohit> bliss::protohit_search(coarse_channel &dedrifted_coarse_ch
         };
     }
 
-    auto noise_stats = dedrifted_coarse_channel.noise_estimate();
-
-    auto drift_plane        = dedrifted_coarse_channel.integrated_drift_plane();
     auto integration_length = drift_plane.integration_steps();
 
     std::vector<protohit_drift_info> noise_per_drift;
     noise_per_drift.reserve(drift_plane.drift_rate_info().size());
     for (auto &drift_rate : drift_plane.drift_rate_info()) {
-        float integration_adjusted_noise_power = noise_stats.noise_power() / std::sqrt(integration_length * drift_rate.desmeared_bins);
+        float integration_adjusted_noise_power = noise_estimate.noise_power() / std::sqrt(integration_length * drift_rate.desmeared_bins);
         noise_per_drift.push_back(protohit_drift_info{.integration_adjusted_noise=integration_adjusted_noise_power});
     }
 
@@ -47,10 +44,10 @@ std::vector<protohit> bliss::protohit_search(coarse_channel &dedrifted_coarse_ch
     std::vector<protohit> components;
     if (options.method == hit_search_methods::CONNECTED_COMPONENTS) {
         components = find_components_above_threshold(
-                doppler_spectrum, dedrifted_rfi, noise_stats.noise_floor(), noise_per_drift, options.snr_threshold, neighborhood);
+                doppler_spectrum, dedrifted_rfi, noise_estimate.noise_floor(), noise_per_drift, options.snr_threshold, neighborhood);
     } else if (options.method == hit_search_methods::LOCAL_MAXIMA) {
         components = find_local_maxima_above_threshold(
-                doppler_spectrum, dedrifted_rfi, noise_stats.noise_floor(), noise_per_drift, options.snr_threshold, neighborhood);
+                doppler_spectrum, dedrifted_rfi, noise_estimate.noise_floor(), noise_per_drift, options.snr_threshold, neighborhood);
     }
 
     return components;
