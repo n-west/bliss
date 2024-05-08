@@ -10,16 +10,15 @@ add_subdirectory(drift_search)
 add_subdirectory(tests)
 add_subdirectory(python)
 
-add_executable(justrun justrun.cpp)
+add_executable(bliss_find_hits bliss_find_hits.cpp)
 
-target_link_libraries(justrun
+target_link_libraries(bliss_find_hits
     bliss_core
     drift_search
     estimators
     bliss_serialization
     flaggers
     fmt::fmt-header-only
-    CUDA::cudart_static
     )
     
 add_executable(event_search event_search.cpp)

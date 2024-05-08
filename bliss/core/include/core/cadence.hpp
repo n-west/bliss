@@ -17,6 +17,7 @@ struct observation_target {
     observation_target() = default;
     observation_target(std::vector<scan> filterbanks);
     observation_target(std::vector<std::string_view> filterbank_paths);
+    observation_target(std::vector<std::string> filterbank_paths);
 
     /**
      * Create an observation target from a list of scan filepaths and a number of fine channels per
