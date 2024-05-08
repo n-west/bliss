@@ -286,10 +286,8 @@ frequency_drift_plane bliss::coarse_channel::integrated_drift_plane() {
         throw std::runtime_error("integrated_drift_plane not set");
     }
     if (std::holds_alternative<std::function<frequency_drift_plane()>>(*_integrated_drift_plane)) {
-        // *_integrated_drift_plane = std::get<std::function<frequency_drift_plane()>>(*_integrated_drift_plane)();
         auto integrated_drift_plane = std::get<std::function<frequency_drift_plane()>>(*_integrated_drift_plane)();
 
-        // auto& ddp = integrated_drift_plane;
         integrated_drift_plane.set_device(_device);
         return integrated_drift_plane;
     } else {
