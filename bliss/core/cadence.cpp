@@ -34,6 +34,13 @@ bliss::observation_target::observation_target(std::vector<scan> filterbanks) {
     _target_name = extract_source_name_from_scans(_scans);
 }
 
+bliss::observation_target::observation_target(std::vector<std::string> filterbank_paths) {
+    for (const auto &filterbank_path : filterbank_paths) {
+        _scans.emplace_back(filterbank_path);
+    }
+    _target_name = extract_source_name_from_scans(_scans);
+}
+
 bliss::observation_target::observation_target(std::vector<std::string_view> filterbank_paths) {
     for (const auto &filterbank_path : filterbank_paths) {
         _scans.emplace_back(filterbank_path);
