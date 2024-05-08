@@ -25,23 +25,27 @@
 int main(int argc, char *argv[]) {
 
     std::vector<std::string> pipeline_files;
-    float min_drift_rate;
-    float max_drift_rate;
     int coarse_channel=0;
+    bliss::integrate_drifts_options dedrift_options{
+            .desmear = true, .low_rate = -500, .high_rate = 500, .rate_step_size = 1};
     std::string device="cuda:0";
     bool help = false;
     auto cli = (
         (
             clipp::values("files").set(pipeline_files) % "input hdf5 filterbank files",
-            clipp::option("-m", "--min-rate").set(min_drift_rate) % "Minimum drift rate (-5 Hz/sec)",
-            clipp::option("-M", "--max-rate").set(max_drift_rate) % "Maximum drift rate (+5 Hz/sec)",
             clipp::option("-c", "--coarse-channel").set(coarse_channel) % "Coarse channel to process",
-            clipp::option("-d", "--device").set(device) % "Compute device to use"
+            clipp::option("-d", "--device").set(device) % "Compute device to use",
+            (clipp::option("--desmear") .set(dedrift_options.desmear, true) |
+             clipp::option("--nodesmear").set(dedrift_options.desmear, false)) % "Desmear the drift plane to compensate for drift rate crossing channels",
+            (clipp::option("-m", "--min-rate") & clipp::value("min-rate").set(dedrift_options.low_rate)) % "Minimum drift rate (-5 Hz/sec)",
+            (clipp::option("-M", "--max-rate") & clipp::value("max-rate").set(dedrift_options.high_rate)) % "Maximum drift rate (+5 Hz/sec)"
         )
         |
         clipp::option("-h", "--help").set(help) % "Show this screen."
     );
+
     auto parse_result = clipp::parse(argc, argv, cli);
+
     if (!parse_result || help) {
         std::cout << clipp::make_man_page(cli, "bliss_find_hits");
         return 0;
@@ -61,9 +65,7 @@ int main(int argc, char *argv[]) {
             bliss::noise_power_estimate_options{.estimator_method = bliss::noise_power_estimator::STDDEV,
                                                 .masked_estimate  = true}); // estimate noise power of unflagged data
 
-    pipeline_object = bliss::integrate_drifts(
-            pipeline_object,
-            bliss::integrate_drifts_options{.desmear = true, .low_rate = -100, .high_rate = 100, .rate_step_size = 1});
+    pipeline_object = bliss::integrate_drifts(pipeline_object, dedrift_options);
 
     auto pipeline_object_with_hits = bliss::hit_search(
             pipeline_object, {.method = bliss::hit_search_methods::CONNECTED_COMPONENTS, .snr_threshold = 10.0f});

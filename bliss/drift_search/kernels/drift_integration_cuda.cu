@@ -147,7 +147,38 @@ __global__ void integrate_drifts(float* drift_plane_data,
     }
 }
 
+__global__ void integrate_drifts2(float* drift_plane_data,
+                            uint8_t* rolloff_data,
+                            uint8_t* low_sk_rfi_data,
+                            uint8_t* high_sk_rfi_data,
+                            int32_t* drift_plane_shape, int32_t* drift_plane_strides,
+                            const float* spectrum_grid_data,
+                            uint8_t* rfi_mask_data,
+                            int32_t* spectrum_grid_shape, int32_t* spectrum_grid_strides,
+                            kernel_drift_info* drifts, int32_t number_drifts, bool desmear) {
 
+    auto spectra_steps = spectrum_grid_shape[0];
+    auto frequency_channels = spectrum_grid_shape[1];
+
+    for (int drift_index = blockIdx.y * blockDim.y + threadIdx.y; drift_index < number_drifts; drift_index += blockDim.y * gridDim.y) {
+        auto m = drifts[drift_index].slope; // look up slope for this drift
+        for (int freq_channel = blockIdx.x * blockDim.x + threadIdx.x; freq_channel < frequency_channels; freq_channel += blockDim.x * gridDim.x) {
+            float accumulated_spectrum = 0;
+            int accumulated_bins = 0;
+            for (int t=0; t < spectra_steps; ++t) {
+                int freq_offset_at_time = m*t;
+                int spectrum_freq_index = freq_channel + freq_offset_at_time;
+                if (spectrum_freq_index >= 0 && spectrum_freq_index < frequency_channels) {
+                    int spectrum_linear_index = t * frequency_channels + spectrum_freq_index /*sspectrum_grid_strides[1]*/;
+                    accumulated_spectrum += spectrum_grid_data[spectrum_linear_index];
+                    ++accumulated_bins;
+                }
+            }
+            int drift_plane_index = drift_index * frequency_channels + freq_channel;
+            drift_plane_data[drift_plane_index] = accumulated_spectrum / accumulated_bins;
+        }
+    }
+}
 
 [[nodiscard]] frequency_drift_plane
 bliss::integrate_linear_rounded_bins_cuda(bland::ndarray    spectrum_grid,
@@ -222,10 +253,10 @@ bliss::integrate_linear_rounded_bins_cuda(bland::ndarray    spectrum_grid,
 
     thrust::device_vector<kernel_drift_info> dev_drift_slopes(device_rates.begin(), device_rates.end());
 
-    int block_size = 512;
-    int number_blocks = 112;
+    dim3 grid(128, 1);
+    dim3 block(512, 1);
     auto smem = sizeof(kernel_drift_info) * number_drifts + sizeof(int32_t) * 4;
-    integrate_drifts<<<number_blocks, block_size, smem>>>(
+    integrate_drifts<<<grid, block, smem>>>(
         drift_plane_ptr, rolloff_rfi_ptr,
         lowsk_rfi_ptr,
         highsk_rfi_ptr,
