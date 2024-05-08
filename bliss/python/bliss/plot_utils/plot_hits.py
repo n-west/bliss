@@ -6,7 +6,7 @@ import matplotlib.gridspec as gridspec
 import matplotlib.patheffects as pe
 from matplotlib.patches import Rectangle
 
-def plot_hits(cc, focus_hits=None, all_hits=None):
+def plot_hits(cc, focus_hits=None, all_hits=None, frequency_padding_Hz=500):
     '''
     Return a list of plots centered on each `focus_hit` with all_hits visible when within
     the frequency bounds of the given plot. When `focus_hits` is None, one plot of the coarse
@@ -24,6 +24,7 @@ def plot_hits(cc, focus_hits=None, all_hits=None):
     # max_drift = drift_rates[-1].drift_rate_Hz_per_sec
     min_drift = -1
     max_drift = 1
+    frequency_padding_MHz = frequency_padding_Hz * 1e-6
     
     plane = plane.to("cpu")
     plot_plane = np.log10(np.from_dlpack(plane) + 1e-3)
@@ -62,14 +63,32 @@ def plot_hits(cc, focus_hits=None, all_hits=None):
     if focus_hits is None:
         # one macro plot of all hits
 
+        f, ax0, ax1, ax2 = base_plots_and_axes(freqs, plot_spectrum, plot_plane)
         for hit in all_hits:
             start_freq = hit.start_freq_MHz
-            end_freq = start_freq + (end_time - start_time) * hit.drift_rate_Hz_per_sec*1e6
-            f, ax0, ax1, ax2 = base_plots_and_axes(freqs, plot_spectrum, plot_plane)
-            color = "red"
+            end_freq = start_freq + (end_time - start_time) * hit.drift_rate_Hz_per_sec*1e-6
+
+            lower_edge = min(start_freq, end_freq)
+            upper_edge = max(start_freq, end_freq)
+            if foff < 0:
+                lower_edge -= hit.bandwidth*1e-6/2
+                upper_edge += hit.bandwidth*1e-6/2
+            else:
+                lower_edge += hit.bandwidth*1e-6/2
+                upper_edge -= hit.bandwidth*1e-6/2
+
+            color = "white"
+            angle = 0
+            # rect = Rectangle((lower_edge, start_time), upper_edge-lower_edge, (end_time-start_time)-tsamp*.05, edgecolor=color, fill=None, angle=angle, rotation_point="center")
+            # ax1.add_patch(rect)
+            # ax1.plot([start_freq, end_freq], [start_time, end_time], color="red", lw=1, path_effects=[pe.Stroke(linewidth=2, foreground='black'), pe.Normal()])
+
+            # The focused hit (this is probably in all_hits and we want the red line to come on top)
             rect = Rectangle((lower_edge, start_time + tsamp*.05), upper_edge-lower_edge, (end_time-start_time)-tsamp*.05, edgecolor=color, fill=None, angle=angle, rotation_point="center")
             ax1.add_patch(rect)
-            ax1.plot([start_freq, end_freq], [start_time, end_time], color="red", lw=1, path_effects=[pe.Stroke(linewidth=2, foreground='black'), pe.Normal()])
+            ax1.plot([start_freq, end_freq], [start_time, end_time], color="red", lw=1, path_effects=[pe.Stroke(linewidth=1, foreground='black'), pe.Normal()])
+
+        return [f,]
 
     all_figs = []
     for hit in focus_hits:
@@ -77,11 +96,11 @@ def plot_hits(cc, focus_hits=None, all_hits=None):
         end_freq = start_freq + (end_time - start_time) * hit.drift_rate_Hz_per_sec*1e-6
 
         # Extend freq bounds by the bandwidth + 500 Hz, keeping the hit centered
-        min_freq = min(start_freq, end_freq) - hit.bandwidth*1e-6/2 - 250e-6
-        max_freq = max(start_freq, end_freq) + hit.bandwidth*1e-6/2 + 250e-6
-        if max_freq - min_freq < 500e-6:
-            # Ensure plots show at minimum 500 Hz
-            difference = (max_freq - min_freq) - 500e-6
+        min_freq = min(start_freq, end_freq) - hit.bandwidth*1e-6/2 - frequency_padding_MHz/2
+        max_freq = max(start_freq, end_freq) + hit.bandwidth*1e-6/2 + frequency_padding_MHz/2
+        if max_freq - min_freq < frequency_padding_MHz:
+            # Ensure plots show at minimum of frequency padding
+            difference = (max_freq - min_freq) - frequency_padding_MHz
             max_freq += difference/2
             min_freq -= difference/2
 
@@ -95,6 +114,7 @@ def plot_hits(cc, focus_hits=None, all_hits=None):
 
         fig = plt.figure()
 
+        fig.suptitle(f"Hit starting at {start_freq:1.6f} MHz with drift rate {hit.drift_rate_Hz_per_sec:1.2f} Hz/sec")
         # Assign different rows to your subplots
         ax0 = fig.add_subplot(gs[:4, 0])  # Top plot gets 1 row (20% of the height)
         ax1 = fig.add_subplot(gs[4:12, 0], sharex=ax0)  # Middle plot gets 4 rows (40% of the height)
@@ -136,6 +156,17 @@ def plot_hits(cc, focus_hits=None, all_hits=None):
             # If the bg_hit is within the freq ranges of this plot, show it
             if bg_start_freq > min_freq and bg_start_freq < max_freq or bg_end_freq > min_freq and bg_end_freq < max_freq:
                 ax1.plot([bg_start_freq, bg_end_freq], [start_time, end_time],  color="none", path_effects=[pe.Stroke(linewidth=.25, foreground='black'), pe.Stroke(linewidth=.125, foreground='red'), pe.Normal()])
+                bg_lower_edge = min(bg_start_freq, bg_end_freq)
+                bg_upper_edge = max(bg_start_freq, bg_end_freq)
+                if foff < 0:
+                    bg_lower_edge -= bg_hit.bandwidth*1e-6/2
+                    bg_upper_edge += bg_hit.bandwidth*1e-6/2
+                else:
+                    bg_lower_edge += bg_hit.bandwidth*1e-6/2
+                    bg_upper_edge -= bg_hit.bandwidth*1e-6/2
+
+                rect = Rectangle((bg_lower_edge, start_time + tsamp*.05), bg_upper_edge-bg_lower_edge, (end_time-start_time)-tsamp*.05, edgecolor="black", fill=None, angle=angle, rotation_point="center")
+                ax1.add_patch(rect)
 
         # The focused hit (this is probably in all_hits and we want the red line to come on top)
         rect = Rectangle((lower_edge, start_time + tsamp*.05), upper_edge-lower_edge, (end_time-start_time)-tsamp*.05, edgecolor=color, fill=None, angle=angle, rotation_point="center")

@@ -122,6 +122,33 @@ __global__ void find_components_kernel(float* doppler_spectrum_data,
     }
 }
 
+__device__ int find_neighbor_max_snr_protohit_id(uint32_t *visited,
+    int number_drifts, int number_channels,
+    freq_drift_coord central_point,
+    int candidate_highest_snr_protohit_id,
+    device_protohit* protohits,
+    freq_drift_coord* neighbor_offsets,
+    int neighborhood_size
+) {
+    double highest_snr = protohits[candidate_highest_snr_protohit_id].snr;
+
+    for (int neighbor_index=0; neighbor_index < neighborhood_size; ++neighbor_index) {
+        auto neighbor_offset = neighbor_offsets[neighbor_index];
+        auto neighbor_coord = central_point;
+
+        neighbor_coord.drift_index += neighbor_offset.drift_index;
+        neighbor_coord.frequency_channel += neighbor_offset.frequency_channel;
+
+        if (neighbor_coord.drift_index >= 0 && neighbor_coord.drift_index < number_drifts &&
+                neighbor_coord.frequency_channel >= 0 && neighbor_coord.frequency_channel < number_channels) {
+
+            auto linear_neighbor_index = neighbor_coord.drift_index * number_channels + neighbor_coord.frequency_channel;
+
+            auto neighbor_id = visited[linear_neighbor_index];
+        }
+    }
+}
+
 __global__ void spread_components_kernel(
     uint32_t *visited,
     int32_t number_drifts, int32_t number_channels,
@@ -149,6 +176,11 @@ __global__ void spread_components_kernel(
 
         auto candidate_linear_index = candidate_drift_index * number_channels + candidate_frequency_channel;
         auto protohit_id = visited[candidate_linear_index];
+        
+        if (protohit_id >= 8 && !protohits[protohit_id].valid) {
+            visited[candidate_linear_index] = protohits[protohit_id].invalidated_by;
+            protohit_id = protohits[protohit_id].invalidated_by;
+        }
         if (protohit_id >= 2) {
             auto protohit = protohits[protohit_id];
 
@@ -184,11 +216,151 @@ __global__ void spread_components_kernel(
             }
             if (neighborhood_max_id > 0) {
                 if (protohits[protohit_id].valid) {
+                    protohits[protohit_id].invalidated_by = neighborhood_max_id;
                     protohits[protohit_id].valid = false;
                     *invalidated_protohits += 1;
                 }
                 visited[candidate_linear_index] = neighborhood_max_id;
                 *changes += 1;
+                
+                // Change the whole neighborhood?
+                neighbor_index = 0;
+                // Expand the neighborhood, adopting the highest SNR protohit within the neighborhood if needed
+                while (neighbor_index < neighborhood_size) {
+                    // Compute the neighbor's drift, frequency coord and linear index
+                    auto neighbor_offset = s_neighbor_offsets[neighbor_index];
+                    auto neighbor_coord = freq_drift_coord{.drift_index=candidate_drift_index, .frequency_channel=candidate_frequency_channel};
+
+                    neighbor_coord.drift_index += neighbor_offset.drift_index;
+                    neighbor_coord.frequency_channel += neighbor_offset.frequency_channel;
+
+                    if (neighbor_coord.drift_index >= 0 && neighbor_coord.drift_index < number_drifts &&
+                            neighbor_coord.frequency_channel >= 0 && neighbor_coord.frequency_channel < number_channels) {
+
+                        auto linear_neighbor_index = neighbor_coord.drift_index * number_channels + neighbor_coord.frequency_channel;
+                        if (visited[linear_neighbor_index] >= 2) {
+                            visited[linear_neighbor_index] = neighborhood_max_id;
+                        }
+                    }
+                    neighbor_index++;
+                }
+
+            }
+        }
+    }
+}
+
+
+__global__ void spread_components3_kernel(
+    uint32_t *visited,
+    int32_t number_drifts, int32_t number_channels,
+    freq_drift_coord* neighbor_offsets,
+    int neighborhood_size,
+    device_protohit* protohits,
+    int* number_protohits,
+    int* invalidated_protohits,
+    int* changes) {
+
+    extern __shared__ char smem[];
+    freq_drift_coord* s_neighbor_offsets = reinterpret_cast<freq_drift_coord*>(smem);
+    for (int neighbor_coord_ind = threadIdx.x; neighbor_coord_ind < neighborhood_size; neighbor_coord_ind+=blockDim.x) {
+        s_neighbor_offsets[neighbor_coord_ind] = neighbor_offsets[neighbor_coord_ind];
+    }
+    __syncthreads();
+
+    auto work_id = blockDim.x * blockIdx.x + threadIdx.x;
+    auto increment_size = blockDim.x * gridDim.x;
+    auto numel = number_drifts * number_channels;
+
+    for (int n = work_id; n < numel; n += increment_size) {
+        auto candidate_frequency_channel = n % number_channels;
+        auto candidate_drift_index = n / number_channels;
+
+        auto candidate_linear_index = candidate_drift_index * number_channels + candidate_frequency_channel;
+        auto protohit_id = visited[candidate_linear_index];
+        if (protohit_id >= 8) {
+            if (protohits[protohit_id].valid) {
+                // Look at every neighbor, check for any protohit with a higher SNR
+                for (int neighbor_index=0; neighbor_index < neighborhood_size; neighbor_index += 1) {
+                    auto neighbor_offset = s_neighbor_offsets[neighbor_index];
+                    auto neighbor_coord = freq_drift_coord{.drift_index=candidate_drift_index, .frequency_channel=candidate_frequency_channel};
+                    neighbor_coord.drift_index += neighbor_offset.drift_index;
+                    neighbor_coord.frequency_channel += neighbor_offset.frequency_channel;
+
+                    if (neighbor_coord.drift_index >= 0 && neighbor_coord.drift_index < number_drifts &&
+                            neighbor_coord.frequency_channel >= 0 && neighbor_coord.frequency_channel < number_channels) {
+                        auto neighbor_linear_index = neighbor_coord.drift_index * number_channels + neighbor_coord.frequency_channel;
+                        auto neighbor_id = visited[neighbor_linear_index];
+                        if (neighbor_id >= 8 && neighbor_id != protohit_id) {
+                            // These are both part of protohits, but not the same one
+
+                            auto neighbor_protohit = protohits[neighbor_id];
+                            if (neighbor_protohit.snr > protohits[protohit_id].snr) {
+                                if (neighbor_protohit.valid) {
+                                    protohits[protohit_id].invalidated_by = neighbor_id;
+                                    protohits[protohit_id].valid = false;
+                                    visited[neighbor_linear_index] = protohit_id;
+                                    *invalidated_protohits += 1;
+                                    *changes += 1;
+                                } else {
+                                    // This is an awkward case because we know these are both bad, but the other is greater
+                                    // so take whatever it has been invalidated by
+                                    protohits[protohit_id].invalidated_by = protohits[neighbor_id].invalidated_by;
+                                    protohits[protohit_id].valid = false;
+                                    visited[candidate_linear_index] = protohits[neighbor_id].invalidated_by;
+                                    *invalidated_protohits += 1;
+                                    *changes += 1;
+                                }
+                            } else {
+                                // Our SNR is higher than the neighbor
+                                if (neighbor_protohit.valid) {
+                                    // The neighbor is lower, so we can invalidate it and set it
+                                    protohits[neighbor_id].invalidated_by = protohit_id;
+                                    protohits[neighbor_id].valid = false;
+                                    visited[neighbor_linear_index] = protohit_id;
+                                    *invalidated_protohits += 1;
+                                    *changes += 1;
+                                } else {
+                                    // We're greater than the neighbor snr, but it's also marked as invalid
+                                    // visited[neighbor_linear_index] = protohit_id;
+                                    // *changes += 1;
+                                }
+                            }
+                        } else if (neighbor_id >= 2 && neighbor_id < 8) {
+                            // Doesn't belong to any valid protohit yet, but it's valid to spread
+                            visited[neighbor_linear_index] = protohit_id;
+                            *changes += 1;
+                        }
+                    }
+                }
+            } else {
+                // belongs to an invalidated protohit, just update the index
+                visited[candidate_linear_index] = protohits[protohit_id].invalidated_by;
+                *changes += 1; // we *could* spread this... but let's not for now
+            }
+        } else if (protohit_id >= 2) {
+            // This can be spread, but isn't above threshold. If a highest-SNR neighbor has a protohit id, we can adopt it
+            double highest_snr_neighbor = -9999; // TODO....
+            int best_protohit_id = 0;
+            for (int neighbor_index=0; neighbor_index < neighborhood_size; neighbor_index += 1) {
+                auto neighbor_offset = s_neighbor_offsets[neighbor_index];
+                auto neighbor_coord = freq_drift_coord{.drift_index=candidate_drift_index, .frequency_channel=candidate_frequency_channel};
+                neighbor_coord.drift_index += neighbor_offset.drift_index;
+                neighbor_coord.frequency_channel += neighbor_offset.frequency_channel;
+                if (neighbor_coord.drift_index >= 0 && neighbor_coord.drift_index < number_drifts &&
+                    neighbor_coord.frequency_channel >= 0 && neighbor_coord.frequency_channel < number_channels) {
+
+                    auto linear_neighbor_index = neighbor_coord.drift_index * number_channels + neighbor_coord.frequency_channel;
+
+                    auto neighbor_id = visited[linear_neighbor_index];
+                    if (neighbor_id >= 8 && protohits[neighbor_id].snr > highest_snr_neighbor) {
+                        best_protohit_id = neighbor_id;
+                        highest_snr_neighbor = protohits[neighbor_id].snr;
+                    }
+                }
+            }
+            if (best_protohit_id >= 8) {
+                visited[candidate_linear_index] = best_protohit_id;
             }
         }
     }
@@ -282,10 +454,10 @@ bliss::find_components_above_threshold_cuda(bland::ndarray                   dop
     cudaMalloc((void**)&visited, sizeof(uint32_t) * number_drifts * number_channels);
     cudaMemset(visited, 0, number_drifts * number_channels);
 
-    int block_size = 512;
     int number_blocks = 112;
+    int block_size = 512;
     int smem = sizeof(freq_drift_coord) * device_neighborhood.size();
-    find_components_kernel<<<block_size, number_blocks, smem>>>(
+    find_components_kernel<<<number_blocks, block_size, smem>>>(
         doppler_spectrum_data,
         visited,
         thrust::raw_pointer_cast(dev_noise_per_drift.data()),
@@ -306,11 +478,13 @@ bliss::find_components_above_threshold_cuda(bland::ndarray                   dop
     cudaMallocManaged(&u_invalidated_protohits, sizeof(int));
     *u_invalidated_protohits = 0;
 
+    block_size = 512;
+    number_blocks = 112;
     do {
         *u_number_changes = 0;
         *u_invalidated_protohits = 0;
 
-        spread_components_kernel<<<block_size, number_blocks, smem>>>(
+        spread_components_kernel<<<number_blocks, block_size, smem>>>(
             visited,
             number_drifts, number_channels,
             thrust::raw_pointer_cast(device_neighborhood.data()),
@@ -322,7 +496,6 @@ bliss::find_components_above_threshold_cuda(bland::ndarray                   dop
         );
         cudaDeviceSynchronize();
 
-        // fmt::print("there were {} changes and {} invalidated protohits\n", *u_number_changes, *u_invalidated_protohits);
     } while (*u_number_changes > 0);
 
 
@@ -339,13 +512,6 @@ bliss::find_components_above_threshold_cuda(bland::ndarray                   dop
         dev_num_maxima
     );
     cudaDeviceSynchronize();
-// __global__ void collect_protohit_md_kernel(
-//     uint8_t* rfi_low_sk,
-//     uint8_t* rfi_high_sk,
-//     uint32_t *visited,
-//     int32_t number_drifts, int32_t number_channels,
-//     device_protohit* protohits,
-//     int* number_protohits) {
 
     thrust::host_vector<device_protohit> host_protohits(dev_protohits.begin(), dev_protohits.end());
 

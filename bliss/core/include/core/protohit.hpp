@@ -39,6 +39,7 @@ struct device_protohit {
     uint8_t low_sk_count;
     uint8_t high_sk_count;
     bool valid=true;
+    uint32_t invalidated_by=0;
 };
 
 } // namespace bliss
