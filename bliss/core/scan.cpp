@@ -190,6 +190,7 @@ std::shared_ptr<coarse_channel> bliss::scan::read_coarse_channel(int coarse_chan
                                                            _machine_id,
                                                            _nbits,
                                                            _fine_channels_per_coarse,
+                                                           data_count[0],
                                                            _nifs,
                                                            _source_name,
                                                            _src_dej,

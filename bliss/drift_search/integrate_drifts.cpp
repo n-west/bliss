@@ -13,38 +13,81 @@
 
 using namespace bliss;
 
+std::vector<frequency_drift_plane::drift_rate> compute_drifts(int time_steps, double foff, double tsamp, integrate_drifts_options options) {
+    auto maximum_drift_span = time_steps - 1;
+
+    // Convert the drift options to specific drift info
+    auto number_drifts = (options.high_rate - options.low_rate) / options.rate_step_size;
+    std::vector<frequency_drift_plane::drift_rate> drift_rate_info;
+    drift_rate_info.reserve(number_drifts);
+    for (int drift_index = 0; drift_index < number_drifts; ++drift_index) {
+        // Allow the options to represent either bin counts or Hz/sec using physical units
+        // Drift in number of channels over the entire time extent
+        auto drift_channels = options.low_rate + drift_index * options.rate_step_size;
+        frequency_drift_plane::drift_rate rate;
+        rate.index_in_plane = drift_index;
+        rate.drift_channels_span = drift_channels;
+
+        // The actual slope of that drift (number channels / time)
+        auto m = static_cast<float>(drift_channels) / static_cast<float>(maximum_drift_span);
+
+        rate.drift_rate_slope = m;
+        rate.drift_rate_Hz_per_sec = m * foff * 1e6 / tsamp;
+        // If a single time step crosses more than 1 channel, there is smearing over multiple channels
+        auto smeared_channels = std::round(std::abs(m));
+
+        int desmear_binwidth = 1;
+        if (options.desmear) {
+            desmear_binwidth = std::max(1.0F, smeared_channels);
+        }
+        rate.desmeared_bins = desmear_binwidth;
+
+        drift_rate_info.push_back(rate);
+    }
+    return drift_rate_info;
+}
+
 bland::ndarray bliss::integrate_drifts(const bland::ndarray &spectrum_grid, integrate_drifts_options options) {
     auto compute_device = spectrum_grid.device();
+    auto drifts = compute_drifts(spectrum_grid.size(0), 1, 1, options);
 
-    if (compute_device.device_type == kDLCPU) {
-        auto drift_grid = integrate_linear_rounded_bins_cpu(spectrum_grid, options);
-        return drift_grid;
-#if BLISS_CUDA
-    } else if (compute_device.device_type == kDLCUDA) {
-        auto drift_grid = integrate_linear_rounded_bins_cuda(spectrum_grid, options);
-        return drift_grid;
-#endif
-    } else {
-        auto drift_grid = integrate_linear_rounded_bins_bland(spectrum_grid, options);
-        return drift_grid;
-        throw std::runtime_error("integrate_drifts not supported on this device");
-    }
+//     if (compute_device.device_type == kDLCPU) {
+//         auto drift_grid = integrate_linear_rounded_bins_cpu(spectrum_grid, drifts, options);
+//         return drift_grid;
+// #if BLISS_CUDA
+//     } else if (compute_device.device_type == kDLCUDA) {
+//         auto drift_grid = integrate_linear_rounded_bins_cuda(spectrum_grid, drifts, options);
+//         return drift_grid;
+// #endif
+//     } else {
+//         auto drift_grid = integrate_linear_rounded_bins_bland(spectrum_grid, drifts, options);
+//         return drift_grid;
+//         throw std::runtime_error("integrate_drifts not supported on this device");
+//     }
 }
 
 coarse_channel bliss::integrate_drifts(coarse_channel cc_data, integrate_drifts_options options) {
     auto compute_device = cc_data.device();
 
+    auto drifts = compute_drifts(cc_data.ntsteps(), cc_data.foff(), cc_data.tsamp(), options);
+
     auto cc_copy = std::make_shared<coarse_channel>(cc_data);
     if (compute_device.device_type == kDLCPU) {
-        auto integrated_dedrift = [cc_data = cc_copy, options](){return integrate_linear_rounded_bins_cpu(cc_data->data(), cc_data->mask(), options);};
+        auto integrated_dedrift = [cc_data = cc_copy, drifts, options]() {
+            return integrate_linear_rounded_bins_cpu(cc_data->data(), cc_data->mask(), drifts, options);
+        };
         cc_data.set_integrated_drift_plane(integrated_dedrift);
 #if BLISS_CUDA
     } else if (compute_device.device_type == kDLCUDA) {
-        auto integrated_dedrift = [cc_data = cc_copy, options](){return integrate_linear_rounded_bins_cuda(cc_data->data(), cc_data->mask(), options);};
+        auto integrated_dedrift = [cc_data = cc_copy, drifts, options]() {
+            return integrate_linear_rounded_bins_cuda(cc_data->data(), cc_data->mask(), drifts, options);
+        };
         cc_data.set_integrated_drift_plane(integrated_dedrift);
 #endif
     } else {
-        auto integrated_dedrift = [cc_data = cc_copy, options](){return integrate_linear_rounded_bins_bland(cc_data->data(), cc_data->mask(), options);};
+        auto integrated_dedrift = [cc_data = cc_copy, drifts, options]() {
+            return integrate_linear_rounded_bins_bland(cc_data->data(), cc_data->mask(), drifts, options);
+        };
         cc_data.set_integrated_drift_plane(integrated_dedrift);
     }
 

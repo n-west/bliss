@@ -34,7 +34,7 @@ int main(int argc, char *argv[]) {
         (
             clipp::values("files").set(pipeline_files) % "input hdf5 filterbank files",
             clipp::option("-c", "--coarse-channel").set(coarse_channel) % "Coarse channel to process",
-            clipp::option("-d", "--device").set(device) % "Compute device to use",
+            (clipp::option("-d", "--device") & clipp::value("device").set(device)) % "Compute device to use",
             (clipp::option("--desmear") .set(dedrift_options.desmear, true) |
              clipp::option("--nodesmear").set(dedrift_options.desmear, false)) % "Desmear the drift plane to compensate for drift rate crossing channels",
             (clipp::option("-m", "--min-rate") & clipp::value("min-rate").set(dedrift_options.low_rate)) % "Minimum drift rate (-5 Hz/sec)",
