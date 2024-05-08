@@ -19,6 +19,7 @@ class frequency_drift_plane {
         int index_in_plane;
         double drift_rate_slope = 0.0F;
         double drift_rate_Hz_per_sec = 0.0F;
+        int drift_channels_span = 0;
         int desmeared_bins=1; // number of bins per spectra used to desmear
     };
 

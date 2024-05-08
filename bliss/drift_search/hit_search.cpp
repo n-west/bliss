@@ -38,8 +38,7 @@ std::list<hit> bliss::hit_search(coarse_channel dedrifted_scan, hit_search_optio
         auto freq_offset        = dedrifted_scan.foff() * this_hit.start_freq_index;
         this_hit.start_freq_MHz = dedrifted_scan.fch1() + freq_offset;
 
-        this_hit.drift_rate_Hz_per_sec = drift_rate_info[this_hit.rate_index].drift_rate_slope * dedrifted_scan.foff() *
-                                         1e6 / dedrifted_scan.tsamp();
+        this_hit.drift_rate_Hz_per_sec = drift_rate_info[this_hit.rate_index].drift_rate_Hz_per_sec;
 
         auto signal_power = (c.max_integration - noise_stats.noise_floor());
 

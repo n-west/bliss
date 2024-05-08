@@ -14,6 +14,7 @@ coarse_channel::coarse_channel(
                             int64_t        machine_id,
                             int64_t        nbits,
                             int64_t        nchans,
+                            int64_t        ntsteps,
                             int64_t        nifs,
                             std::string    source_name,
                             double         src_dej,
@@ -29,6 +30,7 @@ coarse_channel::coarse_channel(
         _machine_id(machine_id),
         _nbits(nbits),
         _nchans(nchans),
+        _ntsteps(ntsteps),
         _nifs(nifs),
         _source_name(source_name),
         _src_dej(src_dej),
@@ -49,6 +51,7 @@ coarse_channel::coarse_channel(std::function<bland::ndarray()> data,
                 int64_t        machine_id,
                 int64_t        nbits,
                 int64_t        nchans,
+                int64_t        ntsteps,
                 int64_t        nifs,
                 std::string    source_name,
                 double         src_dej,
@@ -59,7 +62,7 @@ coarse_channel::coarse_channel(std::function<bland::ndarray()> data,
                 int64_t        data_type,
                 double         az_start,
                 double         za_start) :
-                coarse_channel(fch1, foff, machine_id, nbits, nchans, nifs, source_name, src_dej, src_raj,
+                coarse_channel(fch1, foff, machine_id, nbits, nchans, ntsteps, nifs, source_name, src_dej, src_raj,
                 telescope_id, tsamp, tstart, data_type, az_start, za_start) {
     _data = data;
     _mask = mask;
@@ -73,6 +76,7 @@ coarse_channel::coarse_channel(bland::ndarray data,
                 int64_t        machine_id,
                 int64_t        nbits,
                 int64_t        nchans,
+                int64_t        ntsteps,
                 int64_t        nifs,
                 std::string    source_name,
                 double         src_dej,
@@ -83,7 +87,7 @@ coarse_channel::coarse_channel(bland::ndarray data,
                 int64_t        data_type,
                 double         az_start,
                 double         za_start) :
-                coarse_channel(fch1, foff, machine_id, nbits, nchans, nifs, source_name, src_dej, src_raj,
+                coarse_channel(fch1, foff, machine_id, nbits, nchans, ntsteps, nifs, source_name, src_dej, src_raj,
                 telescope_id, tsamp, tstart, data_type, az_start, za_start) {
     _data = data;
     _mask = mask;
@@ -198,6 +202,13 @@ int64_t bliss::coarse_channel::nchans() const {
 }
 // void bliss::scan::nchans(int64_t nchans) {
 //     _nchans = nchans;
+// }
+
+int64_t bliss::coarse_channel::ntsteps() const {
+    return _ntsteps;
+}
+// void bliss::scan::ntsteps(int64_t ntsteps) {
+//     _ntsteps = ntsteps;
 // }
 
 int64_t bliss::coarse_channel::nifs() const {

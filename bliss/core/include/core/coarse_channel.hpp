@@ -26,6 +26,7 @@ struct coarse_channel {
                    int64_t        machine_id,
                    int64_t        nbits,
                    int64_t        nchans,
+                   int64_t        ntsteps,
                    int64_t        nifs,
                    std::string    source_name,
                    double         src_dej,
@@ -44,6 +45,7 @@ struct coarse_channel {
                    int64_t        machine_id,
                    int64_t        nbits,
                    int64_t        nchans,
+                   int64_t        ntsteps,
                    int64_t        nifs,
                    std::string    source_name,
                    double         src_dej,
@@ -62,6 +64,7 @@ struct coarse_channel {
                    int64_t        machine_id,
                    int64_t        nbits,
                    int64_t        nchans,
+                   int64_t        ntsteps,
                    int64_t        nifs,
                    std::string    source_name,
                    double         src_dej,
@@ -112,6 +115,9 @@ struct coarse_channel {
     // void        nbits(int64_t);
     int64_t nchans() const;
     // void        nchans(int64_t);
+
+    int64_t ntsteps() const;
+
     int64_t nifs() const;
     // void        nifs(int64_t);
     std::string source_name() const;
@@ -147,6 +153,8 @@ struct coarse_channel {
     int64_t     _telescope_id;
     double      _tsamp;
     double      _tstart;
+
+    int64_t     _ntsteps; // this x nchans is total data volume
 
     int64_t _data_type;
     double  _az_start;
