@@ -15,7 +15,7 @@ bliss::find_local_maxima_above_threshold_cpu(bland::ndarray                  dop
                                             float                            noise_floor,
                                             std::vector<protohit_drift_info> noise_per_drift,
                                             float                            snr_threshold,
-                                            std::vector<bland::nd_coords>    max_neighborhood) {
+                                            int                              neighbor_l1_dist) {
 
     auto doppler_spectrum_data    = doppler_spectrum.data_ptr<float>();
     auto doppler_spectrum_strides = doppler_spectrum.strides();
@@ -53,33 +53,35 @@ bliss::find_local_maxima_above_threshold_cpu(bland::ndarray                  dop
             if (candidate_snr > snr_threshold) {
                 // 4. Check if it is greater than surrounding neighborhood
                 bool neighborhood_max = true;
-                for (auto &neighbor_offset : max_neighborhood) {
-                    auto neighbor_coord = curr_coord;
+                for (int freq_neighbor_offset=-neighbor_l1_dist; freq_neighbor_offset < neighbor_l1_dist; ++freq_neighbor_offset) {
+                    for (int drift_neighbor_offset=-neighbor_l1_dist + abs(freq_neighbor_offset); drift_neighbor_offset < neighbor_l1_dist-abs(freq_neighbor_offset); ++drift_neighbor_offset) {
+                        auto neighbor_coord = curr_coord;
 
-                    neighbor_coord.drift_index += neighbor_offset[0];
-                    neighbor_coord.frequency_channel += neighbor_offset[1];
+                        neighbor_coord.drift_index += drift_neighbor_offset;
+                        neighbor_coord.frequency_channel += freq_neighbor_offset;
 
-                    // check if the next coordinate is valid and not visited
-                    if (neighbor_coord.drift_index >= 0 && neighbor_coord.drift_index < doppler_spectrum_shape[0] &&
-                        neighbor_coord.frequency_channel >= 0 && neighbor_coord.frequency_channel < doppler_spectrum_shape[1]) {
-                       
-                        auto linear_neighbor_index = neighbor_coord.drift_index * doppler_spectrum_strides[0] + neighbor_coord.frequency_channel * doppler_spectrum_strides[1];
-                        auto neighbor_val = doppler_spectrum_data[linear_neighbor_index];
-                        auto neighbor_noise = noise_per_drift[neighbor_coord.drift_index].integration_adjusted_noise;
-                        auto neighbor_snr = (neighbor_val - noise_floor) / neighbor_noise;
-                        if (candidate_snr > rtol * neighbor_snr) {
-                            // we know this neighbor can't be a candidate maxima...
-                            auto visited_linear_index = neighbor_coord.drift_index * visited_strides[0] + neighbor_coord.frequency_channel * visited_strides[1];
-                            // visited_strider.to_linear_offset(neighbor_coord)
-                            visited_data[visited_linear_index] = 0;
+                        // check if the next coordinate is valid and not visited
+                        if (neighbor_coord.drift_index >= 0 && neighbor_coord.drift_index < doppler_spectrum_shape[0] &&
+                            neighbor_coord.frequency_channel >= 0 && neighbor_coord.frequency_channel < doppler_spectrum_shape[1]) {
+                        
+                            auto linear_neighbor_index = neighbor_coord.drift_index * doppler_spectrum_strides[0] + neighbor_coord.frequency_channel * doppler_spectrum_strides[1];
+                            auto neighbor_val = doppler_spectrum_data[linear_neighbor_index];
+                            auto neighbor_noise = noise_per_drift[neighbor_coord.drift_index].integration_adjusted_noise;
+                            auto neighbor_snr = (neighbor_val - noise_floor) / neighbor_noise;
+                            if (candidate_snr > rtol * neighbor_snr) {
+                                // we know this neighbor can't be a candidate maxima...
+                                auto visited_linear_index = neighbor_coord.drift_index * visited_strides[0] + neighbor_coord.frequency_channel * visited_strides[1];
+                                // visited_strider.to_linear_offset(neighbor_coord)
+                                visited_data[visited_linear_index] = 0;
+                            } else {
+                                neighborhood_max = false;
+                                break;
+                            }
                         } else {
+                            // the neighbor is outside of grid... this generally causes problems so abandon
                             neighborhood_max = false;
                             break;
                         }
-                    } else {
-                        // the neighbor is outside of grid... this generally causes problems so abandon
-                        neighborhood_max = false;
-                        break;
                     }
                 }
 

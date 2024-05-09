@@ -84,7 +84,7 @@ bliss::find_components_above_threshold_cpu(bland::ndarray                    dop
                                             float                            noise_floor,
                                             std::vector<protohit_drift_info> noise_per_drift,
                                             float                            snr_threshold,
-                                            std::vector<bland::nd_coords>    max_neighborhood) {
+                                            int                              neighbor_l1_dist) {
 
     std::vector<protohit> components;
 
@@ -168,18 +168,20 @@ bliss::find_components_above_threshold_cpu(bland::ndarray                    dop
                         this_component.locations.push_back(idx);
 
                         // Then add all of the neighbors as candidates
-                        for (auto &neighbor_offset : max_neighborhood) {
-                            auto neighbor_coord = idx;
+                        for (int freq_neighbor_offset=-neighbor_l1_dist; freq_neighbor_offset < neighbor_l1_dist; ++freq_neighbor_offset) {
+                            for (int drift_neighbor_offset=-neighbor_l1_dist + abs(freq_neighbor_offset); drift_neighbor_offset < neighbor_l1_dist-abs(freq_neighbor_offset); ++drift_neighbor_offset) {
+                                auto neighbor_coord = idx;
 
-                            neighbor_coord.drift_index += neighbor_offset[0];
-                            neighbor_coord.frequency_channel += neighbor_offset[1];
+                                neighbor_coord.drift_index += drift_neighbor_offset;
+                                neighbor_coord.frequency_channel += freq_neighbor_offset;
 
-                            // If this is in bounds, not visited add it
-                            if (neighbor_coord.drift_index >= 0 && neighbor_coord.drift_index < visited_shape[0]
-                                    && neighbor_coord.frequency_channel >= 0 && neighbor_coord.frequency_channel < visited_shape[1]) {
-                                auto neighbor_visited_linear = neighbor_coord.drift_index * visited_strides[0] + neighbor_coord.frequency_channel * visited_strides[1];
-                                if (visited_data[neighbor_visited_linear] == 0) {
-                                    coord_queue.push(neighbor_coord);
+                                // If this is in bounds, not visited add it
+                                if (neighbor_coord.drift_index >= 0 && neighbor_coord.drift_index < visited_shape[0]
+                                        && neighbor_coord.frequency_channel >= 0 && neighbor_coord.frequency_channel < visited_shape[1]) {
+                                    auto neighbor_visited_linear = neighbor_coord.drift_index * visited_strides[0] + neighbor_coord.frequency_channel * visited_strides[1];
+                                    if (visited_data[neighbor_visited_linear] == 0) {
+                                        coord_queue.push(neighbor_coord);
+                                    }
                                 }
                             }
                         }

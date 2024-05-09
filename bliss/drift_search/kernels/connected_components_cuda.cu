@@ -16,17 +16,9 @@ __global__ void find_components_kernel(float* doppler_spectrum_data,
     int32_t number_drifts, int32_t number_channels,
     float noise_floor,
     float snr_threshold,
-    freq_drift_coord* neighbor_offsets,
-    int neighborhood_size,
+    int neighbor_l1_dist,
     device_protohit* protohits,
     int* number_protohits) {
-
-    extern __shared__ char smem[];
-    freq_drift_coord* s_neighbor_offsets = reinterpret_cast<freq_drift_coord*>(smem);
-    for (int neighbor_coord_ind = threadIdx.x; neighbor_coord_ind < neighborhood_size; neighbor_coord_ind+=blockDim.x) {
-        s_neighbor_offsets[neighbor_coord_ind] = neighbor_offsets[neighbor_coord_ind];
-    }
-    __syncthreads();
 
     // Strategy:
     // 1) grid-strided loop to label each bin in freq-drift plane as a local_maxima with a unique id, above SNR threshold,
@@ -59,27 +51,28 @@ __global__ void find_components_kernel(float* doppler_spectrum_data,
 
                 // Set to a unique id if this is a local maxima
                 bool neighborhood_max = true;
-                for (int neighbor_id = 0; neighbor_id < neighborhood_size; ++neighbor_id) {
-                    auto neighbor_offset = s_neighbor_offsets[neighbor_id];
-                    auto neighbor_coord = freq_drift_coord{.drift_index=candidate_drift_index, .frequency_channel=candidate_frequency_channel};
+                for (int freq_neighbor_offset=-neighbor_l1_dist; freq_neighbor_offset < neighbor_l1_dist; ++freq_neighbor_offset) {
+                    for (int drift_neighbor_offset=-neighbor_l1_dist + abs(freq_neighbor_offset); drift_neighbor_offset < neighbor_l1_dist-abs(freq_neighbor_offset); ++drift_neighbor_offset) {
+                        auto neighbor_coord = freq_drift_coord{.drift_index=candidate_drift_index, .frequency_channel=candidate_frequency_channel};
 
-                    neighbor_coord.drift_index += neighbor_offset.drift_index;
-                    neighbor_coord.frequency_channel += neighbor_offset.frequency_channel;
+                        neighbor_coord.drift_index += drift_neighbor_offset;
+                        neighbor_coord.frequency_channel += freq_neighbor_offset;
 
-                    if (neighbor_coord.drift_index >= 0 && neighbor_coord.drift_index < number_drifts &&
-                            neighbor_coord.frequency_channel >= 0 && neighbor_coord.frequency_channel < number_channels) {
+                        if (neighbor_coord.drift_index >= 0 && neighbor_coord.drift_index < number_drifts &&
+                                neighbor_coord.frequency_channel >= 0 && neighbor_coord.frequency_channel < number_channels) {
 
-                        auto linear_neighbor_index = neighbor_coord.drift_index * number_channels + neighbor_coord.frequency_channel;
-                        auto neighbor_val = doppler_spectrum_data[linear_neighbor_index];
-                        auto neighbor_noise = noise_per_drift[neighbor_coord.drift_index].integration_adjusted_noise;
-                        auto neighbor_snr = (neighbor_val - noise_floor) / neighbor_noise;
-                        if (neighbor_snr > candidate_snr) {
+                            auto linear_neighbor_index = neighbor_coord.drift_index * number_channels + neighbor_coord.frequency_channel;
+                            auto neighbor_val = doppler_spectrum_data[linear_neighbor_index];
+                            auto neighbor_noise = noise_per_drift[neighbor_coord.drift_index].integration_adjusted_noise;
+                            auto neighbor_snr = (neighbor_val - noise_floor) / neighbor_noise;
+                            if (neighbor_snr > candidate_snr) {
+                                neighborhood_max = false;
+                                break; // break sounds right, but may lead to warp divergeance. Benchmark!
+                            }
+                        } else {
                             neighborhood_max = false;
-                            break; // break sounds right, but may lead to warp divergeance. Benchmark!
+                            break;
                         }
-                    } else {
-                        neighborhood_max = false;
-                        break;
                     }
                 }
                 if (neighborhood_max) {
@@ -92,23 +85,24 @@ __global__ void find_components_kernel(float* doppler_spectrum_data,
                     visited[candidate_linear_index] = protohit_index;
 
                     // Assign visited = protohit_index for every neighbor
-                    for (int inner_neighbor_id = 0; inner_neighbor_id < neighborhood_size; ++inner_neighbor_id) {
-                        auto neighbor_offset = s_neighbor_offsets[inner_neighbor_id];
-                        auto neighbor_coord = freq_drift_coord{.drift_index=candidate_drift_index, .frequency_channel=candidate_frequency_channel};
+                    for (int freq_neighbor_offset=-neighbor_l1_dist; freq_neighbor_offset < neighbor_l1_dist; ++freq_neighbor_offset) {
+                        for (int drift_neighbor_offset=-neighbor_l1_dist + abs(freq_neighbor_offset); drift_neighbor_offset < neighbor_l1_dist-abs(freq_neighbor_offset); ++drift_neighbor_offset) {
+                            auto neighbor_coord = freq_drift_coord{.drift_index=candidate_drift_index, .frequency_channel=candidate_frequency_channel};
 
-                        neighbor_coord.drift_index += neighbor_offset.drift_index;
-                        neighbor_coord.frequency_channel += neighbor_offset.frequency_channel;
+                            neighbor_coord.drift_index += drift_neighbor_offset;
+                            neighbor_coord.frequency_channel += freq_neighbor_offset;
 
-                        if (neighbor_coord.drift_index >= 0 && neighbor_coord.drift_index < number_drifts &&
-                                neighbor_coord.frequency_channel >= 0 && neighbor_coord.frequency_channel < number_channels) {
+                                if (neighbor_coord.drift_index >= 0 && neighbor_coord.drift_index < number_drifts &&
+                                        neighbor_coord.frequency_channel >= 0 && neighbor_coord.frequency_channel < number_channels) {
 
-                            auto linear_neighbor_index = neighbor_coord.drift_index * number_channels + neighbor_coord.frequency_channel;
-                            auto neighbor_val = doppler_spectrum_data[linear_neighbor_index];
-                            auto neighbor_noise = noise_per_drift[neighbor_coord.drift_index].integration_adjusted_noise;
-                            auto neighbor_snr = (neighbor_val - noise_floor) / neighbor_noise;
-                            if (neighbor_snr > candidate_snr/2) {
-                                visited[linear_neighbor_index] = protohit_index;
-                            }
+                                    auto linear_neighbor_index = neighbor_coord.drift_index * number_channels + neighbor_coord.frequency_channel;
+                                    auto neighbor_val = doppler_spectrum_data[linear_neighbor_index];
+                                    auto neighbor_noise = noise_per_drift[neighbor_coord.drift_index].integration_adjusted_noise;
+                                    auto neighbor_snr = (neighbor_val - noise_floor) / neighbor_noise;
+                                    if (neighbor_snr > candidate_snr/2) {
+                                        visited[linear_neighbor_index] = protohit_index;
+                                    }
+                                }
                         }
                     }
                 }
@@ -152,19 +146,11 @@ __device__ int find_neighbor_max_snr_protohit_id(uint32_t *visited,
 __global__ void spread_components_kernel(
     uint32_t *visited,
     int32_t number_drifts, int32_t number_channels,
-    freq_drift_coord* neighbor_offsets,
-    int neighborhood_size,
+    int neighbor_l1_dist,
     device_protohit* protohits,
     int* number_protohits,
     int* invalidated_protohits,
     int* changes) {
-
-    extern __shared__ char smem[];
-    freq_drift_coord* s_neighbor_offsets = reinterpret_cast<freq_drift_coord*>(smem);
-    for (int neighbor_coord_ind = threadIdx.x; neighbor_coord_ind < neighborhood_size; neighbor_coord_ind+=blockDim.x) {
-        s_neighbor_offsets[neighbor_coord_ind] = neighbor_offsets[neighbor_coord_ind];
-    }
-    __syncthreads();
 
     auto work_id = blockDim.x * blockIdx.x + threadIdx.x;
     auto increment_size = blockDim.x * gridDim.x;
@@ -187,32 +173,30 @@ __global__ void spread_components_kernel(
             double neighborhood_max_snr = protohit.snr;
             int neighborhood_max_id = -1;
             // bool neighborhood_max = true;
-            int neighbor_index = 0;
             // Expand the neighborhood, adopting the highest SNR protohit within the neighborhood if needed
-            while (neighbor_index < neighborhood_size) {
-                // Compute the neighbor's drift, frequency coord and linear index
-                auto neighbor_offset = s_neighbor_offsets[neighbor_index];
-                auto neighbor_coord = freq_drift_coord{.drift_index=candidate_drift_index, .frequency_channel=candidate_frequency_channel};
+            for (int freq_neighbor_offset=-neighbor_l1_dist; freq_neighbor_offset < neighbor_l1_dist; ++freq_neighbor_offset) {
+                for (int drift_neighbor_offset=-neighbor_l1_dist + abs(freq_neighbor_offset); drift_neighbor_offset < neighbor_l1_dist-abs(freq_neighbor_offset); ++drift_neighbor_offset) {
+                    auto neighbor_coord = freq_drift_coord{.drift_index=candidate_drift_index, .frequency_channel=candidate_frequency_channel};
 
-                neighbor_coord.drift_index += neighbor_offset.drift_index;
-                neighbor_coord.frequency_channel += neighbor_offset.frequency_channel;
+                    neighbor_coord.drift_index += drift_neighbor_offset;
+                    neighbor_coord.frequency_channel += freq_neighbor_offset;
 
-                if (neighbor_coord.drift_index >= 0 && neighbor_coord.drift_index < number_drifts &&
-                        neighbor_coord.frequency_channel >= 0 && neighbor_coord.frequency_channel < number_channels) {
+                    if (neighbor_coord.drift_index >= 0 && neighbor_coord.drift_index < number_drifts &&
+                            neighbor_coord.frequency_channel >= 0 && neighbor_coord.frequency_channel < number_channels) {
 
-                    auto linear_neighbor_index = neighbor_coord.drift_index * number_channels + neighbor_coord.frequency_channel;
+                        auto linear_neighbor_index = neighbor_coord.drift_index * number_channels + neighbor_coord.frequency_channel;
 
-                    auto neighbor_id = visited[linear_neighbor_index];
-                    if (neighbor_id >= 8) {
-                        auto neighbor_protohit = protohits[neighbor_id];
-                        if (neighbor_protohit.snr > neighborhood_max_snr) {
-                            protohits[protohit_id].index_max = {.drift_index=neighbor_coord.drift_index, .frequency_channel=neighbor_coord.frequency_channel};
-                            neighborhood_max_snr = protohits[neighbor_id].snr;
-                            neighborhood_max_id = neighbor_id;
+                        auto neighbor_id = visited[linear_neighbor_index];
+                        if (neighbor_id >= 8) {
+                            auto neighbor_protohit = protohits[neighbor_id];
+                            if (neighbor_protohit.snr > neighborhood_max_snr) {
+                                protohits[protohit_id].index_max = {.drift_index=neighbor_coord.drift_index, .frequency_channel=neighbor_coord.frequency_channel};
+                                neighborhood_max_snr = protohits[neighbor_id].snr;
+                                neighborhood_max_id = neighbor_id;
+                            }
                         }
                     }
                 }
-                neighbor_index++;
             }
             if (neighborhood_max_id > 0) {
                 if (protohits[protohit_id].valid) {
@@ -223,26 +207,23 @@ __global__ void spread_components_kernel(
                 visited[candidate_linear_index] = neighborhood_max_id;
                 *changes += 1;
                 
-                // Change the whole neighborhood?
-                neighbor_index = 0;
                 // Expand the neighborhood, adopting the highest SNR protohit within the neighborhood if needed
-                while (neighbor_index < neighborhood_size) {
-                    // Compute the neighbor's drift, frequency coord and linear index
-                    auto neighbor_offset = s_neighbor_offsets[neighbor_index];
-                    auto neighbor_coord = freq_drift_coord{.drift_index=candidate_drift_index, .frequency_channel=candidate_frequency_channel};
+                for (int freq_neighbor_offset=-neighbor_l1_dist; freq_neighbor_offset < neighbor_l1_dist; ++freq_neighbor_offset) {
+                    for (int drift_neighbor_offset=-neighbor_l1_dist + abs(freq_neighbor_offset); drift_neighbor_offset < neighbor_l1_dist-abs(freq_neighbor_offset); ++drift_neighbor_offset) {
+                        auto neighbor_coord = freq_drift_coord{.drift_index=candidate_drift_index, .frequency_channel=candidate_frequency_channel};
 
-                    neighbor_coord.drift_index += neighbor_offset.drift_index;
-                    neighbor_coord.frequency_channel += neighbor_offset.frequency_channel;
+                        neighbor_coord.drift_index += drift_neighbor_offset;
+                        neighbor_coord.frequency_channel += freq_neighbor_offset;
 
-                    if (neighbor_coord.drift_index >= 0 && neighbor_coord.drift_index < number_drifts &&
-                            neighbor_coord.frequency_channel >= 0 && neighbor_coord.frequency_channel < number_channels) {
+                        if (neighbor_coord.drift_index >= 0 && neighbor_coord.drift_index < number_drifts &&
+                                neighbor_coord.frequency_channel >= 0 && neighbor_coord.frequency_channel < number_channels) {
 
-                        auto linear_neighbor_index = neighbor_coord.drift_index * number_channels + neighbor_coord.frequency_channel;
-                        if (visited[linear_neighbor_index] >= 2) {
-                            visited[linear_neighbor_index] = neighborhood_max_id;
+                            auto linear_neighbor_index = neighbor_coord.drift_index * number_channels + neighbor_coord.frequency_channel;
+                            if (visited[linear_neighbor_index] >= 2) {
+                                visited[linear_neighbor_index] = neighborhood_max_id;
+                            }
                         }
                     }
-                    neighbor_index++;
                 }
 
             }
@@ -422,7 +403,7 @@ bliss::find_components_above_threshold_cuda(bland::ndarray                   dop
                                             float                            noise_floor,
                                             std::vector<protohit_drift_info> noise_per_drift,
                                             float                            snr_threshold,
-                                            std::vector<bland::nd_coords>    max_neighborhood) {
+                                            int                              neighbor_l1_dist) {
 
     auto doppler_spectrum_data    = doppler_spectrum.data_ptr<float>();
     auto doppler_spectrum_strides = doppler_spectrum.strides();
@@ -434,17 +415,8 @@ bliss::find_components_above_threshold_cuda(bland::ndarray                   dop
     auto numel = doppler_spectrum.numel();
 
     thrust::device_vector<protohit_drift_info> dev_noise_per_drift(noise_per_drift.begin(), noise_per_drift.end());
-
-    // This assumes that every array has the same shape/strides (which should be true!!! but needs to be checked)
-    std::vector<freq_drift_coord> neighborhood_offsets;
-    neighborhood_offsets.reserve(max_neighborhood.size());
-    for (auto neighbor_coords : max_neighborhood) {
-        auto n = freq_drift_coord{.drift_index=static_cast<int32_t>(neighbor_coords[0]), .frequency_channel=static_cast<int32_t>(neighbor_coords[1])};
-        neighborhood_offsets.emplace_back(n);
-    }
-    thrust::device_vector<freq_drift_coord> device_neighborhood(neighborhood_offsets.begin(), neighborhood_offsets.end());
     // We can only possibly have one max for every neighborhood, so that's a reasonably efficient max neighborhood
-    thrust::device_vector<device_protohit> dev_protohits(numel / max_neighborhood.size());
+    thrust::device_vector<device_protohit> dev_protohits(numel / (neighbor_l1_dist*neighbor_l1_dist));
 
     int* dev_num_maxima;
     cudaMallocManaged(&dev_num_maxima, sizeof(int));
@@ -456,15 +428,13 @@ bliss::find_components_above_threshold_cuda(bland::ndarray                   dop
 
     int number_blocks = 112;
     int block_size = 512;
-    int smem = sizeof(freq_drift_coord) * device_neighborhood.size();
-    find_components_kernel<<<number_blocks, block_size, smem>>>(
+    find_components_kernel<<<number_blocks, block_size>>>(
         doppler_spectrum_data,
         visited,
         thrust::raw_pointer_cast(dev_noise_per_drift.data()),
         number_drifts, number_channels,
         noise_floor, snr_threshold,
-        thrust::raw_pointer_cast(device_neighborhood.data()),
-        device_neighborhood.size(),
+        neighbor_l1_dist,
         thrust::raw_pointer_cast(dev_protohits.data()),
         dev_num_maxima
     );
@@ -484,11 +454,10 @@ bliss::find_components_above_threshold_cuda(bland::ndarray                   dop
         *u_number_changes = 0;
         *u_invalidated_protohits = 0;
 
-        spread_components_kernel<<<number_blocks, block_size, smem>>>(
+        spread_components_kernel<<<number_blocks, block_size>>>(
             visited,
             number_drifts, number_channels,
-            thrust::raw_pointer_cast(device_neighborhood.data()),
-            device_neighborhood.size(),
+            neighbor_l1_dist,
             thrust::raw_pointer_cast(dev_protohits.data()),
             dev_num_maxima,
             u_invalidated_protohits,

@@ -13,17 +13,6 @@
 using namespace bliss;
 
 std::vector<protohit> bliss::protohit_search(bliss::frequency_drift_plane &drift_plane, noise_stats noise_estimate, hit_search_options options) {
-    // If neighborhood is empty, fill it with L1 distance=1
-    auto neighborhood = options.neighborhood;
-    if (neighborhood.empty()) {
-        neighborhood = {
-                {-1, 0},
-                {1, 0},
-                {0, -1},
-                {0, 1},
-        };
-    }
-
     auto integration_length = drift_plane.integration_steps();
 
     std::vector<protohit_drift_info> noise_per_drift;
@@ -44,10 +33,10 @@ std::vector<protohit> bliss::protohit_search(bliss::frequency_drift_plane &drift
     std::vector<protohit> components;
     if (options.method == hit_search_methods::CONNECTED_COMPONENTS) {
         components = find_components_above_threshold(
-                doppler_spectrum, dedrifted_rfi, noise_estimate.noise_floor(), noise_per_drift, options.snr_threshold, neighborhood);
+                doppler_spectrum, dedrifted_rfi, noise_estimate.noise_floor(), noise_per_drift, options.snr_threshold, options.neighbor_l1_dist);
     } else if (options.method == hit_search_methods::LOCAL_MAXIMA) {
         components = find_local_maxima_above_threshold(
-                doppler_spectrum, dedrifted_rfi, noise_estimate.noise_floor(), noise_per_drift, options.snr_threshold, neighborhood);
+                doppler_spectrum, dedrifted_rfi, noise_estimate.noise_floor(), noise_per_drift, options.snr_threshold, options.neighbor_l1_dist);
     }
 
     return components;
