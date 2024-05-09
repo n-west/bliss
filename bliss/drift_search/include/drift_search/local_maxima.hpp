@@ -14,6 +14,6 @@ std::vector<protohit> find_local_maxima_above_threshold(bland::ndarray   doppler
                                         float                            noise_floor,
                                         std::vector<protohit_drift_info> noise_per_drift,
                                         float                            snr_threshold,
-                                        std::vector<bland::nd_coords>    neighborhood);
+                                        int                              neighbor_l1_dist);
 
 } // namespace bliss

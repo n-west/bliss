@@ -15,8 +15,7 @@ __global__ void local_maxima_kernel(float* doppler_spectrum_data,
     int32_t number_drifts, int32_t number_channels,
     float noise_floor,
     float snr_threshold,
-    freq_drift_coord* neighbor_offsets,
-    int neighborhood_size,
+    int neighbor_l1_dist,
     device_protohit* protohits,
     int* number_protohits) {
 
@@ -39,27 +38,29 @@ __global__ void local_maxima_kernel(float* doppler_spectrum_data,
         if (candidate_snr > snr_threshold) {
             // 4. Check if it is greater than surrounding neighborhood
             bool neighborhood_max = true;
-            for (int neighbor_id = 0; neighbor_id < neighborhood_size; ++neighbor_id) {
-                auto neighbor_offset = neighbor_offsets[neighbor_id];
-                auto neighbor_coord = freq_drift_coord{.drift_index=central_drift_index, .frequency_channel=central_frequency_channel};
+            for (int freq_neighbor_offset = -neighbor_l1_dist; freq_neighbor_offset < neighbor_l1_dist; ++freq_neighbor_offset) {
+                for (int drift_neighbor_offset = -neighbor_l1_dist + abs(freq_neighbor_offset); drift_neighbor_offset < neighbor_l1_dist - abs(freq_neighbor_offset); ++drift_neighbor_offset) {
+                    auto neighbor_coord = freq_drift_coord{.drift_index=central_drift_index, .frequency_channel=central_frequency_channel};
 
-                neighbor_coord.drift_index += neighbor_offset.drift_index;
-                neighbor_coord.frequency_channel += neighbor_offset.frequency_channel;
+                    neighbor_coord.drift_index += drift_neighbor_offset;
+                    neighbor_coord.frequency_channel += freq_neighbor_offset;
 
-                if (neighbor_coord.drift_index >= 0 && neighbor_coord.drift_index < number_drifts &&
+                    if (neighbor_coord.drift_index >= 0 && neighbor_coord.drift_index < number_drifts &&
                         neighbor_coord.frequency_channel >= 0 && neighbor_coord.frequency_channel < number_channels) {
 
-                    auto linear_neighbor_index = neighbor_coord.drift_index * number_channels + neighbor_coord.frequency_channel;
-                    auto neighbor_val = doppler_spectrum_data[linear_neighbor_index];
-                    auto neighbor_noise = noise_per_drift[neighbor_coord.drift_index].integration_adjusted_noise;
-                    auto neighbor_snr = (neighbor_val - noise_floor) / neighbor_noise;
-                    if (neighbor_snr > candidate_snr) {
+                        auto linear_neighbor_index =
+                                neighbor_coord.drift_index * number_channels + neighbor_coord.frequency_channel;
+                        auto neighbor_val   = doppler_spectrum_data[linear_neighbor_index];
+                        auto neighbor_noise = noise_per_drift[neighbor_coord.drift_index].integration_adjusted_noise;
+                        auto neighbor_snr   = (neighbor_val - noise_floor) / neighbor_noise;
+                        if (neighbor_snr > candidate_snr) {
+                            neighborhood_max = false;
+                            break; // break sounds right, but may lead to warp divergeance. Benchmark!
+                        }
+                    } else {
                         neighborhood_max = false;
-                        break; // break sounds right, but may lead to warp divergeance. Benchmark!
+                        break;
                     }
-                } else {
-                    neighborhood_max = false;
-                    break;
                 }
             }
 
@@ -134,7 +135,7 @@ bliss::find_local_maxima_above_threshold_cuda(bland::ndarray                 dop
                                             float                            noise_floor,
                                             std::vector<protohit_drift_info> noise_per_drift,
                                             float                            snr_threshold,
-                                            std::vector<bland::nd_coords>    max_neighborhood) {
+                                            int                              neighbor_l1_dist) {
 
     auto doppler_spectrum_data    = doppler_spectrum.data_ptr<float>();
     auto doppler_spectrum_strides = doppler_spectrum.strides();
@@ -147,16 +148,8 @@ bliss::find_local_maxima_above_threshold_cuda(bland::ndarray                 dop
 
     thrust::device_vector<protohit_drift_info> dev_noise_per_drift(noise_per_drift.begin(), noise_per_drift.end());
 
-    // This assumes that every array has the same shape/strides (which should be true!!! but needs to be checked)
-    std::vector<freq_drift_coord> neighborhood_offsets;
-    neighborhood_offsets.reserve(max_neighborhood.size());
-    for (auto neighbor_coords : max_neighborhood) {
-        auto n = freq_drift_coord{.drift_index=static_cast<int32_t>(neighbor_coords[0]), .frequency_channel=static_cast<int32_t>(neighbor_coords[1])};
-        neighborhood_offsets.emplace_back(n);
-    }
-    thrust::device_vector<freq_drift_coord> device_neighborhood(neighborhood_offsets.begin(), neighborhood_offsets.end());
     // We can only possibly have one max for every neighborhood, so that's a reasonably efficient max neighborhood
-    thrust::device_vector<device_protohit> dev_protohits(numel / max_neighborhood.size());
+    thrust::device_vector<device_protohit> dev_protohits(numel / (neighbor_l1_dist*neighbor_l1_dist));
 
     int* dev_num_maxima;
     cudaMallocManaged(&dev_num_maxima, sizeof(int));
@@ -173,8 +166,7 @@ bliss::find_local_maxima_above_threshold_cuda(bland::ndarray                 dop
         thrust::raw_pointer_cast(dev_noise_per_drift.data()),
         number_drifts, number_channels,
         noise_floor, snr_threshold,
-        thrust::raw_pointer_cast(device_neighborhood.data()),
-        device_neighborhood.size(),
+        neighbor_l1_dist,
         thrust::raw_pointer_cast(dev_protohits.data()),
         dev_num_maxima
     );

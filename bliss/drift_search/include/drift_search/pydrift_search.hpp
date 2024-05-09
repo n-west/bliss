@@ -91,7 +91,7 @@ void bind_pydrift_search(nb::module_ m) {
             .def(nb::init<>())
             .def_rw("method", &bliss::hit_search_options::method)
             .def_rw("snr_threshold", &bliss::hit_search_options::snr_threshold)
-            .def_rw("neighborhood", &bliss::hit_search_options::neighborhood);
+            .def_rw("neighbor_l1_dist", &bliss::hit_search_options::neighbor_l1_dist);
 
     // High-level "hit search" implementation
     m.def("hit_search", nb::overload_cast<bliss::scan, bliss::hit_search_options>(&bliss::hit_search));
