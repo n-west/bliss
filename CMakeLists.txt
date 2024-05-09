@@ -135,8 +135,11 @@ set_package_properties(HDF5 PROPERTIES
     PURPOSE "Read/write BL HDF5-wrapped filterbank data")
 
 # Cap'n proto
-find_package(CapnProto QUIET)
+# find_package(CapnProto QUIET) (disable until we fix using installed capnp)
 if (NOT CapnProto_FOUND)
+  # It's possible that the capnp executable exists without the library which will cause an error when their
+  # versions inevitably don't match
+  unset(CAPNP_EXECUTABLE)
   # capn proto requires CXX extensions
   # https://github.com/capnproto/capnproto/blob/a12c15a7cd0ae5121dca6216f529fb15fdee238c/c%2B%2B/CMakeLists.txt#L152C43-L152C63
   # TODO: try to scope these better
