@@ -8,18 +8,20 @@
 
 #include <string_view>
 #include <vector>
+#include <list>
 
 namespace bliss {
 
 /**
  * write hits as independently serialized cap'n proto messages packed in to a binary file at the given path
 */
-void write_hits_to_file(std::vector<hit> hits, std::string_view file_path);
+template<template<typename> class Container>
+void write_hits_to_file(Container<hit> hits, std::string_view file_path);
 
 /**
  * read cap'n proto serialized hits from file as written by `write_hits_to_file`
 */
-std::vector<hit> read_hits_from_file(std::string_view file_path);
+std::list<hit> read_hits_from_file(std::string_view file_path);
 
 /**
  * write scan metadata and associated hits as cap'n proto messages to binary file at the given path

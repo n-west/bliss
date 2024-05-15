@@ -38,8 +38,8 @@ struct device_protohit {
     // rfi rfi_counts;
     uint8_t low_sk_count;
     uint8_t high_sk_count;
-    bool valid=true;
-    uint32_t invalidated_by=0;
+    // -1 indicates an invalid protohit, 0 indicates valid, > 0 indicates another protohit that is better
+    int invalidated_by=-1;
 };
 
 } // namespace bliss

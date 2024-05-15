@@ -25,7 +25,7 @@ struct raii_file_for_read {
         if (_fd == -1) {
             auto str_err = strerror(errno);
             auto err_msg =
-                    fmt::format("raii_file_for_read: could not open file for reading (fd={}, error={})", _fd, str_err);
+                    fmt::format("raii_file_for_read: could not open file ({}) for reading (fd={}, error={})", file_path, _fd, str_err);
             throw std::runtime_error(err_msg);
         }
     }

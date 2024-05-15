@@ -20,12 +20,12 @@
 using namespace bliss;
 
 
-void bliss::write_hits_to_file(std::vector<hit> hits, std::string_view file_path) {
+template<template<typename> class Container>
+void bliss::write_hits_to_file(Container<hit> hits, std::string_view file_path) {
 
     auto out_file = detail::raii_file_for_write(file_path);
 
-    for (size_t hit_index = 0; hit_index < hits.size(); ++hit_index) {
-        auto                        this_hit = hits[hit_index];
+    for (auto &this_hit : hits) {
         capnp::MallocMessageBuilder message;
         auto                        hit_builder    = message.initRoot<Hit>();
         auto                        signal_builder = hit_builder.initSignal();
@@ -34,11 +34,14 @@ void bliss::write_hits_to_file(std::vector<hit> hits, std::string_view file_path
         capnp::writeMessageToFd(out_file._fd, message);
     }
 }
+template void bliss::write_hits_to_file<std::vector>(std::vector<hit> hits, std::string_view file_path);
+template void bliss::write_hits_to_file<std::list>(std::list<hit> hits, std::string_view file_path);
 
-std::vector<hit> bliss::read_hits_from_file(std::string_view file_path) {
+
+std::list<hit> bliss::read_hits_from_file(std::string_view file_path) {
     auto in_file = detail::raii_file_for_read(file_path);
 
-    std::vector<hit> hits;
+    std::list<hit> hits;
 
     while (true) {
         try {
@@ -63,9 +66,9 @@ void bliss::write_scan_hits_to_file(scan scan_with_hits, std::string_view file_p
     auto                        hit_builder = message.initRoot<ScanDetections>();
     auto                        fil_builder = hit_builder.initScan();
     fil_builder.setFch1(scan_with_hits.fch1());
-    // fil_builder.setBeam(); // not dealing with multiple beams yet
-    // fil_builder.setCoarseChannel(); // not dealing with multiple coarse channels yet
-    // fil_builder.setData(); // don't need or want to duplicate large chunks of data yet
+    // fil_builder.setBeam(); // not dealing with multiple beams (yet)
+    // fil_builder.setCoarseChannel(); // not dealing with multiple coarse channels (yet)
+    // fil_builder.setData(); // don't need or want to duplicate large chunks of data (yet)
     fil_builder.setDec(scan_with_hits.src_dej());
     fil_builder.setRa(scan_with_hits.src_raj());
     fil_builder.setFoff(scan_with_hits.foff());
@@ -87,6 +90,7 @@ void bliss::write_scan_hits_to_file(scan scan_with_hits, std::string_view file_p
         detail::bliss_hit_to_capnp_signal_message(this_signal, hit);
         ++hit_index;
     }
+    fmt::print("Have {} hits (expected {})\n", hit_index, number_hits);
     auto out_file = detail::raii_file_for_write(file_path);
     capnp::writeMessageToFd(out_file._fd, message);
 }
@@ -98,9 +102,13 @@ scan bliss::read_scan_hits_from_file(std::string_view file_path) {
 
     try {
         capnp::StreamFdMessageReader message(in_file._fd);
-        auto                         hit_reader        = message.getRoot<ScanDetections>();
-        auto                         deserialized_scan = hit_reader.getScan();
-        scan_with_hits.set_fch1(deserialized_scan.getFch1());
+
+        auto hit_reader        = message.getRoot<ScanDetections>();
+        auto deserialized_scan = hit_reader.getScan();
+        fmt::print("Setting fields of scan\n");
+        auto fch1 = deserialized_scan.getFch1();
+        scan_with_hits.set_fch1(fch1);
+        fmt::print("made it here\n");
         scan_with_hits.set_foff(deserialized_scan.getFoff());
         scan_with_hits.set_tsamp(deserialized_scan.getTsamp());
         scan_with_hits.set_tstart(deserialized_scan.getTstart());
@@ -108,12 +116,16 @@ scan bliss::read_scan_hits_from_file(std::string_view file_path) {
         scan_with_hits.set_src_dej(deserialized_scan.getDec());
         scan_with_hits.set_src_raj(deserialized_scan.getRa());
         scan_with_hits.set_nchans(deserialized_scan.getNumChannels());
+        fmt::print("Done setting fields\n");
 
         std::list<hit> hits;
 
         auto detections  = hit_reader.getDetections();
         auto number_hits = detections.size();
+        fmt::print("number hits: {}\n", number_hits);
         for (size_t hit_index = 0; hit_index < number_hits; ++hit_index) {
+            fmt::print("pushing back hit index {}/{}\n", hit_index, number_hits);
+
             auto this_detection = detections[hit_index];
             hit  this_hit = detail::capnp_signal_message_to_bliss_hit(this_detection);
             hits.push_back(this_hit);
@@ -122,8 +134,13 @@ scan bliss::read_scan_hits_from_file(std::string_view file_path) {
         // TODO: fix this
         // scan_with_hits.hits(hits);
     } catch (kj::Exception &e) {
+        fmt::print("{}\n", e.getDescription().cStr());
         // We've reached the end of the file.
+    } catch (std::exception e) {
+        fmt::print("{}\n", e.what());
     }
+
+    fmt::print("returning scan\n");
 
     return scan_with_hits;
 }
