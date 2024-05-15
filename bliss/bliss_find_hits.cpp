@@ -68,7 +68,7 @@ int main(int argc, char *argv[]) {
     pipeline_object = bliss::integrate_drifts(pipeline_object, dedrift_options);
 
     auto pipeline_object_with_hits = bliss::hit_search(
-            pipeline_object, {.method = bliss::hit_search_methods::CONNECTED_COMPONENTS, .snr_threshold = 10.0f});
+            pipeline_object, {.method = bliss::hit_search_methods::CONNECTED_COMPONENTS, .snr_threshold = 10.0f, .neighbor_l1_dist=7});
 
     // TODO: add cli args for where to send hits (stdout, file.dat, capn proto serialize,...)
     for (auto &sc : pipeline_object_with_hits._scans) {
