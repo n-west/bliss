@@ -107,8 +107,9 @@ void bind_pycore(nb::module_ m) {
         .def_rw("sigma_clip", &bliss::integrated_flags::sigma_clip);
 
     nb::class_<bliss::observation_target>(m, "observation_target")
-        .def(nb::init<std::vector<bliss::scan>>())
-        .def(nb::init<std::vector<std::string_view>>())
+        .def(nb::init<std::vector<bliss::scan>>(), "scans"_a)
+        .def(nb::init<std::vector<std::string_view>>(), "scan_files"_a)
+        .def(nb::init<std::vector<std::string_view>, int>(), "scan_files"_a, "fine_channels_per_coarse"_a)
         .def("validate_scan_consistency", &bliss::observation_target::validate_scan_consistency)
         .def("get_coarse_channel_with_frequency", &bliss::observation_target::get_coarse_channel_with_frequency, "frequency"_a)
         .def_prop_ro("number_coarse_channels", &bliss::observation_target::get_number_coarse_channels)
@@ -120,8 +121,9 @@ void bind_pycore(nb::module_ m) {
         .def_rw("target_name", &bliss::observation_target::_target_name);
 
     nb::class_<bliss::cadence>(m, "cadence")
-        .def(nb::init<std::vector<bliss::observation_target>>())
-        .def(nb::init<std::vector<std::vector<std::string_view>>>())
+        .def(nb::init<std::vector<bliss::observation_target>>(), "observations"_a)
+        .def(nb::init<std::vector<std::vector<std::string_view>>>(), "scan_files"_a)
+        .def(nb::init<std::vector<std::vector<std::string_view>>, int>(), "scan_files"_a, "fine_channels_per_coarse"_a)
         .def("validate_scan_consistency", &bliss::cadence::validate_scan_consistency)
         .def("get_coarse_channel_with_frequency", &bliss::cadence::get_coarse_channel_with_frequency, "frequency"_a)
         .def_prop_ro("number_coarse_channels", &bliss::cadence::get_number_coarse_channels)
