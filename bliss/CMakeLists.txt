@@ -11,7 +11,6 @@ add_subdirectory(tests)
 add_subdirectory(python)
 
 add_executable(bliss_find_hits bliss_find_hits.cpp)
-
 target_link_libraries(bliss_find_hits
     bliss_core
     drift_search
@@ -20,7 +19,13 @@ target_link_libraries(bliss_find_hits
     flaggers
     fmt::fmt-header-only
     )
-    
+
+add_executable(bliss_hits_to_dat bliss_hits_to_dat.cpp)
+target_link_libraries(bliss_hits_to_dat
+    bliss_serialization
+    fmt::fmt-header-only
+    )
+
 add_executable(event_search event_search.cpp)
 target_link_libraries(event_search
     bliss_serialization

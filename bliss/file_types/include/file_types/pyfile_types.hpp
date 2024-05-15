@@ -22,7 +22,7 @@ void bind_pyfile_types(nb::module_ m) {
             .def("read_data", &bliss::h5_filterbank_file::read_data)
             .def("read_mask", &bliss::h5_filterbank_file::read_mask);
 
-    m.def("write_hits_to_file", &bliss::write_hits_to_file);
+    m.def("write_hits_to_file", &bliss::write_hits_to_file<std::list>);
     m.def("read_hits_from_file", &bliss::read_hits_from_file);
     m.def("write_scan_hits_to_file",
           &bliss::write_scan_hits_to_file,

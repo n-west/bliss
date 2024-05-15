@@ -11,11 +11,13 @@ FetchContent_MakeAvailable(Catch2)
 
 add_executable(test_bliss
     test.cpp
+    test_capnp_roundtrip.cpp
     )
 
 target_link_libraries(test_bliss
   PRIVATE
-  bland
+  bliss_core
+  bliss_serialization
   Catch2::Catch2
   fmt::fmt-header-only
   )
