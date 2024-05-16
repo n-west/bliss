@@ -20,14 +20,12 @@ class scan {
     /**
      * new scan backed by the given `h5_filterbank_file`
      */
-    scan(h5_filterbank_file fb_file);
-    scan(h5_filterbank_file fb_file, int num_fine_channels_per_coarse);
+    scan(h5_filterbank_file fb_file, int num_fine_channels_per_coarse=0);
 
     /**
      * new scan backed by the filterbank file at `file_path`
      */
-    scan(std::string_view file_path);
-    scan(std::string_view file_path, int num_fine_channels_per_coarse);
+    scan(std::string_view file_path, int num_fine_channels_per_coarse=0);
 
     /**
      * read the coarse channel at given index and return shared ownership of it.

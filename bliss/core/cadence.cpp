@@ -34,21 +34,7 @@ bliss::observation_target::observation_target(std::vector<scan> filterbanks) {
     _target_name = extract_source_name_from_scans(_scans);
 }
 
-bliss::observation_target::observation_target(std::vector<std::string> filterbank_paths) {
-    for (const auto &filterbank_path : filterbank_paths) {
-        _scans.emplace_back(filterbank_path);
-    }
-    _target_name = extract_source_name_from_scans(_scans);
-}
-
-bliss::observation_target::observation_target(std::vector<std::string_view> filterbank_paths) {
-    for (const auto &filterbank_path : filterbank_paths) {
-        _scans.emplace_back(filterbank_path);
-    }
-    _target_name = extract_source_name_from_scans(_scans);
-}
-
-bliss::observation_target::observation_target(std::vector<std::string_view> filterbank_paths, int fine_channels_per_coarse) {
+bliss::observation_target::observation_target(std::vector<std::string> filterbank_paths, int fine_channels_per_coarse) {
     for (const auto &filterbank_path : filterbank_paths) {
         _scans.emplace_back(filterbank_path, fine_channels_per_coarse);
     }
@@ -99,6 +85,9 @@ int bliss::observation_target::get_number_coarse_channels() {
 }
 
 bliss::observation_target bliss::observation_target::slice_observation_channels(int start_channel, int count) {
+    if (count == -1) {
+        count = get_number_coarse_channels() - start_channel;
+    }
     observation_target target_coarse_channel;
     for (auto &sc : _scans) {
         target_coarse_channel._scans.push_back(sc.slice_scan_channels(start_channel, count));
@@ -124,13 +113,7 @@ void bliss::observation_target::set_device(std::string_view dev_str) {
 
 bliss::cadence::cadence(std::vector<observation_target> observations) : _observations(observations) {}
 
-bliss::cadence::cadence(std::vector<std::vector<std::string_view>> observations) {
-    for (const auto &target : observations) {
-        _observations.emplace_back(target);
-    }
-}
-
-bliss::cadence::cadence(std::vector<std::vector<std::string_view>> observations, int fine_channels_per_coarse) {
+bliss::cadence::cadence(std::vector<std::vector<std::string>> observations, int fine_channels_per_coarse) {
     for (const auto &target : observations) {
         _observations.emplace_back(target, fine_channels_per_coarse);
     }
