@@ -241,6 +241,11 @@ void bliss::scan::push_device() {
 }
 
 bliss::scan bliss::scan::slice_scan_channels(int start_channel, int count) {
+    if (count == -1) {
+        fmt::print("Got count of -1, replacing with {} - {} = {}\n", get_number_coarse_channels(), start_channel, get_number_coarse_channels() - start_channel);
+        count = get_number_coarse_channels() - start_channel;
+    }
+
     auto sliced_scan = *this;
 
     // what are implications of negative numbers here?

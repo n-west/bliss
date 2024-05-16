@@ -85,9 +85,6 @@ int bliss::observation_target::get_number_coarse_channels() {
 }
 
 bliss::observation_target bliss::observation_target::slice_observation_channels(int start_channel, int count) {
-    if (count == -1) {
-        count = get_number_coarse_channels() - start_channel;
-    }
     observation_target target_coarse_channel;
     for (auto &sc : _scans) {
         target_coarse_channel._scans.push_back(sc.slice_scan_channels(start_channel, count));
