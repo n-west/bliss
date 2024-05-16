@@ -37,7 +37,34 @@ template int8_t      bliss::h5_filterbank_file::read_data_attr<int8_t>(const std
 template int16_t     bliss::h5_filterbank_file::read_data_attr<int16_t>(const std::string &key);
 template int32_t     bliss::h5_filterbank_file::read_data_attr<int32_t>(const std::string &key);
 template int64_t     bliss::h5_filterbank_file::read_data_attr<int64_t>(const std::string &key);
-template std::string bliss::h5_filterbank_file::read_data_attr<std::string>(const std::string &key);
+// template std::string bliss::h5_filterbank_file::read_data_attr<std::string>(const std::string &key);
+
+// Specialization for reading (byte) strings
+template <>
+std::string bliss::h5_filterbank_file::read_data_attr<std::string>(const std::string &key) {
+    if (_h5_data_handle.attrExists(key)) {
+        auto attr  = _h5_data_handle.openAttribute(key);
+        auto dtype = attr.getDataType();
+
+        // Check if the attribute is a byte string
+        if (dtype.getClass() == H5T_STRING && !dtype.isVariableStr()) {
+            // ATA pipeline emits bytestrings for the source_name
+            hsize_t size = attr.getInMemDataSize();
+            std::vector<uint8_t> val(size);
+            attr.read(dtype, val.data());
+
+            // Convert the byte string to a std::string
+            return std::string(val.begin(), val.end());
+        } else {
+            std::string val;
+            attr.read(dtype, &val);
+            return val;
+        }
+    } else {
+        auto err_msg = fmt::format("H5 data does not have an attribute key {}", key);
+        throw std::invalid_argument(err_msg);
+    }
+}
 
 // Specialized for vector<string>
 template <>

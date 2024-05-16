@@ -64,7 +64,7 @@ void bind_pycore(nb::module_ m) {
 
     nb::class_<bliss::scan>(m, "scan")
         .def(nb::init<std::string_view>(), "file_path"_a)
-        .def(nb::init<std::string_view, int>(), "file_path"_a, "fine_channels_per_coarse"_a)
+        .def(nb::init<std::string_view, int>(), "file_path"_a, "fine_channels_per_coarse"_a=0)
         .def("read_coarse_channel", &bliss::scan::read_coarse_channel)
         .def("peak_coarse_channel", &bliss::scan::peak_coarse_channel)
         .def("get_coarse_channel_with_frequency", &bliss::scan::get_coarse_channel_with_frequency, "frequency"_a)
@@ -108,8 +108,7 @@ void bind_pycore(nb::module_ m) {
 
     nb::class_<bliss::observation_target>(m, "observation_target")
         .def(nb::init<std::vector<bliss::scan>>(), "scans"_a)
-        .def(nb::init<std::vector<std::string_view>>(), "scan_files"_a)
-        .def(nb::init<std::vector<std::string_view>, int>(), "scan_files"_a, "fine_channels_per_coarse"_a)
+        .def(nb::init<std::vector<std::string>, int>(), "scan_files"_a, "fine_channels_per_coarse"_a=0)
         .def("validate_scan_consistency", &bliss::observation_target::validate_scan_consistency)
         .def("get_coarse_channel_with_frequency", &bliss::observation_target::get_coarse_channel_with_frequency, "frequency"_a)
         .def_prop_ro("number_coarse_channels", &bliss::observation_target::get_number_coarse_channels)
@@ -122,8 +121,7 @@ void bind_pycore(nb::module_ m) {
 
     nb::class_<bliss::cadence>(m, "cadence")
         .def(nb::init<std::vector<bliss::observation_target>>(), "observations"_a)
-        .def(nb::init<std::vector<std::vector<std::string_view>>>(), "scan_files"_a)
-        .def(nb::init<std::vector<std::vector<std::string_view>>, int>(), "scan_files"_a, "fine_channels_per_coarse"_a)
+        .def(nb::init<std::vector<std::vector<std::string>>, int>(), "scan_files"_a, "fine_channels_per_coarse"_a=0)
         .def("validate_scan_consistency", &bliss::cadence::validate_scan_consistency)
         .def("get_coarse_channel_with_frequency", &bliss::cadence::get_coarse_channel_with_frequency, "frequency"_a)
         .def_prop_ro("number_coarse_channels", &bliss::cadence::get_number_coarse_channels)

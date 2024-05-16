@@ -62,47 +62,6 @@ infer_number_coarse_channels(int number_fine_channels, double foff, double tsamp
     return {1, number_fine_channels};
 }
 
-scan::scan(h5_filterbank_file fb_file) {
-    _h5_file_handle = std::make_shared<h5_filterbank_file>(fb_file);
-    _coarse_channels = std::make_shared<std::map<int, std::shared_ptr<coarse_channel>>>();
-    // double      fch1;
-    _fch1 = fb_file.read_data_attr<double>("fch1");
-    // double      foff;
-    _foff = fb_file.read_data_attr<double>("foff");
-    // int64_t     machine_id;
-    _machine_id = fb_file.read_data_attr<int64_t>("machine_id");
-    // int64_t     nbits;
-    _nbits = fb_file.read_data_attr<int64_t>("nbits");
-    // int64_t     nchans;
-    _nchans = fb_file.read_data_attr<int64_t>("nchans");
-    // int64_t     nifs;
-    _nifs = fb_file.read_data_attr<int64_t>("nifs");
-    // std::string source_name;
-    _source_name = fb_file.read_data_attr<std::string>("source_name");
-    // double      src_dej;
-    _src_dej = fb_file.read_data_attr<double>("src_dej");
-    // double      src_raj;
-    _src_raj = fb_file.read_data_attr<double>("src_raj");
-    // int64_t     telescope_id;
-    _telescope_id = fb_file.read_data_attr<int64_t>("telescope_id");
-    // double      tstamp;
-    _tsamp = fb_file.read_data_attr<double>("tsamp");
-    // double      tstart;
-    _tstart = fb_file.read_data_attr<double>("tstart");
-
-    // int64_t data_type;
-    _data_type = fb_file.read_data_attr<int64_t>("data_type");
-    // double  az_start;
-    _az_start = fb_file.read_data_attr<double>("az_start");
-    // double  za_start;
-    _za_start = fb_file.read_data_attr<double>("za_start");
-
-    // Find the number of coarse channels
-    std::tie(_num_coarse_channels, _fine_channels_per_coarse) =
-            infer_number_coarse_channels(_nchans, 1e6 * _foff, _tsamp);
-}
-
-
 scan::scan(h5_filterbank_file fb_file, int num_fine_channels_per_coarse) {
     // This is mostly duplicate of the inferred version and it would be useful to think
     // about better deferal method that allows inferring channelization OR this version
@@ -140,15 +99,18 @@ scan::scan(h5_filterbank_file fb_file, int num_fine_channels_per_coarse) {
     // double  za_start;
     _za_start = fb_file.read_data_attr<double>("za_start");
 
-    _num_coarse_channels = _nchans / num_fine_channels_per_coarse;
-    _fine_channels_per_coarse = num_fine_channels_per_coarse;
+    if (num_fine_channels_per_coarse == 0) {
+        // Find the number of coarse channels
+        std::tie(_num_coarse_channels, _fine_channels_per_coarse) =
+                infer_number_coarse_channels(_nchans, 1e6 * _foff, _tsamp);
+    } else {
+        _num_coarse_channels = _nchans / num_fine_channels_per_coarse;
+        _fine_channels_per_coarse = num_fine_channels_per_coarse;
+    }
     if (_num_coarse_channels * _fine_channels_per_coarse != _nchans) {
         fmt::print("WARN: the provided number of fine channels per coarse ({}) is not divisible by the total number of channels ({})\n", num_fine_channels_per_coarse, _nchans);
     }
 }
-
-
-scan::scan(std::string_view file_path) : scan(h5_filterbank_file(file_path)) {}
 
 scan::scan(std::string_view file_path, int num_fine_channels_per_coarse) : scan(h5_filterbank_file(file_path), num_fine_channels_per_coarse) {}
 
@@ -279,6 +241,11 @@ void bliss::scan::push_device() {
 }
 
 bliss::scan bliss::scan::slice_scan_channels(int start_channel, int count) {
+    if (count == -1) {
+        fmt::print("Got count of -1, replacing with {} - {} = {}\n", get_number_coarse_channels(), start_channel, get_number_coarse_channels() - start_channel);
+        count = get_number_coarse_channels() - start_channel;
+    }
+
     auto sliced_scan = *this;
 
     // what are implications of negative numbers here?

@@ -16,14 +16,12 @@ struct observation_target {
   public:
     observation_target() = default;
     observation_target(std::vector<scan> filterbanks);
-    observation_target(std::vector<std::string_view> filterbank_paths);
-    observation_target(std::vector<std::string> filterbank_paths);
 
     /**
      * Create an observation target from a list of scan filepaths and a number of fine channels per
      * coarse channel to assume each scan has.
     */
-    observation_target(std::vector<std::string_view> filterbank_paths, int fine_channels_per_coarse);
+    observation_target(std::vector<std::string> filterbank_paths, int fine_channels_per_coarse=0);
 
     /**
      * Validate consistency of scans in this observation target. Each scan should:
@@ -82,15 +80,10 @@ struct cadence {
     cadence(std::vector<observation_target> observations);
 
     /**
-     * Build a cadence by reading file paths to scans
-     */
-    cadence(std::vector<std::vector<std::string_view>> observations);
-
-    /**
      * Build a cadence by reading file paths to scans assuming the given number of fine channels per coarse
      * in each scan
     */
-    cadence(std::vector<std::vector<std::string_view>> observations, int fine_channels_per_coarse);
+    cadence(std::vector<std::vector<std::string>> observations, int fine_channels_per_coarse=0);
     // TODO might be nice to be able to just give a list of scan, then look at that metadata to autosort
     // targets
 
