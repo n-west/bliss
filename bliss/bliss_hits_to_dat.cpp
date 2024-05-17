@@ -43,8 +43,8 @@ int main(int argc, char *argv[]) {
     }
 
     for (const auto &f : hit_files) {
-        auto scan_with_hits = bliss::read_scan_hits_from_file(f);
-        for (auto &h : scan_with_hits.hits()) {
+        auto hits = bliss::read_hits_from_file(f);
+        for (auto &h : hits) {
             std::cout << h.repr() << std::endl;
         }
         // auto hits = bliss::read_hits_from_file(f);

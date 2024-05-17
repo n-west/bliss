@@ -105,10 +105,8 @@ scan bliss::read_scan_hits_from_file(std::string_view file_path) {
 
         auto hit_reader        = message.getRoot<ScanDetections>();
         auto deserialized_scan = hit_reader.getScan();
-        fmt::print("Setting fields of scan\n");
         auto fch1 = deserialized_scan.getFch1();
         scan_with_hits.set_fch1(fch1);
-        fmt::print("made it here\n");
         scan_with_hits.set_foff(deserialized_scan.getFoff());
         scan_with_hits.set_tsamp(deserialized_scan.getTsamp());
         scan_with_hits.set_tstart(deserialized_scan.getTstart());
@@ -116,7 +114,6 @@ scan bliss::read_scan_hits_from_file(std::string_view file_path) {
         scan_with_hits.set_src_dej(deserialized_scan.getDec());
         scan_with_hits.set_src_raj(deserialized_scan.getRa());
         scan_with_hits.set_nchans(deserialized_scan.getNumChannels());
-        fmt::print("Done setting fields\n");
 
         std::list<hit> hits;
 
@@ -140,7 +137,6 @@ scan bliss::read_scan_hits_from_file(std::string_view file_path) {
         fmt::print("{}\n", e.what());
     }
 
-    fmt::print("returning scan\n");
 
     return scan_with_hits;
 }
