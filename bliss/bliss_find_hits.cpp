@@ -31,6 +31,7 @@ int main(int argc, char *argv[]) {
             .desmear = true, .low_rate = -500, .high_rate = 500, .rate_step_size = 1};
     std::string device="cuda:0";
     int nchan_per_coarse=0;
+    bliss::hit_search_options hit_search_options{.method = bliss::hit_search_methods::CONNECTED_COMPONENTS, .snr_threshold = 10.0f, .neighbor_l1_dist=7};
     bool help = false;
     auto cli = (
         (
@@ -42,6 +43,7 @@ int main(int argc, char *argv[]) {
              clipp::option("--nodesmear").set(dedrift_options.desmear, false)) % "Desmear the drift plane to compensate for drift rate crossing channels",
             (clipp::option("-m", "--min-rate") & clipp::value("min-rate").set(dedrift_options.low_rate)) % "Minimum drift rate (-5 Hz/sec)",
             (clipp::option("-M", "--max-rate") & clipp::value("max-rate").set(dedrift_options.high_rate)) % "Maximum drift rate (+5 Hz/sec)",
+            (clipp::option("-s", "--snr") & clipp::value("snr_threshold").set(hit_search_options.snr_threshold)) % "SNR threshold (10)",
             (clipp::option("--nchan-per-coarse") & clipp::value("nchan_per_coarse").set(nchan_per_coarse)) % "number of fine channels per coarse to use (default: 0 auto-detects)"
         )
         |
@@ -71,8 +73,10 @@ int main(int argc, char *argv[]) {
 
     pipeline_object = bliss::integrate_drifts(pipeline_object, dedrift_options);
 
+    pipeline_object.set_device("cpu");
+
     auto pipeline_object_with_hits = bliss::hit_search(
-            pipeline_object, {.method = bliss::hit_search_methods::CONNECTED_COMPONENTS, .snr_threshold = 10.0f, .neighbor_l1_dist=7});
+            pipeline_object, hit_search_options);
 
     // TODO: add cli args for where to send hits (stdout, file.dat, capn proto serialize,...)
     for (auto &sc : pipeline_object_with_hits._scans) {
@@ -81,6 +85,7 @@ int main(int argc, char *argv[]) {
         for (auto &h : hits) {
             fmt::print("{}\n", h.repr());
         }
+        bliss::write_hits_to_file(hits, "hitsout.cp");
     }
 
 }
