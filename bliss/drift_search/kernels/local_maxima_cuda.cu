@@ -55,15 +55,15 @@ __global__ void local_maxima_kernel(float* doppler_spectrum_data,
                         auto neighbor_snr   = (neighbor_val - noise_floor) / neighbor_noise;
                         if (neighbor_snr > candidate_snr) {
                             neighborhood_max = false;
-                            break; // break sounds right, but may lead to warp divergeance. Benchmark!
+                            goto neighborhood_checked;
                         }
                     } else {
                         neighborhood_max = false;
-                        break;
+                        goto neighborhood_checked;
                     }
                 }
             }
-
+            neighborhood_checked:
             if (neighborhood_max) {
                 auto protohit_index = atomicAdd(number_protohits, 1);
                 protohits[protohit_index].index_max = {.drift_index=central_drift_index, .frequency_channel=central_frequency_channel};

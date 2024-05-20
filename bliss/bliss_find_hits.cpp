@@ -26,7 +26,7 @@ int main(int argc, char *argv[]) {
 
     std::vector<std::string> pipeline_files;
     int coarse_channel=0;
-    int number_coarse=1;
+    int number_coarse_channels=1;
     bliss::integrate_drifts_options dedrift_options{
             .desmear = true, .low_rate = -500, .high_rate = 500, .rate_step_size = 1};
     std::string device="cuda:0";
@@ -37,13 +37,16 @@ int main(int argc, char *argv[]) {
         (
             clipp::values("files").set(pipeline_files) % "input hdf5 filterbank files",
             (clipp::option("-c", "--coarse-channel") & clipp::value("coarse_channel").set(coarse_channel)) % "Coarse channel to process",
-            (clipp::option("--number-coarse") & clipp::value("number_coarse").set(number_coarse)) % "Number of coarse channels to process",
+            (clipp::option("--number-coarse") & clipp::value("number_coarse_channels").set(number_coarse_channels)) % "Number of coarse channels to process",
             (clipp::option("-d", "--device") & clipp::value("device").set(device)) % "Compute device to use",
             (clipp::option("--desmear") .set(dedrift_options.desmear, true) |
              clipp::option("--nodesmear").set(dedrift_options.desmear, false)) % "Desmear the drift plane to compensate for drift rate crossing channels",
             (clipp::option("-m", "--min-rate") & clipp::value("min-rate").set(dedrift_options.low_rate)) % "Minimum drift rate (-5 Hz/sec)",
             (clipp::option("-M", "--max-rate") & clipp::value("max-rate").set(dedrift_options.high_rate)) % "Maximum drift rate (+5 Hz/sec)",
+            (clipp::option("--local-maxima") .set(hit_search_options.method, bliss::hit_search_methods::LOCAL_MAXIMA) |
+             clipp::option("--connected-components").set(hit_search_options.method, bliss::hit_search_methods::CONNECTED_COMPONENTS)) % "select the hit search method",
             (clipp::option("-s", "--snr") & clipp::value("snr_threshold").set(hit_search_options.snr_threshold)) % "SNR threshold (10)",
+            (clipp::option("--distance") & clipp::value("l1_distance").set(hit_search_options.neighbor_l1_dist)) % "L1 distance to consider hits connected (7)",
             (clipp::option("--nchan-per-coarse") & clipp::value("nchan_per_coarse").set(nchan_per_coarse)) % "number of fine channels per coarse to use (default: 0 auto-detects)"
         )
         |
@@ -59,7 +62,7 @@ int main(int argc, char *argv[]) {
 
     auto pipeline_object = bliss::observation_target(pipeline_files, nchan_per_coarse);
 
-    pipeline_object = pipeline_object.slice_observation_channels(coarse_channel, number_coarse);
+    pipeline_object = pipeline_object.slice_observation_channels(coarse_channel, number_coarse_channels);
 
     pipeline_object.set_device(device);
 
@@ -73,7 +76,7 @@ int main(int argc, char *argv[]) {
 
     pipeline_object = bliss::integrate_drifts(pipeline_object, dedrift_options);
 
-    pipeline_object.set_device("cpu");
+    // pipeline_object.set_device("cpu");
 
     auto pipeline_object_with_hits = bliss::hit_search(
             pipeline_object, hit_search_options);
