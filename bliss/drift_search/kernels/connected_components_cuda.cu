@@ -11,7 +11,7 @@ using namespace bliss;
 
 
 __global__ void initialize_components_kernel(float* doppler_spectrum_data,
-    uint32_t *g_visited,
+    uint32_t *g_labels,
     protohit_drift_info* noise_per_drift,
     int32_t number_drifts, int32_t number_channels,
     float noise_floor,
@@ -19,20 +19,20 @@ __global__ void initialize_components_kernel(float* doppler_spectrum_data,
     int neighbor_l1_dist,
     device_protohit* protohits,
     int* number_protohits,
-    int* m_non_core_labels) {
+    int n_max_protohits) {
 
     // Strategy:
-    // 1) grid-strided loop to label each bin in freq-drift plane as a local_maxima with a unique id, above SNR threshold,
-    // above SNR/2 threshold, or not above SNR threshold
-    // 2) while changed > 0:
-    //   A) grid-stride loop and replace the neighborhood with the highest index of the neighborhood
+    // 1) grid-strided loop to visit each pixel. For each pixel:
+    //   1a) if below threshold: leave 0
+    //   1b) if above threshold: look at neighborhood SNRs
+    //   If this is the neighborhood max, then grab a new unique id and fill in protohit details
+    //   If this is not the neighborhood max, set to a fake label id that is based on the linear index of neighborhood max
 
-    // g_visited possible values:
-    // 0: not g_visited
-    // 1: g_visited, not above SNR threshold
-    // 2: g_visited, above SNR/2
-    // 3: g_visited, above SNR
-    // >=8: g_visited, above SNR and local_maxima
+
+    // g_visited possible values after this routine:
+    // 0: below threshold
+    // >=8 && < n_max_protohits: local maxima
+    // > n_max_protohits: non-maximum but points to index of the max of this neighborhood
 
     auto work_id = blockDim.x * blockIdx.x + threadIdx.x;
     auto increment_size = blockDim.x * gridDim.x;
@@ -42,41 +42,44 @@ __global__ void initialize_components_kernel(float* doppler_spectrum_data,
         auto candidate_drift_index = n / number_channels;
 
         auto candidate_linear_index = candidate_drift_index * number_channels + candidate_frequency_channel;
-        if (g_visited[candidate_linear_index] == 0) {
-            g_visited[candidate_linear_index] = 1;
-            auto candidate_val = doppler_spectrum_data[candidate_linear_index];
-            auto noise_at_candidate_drift = noise_per_drift[candidate_drift_index].integration_adjusted_noise;
-            auto candidate_snr = (candidate_val - noise_floor) / noise_at_candidate_drift;
-            if (candidate_snr > snr_threshold) {
-                // g_visited[candidate_linear_index] = 3;
+        auto candidate_val = doppler_spectrum_data[candidate_linear_index];
+        auto noise_at_candidate_drift = noise_per_drift[candidate_drift_index].integration_adjusted_noise;
+        auto candidate_snr = (candidate_val - noise_floor) / noise_at_candidate_drift;
+        auto neighborhood_max_snr = candidate_snr;
+        auto neighborhood_max_index = candidate_linear_index;
+        if (candidate_snr > snr_threshold/2) {
+            // Look at the entire neighborhood
+            bool is_neighborhood_max = true;
+            for (int freq_neighbor_offset=-neighbor_l1_dist; freq_neighbor_offset < neighbor_l1_dist; ++freq_neighbor_offset) {
+                for (int drift_neighbor_offset=-neighbor_l1_dist + abs(freq_neighbor_offset); drift_neighbor_offset < neighbor_l1_dist-abs(freq_neighbor_offset); ++drift_neighbor_offset) {
+                    auto neighbor_coord = freq_drift_coord{.drift_index=candidate_drift_index, .frequency_channel=candidate_frequency_channel};
 
-                // Set to a unique id if this is a local maxima
-                bool neighborhood_max = true;
-                for (int freq_neighbor_offset=-neighbor_l1_dist; freq_neighbor_offset < neighbor_l1_dist; ++freq_neighbor_offset) {
-                    for (int drift_neighbor_offset=-neighbor_l1_dist + abs(freq_neighbor_offset); drift_neighbor_offset < neighbor_l1_dist-abs(freq_neighbor_offset); ++drift_neighbor_offset) {
-                        auto neighbor_coord = freq_drift_coord{.drift_index=candidate_drift_index, .frequency_channel=candidate_frequency_channel};
+                    neighbor_coord.drift_index += drift_neighbor_offset;
+                    neighbor_coord.frequency_channel += freq_neighbor_offset;
 
-                        neighbor_coord.drift_index += drift_neighbor_offset;
-                        neighbor_coord.frequency_channel += freq_neighbor_offset;
+                    // Validate the bounds are within tolerance
+                    if (neighbor_coord.drift_index >= 0 && neighbor_coord.drift_index < number_drifts &&
+                            neighbor_coord.frequency_channel >= 0 && neighbor_coord.frequency_channel < number_channels) {
 
-                        if (neighbor_coord.drift_index >= 0 && neighbor_coord.drift_index < number_drifts &&
-                                neighbor_coord.frequency_channel >= 0 && neighbor_coord.frequency_channel < number_channels) {
-
-                            auto linear_neighbor_index = neighbor_coord.drift_index * number_channels + neighbor_coord.frequency_channel;
-                            auto neighbor_val = doppler_spectrum_data[linear_neighbor_index];
-                            auto neighbor_noise = noise_per_drift[neighbor_coord.drift_index].integration_adjusted_noise;
-                            auto neighbor_snr = (neighbor_val - noise_floor) / neighbor_noise;
-                            if (neighbor_snr > candidate_snr) {
-                                neighborhood_max = false;
-                                break; // break sounds right, but may lead to warp divergeance. Benchmark!
-                            }
-                        } else {
-                            neighborhood_max = false;
-                            break;
+                        auto linear_neighbor_index = neighbor_coord.drift_index * number_channels + neighbor_coord.frequency_channel;
+                        auto neighbor_val = doppler_spectrum_data[linear_neighbor_index];
+                        auto neighbor_noise = noise_per_drift[neighbor_coord.drift_index].integration_adjusted_noise;
+                        auto neighbor_snr = (neighbor_val - noise_floor) / neighbor_noise;
+                        if (neighbor_snr > neighborhood_max_snr) {
+                            is_neighborhood_max = false;
+                            neighborhood_max_snr = neighbor_snr;
+                            neighborhood_max_index = linear_neighbor_index;
                         }
+                    } else {
+                        // The neighborhood is out of bounds, so we won't let this be a neighborhood max
+                        is_neighborhood_max = false;
+                        goto done; // Multi-break required
                     }
                 }
-                if (neighborhood_max) {
+            }
+            if (is_neighborhood_max) {
+                if (candidate_snr > snr_threshold) {
+                    // Get a unique label id and fill in details
                     // TODO: sanity check that number_protohits is actually below the max number of protohits we allocated space for
                     auto protohit_index = atomicAdd(number_protohits, 1);
                     protohits[protohit_index].index_max = {.drift_index=candidate_drift_index, .frequency_channel=candidate_frequency_channel};
@@ -85,106 +88,78 @@ __global__ void initialize_components_kernel(float* doppler_spectrum_data,
                     protohits[protohit_index].desmeared_noise = noise_at_candidate_drift;
                     protohits[protohit_index].invalidated_by = 0;
 
-                    g_visited[candidate_linear_index] = protohit_index;
+                    g_labels[candidate_linear_index] = protohit_index;
                 } else {
-                    // These need a label but aren't true hits and don't have allocated memory for them!
-                    auto nonprotohit_label = atomicAdd(m_non_core_labels, 1);
-                    g_visited[candidate_linear_index] = nonprotohit_label;
+                    // Nothing needs to happen here, but this could happen because
+                    // this pixel is the center and above snr_threshold/2
                 }
-
+            } else {
+                // Assign to a unique label id that doesn't get metadata, but is based on neighborhood max value
+                g_labels[candidate_linear_index] = n_max_protohits + neighborhood_max_index;
             }
-            // TODO: come back to this, we might just want to make this a non-core label
-            //  else if (candidate_snr > snr_threshold/2) {
-            //     g_visited[candidate_linear_index] = 2;
-            // }
-        } else {
-
+            done: ; // empty statement to avoid a warning
         }
+
     }
 }
 
-__device__ int bfs_greedy_search_connected_protohit(uint32_t *g_visited,
-    int number_drifts, int number_channels,
-    freq_drift_coord central_point,
-    int neighbor_l1_dist,
-    device_protohit* protohits,
-    int* number_protohits,
-    int first_noncore_label) {
+__device__ int find_root(uint32_t *g_labels,
+    int linear_index,
+    int first_nonroot_label) {
 
-    bool found_real_protohit = false;
-    float best_real_protohit_snr = -9999;
-    int best_protohit_id = 0;
-    // Check all of the neighbors for the highest SNR protohit
-    for (int freq_neighbor_offset=-neighbor_l1_dist; freq_neighbor_offset < neighbor_l1_dist; ++freq_neighbor_offset) {
-        for (int drift_neighbor_offset=-neighbor_l1_dist + abs(freq_neighbor_offset); drift_neighbor_offset < neighbor_l1_dist-abs(freq_neighbor_offset); ++drift_neighbor_offset) {
-            auto neighbor_coord = central_point;
-            neighbor_coord.drift_index += drift_neighbor_offset;
-            neighbor_coord.frequency_channel += freq_neighbor_offset;
-
-            if (neighbor_coord.drift_index >= 0 && neighbor_coord.drift_index < number_drifts &&
-                    neighbor_coord.frequency_channel >= 0 && neighbor_coord.frequency_channel < number_channels) {
-
-                auto linear_neighbor_index = neighbor_coord.drift_index * number_channels + neighbor_coord.frequency_channel;
-
-                auto neighbor_id = g_visited[linear_neighbor_index];
-                if (neighbor_id >= first_noncore_label && !found_real_protohit) {
-                    // we haven't found a core point yet so we can merge to the lower label
-                    best_protohit_id = min(best_protohit_id, neighbor_id);
-                } else if (neighbor_id >= 8 && neighbor_id < first_noncore_label) {
-                    auto neighbor_snr = protohits[neighbor_id].snr;
-                    if (!found_real_protohit || neighbor_snr > best_real_protohit_snr) {
-                        best_real_protohit_snr = neighbor_snr;
-                        best_protohit_id = neighbor_id;
-                        found_real_protohit = true;
-                    }
-                }
-            }
-        }
+    auto component = g_labels[linear_index];
+    // Keep climbing to subsequently higher maxima until reaching a local maxima which is the root of this graph
+    while (component > first_nonroot_label) {
+        auto node_address = component - first_nonroot_label;
+        component = g_labels[node_address];
     }
-    // We now want to expand our perimeter somehow. At our neighborhood edges look at their neighbors but we also don't need to bother
-    // looking back at places we've already looked
-    if (found_real_protohit) {
-        return best_protohit_id;
-    } else {
-        return -1;
-    }
+    return component;
 }
 
-__global__ void scan_connected_component(uint32_t *g_visited,
+
+__global__ void resolve_labels(uint32_t *g_labels,
     int32_t number_drifts, int32_t number_channels,
     int neighbor_l1_dist,
     device_protohit* protohits,
     int* number_protohits,
-    int first_noncore_label) {
+    int first_nonroot_label) {
 
     auto work_id = blockDim.x * blockIdx.x + threadIdx.x;
     auto increment_size = blockDim.x * gridDim.x;
     auto numel = number_drifts * number_channels;
 
     for (int n = work_id; n < numel; n += increment_size) {
+
+        // For each pixel, hill climb to find the root node (which is a legitimate local_maxima)
         auto candidate_frequency_channel = n % number_channels;
         auto candidate_drift_index = n / number_channels;
 
-        auto candidate_linear_index = candidate_drift_index * number_channels + candidate_frequency_channel;
-        auto protohit_id = g_visited[candidate_linear_index];
+        auto linear_index = candidate_drift_index * number_channels + candidate_frequency_channel;
+        auto protohit_id = g_labels[linear_index];
 
         if (protohit_id >= 8) {
-            // Scan the neighborhood for a better label
-            auto neighborhood_anchor = freq_drift_coord{.drift_index=candidate_drift_index, .frequency_channel=candidate_frequency_channel};
-            auto connected_protohit = bfs_greedy_search_connected_protohit(g_visited, number_drifts, number_channels, neighborhood_anchor, neighbor_l1_dist, protohits, number_protohits, first_noncore_label);
-            if (connected_protohit >= 8) {
-                g_visited[candidate_linear_index] = connected_protohit;
+            if (protohit_id > first_nonroot_label) {
+                auto root = find_root(g_labels, linear_index, first_nonroot_label);
+                if (root < first_nonroot_label) {
+                    g_labels[linear_index] = root;
+                } else {
+                    // If our snr was above snr_threshold/2 but below snr and we couldn't connect
+                    // to a valid protohit, womp womp-- not part of a hit
+                    g_labels[linear_index] = 0;
+                }
             }
         }
     }
 }
 
-__global__ void analyze_labels_kernel(
-    uint32_t *g_visited,
+__global__ void merge_labels(
+    uint32_t *g_labels,
     int32_t number_drifts, int32_t number_channels,
     int neighbor_l1_dist,
     device_protohit* protohits,
     int* number_protohits) {
+    // Every node points to a valid protohit, now make every node that is not a component max point
+    // towards component max
 
     // Grid-stride loop to invalidate our neighbor in favor of a component in our neighborhood with higher SNR
     auto work_id = blockDim.x * blockIdx.x + threadIdx.x;
@@ -195,59 +170,84 @@ __global__ void analyze_labels_kernel(
         auto candidate_frequency_channel = n % number_channels;
         auto candidate_drift_index = n / number_channels;
 
-        auto candidate_linear_index = candidate_drift_index * number_channels + candidate_frequency_channel;
-        auto protohit_id = g_visited[candidate_linear_index];
+        auto center_linear_index = candidate_drift_index * number_channels + candidate_frequency_channel;
+        auto protohit_id = g_labels[center_linear_index];
 
         if (protohit_id >= 8) {
-            int neighborhood_best_component = protohit_id;
-            float neighborhood_best_snr = protohits[protohit_id].snr;
+            auto pixel_root = protohit_id;
+            // Chase to the current root
+            while (protohits[pixel_root].invalidated_by != 0) {
+                pixel_root = protohits[pixel_root].invalidated_by;
+            }
 
-            bool oob = false;
             auto central_coord = freq_drift_coord{.drift_index=candidate_drift_index, .frequency_channel=candidate_frequency_channel};
             // Look in our neighborhood for the protohit_id with the highest snr, and track its id
-            for (int freq_neighbor_offset=-neighbor_l1_dist; freq_neighbor_offset < neighbor_l1_dist && !oob; ++freq_neighbor_offset) {
+            for (int freq_neighbor_offset=-neighbor_l1_dist; freq_neighbor_offset < neighbor_l1_dist; ++freq_neighbor_offset) {
                 auto neighbor_coord_freq = central_coord;
                 neighbor_coord_freq.frequency_channel += freq_neighbor_offset;
                 if (neighbor_coord_freq.frequency_channel < 0 || neighbor_coord_freq.frequency_channel >= number_channels) {
-                    // a neighbor is out of bounds, so axe it
-                    neighborhood_best_component = protohit_id;
-                    oob = true;
+                    // a neighbor is out of bounds, don't pay attention to this (shouldn't even get here)
                     break;
                 }
-                for (int drift_neighbor_offset=-neighbor_l1_dist + abs(freq_neighbor_offset); drift_neighbor_offset < neighbor_l1_dist-abs(freq_neighbor_offset) && !oob; ++drift_neighbor_offset) {
+                for (int drift_neighbor_offset=-neighbor_l1_dist + abs(freq_neighbor_offset); drift_neighbor_offset < neighbor_l1_dist-abs(freq_neighbor_offset); ++drift_neighbor_offset) {
                     auto neighbor_coord_drift = neighbor_coord_freq;
                     neighbor_coord_drift.drift_index += drift_neighbor_offset;
 
                     if (neighbor_coord_drift.drift_index < 0 || neighbor_coord_drift.drift_index >= number_drifts) {
-                        // a neighbor is out of bounds, so axe it
-                        neighborhood_best_component = protohit_id;
-                        oob = true;
+                        // a neighbor is out of bounds, don't pay attention to this (shouldn't even get here)
                         break;
                     }
 
-                    auto linear_neighbor_index = neighbor_coord_drift.drift_index * number_channels + neighbor_coord_drift.frequency_channel;
-                    auto neighbor_id = g_visited[linear_neighbor_index];
+                    auto neighbor_linear_index = neighbor_coord_drift.drift_index * number_channels + neighbor_coord_drift.frequency_channel;
+                    auto neighbor_id = g_labels[neighbor_linear_index];
+
                     if (neighbor_id >= 8) {
-                        auto neighbor_snr = protohits[neighbor_id].snr;
-                        if (neighbor_snr > neighborhood_best_snr) {
-                            neighborhood_best_snr = neighbor_snr;
-                            neighborhood_best_component = neighbor_id;
-                        }
-                        // if (neighborhood_best_snr < 1000) {
-                        //     neighborhood_best_component = 1;
-                        // } else {
-                        //     printf("centered at (%lld, %lld): at neighbor %lld, %lld the SNR was %f\n", central_coord.drift_index, central_coord.frequency_channel, neighbor_coord_drift.drift_index, neighbor_coord_drift.frequency_channel, neighbor_snr);
-                        // }
+                        // Go to the neighbor's root
+                        auto neighbor_root = neighbor_id;
+
+                        int old = 0;
+                        int merged_root = pixel_root;
+
+                        do {
+                            // Find the root of our pixel and the neighbor
+                            while (protohits[pixel_root].invalidated_by != 0) {
+                                pixel_root = protohits[pixel_root].invalidated_by;
+                            }
+                            while (protohits[neighbor_root].invalidated_by != 0) {
+                                neighbor_root = protohits[neighbor_root].invalidated_by;
+                            }
+                            if (pixel_root == neighbor_root) {
+                                break;
+                            }
+
+                            // Between the two roots, find the one with better SNR and merge the other to this graph
+                            int to_invalidate = pixel_root;
+                            if (protohits[pixel_root].snr > protohits[neighbor_root].snr) {
+                                to_invalidate = neighbor_root;
+                                merged_root = pixel_root;
+                            } else {
+                                to_invalidate = pixel_root;
+                                merged_root = neighbor_root;
+                            }
+
+                            // printf("looking at pixel %i,%i which has id %i. Its root is %i and a neighbor has root %i\n",
+                            //         candidate_frequency_channel, candidate_drift_index, protohit_id, pixel_root, root_of_neighbor);
+
+                            // Try the (atomic) swap. The current invalidated_field must be 0
+                            old = atomicCAS(
+                                &(protohits[to_invalidate].invalidated_by),
+                                0,
+                                merged_root
+                            );
+
+                            // TODO: path compression
+
+                        } while (old != 0);
+
                     }
                 }
             }
 
-            if (!oob && neighborhood_best_component != protohit_id) {
-                protohits[protohit_id].invalidated_by = neighborhood_best_component;
-            //     atomicCAS(&(protohits[protohit_id].invalidated_by),
-            //         0,
-            //         neighborhood_best_component);
-            }
         }
     }
 }
@@ -255,7 +255,7 @@ __global__ void analyze_labels_kernel(
 __global__ void collect_protohit_md_kernel(
     uint8_t* rfi_low_sk,
     uint8_t* rfi_high_sk,
-    uint32_t *g_visited,
+    uint32_t *g_labels,
     int32_t number_drifts, int32_t number_channels,
     device_protohit* protohits,
     int* number_protohits) {
@@ -277,7 +277,7 @@ __global__ void collect_protohit_md_kernel(
             do {
                 lower_freq_edge_index -= 1;
                 auto linear_index = drift_index * number_channels + lower_freq_edge_index;
-                still_above_snr_2 = g_visited[linear_index] > 1;
+                still_above_snr_2 = g_labels[linear_index] > 1;
             } while(still_above_snr_2 && lower_freq_edge_index > 0);
 
             int upper_freq_edge_index = frequency_channel;
@@ -285,7 +285,7 @@ __global__ void collect_protohit_md_kernel(
             do {
                 upper_freq_edge_index += 1;
                 auto linear_index = drift_index * number_channels + upper_freq_edge_index;
-                still_above_snr_2 = g_visited[linear_index] > 1;
+                still_above_snr_2 = g_labels[linear_index] > 1;
             } while(still_above_snr_2 && upper_freq_edge_index < number_channels-1);
 
             int linear_index = drift_index * number_channels + frequency_channel;
@@ -330,19 +330,10 @@ bliss::find_components_above_threshold_cuda(bland::ndarray                   dop
     *m_num_maxima = 8;
 
     int first_noncore_label = number_protohits;
-    int* m_non_core_labels;
-    cudaMallocManaged(&m_non_core_labels, sizeof(int));
-    *m_non_core_labels = first_noncore_label;
 
-    uint32_t* g_visited;
-    cudaMalloc((void**)&g_visited, sizeof(uint32_t) * number_drifts * number_channels);
-    cudaMemset(g_visited, 0, sizeof(uint32_t) * number_drifts * number_channels);
-
-    // Label equivalence algorithm:
-    // 1) Initialize: Initialize labels for all pixels
-    // 2) Scan: Construct label-equivalence list based on connectivity (what is the best label that each label is equivalent to)
-    // 3) Analysis: Resolve equivalence (replace with the end of the equivalence list)
-
+    uint32_t* g_labels;
+    cudaMalloc((void**)&g_labels, sizeof(uint32_t) * number_drifts * number_channels);
+    cudaMemset(g_labels, 0, sizeof(uint32_t) * number_drifts * number_channels);
 
     // Step 1: Initialize labels
     // Each pixel looks within its neighborhood to determine if it is the neighborhood maxima AND above SNR threshold. If so, it gets a unique
@@ -357,77 +348,73 @@ bliss::find_components_above_threshold_cuda(bland::ndarray                   dop
     int block_size = 512;
     initialize_components_kernel<<<number_blocks, block_size>>>(
         doppler_spectrum_data,
-        g_visited,
+        g_labels,
         thrust::raw_pointer_cast(dev_noise_per_drift.data()),
         number_drifts, number_channels,
         noise_floor, snr_threshold,
         neighbor_l1_dist,
         thrust::raw_pointer_cast(dev_protohits.data()),
         m_num_maxima,
-        m_non_core_labels
+        first_noncore_label
     );
-    auto launch_ret = cudaDeviceSynchronize();
-    auto kernel_ret = cudaGetLastError();
-    if (launch_ret != cudaSuccess) {
-        fmt::print("initialize_components_kernel: cuda launch got error {} ({})\n", launch_ret, cudaGetErrorString(launch_ret));
-    }
-    if (kernel_ret != cudaSuccess) {
-        fmt::print("initialize_components_kernel: cuda kernel got error {} ({})\n", kernel_ret, cudaGetErrorString(kernel_ret));
-    }
+    // auto launch_ret = cudaDeviceSynchronize();
+    // auto kernel_ret = cudaGetLastError();
+    // if (launch_ret != cudaSuccess) {
+    //     fmt::print("initialize_components_kernel: cuda launch got error {} ({})\n", launch_ret, cudaGetErrorString(launch_ret));
+    // }
+    // if (kernel_ret != cudaSuccess) {
+    //     fmt::print("initialize_components_kernel: cuda kernel got error {} ({})\n", kernel_ret, cudaGetErrorString(kernel_ret));
+    // }
 
-    // Step 2: Scan
+    // Step 2: Resolve
     // Each pixel with a protohit id looks at its neighborhood to see if a better protohit (higher SNR) is neighboring it, which invalidates
     // this protohit by the neighboring protohit with better SNR. Use AtomicCAS to swap invalidated_by if our SNR is higher than the current
     // invalidated_by SNR-- that might also require us to invalidate the old node by us as well
     // At the end of this, there should be a fixed number of "valid" protohits that is deterministic but with non-deterministic ids
-    block_size = 1;
-    number_blocks = 1;
-    scan_connected_component<<<number_blocks, block_size>>>(
-        g_visited,
+    resolve_labels<<<number_blocks, block_size>>>(
+        g_labels,
         number_drifts, number_channels,
         neighbor_l1_dist,
         thrust::raw_pointer_cast(dev_protohits.data()),
         m_num_maxima,
         first_noncore_label
     );
-
-    launch_ret = cudaDeviceSynchronize();
-    kernel_ret = cudaGetLastError();
-    if (launch_ret != cudaSuccess) {
-        fmt::print("scan_connected_component: cuda launch got error {} ({})\n", launch_ret, cudaGetErrorString(launch_ret));
-    }
-    if (kernel_ret != cudaSuccess) {
-        fmt::print("scan_connected_component: cuda kernel got error {} ({})\n", kernel_ret, cudaGetErrorString(kernel_ret));
-    }
+    // launch_ret = cudaDeviceSynchronize();
+    // kernel_ret = cudaGetLastError();
+    // if (launch_ret != cudaSuccess) {
+    //     fmt::print("resolve_labels: cuda launch got error {} ({})\n", launch_ret, cudaGetErrorString(launch_ret));
+    // }
+    // if (kernel_ret != cudaSuccess) {
+    //     fmt::print("resolve_labels: cuda kernel got error {} ({})\n", kernel_ret, cudaGetErrorString(kernel_ret));
+    // }
 
     // Step 3: Analysis
     // For each pixel, follow the chain of "invalidated by" kernels to update all labels
-    analyze_labels_kernel<<<112, 512>>>(
-        g_visited,
+    merge_labels<<<number_blocks, block_size>>>(
+        g_labels,
         number_drifts, number_channels,
         neighbor_l1_dist,
         thrust::raw_pointer_cast(dev_protohits.data()),
         m_num_maxima
     );
-
-    launch_ret = cudaDeviceSynchronize();
-    kernel_ret = cudaGetLastError();
-    if (launch_ret != cudaSuccess) {
-        fmt::print("analyze_labels_kernel: cuda launch got error {} ({})\n", launch_ret, cudaGetErrorString(launch_ret));
-    }
-    if (kernel_ret != cudaSuccess) {
-        fmt::print("analyze_labels_kernel: cuda kernel got error {} ({})\n", kernel_ret, cudaGetErrorString(kernel_ret));
-    }
+    // launch_ret = cudaDeviceSynchronize();
+    // kernel_ret = cudaGetLastError();
+    // if (launch_ret != cudaSuccess) {
+    //     fmt::print("merge_labels: cuda launch got error {} ({})\n", launch_ret, cudaGetErrorString(launch_ret));
+    // }
+    // if (kernel_ret != cudaSuccess) {
+    //     fmt::print("merge_labels: cuda kernel got error {} ({})\n", kernel_ret, cudaGetErrorString(kernel_ret));
+    // }
 
     dev_protohits.erase(dev_protohits.begin(), dev_protohits.begin() + 8);
     *m_num_maxima -= 8;
-    fmt::print("dev_protohits.size = {} and m_num_maxima= {}\n", dev_protohits.size(), *m_num_maxima);
-    dev_protohits.resize(*m_num_maxima); // this is probably a do-nothing
+    // fmt::print("dev_protohits.size = {} and m_num_maxima= {}\n", dev_protohits.size(), *m_num_maxima);
+    dev_protohits.resize(*m_num_maxima);
 
-    collect_protohit_md_kernel<<<1, 1>>>(
+    collect_protohit_md_kernel<<<1, 512>>>(
         dedrifted_rfi.low_spectral_kurtosis.data_ptr<uint8_t>(),
         dedrifted_rfi.high_spectral_kurtosis.data_ptr<uint8_t>(),
-        g_visited,
+        g_labels,
         number_drifts, number_channels,
         thrust::raw_pointer_cast(dev_protohits.data()),
         m_num_maxima
@@ -437,8 +424,7 @@ bliss::find_components_above_threshold_cuda(bland::ndarray                   dop
     thrust::host_vector<device_protohit> host_protohits(dev_protohits.begin(), dev_protohits.end());
 
     cudaFree(m_num_maxima);
-    cudaFree(m_non_core_labels);
-    cudaFree(g_visited);
+    cudaFree(g_labels);
 
     std::vector<protohit> export_protohits;
     export_protohits.reserve(host_protohits.size());
