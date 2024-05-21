@@ -148,7 +148,11 @@ std::vector<int64_t> bliss::h5_filterbank_file::get_data_shape() {
         throw std::invalid_argument("Could not find a frequency dimension in dimension labels");
     }
     if (std::get<0>(time_steps) == read_data_attr<int64_t>("nchans") && std::get<0>(freq_bins) != read_data_attr<int64_t>("nchans")) {
-        fmt::print("WARN h5_filterbank_file: the DIMENSION_LABELS appear out of order, time dimension matches nchans\n");
+        static bool warning_issued = false;
+        if (!warning_issued) {
+            fmt::print("WARN h5_filterbank_file: the DIMENSION_LABELS appear out of order, time dimension matches nchans\n");
+            warning_issued = true;
+        }
         // There's some files that have the dim labels for time, channels swapped
         auto temp_time_steps = freq_bins;
         freq_bins            = time_steps;

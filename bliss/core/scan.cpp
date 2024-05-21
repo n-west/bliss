@@ -130,10 +130,10 @@ std::shared_ptr<coarse_channel> bliss::scan::read_coarse_channel(int coarse_chan
         auto global_start_fine_channel = _fine_channels_per_coarse * global_offset_in_file;
         data_offset[2] = global_start_fine_channel;
 
-        fmt::print("DEBUG: reading data from coarse channel {} which translates to offset {} + count {}\n",
-                   global_offset_in_file,
-                   data_offset,
-                   data_count);
+        // fmt::print("DEBUG: reading data from coarse channel {} which translates to offset {} + count {}\n",
+        //            global_offset_in_file,
+        //            data_offset,
+        //            data_count);
         auto data_reader = [h5_file_handle=this->_h5_file_handle, data_offset, data_count](){
             auto data = h5_file_handle->read_data(data_offset, data_count);
             return data;
