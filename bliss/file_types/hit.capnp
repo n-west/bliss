@@ -102,7 +102,19 @@ struct Event {
 
 # This is a filterbank file with detected signals (hits)
 # in bliss we call this a scan with 
-struct ScanDetections {
-  scan @0: Filterbank;
-  detections @1 :List(Signal);
+struct CoarseChannel {
+  md @0: Filterbank;
+  hits @1 :List(Signal);
+}
+
+struct Scan {
+  coarseChannels @0: List(CoarseChannel);
+}
+ 
+struct ObservationTarget {
+  scans @0: List(Scan);
+}
+
+struct Cadence {
+  observations @0: List(ObservationTarget);
 }

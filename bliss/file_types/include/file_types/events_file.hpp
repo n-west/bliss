@@ -18,7 +18,7 @@ struct event;
 void write_events_to_file(std::vector<event> events, std::string_view base_filename);
 
 /**
- * read cap'n proto serialized scan from file as written by `write_scan_hits_to_file`
+ * read cap'n proto serialized scan from file as written by `write_coarse_channel_hits_to_file`
 */
 std::vector<event> read_events_from_file(std::string_view file_path);
 

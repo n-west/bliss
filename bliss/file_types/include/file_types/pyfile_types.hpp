@@ -3,7 +3,7 @@
 
 #include "events_file.hpp"
 #include "h5_filterbank_file.hpp"
-#include "hits_file.hpp"
+#include "cpnp_files.hpp"
 
 #include <nanobind/nanobind.h>
 #include <nanobind/ndarray.h>
@@ -24,15 +24,15 @@ void bind_pyfile_types(nb::module_ m) {
 
     m.def("write_hits_to_file", &bliss::write_hits_to_file<std::list>);
     m.def("read_hits_from_file", &bliss::read_hits_from_file);
-    m.def("write_scan_hits_to_file",
-          &bliss::write_scan_hits_to_file,
+    m.def("write_coarse_channel_hits_to_file",
+          &bliss::write_coarse_channel_hits_to_file,
           "scan_with_hits"_a,
           "file_path"_a,
           "write scan metadata and associated hits as cap'n proto messages to binary file at the given path");
-    m.def("read_scan_hits_from_file",
-          &bliss::read_scan_hits_from_file,
+    m.def("read_coarse_channel_hits_from_file",
+          &bliss::read_coarse_channel_hits_from_file,
           "file_path"_a,
-          "read cap'n proto serialized scan from file as written by `write_scan_hits_to_file`");
+          "read cap'n proto serialized scan from file as written by `write_coarse_channel_hits_to_file`");
     m.def("write_observation_target_hits_to_files",
           &bliss::write_observation_target_hits_to_files,
           "observation_target"_a,
@@ -50,7 +50,7 @@ void bind_pyfile_types(nb::module_ m) {
     m.def("read_cadence_hits_from_files",
           &bliss::read_cadence_hits_from_files,
           "base_filename"_a,
-          "read cap'n proto serialized scan from file as written by `write_scan_hits_to_file`");
+          "read cap'n proto serialized scan from file as written by `write_coarse_channel_hits_to_file`");
     m.def("write_events_to_file", &bliss::write_events_to_file);
     m.def("read_events_from_file", &bliss::read_events_from_file);
 }

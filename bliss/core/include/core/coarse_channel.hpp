@@ -2,60 +2,60 @@
 
 #include <bland/bland.hpp>
 
-#include "noise_power.hpp"
-#include "integrate_drifts_options.hpp"
 #include "frequency_drift_plane.hpp"
 #include "hit.hpp"
+#include "integrate_drifts_options.hpp"
+#include "noise_power.hpp"
 
+#include <functional> // std::function
 #include <list>
 #include <map>
+#include <memory> // std::shared_ptr
 #include <optional>
 #include <string>
 #include <string_view>
 #include <tuple>
-#include <memory> // std::shared_ptr
-#include <functional> // std::function
 #include <variant> // std::variant
 
 namespace bliss {
 
 struct coarse_channel {
 
-    coarse_channel(double         fch1,
-                   double         foff,
-                   int64_t        machine_id,
-                   int64_t        nbits,
-                   int64_t        nchans,
-                   int64_t        ntsteps,
-                   int64_t        nifs,
-                   std::string    source_name,
-                   double         src_dej,
-                   double         src_raj,
-                   int64_t        telescope_id,
-                   double         tsamp,
-                   double         tstart,
-                   int64_t        data_type,
-                   double         az_start,
-                   double         za_start);
+    coarse_channel(double      fch1,
+                   double      foff,
+                   int64_t     machine_id,
+                   int64_t     nbits,
+                   int64_t     nchans,
+                   int64_t     ntsteps,
+                   int64_t     nifs,
+                   std::string source_name,
+                   double      src_dej,
+                   double      src_raj,
+                   int64_t     telescope_id,
+                   double      tsamp,
+                   double      tstart,
+                   int64_t     data_type,
+                   double      az_start,
+                   double      za_start);
 
-    coarse_channel(std::function<bland::ndarray()>  data,
-                   std::function<bland::ndarray()>  mask,
-                   double         fch1,
-                   double         foff,
-                   int64_t        machine_id,
-                   int64_t        nbits,
-                   int64_t        nchans,
-                   int64_t        ntsteps,
-                   int64_t        nifs,
-                   std::string    source_name,
-                   double         src_dej,
-                   double         src_raj,
-                   int64_t        telescope_id,
-                   double         tsamp,
-                   double         tstart,
-                   int64_t        data_type,
-                   double         az_start,
-                   double         za_start);
+    coarse_channel(std::function<bland::ndarray()> data,
+                   std::function<bland::ndarray()> mask,
+                   double                          fch1,
+                   double                          foff,
+                   int64_t                         machine_id,
+                   int64_t                         nbits,
+                   int64_t                         nchans,
+                   int64_t                         ntsteps,
+                   int64_t                         nifs,
+                   std::string                     source_name,
+                   double                          src_dej,
+                   double                          src_raj,
+                   int64_t                         telescope_id,
+                   double                          tsamp,
+                   double                          tstart,
+                   int64_t                         data_type,
+                   double                          az_start,
+                   double                          za_start);
 
     coarse_channel(bland::ndarray data,
                    bland::ndarray mask,
@@ -78,13 +78,13 @@ struct coarse_channel {
 
     bland::ndarray_deferred data();
     bland::ndarray_deferred mask();
-    void           set_mask(bland::ndarray new_mask);
-    void           set_mask(bland::ndarray_deferred new_mask);
+    void                    set_mask(bland::ndarray new_mask);
+    void                    set_mask(bland::ndarray_deferred new_mask);
 
     frequency_drift_plane integrated_drift_plane();
-    void set_integrated_drift_plane(frequency_drift_plane integrated_plane);
-    void set_integrated_drift_plane(std::function<frequency_drift_plane()> integrated_plane);
-    void detach_drift_plane();
+    void                  set_integrated_drift_plane(frequency_drift_plane integrated_plane);
+    void                  set_integrated_drift_plane(std::function<frequency_drift_plane()> integrated_plane);
+    void                  detach_drift_plane();
 
     noise_stats noise_estimate() const;
     void        set_noise_estimate(noise_stats estimate);
@@ -99,7 +99,7 @@ struct coarse_channel {
     /**
      * Set the compute device for this coarse_channel. When `data` or `mask` is requested, it will first
      * be sent to this device if it is not already there.
-    */
+     */
     void set_device(bland::ndarray::dev &device);
     void set_device(std::string_view device);
 
@@ -133,11 +133,11 @@ struct coarse_channel {
     double tstart() const;
     // void        tstart(double);
 
-    int64_t        data_type() const;
+    int64_t data_type() const;
     // void           data_type(int64_t);
-    double         az_start() const;
+    double az_start() const;
     // void           az_start(double);
-    double         za_start() const;
+    double za_start() const;
     // void           za_start(double);
     // All values will be specific to the coarse channel
     // such as fch1 being the first channel of this coarse channel
@@ -154,7 +154,7 @@ struct coarse_channel {
     double      _tsamp;
     double      _tstart;
 
-    int64_t     _ntsteps; // this x nchans is total data volume
+    int64_t _ntsteps; // this x nchans is total data volume
 
     int64_t _data_type;
     double  _az_start;
@@ -165,12 +165,12 @@ struct coarse_channel {
 
     std::optional<noise_stats> _noise_stats;
 
-    std::shared_ptr<std::variant<frequency_drift_plane, std::function<frequency_drift_plane()>>> _integrated_drift_plane = nullptr;
+    std::shared_ptr<std::variant<frequency_drift_plane, std::function<frequency_drift_plane()>>>
+            _integrated_drift_plane = nullptr;
 
     std::shared_ptr<std::variant<std::list<hit>, std::function<std::list<hit>()>>> _hits = nullptr;
 
     bland::ndarray::dev _device = bland::ndarray::dev::cpu;
-
 };
 
 } // namespace bliss

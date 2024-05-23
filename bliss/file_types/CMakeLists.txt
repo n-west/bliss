@@ -32,7 +32,7 @@ if (WITH_CAPNP)
     # TODO: condition out some includes so actual usage of capnp is disabled as well
     target_sources(bliss_serialization
         PRIVATE
-        hits_file.cpp
+        cpnp_files.cpp
         events_file.cpp
         detail/raii_file_helpers.cpp
         detail/cpnp_hit_builder.cpp

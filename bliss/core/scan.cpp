@@ -62,6 +62,23 @@ infer_number_coarse_channels(int number_fine_channels, double foff, double tsamp
     return {1, number_fine_channels};
 }
 
+scan::scan(std::map<int, std::shared_ptr<coarse_channel>> coarse_channels) {
+    _coarse_channels = std::make_shared<std::map<int, std::shared_ptr<bliss::coarse_channel> > >(coarse_channels);
+    // Grab the first coarse channel
+    auto first_cc = _coarse_channels->at(0);
+
+    // Use it to initialize a bunch of metadata
+    _num_coarse_channels = _coarse_channels->size();
+    _foff = first_cc->foff();
+    _fch1 = first_cc->fch1();
+    _nchans = first_cc->nchans() * _num_coarse_channels;
+    _tstart = first_cc->tstart();
+    _tsamp = first_cc->tsamp();
+    _source_name = first_cc->source_name();
+    _ntsteps = first_cc->ntsteps();
+    _tduration_secs = _ntsteps * _tsamp;
+}
+
 scan::scan(h5_filterbank_file fb_file, int num_fine_channels_per_coarse) {
     // This is mostly duplicate of the inferred version and it would be useful to think
     // about better deferal method that allows inferring channelization OR this version
@@ -98,6 +115,15 @@ scan::scan(h5_filterbank_file fb_file, int num_fine_channels_per_coarse) {
     _az_start = fb_file.read_data_attr<double>("az_start");
     // double  za_start;
     _za_start = fb_file.read_data_attr<double>("za_start");
+
+    // This is expected to be [time, feed, freq]
+    auto data_shape = _h5_file_handle->get_data_shape();
+    if (data_shape.size() == 3) {
+        _ntsteps = data_shape[0];
+        _tduration_secs = _ntsteps * _tsamp;
+    } else {
+        fmt::print("ERROR: reading data_shape from HDF5 did not have 3 dimensions but we expect [time, feed, freq]\n");
+    }
 
     if (num_fine_channels_per_coarse == 0) {
         // Find the number of coarse channels
@@ -363,8 +389,8 @@ void bliss::scan::set_za_start(double za_start) {
     _za_start = za_start;
 }
 
-int64_t bliss::scan::slow_time_bins() const {
-    return _slow_time_bins;
+int64_t bliss::scan::ntsteps() const {
+    return _ntsteps;
 }
 
 double bliss::scan::tduration_secs() const {
