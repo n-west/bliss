@@ -56,9 +56,43 @@ infer_number_coarse_channels(int number_fine_channels, double foff, double tsamp
             return std::make_tuple(num_coarse_channels, std::get<0>(channelization));
         }
     }
+
+    // We got a larger number of channels than we would typically want to work with and no
+    // known channelization scheme. Break it down to a workable size. (N.B. original motivation
+    // here is Parkes which gives 64M fine channels in a single coarse per node. The default
+    // behavior of existing pipelines is to imitate 64 coarse channels of 1M fine channels each)
+    // The "reasonable size" is dependent on the number of time steps and the vram we're OK consuming
+    // at once but the more important thing is having safe defaults for current telescopes of interest
+    {
+        // Try 2**18 (Matches ATA)
+        constexpr int common_channelization = 1<<18;
+        auto number_coarse = number_fine_channels / common_channelization;
+        auto remainder_per_coarse = (number_fine_channels % common_channelization) / number_coarse;
+        auto fine_per_coarse = common_channelization + remainder_per_coarse;
+        if (fine_per_coarse * number_coarse == number_fine_channels) {
+            fmt::print("WARN: scan with {} fine channels could not be matched with a known channelization scheme. "
+                    "Rounding from 2**18 fine channels per coarse to give {} coarse channels with {} fine channels each\n",
+                    number_fine_channels, number_coarse, fine_per_coarse);
+            return {number_coarse, fine_per_coarse};
+        }
+    }
+
+    {
+        // Try 1M (Matches Parkes)
+        constexpr int common_channelization = 1000000;
+        auto number_coarse = number_fine_channels / common_channelization;
+        auto remainder_per_coarse = (number_fine_channels % common_channelization) / number_coarse;
+        auto fine_per_coarse = common_channelization + remainder_per_coarse;
+        if (fine_per_coarse * number_coarse == number_fine_channels) {
+            fmt::print("WARN: scan with {} fine channels could not be matched with a known channelization scheme. "
+                    "Rounding from 1M fine channels per coarse to give {} coarse channels with {} fine channels each\n",
+                    number_fine_channels, number_coarse, fine_per_coarse);
+            return {number_coarse, fine_per_coarse};
+        }
+    }
     fmt::print("WARN: scan with {} fine channels could not be matched with a known channelization scheme. "
-               "Assuming 1 coarse channel with {} channels\n",
-               number_fine_channels, number_fine_channels);
+            "Rounding to standard known channelization didn't work, so working from 1 coarse channel\n",
+            number_fine_channels);
     return {1, number_fine_channels};
 }
 
@@ -133,8 +167,9 @@ scan::scan(h5_filterbank_file fb_file, int num_fine_channels_per_coarse) {
         _num_coarse_channels = _nchans / num_fine_channels_per_coarse;
         _fine_channels_per_coarse = num_fine_channels_per_coarse;
     }
+
     if (_num_coarse_channels * _fine_channels_per_coarse != _nchans) {
-        fmt::print("WARN: the provided number of fine channels per coarse ({}) is not divisible by the total number of channels ({})\n", num_fine_channels_per_coarse, _nchans);
+        fmt::print("WARN: the provided number of fine channels per coarse ({}) is not divisible by the total number of channels ({})\n", _fine_channels_per_coarse, _nchans);
     }
 }
 
