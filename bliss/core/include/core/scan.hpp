@@ -17,6 +17,8 @@ class scan {
   public:
     scan() = default;
 
+    scan(std::map<int, std::shared_ptr<coarse_channel>> coarse_channels);
+
     /**
      * new scan backed by the given `h5_filterbank_file`
      */
@@ -113,7 +115,7 @@ class scan {
     double  za_start() const;
     void    set_za_start(double);
 
-    int64_t slow_time_bins() const;
+    int64_t ntsteps() const;
 
     double tduration_secs() const;
 
@@ -144,7 +146,7 @@ class scan {
     double  _az_start;
     double  _za_start;
 
-    // filterbank_channelization_revs _inferred_channelization;
+
     // Derived OR inferred
     int _fine_channels_per_coarse;
     // Derived values at read-time
@@ -152,7 +154,7 @@ class scan {
     int64_t _coarse_channel_offset = 0;
 
     // slow time is number of spectra
-    int64_t _slow_time_bins;
+    int64_t _ntsteps;
     double  _tduration_secs;
 
     bland::ndarray::dev _device = bland::ndarray::dev::cpu;
