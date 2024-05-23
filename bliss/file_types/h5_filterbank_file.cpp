@@ -18,8 +18,44 @@ T bliss::h5_filterbank_file::read_data_attr(const std::string &key) {
         auto attr  = _h5_data_handle.openAttribute(key);
         auto dtype = attr.getDataType();
 
-        attr.read(dtype, &val);
-        return val;
+        // Check the data type and perform the appropriate casting
+        if (dtype == H5::PredType::NATIVE_INT16) {
+            int16_t val;
+            attr.read(dtype, &val);
+            return static_cast<T>(val);
+        } else if (dtype == H5::PredType::NATIVE_UINT16) {
+            uint16_t val;
+            attr.read(dtype, &val);
+            return static_cast<T>(val);
+        } else if (dtype == H5::PredType::NATIVE_INT32) {
+            int32_t val;
+            attr.read(dtype, &val);
+            return static_cast<T>(val);
+        } else if (dtype == H5::PredType::NATIVE_UINT32) {
+            uint32_t val;
+            attr.read(dtype, &val);
+            return static_cast<T>(val);
+        }  else if (dtype == H5::PredType::NATIVE_INT64) {
+            int64_t val;
+            attr.read(dtype, &val);
+            return static_cast<T>(val);
+        }  else if (dtype == H5::PredType::NATIVE_UINT64) {
+            uint64_t val;
+            attr.read(dtype, &val);
+            return static_cast<T>(val);
+        }  else if (dtype == H5::PredType::NATIVE_FLOAT) {
+            float val;
+            attr.read(dtype, &val);
+            return static_cast<T>(val);
+        }  else if (dtype == H5::PredType::NATIVE_DOUBLE) {
+            double val;
+            attr.read(dtype, &val);
+            return static_cast<T>(val);
+        } else {
+            T val;
+            attr.read(dtype, &val);
+            return val;
+        }
     } else {
         auto err_msg = fmt::format("H5 data does not have an attribute key {}", key);
         throw std::invalid_argument(err_msg);
