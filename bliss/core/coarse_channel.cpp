@@ -118,13 +118,15 @@ coarse_channel::coarse_channel(bland::ndarray data,
 }
 
 bland::ndarray_deferred bliss::coarse_channel::data() {
-    _data = _data.to(_device);
-    return _data;
+    // TODO: add an option to compute graph to memoize the data read from disk
+    // _data = _data.to(_device);
+    return _data.to(_device);;
 }
 
 bland::ndarray_deferred bliss::coarse_channel::mask() {
-    _mask = _mask.to(_device);
-    return _mask;
+    // TODO: add an option to compute graph to memoize the mask read from disk
+    // _mask = _mask.to(_device);
+    return _mask.to(_device);
 }
 
 void bliss::coarse_channel::set_mask(bland::ndarray new_mask) {
@@ -308,6 +310,9 @@ frequency_drift_plane bliss::coarse_channel::integrated_drift_plane() {
     if (_integrated_drift_plane == nullptr) {
         throw std::runtime_error("integrated_drift_plane not set");
     }
+    // TODO: this used to hold on to a memoized copy of the result, but is set up to not do that now
+    // in order to save VRAM at a cost of recomputing as needed. This could be passed in as a compute
+    // graph option
     if (std::holds_alternative<std::function<frequency_drift_plane()>>(*_integrated_drift_plane)) {
         auto integrated_drift_plane = std::get<std::function<frequency_drift_plane()>>(*_integrated_drift_plane)();
 

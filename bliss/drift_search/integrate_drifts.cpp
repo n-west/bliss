@@ -50,20 +50,6 @@ std::vector<frequency_drift_plane::drift_rate> compute_drifts(int time_steps, do
 bland::ndarray bliss::integrate_drifts(const bland::ndarray &spectrum_grid, integrate_drifts_options options) {
     auto compute_device = spectrum_grid.device();
     auto drifts = compute_drifts(spectrum_grid.size(0), 1, 1, options);
-
-//     if (compute_device.device_type == kDLCPU) {
-//         auto drift_grid = integrate_linear_rounded_bins_cpu(spectrum_grid, drifts, options);
-//         return drift_grid;
-// #if BLISS_CUDA
-//     } else if (compute_device.device_type == kDLCUDA) {
-//         auto drift_grid = integrate_linear_rounded_bins_cuda(spectrum_grid, drifts, options);
-//         return drift_grid;
-// #endif
-//     } else {
-//         auto drift_grid = integrate_linear_rounded_bins_bland(spectrum_grid, drifts, options);
-//         return drift_grid;
-//         throw std::runtime_error("integrate_drifts not supported on this device");
-//     }
 }
 
 coarse_channel bliss::integrate_drifts(coarse_channel cc_data, integrate_drifts_options options) {
