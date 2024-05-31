@@ -36,7 +36,7 @@ add_feature_info(CUDA WITH_CUDA "Enabling bliss-specific CUDA operations")
 
 if (WITH_CUDA)
   # set(CMAKE_CUDA_ARCHITECTURES 53)
-  set(CMAKE_CUDA_ARCHITECTURES "35;37;50;52;53;60;61;62;70;72;75;80;86;87")
+  set(CMAKE_CUDA_ARCHITECTURES "50;52;53;60;61;62;70;72;75;80;86;87;89")
   # set_property()
 # set(CUDA_SEPARABLE_COMPILATION ON)
   message("**BLISS:: enabling cuda (the language)")

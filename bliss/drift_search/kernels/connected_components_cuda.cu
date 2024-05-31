@@ -225,13 +225,24 @@ __global__ void merge_labels(
                             if (protohits[pixel_root].snr > protohits[neighbor_root].snr) {
                                 to_invalidate = neighbor_root;
                                 merged_root = pixel_root;
-                            } else {
+                            } else if (protohits[neighbor_root].snr > protohits[pixel_root].snr) {
                                 to_invalidate = pixel_root;
                                 merged_root = neighbor_root;
+                            } else {
+                                // the equality condition very rarely can hit. This is known to be possible only at coarse channel
+                                // boundaries with a DC tone right on the edge that crosses above SNR threshold. In this case,
+                                // they should both eventually be invalidated by a closer to DC tone that captures more of the
+                                // signal energy, just merge with a consistent rule: prefer lower linear index
+                                auto neighbor_root_index = protohits[neighbor_root].index_max;
+                                auto pixel_root_index = protohits[pixel_root].index_max;
+                                if (neighbor_root_index.drift_index * number_channels + neighbor_root_index.frequency_channel < pixel_root_index.drift_index * number_channels + pixel_root_index.frequency_channel) {
+                                    to_invalidate = pixel_root;
+                                    merged_root = neighbor_root;
+                                } else {
+                                    to_invalidate = neighbor_root;
+                                    merged_root = pixel_root;
+                                }
                             }
-
-                            // printf("looking at pixel %i,%i which has id %i. Its root is %i and a neighbor has root %i\n",
-                            //         candidate_frequency_channel, candidate_drift_index, protohit_id, pixel_root, root_of_neighbor);
 
                             // Try the (atomic) swap. The current invalidated_field must be 0
                             old = atomicCAS(
@@ -295,9 +306,6 @@ __global__ void collect_protohit_md_kernel(
             this_protohit.index_center = {.drift_index=drift_index, .frequency_channel=(lower_freq_edge_index + upper_freq_edge_index)/2};
 
             protohits[protohit_index] = this_protohit;
-            // protohits[protohit_index].snr = candidate_snr;
-            // protohits[protohit_index].max_integration = candidate_val;
-            // protohits[protohit_index].desmeared_noise = noise_at_candidate_drift;
         }
     }
 }
@@ -408,7 +416,6 @@ bliss::find_components_above_threshold_cuda(bland::ndarray                   dop
 
     dev_protohits.erase(dev_protohits.begin(), dev_protohits.begin() + 8);
     *m_num_maxima -= 8;
-    // fmt::print("dev_protohits.size = {} and m_num_maxima= {}\n", dev_protohits.size(), *m_num_maxima);
     dev_protohits.resize(*m_num_maxima);
 
     collect_protohit_md_kernel<<<1, 512>>>(
