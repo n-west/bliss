@@ -15,6 +15,7 @@ using namespace bland::cpu;
 
 
 ndarray bland::cpu::copy(ndarray a, ndarray &out) {
+    fmt::print("cpu copy\n");
     return dispatch_new2<cpu::unary_op_impl_wrapper, elementwise_copy_op>(out, a);
 }
 

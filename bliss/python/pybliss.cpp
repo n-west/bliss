@@ -11,6 +11,7 @@
 #include "flaggers/pyflaggers.hpp"
 #include "estimators/pyestimators.hpp"
 #include "drift_search/pydrift_search.hpp"
+#include "preprocess/pypreprocess.hpp"
 
 #if BLISS_CUDA
 #include <cuda_runtime.h>
@@ -52,6 +53,8 @@ NB_MODULE(pybliss, m) {
     auto flaggers_module = m.def_submodule("flaggers", "Flaggers");
     bind_pyflaggers(flaggers_module);
 
+    auto preprocess_module = m.def_submodule("preprocess", "Preprocess");
+    bind_pypreprocess(preprocess_module);
     
 
 }

@@ -4,6 +4,7 @@ add_subdirectory(core)
 add_subdirectory(estimators)
 add_subdirectory(file_types)
 add_subdirectory(flaggers)
+add_subdirectory(preprocess)
 add_subdirectory(rfi)
 add_subdirectory(drift_search)
 

@@ -6,7 +6,9 @@
 
 #include <fmt/core.h>
 #include <fmt/ranges.h>
+#include <fmt/std.h>
 
+#include <complex> // std::complex
 #include <numeric> // accumulate
 #include <regex> // regex (parsing device id)
 
@@ -84,7 +86,7 @@ bool bland::ndarray::dev::operator!=(const dev &other) {
 }
 
 std::string bland::ndarray::dev::repr() {
-    auto r = fmt::format("ndarray::dev (.device_type={}, .device_id={})\n", device_type, device_id);
+    auto r = fmt::format("ndarray::dev (.device_type={}, .device_id={})\n", static_cast<int8_t>(device_type), device_id);
     return r;
 }
 
@@ -273,6 +275,8 @@ std::string pretty_print(const ndarray &a) {
         type_specifier = "{:f}";
     } else if (std::is_same<datatype, double>()) {
         dtype_pp = "float64";
+    } else if (std::is_same<datatype, std::complex<float>>()) {
+        dtype_pp = "complex<float32>";
     } else if (std::is_same<datatype, int8_t>()) {
         dtype_pp = "int8_t";
     } else if (std::is_same<datatype, int16_t>()) {
@@ -303,8 +307,8 @@ std::string pretty_print(const ndarray &a) {
     } else {
         dev_pp = "not implemented device";
     }
-    fmt::memory_buffer output_repr;
-    fmt::format_to(output_repr, "bland shape {} with dtype {} on device {}:\n", a.shape(), dtype_pp, dev_pp);
+    std::string output_repr;
+    fmt::format_to(std::back_inserter(output_repr), "bland shape {} with dtype {} on device {}:\n", a.shape(), dtype_pp, dev_pp);
     int count = 0;
     auto a_cpu = bland::to(a, "cpu");
     auto a_data = a_cpu.data_ptr<datatype>();
@@ -317,7 +321,7 @@ std::string pretty_print(const ndarray &a) {
         for (int i = 0; i < a_cpu.shape().size(); ++i) {
             linear_index += a_cpu.offsets()[i] + (index[i] % a_cpu.shape()[i]) * a_cpu.strides()[i];
         }
-        fmt::format_to(output_repr, "{} ", a_data[linear_index]);
+        fmt::format_to(std::back_inserter(output_repr), "{} ", a_data[linear_index]);
 
         // Increment the multi-dimensional index
         for (int i = a_cpu.shape().size() - 1; i >= 0; --i) {
@@ -327,17 +331,29 @@ std::string pretty_print(const ndarray &a) {
             } else {
                 // Otherwise, set it to 0 and move down to the next dim
                 index[i] = 0;
-                fmt::format_to(output_repr, "\n");
+                fmt::format_to(std::back_inserter(output_repr), "\n");
             }
         }
     }
 
-    return fmt::to_string(output_repr);
+    return output_repr;
 }
 
 std::string bland::ndarray::repr() const {
     auto dtype = _tensor.dtype;
     switch (dtype.code) {
+    case kDLComplex: {
+        switch (dtype.bits) {
+        case 64: {
+            return pretty_print<std::complex<float>>(*this);
+        } break;
+        case 128: {
+            return pretty_print<std::complex<double>>(*this);
+        } break;
+        default:
+            throw std::runtime_error("Unsupported float bitwidth");
+        }
+    } break;
     case kDLFloat: {
         switch (dtype.bits) {
         case 32: {

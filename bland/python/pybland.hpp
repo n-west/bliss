@@ -243,6 +243,18 @@ void bind_pybland(nb::module_ m) {
         return r;
     });
 
+    /*********************
+     * Frequency analysis
+    **********************/
+    m.def("fft", [](nb::ndarray<> x) {
+        return bland::fft(nb_to_bland(x));
+    });
+
+    m.def("fft_shift_mag_square", [](nb::ndarray<> x) {
+        return bland::fft_shift_mag_square(nb_to_bland(x));
+    });
+
+
 }
 
 

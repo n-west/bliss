@@ -217,10 +217,10 @@ bliss::integrate_linear_rounded_bins_cuda(bland::ndarray    spectrum_grid,
     auto launch_ret = cudaDeviceSynchronize();
     auto kernel_ret = cudaGetLastError();
     if (launch_ret != cudaSuccess) {
-        fmt::print("cuda launch got error {} ({})\n", launch_ret, cudaGetErrorString(launch_ret));
+        fmt::print("cuda launch got error {} ({})\n", static_cast<int>(launch_ret), cudaGetErrorString(launch_ret));
     }
     if (kernel_ret != cudaSuccess) {
-        fmt::print("cuda launch got error {} ({})\n", kernel_ret, cudaGetErrorString(kernel_ret));
+        fmt::print("cuda launch got error {} ({})\n", static_cast<int>(kernel_ret), cudaGetErrorString(kernel_ret));
     }
 
     // auto first_channel = 0; // This needs to be incrememnted by the offset from the most negative drift

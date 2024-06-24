@@ -74,6 +74,7 @@ struct unary_op_impl_wrapper {
         int64_t a_ptr_offset = std::accumulate(a_offset.begin(), a_offset.end(), 0LL);
         int64_t out_ptr_offset = std::accumulate(out_offset.begin(), out_offset.end(), 0LL);
 
+        fmt::print("cuda::unary_op_impl_wrapper: input offset is {}, computed a_ptr_offset is {}\n", a_offset, a_ptr_offset);
         auto a_data = a.data_ptr<A_type>() + a_ptr_offset;
         auto a_shape = a.shape();
 

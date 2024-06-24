@@ -1,6 +1,7 @@
 #include "bland/ndarray_slice.hpp"
 
 #include "bland/ops/ops.hpp" // bland::slice
+#include <fmt/core.h>
 
 using namespace bland;
 
@@ -52,12 +53,13 @@ template ndarray_slice bland::ndarray::slice(slice_spec,
 ndarray_slice::ndarray_slice(const ndarray &other) : ndarray(other) {}
 
 ndarray_slice &ndarray_slice::operator=(const ndarray_slice &rhs) {
-
+    fmt::print("ndarray_slice::operator= ndarray_slice rhs\n");
     copy(rhs, *this);
     return *this;
 };
 
 ndarray_slice &ndarray_slice::operator=(const ndarray &rhs) {
+    fmt::print("ndarray_slice::operator= ndarray rhs\n");
     copy(rhs, *this);
     return *this;
 };

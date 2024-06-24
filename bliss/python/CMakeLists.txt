@@ -4,6 +4,7 @@ target_link_libraries(pybliss
 PUBLIC
 pybliss_core
 pybland_header
+pybliss_preprocess
 pydrift_search
 pyestimators
 pyfile_types

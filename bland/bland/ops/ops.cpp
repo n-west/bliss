@@ -33,6 +33,7 @@ ndarray bland::copy(ndarray a) {
 }
 
 ndarray bland::copy(ndarray a, ndarray &out) {
+    fmt::print("bland::copy\n");
     return device_dispatch(cpu::copy,
                             #if BLAND_CUDA_CODE
                             cuda::copy,
