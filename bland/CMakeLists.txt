@@ -43,8 +43,6 @@ if (WITH_CUDA)
   set(BLAND_GEN_INCLUDE_DIR ${CMAKE_CURRENT_BINARY_DIR}/bland/include/)
   set(GEN_CUDA_ARCHS_HPP ${BLAND_GEN_INCLUDE_DIR}/generated/bland_cuda_archs.hpp)
 
-  configure_file(${CMAKE_CURRENT_SOURCE_DIR}/bland_cuda_archs.hpp.in ${GEN_CUDA_ARCHS_HPP} @ONLY)
-
   message("BLAND:: enabling cuda (the language)")
   set(CUDA_ARCHITECTURES all)
   enable_language(CUDA)
@@ -53,6 +51,7 @@ if (WITH_CUDA)
 else()
   message("BLAND:: CUDA not found, building without it")
 endif()
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/bland_cuda_archs.hpp.in ${GEN_CUDA_ARCHS_HPP} @ONLY)
 
 
 # Only do these if this is the main project, and not if it is included through add_subdirectory
