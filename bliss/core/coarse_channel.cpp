@@ -1,6 +1,8 @@
 
 #include "core/coarse_channel.hpp"
 
+#include "bland/config.hpp"
+
 #include "fmt/format.h"
 #include "fmt/ranges.h"
 
@@ -177,11 +179,20 @@ bland::ndarray::dev bliss::coarse_channel::device() {
 }
 
 void bliss::coarse_channel::set_device(bland::ndarray::dev &device) {
+    if (device.device_type == bland::ndarray::dev::cuda.device_type ||
+        device.device_type == bland::ndarray::dev::cuda_managed.device_type) {
+        if (!bland::g_config.check_is_valid_cuda_device(device.device_id)) {
+            fmt::print("The selected device id either does not exist or has a compute capability that is not compatible with this build\n");
+            throw std::runtime_error("set_device received invalid cuda device");
+        }
+    }
     _device = device;
 }
 
 void bliss::coarse_channel::set_device(std::string_view device) {
-    _device = device;
+    // convert to dev and defer to other set_device which does checking
+    bland::ndarray::dev proper_dev = device;
+    set_device(proper_dev);
 }
 
 void bliss::coarse_channel::push_device() {

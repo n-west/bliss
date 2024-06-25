@@ -1,0 +1,5 @@
+#pragma once
+#include <array>
+
+
+constexpr std::array<int, @NVCC_NUM_ARCHS@> compiled_archs = {@NVCC_ARCHS_STR@};

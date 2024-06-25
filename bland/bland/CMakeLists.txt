@@ -16,6 +16,8 @@ add_library(bland
     ops/comparison.cpp
     ops/creators.cpp
     ops/statistical.cpp
+
+    config.cpp
 )
 
 if (WITH_CUDA)
@@ -27,6 +29,9 @@ if (WITH_CUDA)
         ops/cuda/ops_cuda.cu
         ops/cuda/statistical_cuda.cu
     )
+
+    target_include_directories(bland PRIVATE ${BLAND_GEN_INCLUDE_DIR})
+    # target_sources(bland PRIVATE ${GEN_CUDA_ARCHS_CPP})
 
     target_link_libraries(bland
         PRIVATE
