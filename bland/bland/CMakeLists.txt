@@ -16,6 +16,8 @@ add_library(bland
     ops/comparison.cpp
     ops/creators.cpp
     ops/statistical.cpp
+
+    config.cpp
 )
 
 if (WITH_CUDA)
@@ -33,6 +35,8 @@ if (WITH_CUDA)
         CUDA::cudart_static
     )
 endif ()
+
+target_include_directories(bland PRIVATE ${BLAND_GEN_INCLUDE_DIR})
 
 target_include_directories(bland
     PUBLIC
