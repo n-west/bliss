@@ -44,8 +44,10 @@ if (WITH_CUDA)
   enable_language(CUDA)
   add_definitions("-DBLAND_CUDA_CODE=1")
   add_definitions("-DBLAND_CUDA=1")
-  else()
+else()
   message("BLAND:: CUDA not found, building without it")
+  set(NVCC_ARCHS_STR "")
+  set(NVCC_NUM_ARCHS 0)
 endif()
 
 # Custom command to generate bland_cuda_archs.h
