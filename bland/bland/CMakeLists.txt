@@ -30,14 +30,13 @@ if (WITH_CUDA)
         ops/cuda/statistical_cuda.cu
     )
 
-    target_include_directories(bland PRIVATE ${BLAND_GEN_INCLUDE_DIR})
-    # target_sources(bland PRIVATE ${GEN_CUDA_ARCHS_CPP})
-
     target_link_libraries(bland
         PRIVATE
         CUDA::cudart_static
     )
 endif ()
+
+target_include_directories(bland PRIVATE ${BLAND_GEN_INCLUDE_DIR})
 
 target_include_directories(bland
     PUBLIC
