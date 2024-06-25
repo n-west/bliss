@@ -38,19 +38,19 @@ if (WITH_CUDA)
   list(LENGTH NVCC_ARCHS NVCC_NUM_ARCHS)
   # Convert the list of architectures to a string
   string(JOIN "," NVCC_ARCHS_STR ${NVCC_ARCHS})
-
-  # Custom command to generate bland_cuda_archs.h
-  set(BLAND_GEN_INCLUDE_DIR ${CMAKE_CURRENT_BINARY_DIR}/bland/include/)
-  set(GEN_CUDA_ARCHS_HPP ${BLAND_GEN_INCLUDE_DIR}/generated/bland_cuda_archs.hpp)
-
+  
   message("BLAND:: enabling cuda (the language)")
   set(CUDA_ARCHITECTURES all)
   enable_language(CUDA)
   add_definitions("-DBLAND_CUDA_CODE=1")
   add_definitions("-DBLAND_CUDA=1")
-else()
+  else()
   message("BLAND:: CUDA not found, building without it")
 endif()
+
+# Custom command to generate bland_cuda_archs.h
+set(BLAND_GEN_INCLUDE_DIR ${CMAKE_CURRENT_BINARY_DIR}/bland/include/)
+set(GEN_CUDA_ARCHS_HPP ${BLAND_GEN_INCLUDE_DIR}/generated/bland_cuda_archs.hpp)
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/bland_cuda_archs.hpp.in ${GEN_CUDA_ARCHS_HPP} @ONLY)
 
 
