@@ -1,4 +1,5 @@
 #include "bland/ops/ops.hpp"
+#include "bland/config.hpp"
 
 #include "bland/ndarray.hpp"
 #include "bland/ndarray_slice.hpp"
@@ -75,6 +76,9 @@ ndarray bland::to(ndarray src, DLDevice dest_dev) {
             dest_dev.device_type == ndarray::dev::cuda_managed.device_type) {
             // source cpu, dest cuda device
 #if BLAND_CUDA
+            if (!g_config.check_is_valid_cuda_device(dest_dev.device_id)) {
+                throw std::runtime_error("copying data to an invalid cuda device");
+            }
             cudaMemcpy(dst_ptr, src_ptr, copy_size, cudaMemcpyHostToDevice);
 #endif // BLAND_CUDA
         } else if (dest_dev.device_type == ndarray::dev::cuda_host.device_type) {
@@ -103,6 +107,9 @@ ndarray bland::to(ndarray src, DLDevice dest_dev) {
             cudaMemcpy(dst_ptr, src_ptr, copy_size, cudaMemcpyDeviceToHost);
         } else if (dest_dev.device_type == ndarray::dev::cuda_managed.device_type) {
             if (dest_dev.device_id != source_dev.device_id) {
+                if (!g_config.check_is_valid_cuda_device(dest_dev.device_id)) {
+                    throw std::runtime_error("copying data to an invalid cuda device");
+                }
                 // Crossing cuda devices
                 cudaMemcpy(dst_ptr, src_ptr, copy_size, cudaMemcpyDeviceToDevice);
             } else {

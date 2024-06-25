@@ -18,6 +18,8 @@ add_library(bland
     ops/frequency.cpp
     ops/creators.cpp
     ops/statistical.cpp
+
+    config.cpp
 )
 
 if (WITH_CUDA)
@@ -37,6 +39,8 @@ if (WITH_CUDA)
         CUDA::cufft
     )
 endif ()
+
+target_include_directories(bland PRIVATE ${BLAND_GEN_INCLUDE_DIR})
 
 target_include_directories(bland
     PUBLIC

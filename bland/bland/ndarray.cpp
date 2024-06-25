@@ -3,6 +3,7 @@
 #include "bland/ndarray_slice.hpp"
 #include "bland/ops/ops_arithmetic.hpp"
 #include "bland/ops/ops.hpp" // to, fill
+#include <bland/config.hpp>
 
 #include <fmt/core.h>
 #include <fmt/ranges.h>

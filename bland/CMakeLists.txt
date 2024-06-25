@@ -17,17 +17,43 @@ cmake_dependent_option(WITH_CUDA "Enable CUDA backend for array storage and oper
 add_feature_info(CUDA WITH_CUDA "Using CUDA as a backend for array storage and compute")
 
 if (WITH_CUDA)
+
+  execute_process(COMMAND nvcc --list-gpu-code OUTPUT_VARIABLE NVCC_LIST_GPU_CODE)
+  string(REPLACE "\n" ";" NVCC_CODE_LINES ${NVCC_LIST_GPU_CODE})
+
+  # Process each line
+  set(NVCC_ARCHS "")
+  foreach(LINE ${NVCC_CODE_LINES})
+      # Match the architecture in the line
+      string(REGEX MATCH "sm_([0-9]+)" MATCH ${LINE})
+      if(MATCH)
+          # TODO: what happens when we get to major arch 10
+          string(SUBSTRING ${CMAKE_MATCH_1} 0 1 MAJOR)
+          string(SUBSTRING ${CMAKE_MATCH_1} 1 2 MINOR)
+          set(ARCH "${MAJOR}${MINOR}")
+          list(APPEND NVCC_ARCHS ${ARCH})
+      endif()
+  endforeach()
+
+  list(LENGTH NVCC_ARCHS NVCC_NUM_ARCHS)
+  # Convert the list of architectures to a string
+  string(JOIN "," NVCC_ARCHS_STR ${NVCC_ARCHS})
+  
   message("BLAND:: enabling cuda (the language)")
-  if(NOT DEFINED CMAKE_CUDA_ARCHITECTURES)
-    # set(CUDA_SEPARABLE_COMPILATION ON)
-    set(CUDA_ARCHITECTURES 50;52;53;60;61;62;70;72;75;80;86;87;89)
-  endif()
+  set(CUDA_ARCHITECTURES all)
   enable_language(CUDA)
   add_definitions("-DBLAND_CUDA_CODE=1")
   add_definitions("-DBLAND_CUDA=1")
 else()
   message("BLAND:: CUDA not found, building without it")
+  set(NVCC_ARCHS_STR "")
+  set(NVCC_NUM_ARCHS 0)
 endif()
+
+# Custom command to generate bland_cuda_archs.h
+set(BLAND_GEN_INCLUDE_DIR ${CMAKE_CURRENT_BINARY_DIR}/bland/include/)
+set(GEN_CUDA_ARCHS_HPP ${BLAND_GEN_INCLUDE_DIR}/generated/bland_cuda_archs.hpp)
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/bland_cuda_archs.hpp.in ${GEN_CUDA_ARCHS_HPP} @ONLY)
 
 
 # Only do these if this is the main project, and not if it is included through add_subdirectory
