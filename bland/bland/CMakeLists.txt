@@ -54,6 +54,7 @@ target_link_libraries(bland
     dlpack_link
     PRIVATE
     fmt::fmt-header-only
+    PkgConfig::FFTW
     )
 
 

@@ -81,19 +81,20 @@ bland::ndarray bliss::gen_coarse_channel_inverse(int fine_per_coarse, int num_co
     h_padded.slice(bland::slice_spec{0, 0, h.size(0)}) = h;
     fmt::print("h_padded repr: {}\n", h_padded.repr());
     // compute magnitude response (fft -> abs -> square)
+    // h_padded = h_padded.to("cpu");
     h_padded = h_padded.to("cuda:0");
     auto H = bland::fft_shift_mag_square(h_padded);
-    H = H.to("cpu");
     fmt::print("Done with the fft_shift_mag_square... doing slice and reshape\n");
+    H = H.to("cpu");
 
     auto number_coarse_channels_contributing = H.size(0)/fine_per_coarse - 1;
     H = H.slice(bland::slice_spec{0, fine_per_coarse/2, full_res_length-fine_per_coarse/2});
     fmt::print("H_slice is like {}\n", H.shape());
-    // H = H.reshape({number_coarse_channels_contributing, fine_per_coarse});
-    fmt::print("H_slice is like {}\n", H.shape());
-    // H = bland::sum(H_slice, {0});
+    H = H.to("cuda:0");
+    H = H.reshape({number_coarse_channels_contributing, fine_per_coarse});
+    fmt::print("H_slice reshaped is like {}\n", H.shape());
     // H = H.slice(bland::slice_spec{0, fine_per_coarse/2, -fine_per_coarse/2+1}).reshape({number_coarse_channels_contributing, fine_per_coarse});
-    // H = bland::sum(H, {0});
+    H = bland::sum(H, {0});
 
     return H;
 }
