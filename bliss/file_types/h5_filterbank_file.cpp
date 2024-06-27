@@ -131,9 +131,13 @@ bliss::h5_filterbank_file::h5_filterbank_file(std::string_view file_path) {
     }
 
     try {
-        _h5_mask_handle = _h5_file_handle.openDataSet("mask");
+        if (_h5_file_handle.nameExists("mask")) {
+                _h5_mask_handle = _h5_file_handle.openDataSet("mask");
+        } else {
+            fmt::print("INFO: h5_filterbank_file: mask is not in this file. This is recoverable.\n");
+        }
     } catch (H5::FileIException h5_mask_exception) {
-        fmt::print("INFO: h5_filterbank_file: got an exception while reading mask. This is recoverable.\n");
+        fmt::print("WARN: h5_filterbank_file: got an exception while reading mask. This is recoverable.\n");
     }
 
     if (read_file_attr<std::string>("CLASS") != "FILTERBANK") {
