@@ -140,7 +140,12 @@ void bliss::coarse_channel::set_mask(bland::ndarray_deferred deferred_mask) {
 }
 
 noise_stats bliss::coarse_channel::noise_estimate() const {
-    return _noise_stats.value();
+    if (_noise_stats.has_value()) {
+        return _noise_stats.value();
+    } else {
+        fmt::print("coarse_channel::noise_estimate: requested noise estimate which does not exist yet.");
+        throw std::runtime_error("coarse_channel::noise_estimate: requested noise estimate which does not exist");
+    }
 }
 
 void bliss::coarse_channel::set_noise_estimate(noise_stats estimate) {
