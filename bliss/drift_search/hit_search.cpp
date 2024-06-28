@@ -16,7 +16,6 @@ using namespace bliss;
 
 std::list<hit> bliss::hit_search(coarse_channel dedrifted_scan, hit_search_options options) {
 
-    // dedrifted_scan.set_device("cpu");
     auto noise_estimate  = dedrifted_scan.noise_estimate();
     auto dedrifted_plane = dedrifted_scan.integrated_drift_plane();
 
