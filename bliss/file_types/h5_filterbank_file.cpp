@@ -145,9 +145,21 @@ bliss::h5_filterbank_file::h5_filterbank_file(std::string_view file_path) {
     }
 
     // TODO: what is the support matrix we can handle?
-    if (read_file_attr<std::string>("VERSION") != "1.0") {
-        throw std::invalid_argument("H5 file VERSION is not 1.0");
+    // We know most telescopes and archive data are 1.0 and GBT currently emits 2.0
+    constexpr std::array<const char*, 2> supported_filterbank_versions = {"1.0", "2.0"};
+
+    auto filterbank_version = read_file_attr<std::string>("VERSION");
+    if (!std::any_of(supported_filterbank_versions.begin(),
+                     supported_filterbank_versions.end(),
+                     [filterbank_version](const char* supported_version) { return supported_version == filterbank_version; })) {
+
+        auto warning = fmt::format("WARN: h5_filterbank_file: H5 FILTERBANK file VERSION field ({}) is not in known supported "
+                    "versions list {}. Trying to read it anyway!\n",
+                    filterbank_version,
+                    supported_filterbank_versions);
+        fmt::print(warning);
     }
+
 }
 
 
