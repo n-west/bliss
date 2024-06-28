@@ -123,17 +123,43 @@ std::vector<std::string> bliss::h5_filterbank_file::read_data_attr<std::vector<s
 
 bliss::h5_filterbank_file::h5_filterbank_file(std::string_view file_path) {
     _h5_file_handle = H5::H5File(file_path.data(), H5F_ACC_RDONLY);
-    _h5_data_handle = _h5_file_handle.openDataSet("data");
-    _h5_mask_handle = _h5_file_handle.openDataSet("mask");
+    try {
+        _h5_data_handle = _h5_file_handle.openDataSet("data");
+    } catch (H5::FileIException h5_data_exception) {
+        fmt::print("ERROR: h5_filterbank_file: got an exception while reading data. Cannot continue and rethrowing.\n");
+        throw h5_data_exception;
+    }
+
+    try {
+        if (_h5_file_handle.nameExists("mask")) {
+                _h5_mask_handle = _h5_file_handle.openDataSet("mask");
+        } else {
+            fmt::print("INFO: h5_filterbank_file: mask is not in this file. This is recoverable.\n");
+        }
+    } catch (H5::FileIException h5_mask_exception) {
+        fmt::print("WARN: h5_filterbank_file: got an exception while reading mask. This is recoverable.\n");
+    }
 
     if (read_file_attr<std::string>("CLASS") != "FILTERBANK") {
         throw std::invalid_argument("H5 file CLASS is not FILTERBANK");
     }
 
     // TODO: what is the support matrix we can handle?
-    if (read_file_attr<std::string>("VERSION") != "1.0") {
-        throw std::invalid_argument("H5 file VERSION is not 1.0");
+    // We know most telescopes and archive data are 1.0 and GBT currently emits 2.0
+    constexpr std::array<const char*, 2> supported_filterbank_versions = {"1.0", "2.0"};
+
+    auto filterbank_version = read_file_attr<std::string>("VERSION");
+    if (!std::any_of(supported_filterbank_versions.begin(),
+                     supported_filterbank_versions.end(),
+                     [filterbank_version](const char* supported_version) { return supported_version == filterbank_version; })) {
+
+        auto warning = fmt::format("WARN: h5_filterbank_file: H5 FILTERBANK file VERSION field ({}) is not in known supported "
+                    "versions list {}. Trying to read it anyway!\n",
+                    filterbank_version,
+                    supported_filterbank_versions);
+        fmt::print(warning);
     }
+
 }
 
 
@@ -239,39 +265,47 @@ bland::ndarray bliss::h5_filterbank_file::read_data(std::vector<int64_t> offset,
 }
 
 bland::ndarray bliss::h5_filterbank_file::read_mask(std::vector<int64_t> offset, std::vector<int64_t> count) {
-    auto dataspace   = _h5_mask_handle.getSpace();
-    auto number_dims = dataspace.getSimpleExtentNdims();
+    if (_h5_mask_handle.has_value()) {
+        auto h5_mask = _h5_mask_handle.value();
+        auto dataspace   = h5_mask.getSpace();
+        auto number_dims = dataspace.getSimpleExtentNdims();
 
-    bland::ndarray spectrum_grid;
+        bland::ndarray mask_grid;
 
-    auto shape = get_data_shape();
+        auto shape = get_data_shape();
 
-    if (offset.empty()) {
-        offset = std::vector<int64_t>(shape.size(), 0);
+        if (offset.empty()) {
+            offset = std::vector<int64_t>(shape.size(), 0);
+        }
+        if (count.empty()) {
+            count = shape;
+            count[0] -= offset[0];
+            count[1] -= offset[1];
+            count[2] -= offset[2];
+        }
+        mask_grid = bland::ndarray(count, bland::ndarray::datatype::uint8, bland::ndarray::dev::cpu);
+        // TODO: validate both offset and count are size 3
+
+        std::vector<hsize_t> offset_hsize(offset.begin(), offset.end());
+        std::vector<hsize_t> count_hsize(count.begin(), count.end());
+
+        dataspace.selectHyperslab(H5S_SELECT_SET, count_hsize.data(), offset_hsize.data());
+
+        // Define the memory dataspace to receive the read data
+        std::vector<hsize_t> grid_shape(count.begin(), count.end());
+        H5::DataSpace        memspace(grid_shape.size(), grid_shape.data());
+
+        // The row-major reading and axes we set up means frequency (most dense) is in last dim
+        h5_mask.read(mask_grid.data_ptr<float>(), H5::PredType::NATIVE_UINT8, memspace, dataspace);
+
+        mask_grid = mask_grid.squeeze(1); // squeeze out the feed_id
+        return mask_grid;
+    } else {
+        // The file has no "mask" dataset, it's typically zeros anyway so just allocate the appropriate number of uint8 zeros
+        auto mask_grid = bland::zeros(count, bland::ndarray::datatype::uint8, bland::ndarray::dev::cpu);
+        mask_grid = mask_grid.squeeze(1); // squeeze out the feed_id
+        return mask_grid;
     }
-    if (count.empty()) {
-        count = shape;
-        count[0] -= offset[0];
-        count[1] -= offset[1];
-        count[2] -= offset[2];
-    }
-    spectrum_grid = bland::ndarray(count, bland::ndarray::datatype::uint8, bland::ndarray::dev::cpu);
-    // TODO: validate both offset and count are size 3
-
-    std::vector<hsize_t> offset_hsize(offset.begin(), offset.end());
-    std::vector<hsize_t> count_hsize(count.begin(), count.end());
-
-    dataspace.selectHyperslab(H5S_SELECT_SET, count_hsize.data(), offset_hsize.data());
-
-    // Define the memory dataspace to receive the read data
-    std::vector<hsize_t> grid_shape(count.begin(), count.end());
-    H5::DataSpace        memspace(grid_shape.size(), grid_shape.data());
-
-    // The row-major reading and axes we set up means frequency (most dense) is in last dim
-    _h5_mask_handle.read(spectrum_grid.data_ptr<float>(), H5::PredType::NATIVE_UINT8, memspace, dataspace);
-
-    spectrum_grid = spectrum_grid.squeeze(1); // squeeze out the feed_id
-    return spectrum_grid;
 }
 
 std::string bliss::h5_filterbank_file::repr() {
