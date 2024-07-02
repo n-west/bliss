@@ -71,7 +71,7 @@ class h5_filterbank_file {
   private:
     H5::H5File  _h5_file_handle;
     H5::DataSet _h5_data_handle;
-    H5::DataSet _h5_mask_handle;
+    std::optional<H5::DataSet> _h5_mask_handle;
 };
 
 template <typename T>
