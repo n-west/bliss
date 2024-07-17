@@ -14,6 +14,8 @@ namespace cuda {
  * Reductions
 */
 
+ndarray max(const ndarray &a, ndarray &out, std::vector<int64_t> axes={});
+
 ndarray sum(const ndarray &a, ndarray &out, std::vector<int64_t> axes={});
 
 ndarray masked_sum(const ndarray &a, const ndarray &mask, ndarray &out, std::vector<int64_t> axes={});

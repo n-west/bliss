@@ -65,7 +65,7 @@ bland::ndarray::datatype::datatype(std::string_view dtype_str) {
 bland::ndarray::datatype::datatype(DLDataType dtype) : DLDataType(dtype) {}
 
 bool bland::ndarray::datatype::operator==(const datatype&other) {
-    return this->code && other.code && this->bits == other.bits && this->lanes && other.lanes;
+    return this->code == other.code && this->bits == other.bits && this->lanes == other.lanes;
 }
 
 bool bland::ndarray::datatype::operator!=(const datatype&other) {

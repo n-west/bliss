@@ -42,7 +42,7 @@ ndarray bland::cpu::fft_shift_mag_square(ndarray x, ndarray &out) {
         if (i != 0) {
             out_ptr[rev_index] = mag_squared;
         }
-
+\
     }
 
     fftwf_destroy_plan(plan);

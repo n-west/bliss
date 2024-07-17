@@ -25,6 +25,23 @@
 
 using namespace bland;
 
+
+/**
+ * Write array values as flattened raw values
+*/
+void bland::write_to_file(ndarray x, std::string_view file_path) {
+    // Copy whatever data there is to cpu for now
+    x = x.to("cpu");
+    cpu::write_to_file(x, file_path);
+}
+
+/**
+ * Read array values as flattened raw values with the given dtype
+*/
+ndarray bland::read_from_file(std::string_view file_path, ndarray::datatype dtype) {
+    return cpu::read_from_file(file_path, dtype);
+}
+
 /**
  * Copy (data)
  */

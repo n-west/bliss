@@ -3,6 +3,7 @@
 #include "bland/ndarray.hpp"
 #include "bland/ndarray_slice.hpp"
 #include "bland/ops/ops_arithmetic.hpp"
+#include "internal/shape_helpers.hpp"
 
 #include "internal/dispatcher.hpp"
 #include "elementwise_binary_op.hpp"
@@ -55,7 +56,8 @@ ndarray bland::cpu::multiply_cpu<ndarray_slice>(ndarray a, ndarray_slice b) {
 // Divides...
 template <> // Specialize for adding an array
 ndarray bland::cpu::divide_cpu<ndarray>(ndarray a, ndarray b) {
-    auto out = ndarray(a.shape(), a.dtype(), a.device());
+    auto out_shape = expand_shapes_to_broadcast(a.shape(), b.shape());
+    auto out = ndarray(out_shape, a.dtype(), a.device());
     return dispatch<elementwise_binary_op_impl_wrapper<elementwise_divide_op_ts>>(out, a, b);
 }
 template <>

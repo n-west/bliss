@@ -21,6 +21,47 @@
 using namespace bland;
 
 
+ndarray bland::max(const ndarray &a, std::vector<int64_t> reduced_axes) {
+    auto out_shape = std::vector<int64_t>();
+    auto a_shape   = a.shape();
+    if (!reduced_axes.empty()) {
+        for (int64_t axis = 0; axis < a_shape.size(); ++axis) {
+            if (std::find(reduced_axes.begin(), reduced_axes.end(), axis) == reduced_axes.end()) {
+                out_shape.push_back(a_shape[axis]);
+            }
+        }
+    }
+    // output shape will be empty either because axes is empty OR is all dims
+    if (out_shape.empty()) {
+        out_shape = {1};
+    }
+    ndarray out(out_shape, a.dtype(), a.device());
+    return max(a, out, reduced_axes);
+}
+
+ndarray bland::max(const ndarray &a, ndarray &out, std::vector<int64_t> reduced_axes) {
+    auto compute_device = a.device();
+
+    if (out.device() != compute_device) {
+        throw std::runtime_error("out array is not on same device as input");
+    }
+    if (reduced_axes.empty()) {
+        for (int axis = 0; axis < a.ndim(); ++axis) {
+            reduced_axes.push_back(axis);
+        }
+    }
+#if BLAND_CUDA_CODE
+    if (compute_device.device_type == ndarray::dev::cuda.device_type || compute_device.device_type == ndarray::dev::cuda_managed.device_type) {
+        return cuda::max(a, out, reduced_axes);
+    } else
+#endif // BLAND_CUDA_CODE
+    if (compute_device.device_type == ndarray::dev::cpu.device_type) {
+        return cpu::max(a, out, reduced_axes);
+    } else {
+        throw std::runtime_error("unsupported device for max");
+    }
+}
+
 ndarray bland::mean(const ndarray &a, ndarray &out, std::vector<int64_t> reduced_axes) {
     auto compute_device = a.device();
     if (out.device() != compute_device) {

@@ -9,7 +9,14 @@ struct ndarray;
 struct ndarray_slice;
 
 /**
- * Reductions
+ * Comparison Reductions
+*/
+ndarray max(const ndarray &a, std::vector<int64_t> axes={});
+ndarray max(const ndarray &a, ndarray &out, std::vector<int64_t> axes={});
+
+
+/**
+ * Statistical Reductions
 */
 ndarray sum(const ndarray &a, std::vector<int64_t> axes={});
 ndarray sum(const ndarray &a, ndarray &out, std::vector<int64_t> axes={});

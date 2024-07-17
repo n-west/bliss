@@ -30,15 +30,31 @@ TEST_CASE("ndarray 1d", "[ndarray]") {
     }
 
     SECTION("reshape", "reshape 1d to 2d") {
-        {
-            auto test_array =
-                    bland::arange(0.0f, 50.0f, 1.0f, DLDataType{.code = DLDataTypeCode::kDLFloat, .bits = 32});
+        auto test_array =
+                bland::arange(0.0f, 50.0f, 1.0f, DLDataType{.code = DLDataTypeCode::kDLFloat, .bits = 32});
 
-            auto x = test_array.reshape({5, 10});
+        auto x = test_array.reshape({5, 10});
 
-            REQUIRE(x.numel() == 50);
-            REQUIRE_THAT(x.shape(), Catch::Matchers::Equals(std::vector<int64_t>{5, 10}));
-            REQUIRE_THAT(x.strides(), Catch::Matchers::Equals(std::vector<int64_t>{10, 1}));
-        }
+        REQUIRE(x.numel() == 50);
+        REQUIRE_THAT(x.shape(), Catch::Matchers::Equals(std::vector<int64_t>{5, 10}));
+        REQUIRE_THAT(x.strides(), Catch::Matchers::Equals(std::vector<int64_t>{10, 1}));
+
+        fmt::print("repr is {}\n", x.repr());
+    }
+
+
+    SECTION("reshape_large", "reshape larger array") {
+        auto x =
+                bland::linspace(0.0f, 512.0f, 512, DLDataType{.code = DLDataTypeCode::kDLFloat, .bits = 32});
+
+        auto y = x.reshape({16, 512/16});
+
+        auto z = bland::add(y, y);
+
+        fmt::print("repr is {}\n", z.repr());
+        REQUIRE(z.numel() == 512);
+        REQUIRE_THAT(x.shape(), Catch::Matchers::Equals(std::vector<int64_t>{16, 32}));
+        REQUIRE_THAT(x.strides(), Catch::Matchers::Equals(std::vector<int64_t>{32, 1}));
+
     }
 }

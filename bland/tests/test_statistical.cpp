@@ -11,6 +11,21 @@
 #include <bland/bland.hpp>
 
 TEST_CASE("cpu statistical", "[ndarray][ops][statistical]") {
+    SECTION("cpu max", "test the cpu max over an entire array") {
+                auto test_array = bland::rand_normal(
+                        {1000, 1000}, 0.0f, 1.0f, DLDataType{.code = DLDataTypeCode::kDLFloat, .bits = 32});
+
+                auto first_max = bland::max(test_array);
+
+                auto test_data = test_array.data_ptr<float>();
+                test_data[1642] = 9000.1f;
+
+                auto second_max = bland::max(test_array);
+                
+                REQUIRE(second_max.scalarize<float>() > first_max.scalarize<float>());
+                REQUIRE_THAT(second_max.scalarize<float>(), Catch::Matchers::WithinAbs(9000.1f, .01));
+        }
+
     SECTION("cpu mean", "test mean on variations of 1d, 2d, with and without axis arguments") {
         {
             auto test_array =
