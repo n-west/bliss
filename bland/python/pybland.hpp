@@ -34,6 +34,7 @@ void bind_pybland(nb::module_ m) {
     .def("ndim", &bland::ndarray::ndim)
     .def("dtype", &bland::ndarray::dtype)
     .def("device", &bland::ndarray::device)
+    .def("reshape", &bland::ndarray::reshape)
     .def("to", nb::overload_cast<std::string_view>(&bland::ndarray::to))
     .def("size", &bland::ndarray::size)
     .def("__getstate__", [](bland::ndarray &self) {
@@ -65,6 +66,9 @@ void bind_pybland(nb::module_ m) {
     .def_rw("device_id", &bland::ndarray::dev::device_id)
     .def("__repr__", &bland::ndarray::dev::repr);
 
+    m.def("write_to_file", &bland::write_to_file);
+
+    m.def("read_from_file", &bland::read_from_file);
 
     m.def("arange", [](float start, float end, float step) {
         return bland::arange(start, end, step);
@@ -208,6 +212,10 @@ void bind_pybland(nb::module_ m) {
     /**************
      * Statistical & Reduction ops
     **************/
+    m.def("max", [](nb::ndarray<> a, std::vector<int64_t>axes={}) {
+        return bland::max(nb_to_bland(a), axes);
+    }, "a"_a, "axes"_a=std::vector<int64_t>{});
+
     m.def("sum", [](nb::ndarray<> a, std::vector<int64_t>axes={}) {
         return bland::sum(nb_to_bland(a), axes);
     }, "a"_a, "axes"_a=std::vector<int64_t>{});
@@ -242,6 +250,18 @@ void bind_pybland(nb::module_ m) {
         auto r = copy(sliced);
         return r;
     });
+
+    /*********************
+     * Frequency analysis
+    **********************/
+    m.def("fft", [](nb::ndarray<> x) {
+        return bland::fft(nb_to_bland(x));
+    });
+
+    m.def("fft_shift_mag_square", [](nb::ndarray<> x) {
+        return bland::fft_shift_mag_square(nb_to_bland(x));
+    });
+
 
 }
 

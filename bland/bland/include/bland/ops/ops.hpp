@@ -13,6 +13,16 @@
 
 namespace bland {
 
+/**
+ * Write array values as flattened raw values
+*/
+void write_to_file(ndarray x, std::string_view file_path);
+
+/**
+ * Read array values as flattened raw values with the given dtype
+*/
+ndarray read_from_file(std::string_view file_path, ndarray::datatype dtype);
+
 ndarray copy(ndarray a);
 ndarray copy(ndarray a, ndarray &out);
 

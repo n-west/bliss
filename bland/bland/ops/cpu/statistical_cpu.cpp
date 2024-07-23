@@ -15,6 +15,7 @@
 
 #include <algorithm> // std::find
 #include <numeric>   // std::accumulate
+#include <limits>
 
 using namespace bland;
 using namespace bland::cpu;
@@ -844,6 +845,112 @@ struct count_impl {
         return count;
     }
 };
+
+
+/*************
+ **** Max ****
+ ************/
+
+struct max_impl {
+    template <typename datatype>
+    static inline ndarray call(ndarray &out, const ndarray &a, std::vector<int64_t> reduced_axes) {
+        auto a_data = a.data_ptr<datatype>();
+
+        if (reduced_axes.empty()) {
+            for (int axis = 0; axis < a.ndim(); ++axis) {
+                reduced_axes.push_back(axis);
+            }
+        }
+
+        // Number of elements that get reduced to a single output element
+        int64_t reduced_elements = 1;
+        for (auto &d : reduced_axes) {
+            reduced_elements *= a.shape()[d];
+        }
+
+        // The out array may actually be a slice! So need to respect its strides, shapes, and offsets
+        auto out_data = out.data_ptr<datatype>();
+
+        auto                 out_shape   = out.shape();
+        auto                 out_strides = out.strides();
+        auto                 out_offset  = out.offsets();
+        std::vector<int64_t> out_index(out_shape.size(), 0);
+
+        auto                 a_shape   = a.shape();
+        auto                 a_strides = a.strides();
+        auto                 a_offset  = a.offsets();
+        std::vector<int64_t> input_index(a_shape.size(), 0);
+
+        // Loop over the dimensions of the array and perform the reduction operation
+        auto numel = out.numel();
+        for (int i = 0; i < numel; ++i) {
+            // Make a copy of the current input index, we'll fix the non-summed dims
+            // and iterate over the reduced dims accumulating the total
+            auto        reduce_nd_index = input_index;
+            datatype max = std::numeric_limits<datatype>::lowest();
+            for (int jj = 0; jj < reduced_elements; ++jj) {
+                int64_t input_linear_index = 0;
+                for (int axis = 0; axis < a_shape.size(); ++axis) {
+                    input_linear_index += a_offset[axis] + (reduce_nd_index[axis] % a_shape[axis]) * a_strides[axis];
+                }
+                auto this_val = a_data[input_linear_index];
+                if (this_val > max) {
+                    max = this_val;
+                }
+                // Increment the multi-dimensional index
+                for (int i = reduced_axes.size() - 1; i >= 0; --i) {
+                    auto d = reduced_axes[i];
+                    // If we're not at the end of this dim, keep going
+                    if (++reduce_nd_index[d] != a_shape[d]) {
+                        break;
+                    } else {
+                        // Otherwise, set it to 0 and move down to the next dim
+                        reduce_nd_index[d] = 0;
+                    }
+                }
+            }
+
+            int64_t out_linear_index = 0;
+            for (int axis = 0; axis < out_shape.size(); ++axis) {
+                out_linear_index += out_offset[axis] + (out_index[axis]) * out_strides[axis];
+            }
+
+            out_data[out_linear_index] = max;
+
+            // Increment the multi-dimensional output index
+            for (int axis = out_shape.size() - 1; axis >= 0; --axis) {
+                // If we're not at the end of this dim, keep going
+                if (++out_index[axis] != out_shape[axis]) {
+                    break;
+                } else {
+                    // Otherwise, set it to 0 and move down to the next dim
+                    out_index[axis] = 0;
+                }
+            }
+            // Increment the multi-dimensional input index
+            // TODO: I think I can dedupe this with above by checking if axis is in reduce axis but that may actually be
+            // less efficient
+            for (int axis = a_shape.size() - 1; axis >= 0; --axis) {
+                if (std::find(reduced_axes.begin(), reduced_axes.end(), axis) == reduced_axes.end()) {
+                    // If we're not at the end of this dim, keep going
+                    if (++input_index[axis] != a_shape[axis]) {
+                        break;
+                    } else {
+                        // Otherwise, set it to 0 and move down to the next dim
+                        input_index[axis] = 0;
+                    }
+                }
+            }
+        }
+
+        return out;
+    }
+};
+
+ndarray bland::cpu::max(const ndarray &a, ndarray &out, std::vector<int64_t> axes) {
+    return dispatch_new4<max_impl>(out, a, axes);
+}
+
 
 int64_t bland::cpu::count_true(ndarray x) {
     return dispatch_summary<count_impl>(x);

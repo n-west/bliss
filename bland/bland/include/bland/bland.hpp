@@ -8,5 +8,6 @@
 #include "ops/ops.hpp"
 #include "ops/ops_comparison.hpp"
 #include "ops/ops_arithmetic.hpp"
+#include "ops/ops_frequency.hpp"
 #include "ops/ops_shape.hpp"
 #include "ops/ops_statistical.hpp"

@@ -13,7 +13,7 @@ namespace bland {
     DLDevice { .device_type = kDLCPU, .device_id = 0 }
 
 #define default_dtype                                                                                                  \
-    DLDataType { .code = kDLFloat, .bits = 32 }
+    DLDataType { .code = kDLFloat, .bits = 32, .lanes=1 }
 
 // Forward declare
 class ndarray_slice;
@@ -38,7 +38,9 @@ class ndarray {
         bool operator!=(const datatype &other);
 
         static constexpr DLDataType float32 = DLDataType{.code = DLDataTypeCode::kDLFloat, .bits = 32, .lanes = 1};
+        static constexpr DLDataType cfloat32 = DLDataType{.code = DLDataTypeCode::kDLComplex, .bits = 64, .lanes = 1};
         static constexpr DLDataType float64 = DLDataType{.code = DLDataTypeCode::kDLFloat, .bits = 64, .lanes = 1};
+        static constexpr DLDataType cfloat64 = DLDataType{.code = DLDataTypeCode::kDLComplex, .bits = 128, .lanes = 1};
         static constexpr DLDataType int8    = DLDataType{.code = DLDataTypeCode::kDLInt, .bits = 8, .lanes = 1};
         static constexpr DLDataType int16   = DLDataType{.code = DLDataTypeCode::kDLInt, .bits = 16, .lanes = 1};
         static constexpr DLDataType int32   = DLDataType{.code = DLDataTypeCode::kDLInt, .bits = 32, .lanes = 1};

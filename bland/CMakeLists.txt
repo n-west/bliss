@@ -87,6 +87,21 @@ else ()
 endif()
 ## - end dlpack - ##
 
+## Other dependencies ##
+
+# find_package(FFTW)
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(FFTW REQUIRED IMPORTED_TARGET fftw3f)
+# For fftw, defines:
+# * FFTW_LIBRARIES
+# * FFTW_LIBRARY_DIRS
+# * FFTW_INCLUDEDIR
+# * FFTW_INCLUDE_DIRS
+# use PkgConfig::FFTW
+
+
+## - end other dependencies - ##
+
 
 add_subdirectory(bland)
 add_subdirectory(python)

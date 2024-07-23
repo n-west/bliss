@@ -161,7 +161,7 @@ FetchContent_Declare(
   fmtlib
   EXCLUDE_FROM_ALL
   GIT_REPOSITORY https://github.com/fmtlib/fmt.git
-  GIT_TAG 5.3.0)
+  GIT_TAG 598e5180857954bf4e8f21f2a8c526691a071af1)
 FetchContent_MakeAvailable(fmtlib)
 # Adds fmt::fmt
 

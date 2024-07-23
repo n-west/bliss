@@ -11,9 +11,11 @@ add_library(bland
     ops/cpu/arithmetic_cpu.cpp
     ops/cpu/arithmetic_scalar_cpu.cpp
     ops/cpu/comparison_cpu.cpp
+    ops/cpu/frequency_cpu_impl.cpp
     ops/cpu/ops_cpu.cpp
     ops/cpu/statistical_cpu.cpp
     ops/comparison.cpp
+    ops/frequency.cpp
     ops/creators.cpp
     ops/statistical.cpp
 
@@ -26,6 +28,7 @@ if (WITH_CUDA)
         ops/cuda/arithmetic_cuda.cu
         ops/cuda/arithmetic_scalar_cuda.cu
         ops/cuda/comparison_cuda.cu
+        ops/cuda/frequency_cuda.cu
         ops/cuda/ops_cuda.cu
         ops/cuda/statistical_cuda.cu
     )
@@ -33,6 +36,7 @@ if (WITH_CUDA)
     target_link_libraries(bland
         PRIVATE
         CUDA::cudart_static
+        CUDA::cufft
     )
 endif ()
 
@@ -50,6 +54,7 @@ target_link_libraries(bland
     dlpack_link
     PRIVATE
     fmt::fmt-header-only
+    PkgConfig::FFTW
     )
 
 
@@ -60,3 +65,7 @@ target_include_directories(bland_internal
     INTERFACE
     ${CMAKE_CURRENT_SOURCE_DIR}/internal
 )
+
+
+add_executable(demo demo.cpp)
+target_link_libraries(demo PUBLIC bland fmt::fmt-header-only)

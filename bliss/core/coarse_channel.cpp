@@ -125,6 +125,14 @@ bland::ndarray_deferred bliss::coarse_channel::data() {
     return _data.to(_device);;
 }
 
+void bliss::coarse_channel::set_data(bland::ndarray new_data) {
+    _data = new_data; // TODO: should we send _mask to _device?
+}
+
+void bliss::coarse_channel::set_data(bland::ndarray_deferred deferred_data) {
+    _data = deferred_data; // TODO: should we send _mask to _device?
+}
+
 bland::ndarray_deferred bliss::coarse_channel::mask() {
     // TODO: add an option to compute graph to memoize the mask read from disk
     // _mask = _mask.to(_device);

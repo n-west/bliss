@@ -14,6 +14,8 @@ namespace cpu {
  * Reductions
 */
 
+ndarray max(const ndarray &a, ndarray &out, std::vector<int64_t> axes={});
+
 ndarray sum(const ndarray &a, ndarray &out, std::vector<int64_t> axes={});
 
 ndarray mean(const ndarray &a, ndarray &out, std::vector<int64_t> axes={});

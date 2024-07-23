@@ -18,6 +18,7 @@ add_executable(test_bland
     test_comparison.cpp
     test_copy.cpp
     test_creators.cpp
+    test_file_io.cpp
     test_ndarray.cpp
     test_strides.cpp
     test_reductions.cpp
@@ -29,6 +30,11 @@ target_link_libraries(test_bland
     bland
     Catch2::Catch2
     fmt::fmt-header-only
+    )
+
+target_include_directories(test_bland
+    PRIVATE
+    ../bland/internal/include
     )
 
 if (WITH_CUDA)

@@ -2,6 +2,8 @@
 
 #include "bland/ndarray.hpp"
 
+#include <fmt/core.h>
+
 #include <stdexcept>
 
 namespace bland {
@@ -337,6 +339,69 @@ ndarray dispatch_new(ndarray &out, const S &b, Args... args) {
 }
 
 
+/**
+ * Deduce the first input datatype to a reduction op
+*/
+/**
+ * out = f(a) where a is an array and out must be the same type.
+ * 
+ * This requires one type deductions and passes through an underlying impl function with 1 template args
+ * 
+ * Used by
+ * * max
+ **/
+template <class Op, typename... Args>
+ndarray dispatch_new4(ndarray &out, const ndarray &a, Args... args) {
+    auto dtype = a.dtype();
+    auto out_dtype = out.dtype();
+    if (dtype != out_dtype) {
+        throw std::runtime_error("dispatch_new4: out dtype is not the same as the in dtype");
+    }
+
+    switch (dtype.code) {
+
+    case kDLFloat: {
+        switch (dtype.bits) {
+        case 32:
+            return Op::template call<float>(out, a, std::forward<Args>(args)...);
+        // case 64:
+        //     return Op::template call<double>(out, a, std::forward<Args>(args)...);
+        default:
+            throw std::runtime_error("Unsupported float bitwidth");
+        }
+    }
+    case kDLInt: {
+        switch (dtype.bits) {
+        // case 8:
+        //     return Op::template call<int8_t>(out, a, std::forward<Args>(args)...);
+        // case 16:
+        //     return Op::template call<int16_t>(out, a, std::forward<Args>(args)...);
+        case 32:
+            return Op::template call<int32_t>(out, a, std::forward<Args>(args)...);
+        case 64:
+            return Op::template call<int64_t>(out, a, std::forward<Args>(args)...);
+        default:
+            throw std::runtime_error("Unsupported int bitwidth");
+        }
+    }
+    case kDLUInt: {
+        switch (dtype.bits) {
+        case 8:
+            return Op::template call<uint8_t>(out, a, std::forward<Args>(args)...);
+        // case 16:
+        //     return Op::template call<uint16_t>(out, a, std::forward<Args>(args)...);
+        case 32:
+            return Op::template call<uint32_t>(out, a, std::forward<Args>(args)...);
+        // case 64:
+        //     return Op::template call<uint64_t>(out, a, std::forward<Args>(args)...);
+        default:
+            throw std::runtime_error("Unsupported uint bitwidth");
+        }
+    }
+    default:
+        throw std::runtime_error("Unsupported datatype code");
+    }
+}
 
 /**
  * Deduce the first input datatype to a reduction op
