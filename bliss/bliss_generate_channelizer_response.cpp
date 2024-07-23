@@ -42,7 +42,12 @@ int main(int argc, char *argv[]) {
     auto parse_result = clipp::parse(argc, argv, cli);
 
     if (!parse_result || help) {
-        std::cout << clipp::make_man_page(cli, "bliss_generate_channelizer_response");
+        auto man_page = clipp::make_man_page(cli, "bliss_generate_channelizer_response");
+        man_page = man_page.append_section("EXAMPLES",
+        "ATA: ./bliss_generate_channelizer_response -f 131072 -N 4 -M 2048\n"
+        "GBT: ./bliss_generate_channelizer_response -f 1048576 -N 12 -M 256\n");
+
+        std::cout << man_page;
         return 0;
     }
 

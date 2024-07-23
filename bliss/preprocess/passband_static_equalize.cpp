@@ -74,7 +74,7 @@ bland::ndarray bliss::gen_coarse_channel_response(int fine_per_coarse, int num_c
     // Zero-pad to full rate (need to know the number of coarse channels in original recording)
     int total_fine_channels = num_coarse_channels * fine_per_coarse;
 
-    int64_t full_res_length = num_coarse_channels * fine_per_coarse;
+    int64_t full_res_length = static_cast<int64_t>(num_coarse_channels * fine_per_coarse);
     auto h_padded = bland::zeros({full_res_length});
 
     h_padded.slice(bland::slice_spec{0, 0, h.size(0)}) = h;
