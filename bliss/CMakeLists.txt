@@ -28,17 +28,6 @@ target_link_libraries(bliss_find_hits
     fmt::fmt-header-only
     )
 
-add_executable(bliss_debug_demo bliss_debug_demo.cpp)
-target_link_libraries(bliss_debug_demo
-    bliss_core
-    drift_search
-    estimators
-    bliss_serialization
-    flaggers
-    bliss_preprocess
-    fmt::fmt-header-only
-    )
-
 add_executable(bliss_hits_to_dat bliss_hits_to_dat.cpp)
 target_link_libraries(bliss_hits_to_dat
     bliss_serialization
