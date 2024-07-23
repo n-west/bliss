@@ -813,6 +813,8 @@ struct statistical_launch_wrapper {
         thrust::device_vector<int64_t> dev_a_shape(a_shape.begin(), a_shape.end());
         thrust::device_vector<int64_t> dev_a_strides(a_strides.begin(), a_strides.end());
 
+        fmt::print("reducing a statistical_launch_wrapper reducing {} to {} with axes arg {}\n", a_shape, out_shape, reduced_axes);
+
         int64_t reduced_elements = 1;
         for (auto &d : reduced_axes) {
             reduced_elements *= a_shape[d];

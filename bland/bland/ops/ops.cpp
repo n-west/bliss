@@ -51,7 +51,6 @@ ndarray bland::copy(ndarray a) {
 }
 
 ndarray bland::copy(ndarray a, ndarray &out) {
-    fmt::print("bland::copy\n");
     return device_dispatch(cpu::copy,
                             #if BLAND_CUDA_CODE
                             cuda::copy,
@@ -71,6 +70,9 @@ ndarray bland::to(ndarray src, DLDevice dest_dev) {
     auto dst        = bland::ndarray(src.shape(), src.dtype(), dest_dev);
     auto dst_ptr    = dst.data_ptr<void>();
     auto src_ptr    = src.data_ptr<void>();
+    // The memcpy also needs the offsets & strides
+    auto src_offset = src.offsets();
+    auto src_strides = src.strides();
 
     // TODO: will probably want to handle slices more efficiently in the future
     auto copy_size = src.numel() * src.dtype().bits / 8;
@@ -121,7 +123,20 @@ ndarray bland::to(ndarray src, DLDevice dest_dev) {
         if (dest_dev.device_type == ndarray::dev::cpu.device_type ||
             dest_dev.device_type == ndarray::dev::cuda_host.device_type) {
             // source cuda, dest cpu
-            cudaMemcpy(dst_ptr, src_ptr, copy_size, cudaMemcpyDeviceToHost);
+            // if (src.ndim() == 1) {
+                // bool is_flat = false;
+
+            // if (is_flat) {
+                int64_t offset = std::accumulate(src_offset.begin(), src_offset.end(), 0LL);
+                auto copy_src = src_ptr + offset*(src.dtype().bits / 8);
+                cudaMemcpy(dst_ptr, copy_src, copy_size, cudaMemcpyDeviceToHost);
+            // }
+            // } else if (src.ndim() == 2) {
+            //     cudaMemcpy2DFromArray(dst_ptr, src_ptr, copy_size, cudaMemcpyDeviceToHost);
+            // } else if (src.ndim() == 3) {
+
+            // }
+
         } else if (dest_dev.device_type == ndarray::dev::cuda_managed.device_type) {
             if (dest_dev.device_id != source_dev.device_id) {
                 if (!g_config.check_is_valid_cuda_device(dest_dev.device_id)) {

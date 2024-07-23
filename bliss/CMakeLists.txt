@@ -11,6 +11,13 @@ add_subdirectory(drift_search)
 add_subdirectory(tests)
 add_subdirectory(python)
 
+add_executable(bliss_generate_channelizer_response bliss_generate_channelizer_response.cpp)
+target_link_libraries(bliss_generate_channelizer_response
+    bliss_preprocess
+    bland
+    fmt::fmt-header-only
+    )
+
 add_executable(bliss_find_hits bliss_find_hits.cpp)
 target_link_libraries(bliss_find_hits
     bliss_core
@@ -18,6 +25,17 @@ target_link_libraries(bliss_find_hits
     estimators
     bliss_serialization
     flaggers
+    fmt::fmt-header-only
+    )
+
+add_executable(bliss_debug_demo bliss_debug_demo.cpp)
+target_link_libraries(bliss_debug_demo
+    bliss_core
+    drift_search
+    estimators
+    bliss_serialization
+    flaggers
+    bliss_preprocess
     fmt::fmt-header-only
     )
 

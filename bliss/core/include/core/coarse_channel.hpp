@@ -77,6 +77,9 @@ struct coarse_channel {
                    double         za_start);
 
     bland::ndarray_deferred data();
+    void                    set_data(bland::ndarray new_mask);
+    void                    set_data(bland::ndarray_deferred new_mask);
+
     bland::ndarray_deferred mask();
     void                    set_mask(bland::ndarray new_mask);
     void                    set_mask(bland::ndarray_deferred new_mask);
