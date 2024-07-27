@@ -15,7 +15,6 @@ using namespace bland::cuda;
 
 
 ndarray bland::cuda::copy(ndarray a, ndarray &out) {
-    fmt::print("cuda::copy\n");
     return dispatch_new2<cuda::unary_op_impl_wrapper, cuda::elementwise_copy_op>(out, a);
 }
 

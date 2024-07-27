@@ -126,7 +126,7 @@ bland::ndarray_deferred correct_mask(const bland::ndarray_deferred &mask) {
         auto unmasked_samples = bland::count_true(bland::ndarray(*mask) == 0);
         if (unmasked_samples == 0) {
             // TODO: issue warning & "correct" the mask in some intelligent way
-            fmt::format("correct_mask: the mask is completely flagged, so a flagged noise estimate is not possible.");
+            auto err = fmt::format("correct_mask: the mask is completely flagged, so a flagged noise estimate is not possible.");
             /*
             * This is a pretty strange condition where the entire scan is flagged which makes estimating noise using
             * unflagged samples pretty awkward... There's not an obviously right way to handle this and anyone caring
@@ -143,7 +143,7 @@ bland::ndarray_deferred correct_mask(const bland::ndarray_deferred &mask) {
             //   is not falled
             // * ignore high SK here (or try to identify what flag is causing issues and ignore it)
             // * warn earlier in flagging step
-            throw std::runtime_error("correct_mask: the mask is completely flagged");
+            throw std::runtime_error(err);
         }
         return *mask;
     });
