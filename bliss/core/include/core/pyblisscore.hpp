@@ -86,8 +86,8 @@ void bind_pycore(nb::module_ m) {
         .def_prop_ro("tstart", &bliss::scan::tstart)
         .def_prop_ro("za_start", &bliss::scan::za_start)
         .def("device", &bliss::scan::device)
-        .def("set_device", nb::overload_cast<bland::ndarray::dev&>(&bliss::scan::set_device))
-        .def("set_device", nb::overload_cast<std::string_view>(&bliss::scan::set_device))
+        .def("set_device", nb::overload_cast<bland::ndarray::dev&, bool>(&bliss::scan::set_device), "device"_a, "verbose"_a=true)
+        .def("set_device", nb::overload_cast<std::string_view, bool>(&bliss::scan::set_device), "device"_a, "verbose"_a=true)
         .def("push_device", (&bliss::scan::push_device));
 
     nb::class_<bliss::integrate_drifts_options>(m, "integrate_drifts_options")
@@ -114,8 +114,8 @@ void bind_pycore(nb::module_ m) {
         .def_prop_ro("number_coarse_channels", &bliss::observation_target::get_number_coarse_channels)
         .def("slice_observation_channels", &bliss::observation_target::slice_observation_channels, "start"_a=0, "count"_a=1)
         .def("device", &bliss::observation_target::device)
-        .def("set_device", nb::overload_cast<bland::ndarray::dev&>(&bliss::observation_target::set_device))
-        .def("set_device", nb::overload_cast<std::string_view>(&bliss::observation_target::set_device))
+        .def("set_device", nb::overload_cast<bland::ndarray::dev&, bool>(&bliss::observation_target::set_device), "device"_a, "verbose"_a=true)
+        .def("set_device", nb::overload_cast<std::string_view, bool>(&bliss::observation_target::set_device), "device"_a, "verbose"_a=true)
         .def_rw("scans", &bliss::observation_target::_scans)
         .def_rw("target_name", &bliss::observation_target::_target_name);
 
@@ -128,6 +128,6 @@ void bind_pycore(nb::module_ m) {
         .def("slice_cadence_channels", &bliss::cadence::slice_cadence_channels, "start"_a=0, "count"_a=1)
         .def_rw("observations", &bliss::cadence::_observations)
         .def("device", &bliss::cadence::device)
-        .def("set_device", nb::overload_cast<bland::ndarray::dev&>(&bliss::cadence::set_device))
-        .def("set_device", nb::overload_cast<std::string_view>(&bliss::cadence::set_device));
+        .def("set_device", nb::overload_cast<bland::ndarray::dev&, bool>(&bliss::cadence::set_device), "device"_a, "verbose"_a=true)
+        .def("set_device", nb::overload_cast<std::string_view, bool>(&bliss::cadence::set_device), "device"_a, "verbose"_a=true);
 }

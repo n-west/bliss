@@ -1,5 +1,10 @@
 #pragma once
 
+#if BLAND_CUDA_CODE
+#include <cuda_runtime.h>
+#endif
+
+#include <map>
 #include <vector>
 
 namespace bland {
@@ -10,6 +15,17 @@ namespace bland {
 */
 class config {
 public:
+
+#if BLAND_CUDA_CODE
+    using cuda_device_attributes = cudaDeviceProp;
+#else
+    // Here to make the conditional compilation of used fields restricted to one place
+    struct cuda_device_attributes {
+        char name[256];                  /**< ASCII string identifying device */
+        struct {char bytes[16];} uuid;    /**< 16-byte unique identifier */
+    };
+#endif
+
     static config& get_instance() {
         static config instance;
         return instance;
@@ -18,13 +34,13 @@ public:
     config(config const&) = delete;
     void operator=(config const&) = delete;
 
-    std::vector<int> get_valid_cuda_devices();
-    bool check_is_valid_cuda_device(int device_index);
+    std::map<int, cuda_device_attributes> get_valid_cuda_devices();
+    bool check_is_valid_cuda_device(int device_index, bool verbose=false);
 
 private:
     config();
 
-    std::vector<int> _valid_cuda_devices;
+    std::map<int, cuda_device_attributes> _valid_cuda_devices;
     std::vector<int> _invalid_cuda_devices;
     
 };

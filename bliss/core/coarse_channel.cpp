@@ -1,7 +1,7 @@
 
 #include "core/coarse_channel.hpp"
 
-#include "bland/config.hpp"
+#include <bland/config.hpp>
 
 #include "fmt/format.h"
 #include "fmt/ranges.h"

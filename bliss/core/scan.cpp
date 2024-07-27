@@ -2,6 +2,8 @@
 #include "core/scan.hpp"
 #include "file_types/h5_filterbank_file.hpp"
 
+#include "bland/config.hpp"
+
 #include "fmt/format.h"
 #include "fmt/ranges.h"
 
@@ -282,16 +284,24 @@ bland::ndarray::dev bliss::scan::device() {
     return _device;
 }
 
-void bliss::scan::set_device(bland::ndarray::dev &device) {
+void bliss::scan::set_device(bland::ndarray::dev &device, bool verbose) {
     _device = device;
+
+    if (device.device_type == bland::ndarray::dev::cuda.device_type ||
+        device.device_type == bland::ndarray::dev::cuda_managed.device_type) {
+        if (!bland::g_config.check_is_valid_cuda_device(device.device_id, verbose)) {
+            throw std::runtime_error("set_device received invalid cuda device");
+        }
+    }
+
     for (auto &[channel_index, cc] : *_coarse_channels) {
         cc->set_device(device);
     }
 }
 
-void bliss::scan::set_device(std::string_view dev_str) {
+void bliss::scan::set_device(std::string_view dev_str, bool verbose) {
     bland::ndarray::dev device = dev_str;
-    set_device(device);
+    set_device(device, verbose);
 }
 
 void bliss::scan::push_device() {
