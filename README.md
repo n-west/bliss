@@ -20,6 +20,7 @@ Running bliss requires
 * libhdf5-cpp-103 (double check!)
 * hdf5-filter-plugin
 * bitshuffle
+* libfftw
 
 ### Binary package
 
@@ -37,6 +38,7 @@ This project builds with cmake and is set up to be built as a python package wit
 * cmake
 * gcc / clang capable of C++17 and supporting your version of cuda
 * libhdf5-dev
+* libfftw3-dev
 * (optional) libcapnp-dev
 
 #### CMake-based (dev) builds:
@@ -51,11 +53,36 @@ make -j $(($(nproc)/2)) # replace with make -j CORES if you don't have nproc
 
 The python package is partially set up in `bliss/python/bliss`. During the build process, the C++ extensions are built and placed in this package. In cmake development mode, this is placed in build/bliss/python/bliss and configured to be updated with any file changes as they occur (each file is symlinked) and new files will be added at the next build.
 
-
 #### Python package build
 
 `pyproject.toml` configures the python package and uses `py-cmake-build` as the build backend to get the required C++ extensions built and packaged appropriately. You can build this package with standard tools such as `pip install .` and `python -m build`.
 
+#### Conda-based builds
+
+Conda can be useful when the host system doesn't have a useable compiler (for example the compiler doesn't support c++17 features that are used throughout). Install a compiler that will work with c++-17 features from conda, install the other dependencies, then do a psuedo-cross compile. Since we've changed the compiler and glibc, it's important to treat this as a cross-compile to avoid mixing versioned glibc symbols. Otherwise, you'll run in to obscure-looking linker errors or missing libraries at runtime.
+
+There is a conda toolchain file that works with a suitable conda compiler in toolchains/conda.cmake. Here's a quick recipe for setting up a new environment:
+
+```
+export ENV_NAME=bliss-dev
+conda create -n ${ENV_NAME} python=3.8
+conda activate ${ENV_NAME}
+conda config --add channels conda-forge 
+
+conda install gxx=11.4.0 cmake hdf5 bitshuffle hdf5-external-filter-plugins fftw
+. /usr/local/cuda-11.7.1/cuda.sh
+```
+
+A small aside: on some BDC systems the tmpdir doesn't have execute permissions so some "failed to compile a simple program" errors will pop up. The solution is something like this
+```
+export TMPDIR=/datax/scratch/nwest/tmp
+```
+
+Now, run cmake with the toolchain file:
+```
+mkdir build && cd build
+cmake -DCMAKE_TOOLCHAIN_FILE=../toolchains/conda.cmake ..
+```
 
 ## Tests
 Inside `build/bland/tests` you will have a `test_bland` executable. You can run those tests to sanity check everything works as expected.
