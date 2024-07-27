@@ -54,8 +54,8 @@ struct observation_target {
     observation_target slice_observation_channels(int start_channel=0, int count=1);
 
     bland::ndarray::dev device();
-    void set_device(bland::ndarray::dev &device);
-    void set_device(std::string_view device_str);
+    void set_device(bland::ndarray::dev &device, bool verbose=true);
+    void set_device(std::string_view device_str, bool verbose=true);
 
     // Is it useful to capture which of ABACAD this is?
     std::vector<scan> _scans;
@@ -121,8 +121,8 @@ struct cadence {
     cadence slice_cadence_channels(int start_channel=0, int count=1);
 
     bland::ndarray::dev device();
-    void set_device(bland::ndarray::dev &device);
-    void set_device(std::string_view device_str);
+    void set_device(bland::ndarray::dev &device, bool verbose=true);
+    void set_device(std::string_view device_str, bool verbose=true);
 
   protected:
     bland::ndarray::dev _device = default_device;

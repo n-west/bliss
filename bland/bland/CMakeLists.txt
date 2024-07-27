@@ -38,6 +38,8 @@ if (WITH_CUDA)
         CUDA::cudart_static
         CUDA::cufft
     )
+
+    target_compile_definitions(bland PUBLIC BLAND_CUDA_CODE=1)
 endif ()
 
 target_include_directories(bland PRIVATE ${BLAND_GEN_INCLUDE_DIR})

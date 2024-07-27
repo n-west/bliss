@@ -73,8 +73,8 @@ class scan {
     std::list<hit> hits();
 
     bland::ndarray::dev device();
-    void set_device(bland::ndarray::dev &device);
-    void set_device(std::string_view device);
+    void set_device(bland::ndarray::dev &device, bool verbose=true);
+    void set_device(std::string_view device, bool verbose=true);
     void push_device();
 
     /**

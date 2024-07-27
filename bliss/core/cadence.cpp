@@ -1,5 +1,7 @@
 #include "core/cadence.hpp"
 
+#include <bland/config.hpp>
+
 #include <fmt/core.h>
 #include <fmt/format.h>
 
@@ -96,15 +98,22 @@ bland::ndarray::dev bliss::observation_target::device() {
     return _device;
 }
 
-void bliss::observation_target::set_device(bland::ndarray::dev& device) {
+void bliss::observation_target::set_device(bland::ndarray::dev& device, bool verbose) {
+    if (device.device_type == bland::ndarray::dev::cuda.device_type ||
+        device.device_type == bland::ndarray::dev::cuda_managed.device_type) {
+        if (!bland::g_config.check_is_valid_cuda_device(device.device_id, verbose)) {
+            throw std::runtime_error("set_device received invalid cuda device");
+        }
+    }
+
     for (auto &target_scan : _scans) {
-        target_scan.set_device(device);
+        target_scan.set_device(device, false);
     }
 }
 
-void bliss::observation_target::set_device(std::string_view dev_str) {
+void bliss::observation_target::set_device(std::string_view dev_str, bool verbose) {
     bland::ndarray::dev device = dev_str;
-    set_device(device);
+    set_device(device, verbose);
 }
 
 
@@ -181,13 +190,20 @@ bland::ndarray::dev bliss::cadence::device() {
     return _device;
 }
 
-void bliss::cadence::set_device(bland::ndarray::dev& device) {
+void bliss::cadence::set_device(bland::ndarray::dev& device, bool verbose) {
+    if (device.device_type == bland::ndarray::dev::cuda.device_type ||
+        device.device_type == bland::ndarray::dev::cuda_managed.device_type) {
+        if (!bland::g_config.check_is_valid_cuda_device(device.device_id, verbose)) {
+            throw std::runtime_error("set_device received invalid cuda device");
+        }
+    }
+
     for (auto &target : _observations) {
-        target.set_device(device);
+        target.set_device(device, false);
     }
 }
 
-void bliss::cadence::set_device(std::string_view dev_str) {
+void bliss::cadence::set_device(std::string_view dev_str, bool verbose) {
     bland::ndarray::dev device = dev_str;
-    set_device(device);
+    set_device(device, verbose);
 }
