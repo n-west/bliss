@@ -353,7 +353,6 @@ bliss::find_components_above_threshold_cuda(bland::ndarray                   dop
     // We can only possibly have one max for every neighborhood, so that's a reasonably efficient max neighborhood
     int number_protohits = numel / (neighbor_l1_dist*neighbor_l1_dist);
     auto dev_protohits = safe_device_vector<device_protohit>(number_protohits);
-    fmt::print("Are we making it here? where does our exception go");
 
     // All malloc's in one place to make it easier to track down free's later on
     int* m_num_maxima;
