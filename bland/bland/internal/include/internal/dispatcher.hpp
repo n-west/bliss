@@ -290,7 +290,7 @@ ndarray dispatch_new3(ndarray &out, const ndarray &a, const S &b, Args... args) 
  * This requires one type deductions and passes through an underlying impl function with 2 template args
  **/
 template <typename F, typename S, typename ...Args>
-ndarray dispatch_new(ndarray &out, const S &b, Args... args) {
+ndarray dispatch_scalar(ndarray &out, const S &b, Args... args) {
     auto dtype = out.dtype();
 
     switch (dtype.code) {

@@ -89,7 +89,7 @@ ndarray bland::cpu::abs(ndarray a, ndarray& out) {
 
 template <typename T>
 ndarray bland::cpu::fill(ndarray out, T value) {
-    return dispatch_new<cpu::assignment_op_impl_wrapper, T>(out, value);
+    return dispatch_scalar<cpu::assignment_op_impl_wrapper, T>(out, value);
 }
 
 template ndarray bland::cpu::fill<float>(ndarray out, float v);

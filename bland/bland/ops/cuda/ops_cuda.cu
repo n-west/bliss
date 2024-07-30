@@ -130,7 +130,7 @@ value,
 
 template <typename T>
 ndarray bland::cuda::fill(ndarray out, T value) {
-    return dispatch_new<assignment_op_impl_wrapper, T>(out, value);
+    return dispatch_scalar<assignment_op_impl_wrapper, T>(out, value);
 }
 
 template ndarray bland::cuda::fill<float>(ndarray out, float v);
