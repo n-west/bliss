@@ -89,17 +89,21 @@ int main(int argc, char *argv[]) {
     auto pipeline_object_with_hits = bliss::hit_search(
             pipeline_object, hit_search_options);
 
-    // TODO: add cli args for where to send hits (stdout, file.dat, capn proto serialize,...)
-    for (int scan_index=0; scan_index < pipeline_object_with_hits._scans.size(); ++scan_index) {
-        auto &sc = pipeline_object_with_hits._scans[scan_index];
-        auto hits = sc.hits();
-        fmt::print("scan has {} hits\n", hits.size());
-        for (auto &h : hits) {
-            fmt::print("{}\n", h.repr());
-        }
+    try {
+        // TODO: add cli args for where to send hits (stdout, file.dat, capn proto serialize,...)
+        for (int scan_index=0; scan_index < pipeline_object_with_hits._scans.size(); ++scan_index) {
+            auto &sc = pipeline_object_with_hits._scans[scan_index];
+            auto hits = sc.hits();
+            fmt::print("scan has {} hits\n", hits.size());
+            for (auto &h : hits) {
+                fmt::print("{}\n", h.repr());
+            }
 
-        auto scan_results_file = fmt::format("hitsout_{}.cp", scan_index);
-        // bliss::write_coarse_channel_hits_to_file(sc, scan_results_file);
+            auto scan_results_file = fmt::format("hitsout_{}.cp", scan_index);
+            // bliss::write_scan_hits_to_file(sc, scan_results_file);
+        }
+    } catch (std::exception &e) {
+        fmt::print("ERROR: got a fatal exception ({}) while running pipeline. This is likely due to running out of memory. Ending processing.\n", e.what());
     }
 
 }

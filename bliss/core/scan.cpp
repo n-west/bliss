@@ -271,8 +271,8 @@ std::list<hit> bliss::scan::hits() {
             try {
                 auto this_channel_hits = cc->hits();
                 all_hits.insert(all_hits.end(), this_channel_hits.cbegin(), this_channel_hits.cend());
-            } catch (const std::runtime_error &e) {
-                fmt::print("WARN: no hits available from coarse channel {}\n", cc_index);
+            } catch (const std::logic_error &e) {
+                fmt::print("WARN: caught exception ({}) while getting hits from pipeline on coarse channel {}, this might indicate a bad pipeline\n", e.what(), cc_index);
             }
         }
     }

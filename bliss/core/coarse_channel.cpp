@@ -152,7 +152,7 @@ noise_stats bliss::coarse_channel::noise_estimate() const {
         return _noise_stats.value();
     } else {
         fmt::print("coarse_channel::noise_estimate: requested noise estimate which does not exist yet.");
-        throw std::runtime_error("coarse_channel::noise_estimate: requested noise estimate which does not exist");
+        throw std::logic_error("coarse_channel::noise_estimate: requested noise estimate which does not exist");
     }
 }
 
@@ -170,7 +170,7 @@ bool bliss::coarse_channel::has_hits() {
 
 std::list<hit> bliss::coarse_channel::hits() const {
     if (_hits == nullptr) {
-        throw std::runtime_error("hits not set");
+        throw std::logic_error("hits not set");
     }
     if (std::holds_alternative<std::function<std::list<hit>()>>(*_hits)) {
         *_hits = std::get<std::function<std::list<hit>()>>(*_hits)();

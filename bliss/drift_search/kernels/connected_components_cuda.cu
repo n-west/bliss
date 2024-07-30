@@ -310,6 +310,28 @@ __global__ void collect_protohit_md_kernel(
     }
 }
 
+
+template <typename T>
+thrust::device_vector<T> safe_device_vector(int64_t size) {
+    try {
+        return thrust::device_vector<T>(size);
+    }
+    catch (thrust::system::detail::bad_alloc &e) {
+        fmt::print("ERROR: while allocating safe vector: {}\n", e.what());
+        throw std::runtime_error("GPU Memory allocation failed while running find_components");
+    }
+}
+template <typename T, typename It>
+thrust::device_vector<T> safe_device_vector(It begin_alloc, It end_alloc) {
+    try {
+        return thrust::device_vector<T>(begin_alloc, end_alloc);
+    }
+    catch (thrust::system::detail::bad_alloc &e) {
+        fmt::print("ERROR: while allocating safe vector: {}\n", e.what());
+        throw std::runtime_error("GPU Memory allocation failed while running find_components");
+    }
+}
+
 std::vector<protohit>
 bliss::find_components_above_threshold_cuda(bland::ndarray                   doppler_spectrum,
                                             integrated_flags                 dedrifted_rfi,
@@ -327,21 +349,36 @@ bliss::find_components_above_threshold_cuda(bland::ndarray                   dop
 
     auto numel = doppler_spectrum.numel();
 
-    thrust::device_vector<protohit_drift_info> dev_noise_per_drift(noise_per_drift.begin(), noise_per_drift.end());
+    auto dev_noise_per_drift = safe_device_vector<protohit_drift_info>(noise_per_drift.begin(), noise_per_drift.end());
     // We can only possibly have one max for every neighborhood, so that's a reasonably efficient max neighborhood
     int number_protohits = numel / (neighbor_l1_dist*neighbor_l1_dist);
-    thrust::device_vector<device_protohit> dev_protohits(number_protohits);
+    auto dev_protohits = safe_device_vector<device_protohit>(number_protohits);
+    fmt::print("Are we making it here? where does our exception go");
 
     // All malloc's in one place to make it easier to track down free's later on
     int* m_num_maxima;
-    cudaMallocManaged(&m_num_maxima, sizeof(int));
+    auto malloc_ret = cudaMallocManaged(&m_num_maxima, sizeof(int));
     *m_num_maxima = 8;
+    if (malloc_ret != cudaSuccess) {
+        // Clean up our existing allocation
+        fmt::print("ERROR: allocating space for m_num_maxima: cudaMalloc({}) got error {} ({})\n", sizeof(uint32_t) * number_drifts * number_channels, (int)malloc_ret, cudaGetErrorString(malloc_ret));
+        throw std::runtime_error("find_components_above_threshold_cuda did not have enough vRAM to continue");
+    }
 
     int first_noncore_label = number_protohits;
 
     uint32_t* g_labels;
-    cudaMalloc((void**)&g_labels, sizeof(uint32_t) * number_drifts * number_channels);
-    cudaMemset(g_labels, 0, sizeof(uint32_t) * number_drifts * number_channels);
+    malloc_ret = cudaMalloc((void**)&g_labels, sizeof(uint32_t) * number_drifts * number_channels);
+    if (malloc_ret != cudaSuccess) {
+        // Clean up our existing allocation
+        cudaFree(m_num_maxima);
+        fmt::print("ERROR: allocating space for labels: cudaMalloc({}) got error {} ({})\n", sizeof(uint32_t) * number_drifts * number_channels, (int)malloc_ret, cudaGetErrorString(malloc_ret));
+        throw std::runtime_error("find_components_above_threshold_cuda did not have enough vRAM to continue");
+    }
+    malloc_ret = cudaMemset(g_labels, 0, sizeof(uint32_t) * number_drifts * number_channels);
+    if (malloc_ret != cudaSuccess) {
+        fmt::print("initializing labels: cudaMemset got error {} ({})\n", (int)malloc_ret, cudaGetErrorString(malloc_ret));
+    }
 
     // Step 1: Initialize labels
     // Each pixel looks within its neighborhood to determine if it is the neighborhood maxima AND above SNR threshold. If so, it gets a unique
@@ -368,10 +405,10 @@ bliss::find_components_above_threshold_cuda(bland::ndarray                   dop
     // auto launch_ret = cudaDeviceSynchronize();
     // auto kernel_ret = cudaGetLastError();
     // if (launch_ret != cudaSuccess) {
-    //     fmt::print("initialize_components_kernel: cuda launch got error {} ({})\n", launch_ret, cudaGetErrorString(launch_ret));
+    //     fmt::print("initialize_components_kernel: cuda launch got error {} ({})\n", (int)launch_ret, cudaGetErrorString(launch_ret));
     // }
     // if (kernel_ret != cudaSuccess) {
-    //     fmt::print("initialize_components_kernel: cuda kernel got error {} ({})\n", kernel_ret, cudaGetErrorString(kernel_ret));
+    //     fmt::print("initialize_components_kernel: cuda kernel got error {} ({})\n", (int)kernel_ret, cudaGetErrorString(kernel_ret));
     // }
 
     // Step 2: Resolve
@@ -390,10 +427,10 @@ bliss::find_components_above_threshold_cuda(bland::ndarray                   dop
     // launch_ret = cudaDeviceSynchronize();
     // kernel_ret = cudaGetLastError();
     // if (launch_ret != cudaSuccess) {
-    //     fmt::print("resolve_labels: cuda launch got error {} ({})\n", launch_ret, cudaGetErrorString(launch_ret));
+    //     fmt::print("resolve_labels: cuda launch got error {} ({})\n", (int)launch_ret, cudaGetErrorString(launch_ret));
     // }
     // if (kernel_ret != cudaSuccess) {
-    //     fmt::print("resolve_labels: cuda kernel got error {} ({})\n", kernel_ret, cudaGetErrorString(kernel_ret));
+    //     fmt::print("resolve_labels: cuda kernel got error {} ({})\n", (int)kernel_ret, cudaGetErrorString(kernel_ret));
     // }
 
     // Step 3: Analysis
@@ -408,10 +445,10 @@ bliss::find_components_above_threshold_cuda(bland::ndarray                   dop
     // launch_ret = cudaDeviceSynchronize();
     // kernel_ret = cudaGetLastError();
     // if (launch_ret != cudaSuccess) {
-    //     fmt::print("merge_labels: cuda launch got error {} ({})\n", launch_ret, cudaGetErrorString(launch_ret));
+    //     fmt::print("merge_labels: cuda launch got error {} ({})\n", (int)launch_ret, cudaGetErrorString(launch_ret));
     // }
     // if (kernel_ret != cudaSuccess) {
-    //     fmt::print("merge_labels: cuda kernel got error {} ({})\n", kernel_ret, cudaGetErrorString(kernel_ret));
+    //     fmt::print("merge_labels: cuda kernel got error {} ({})\n", (int)kernel_ret, cudaGetErrorString(kernel_ret));
     // }
 
     dev_protohits.erase(dev_protohits.begin(), dev_protohits.begin() + 8);
