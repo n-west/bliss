@@ -21,6 +21,7 @@ target_link_libraries(bliss_generate_channelizer_response
 add_executable(bliss_find_hits bliss_find_hits.cpp)
 target_link_libraries(bliss_find_hits
     bliss_core
+    bliss_preprocess
     drift_search
     estimators
     bliss_serialization

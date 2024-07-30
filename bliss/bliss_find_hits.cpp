@@ -2,6 +2,7 @@
 #include <core/scan.hpp>
 #include <core/cadence.hpp>
 #include <estimators/noise_estimate.hpp>
+#include <preprocess/passband_static_equalize.hpp>
 #include <drift_search/event_search.hpp>
 #include <drift_search/filter_hits.hpp>
 #include <drift_search/hit_search.hpp>
@@ -27,6 +28,7 @@ int main(int argc, char *argv[]) {
     std::vector<std::string> pipeline_files;
     int coarse_channel=0;
     int number_coarse_channels=1;
+    std::string channel_taps_path;
     bliss::integrate_drifts_options dedrift_options{
             .desmear = true, .low_rate = -500, .high_rate = 500, .rate_step_size = 1};
     std::string device="cuda:0";
@@ -41,6 +43,9 @@ int main(int argc, char *argv[]) {
             (clipp::option("-c", "--coarse-channel") & clipp::value("coarse_channel").set(coarse_channel)) % "Coarse channel to process",
             (clipp::option("--number-coarse") & clipp::value("number_coarse_channels").set(number_coarse_channels)) % "Number of coarse channels to process",
             (clipp::option("--nchan-per-coarse") & clipp::value("nchan_per_coarse").set(nchan_per_coarse)) % "number of fine channels per coarse to use (default: 0 auto-detects)",
+
+            // Preprocessing
+            (clipp::option("-e", "--equalizer-channel") & clipp::value("channel_taps").set(channel_taps_path)) % "the path to coarse channel response at fine frequency resolution",
 
             // Compute device / params
             (clipp::option("-d", "--device") & clipp::value("device").set(device)) % "Compute device to use",
@@ -81,6 +86,10 @@ int main(int argc, char *argv[]) {
             pipeline_object,
             bliss::noise_power_estimate_options{.estimator_method = bliss::noise_power_estimator::STDDEV,
                                                 .masked_estimate  = true}); // estimate noise power of unflagged data
+
+    if (!channel_taps_path.empty()) {
+        pipeline_object = bliss::equalize_passband_filter(pipeline_object, channel_taps_path);
+    }
 
     pipeline_object = bliss::integrate_drifts(pipeline_object, dedrift_options);
 

@@ -34,8 +34,9 @@ if (WITH_CUDA)
     )
 
     target_link_libraries(bland
-        PRIVATE
+        PUBLIC
         CUDA::cudart_static
+        PRIVATE
         CUDA::cufft
     )
 

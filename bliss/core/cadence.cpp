@@ -105,6 +105,7 @@ void bliss::observation_target::set_device(bland::ndarray::dev& device, bool ver
             throw std::runtime_error("set_device received invalid cuda device");
         }
     }
+    _device = device;
 
     for (auto &target_scan : _scans) {
         target_scan.set_device(device, false);
@@ -197,6 +198,8 @@ void bliss::cadence::set_device(bland::ndarray::dev& device, bool verbose) {
             throw std::runtime_error("set_device received invalid cuda device");
         }
     }
+
+    _device = device;
 
     for (auto &target : _observations) {
         target.set_device(device, false);
