@@ -96,12 +96,12 @@ bland::ndarray bliss::gen_coarse_channel_response(int fine_per_coarse, int num_c
 
     H.reshape({number_coarse_channels_contributing, fine_per_coarse});
 
-    bland::write_to_file(H, "H_sliced_reshaped_magsquare.cuda_f32");
+    // bland::write_to_file(H, "H_sliced_reshaped_magsquare.cuda_f32");
 
     H = bland::sum(H, {0}); // sum all of the energy from adjacent channels that folds back in
     H = H/bland::max(H); // normalize
 
-    bland::write_to_file(H, "H_normalized.cuda_f32");
+    // bland::write_to_file(H, "H_normalized.cuda_f32");
 
     return H;
 }
@@ -146,6 +146,7 @@ observation_target bliss::equalize_passband_filter(observation_target ot, bland:
 
 observation_target bliss::equalize_passband_filter(observation_target ot, std::string_view h_resp_filepath, bland::ndarray::datatype dtype) {
     auto h = bland::read_from_file(h_resp_filepath, dtype);
+    h = h.to(ot.device());
     return equalize_passband_filter(ot, h);
 }
 
