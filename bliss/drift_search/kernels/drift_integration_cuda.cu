@@ -44,12 +44,12 @@ __global__ void integrate_drifts(float* drift_plane_data,
     auto time_steps = spectrum_grid_shape[0];
     auto number_channels = spectrum_grid_shape[1];
 
-    for (uint32_t freq_channel = tid; freq_channel < number_channels; freq_channel += grid_size) {
-        for (uint32_t drift_index=0; drift_index < number_drifts; ++drift_index) {
+    for (uint64_t freq_channel = tid; freq_channel < number_channels; freq_channel += grid_size) {
+        for (uint64_t drift_index=0; drift_index < number_drifts; ++drift_index) {
             auto m = drifts[drift_index].drift_rate_slope;
             auto desmear_bandwidth = drifts[drift_index].desmeared_bins;
             
-            int32_t drift_plane_index = drift_index * number_channels + freq_channel;
+            int64_t drift_plane_index = drift_index * number_channels + freq_channel;
 
             uint8_t accumulated_low_sk = 0;
             uint8_t accumulated_high_sk = 0;
@@ -68,7 +68,7 @@ __global__ void integrate_drifts(float* drift_plane_data,
                         int32_t spectrum_freq_index = freq_channel + channel_offset;
 
                         if (spectrum_freq_index >= 0 && spectrum_freq_index < number_channels && freq_channel < number_channels) {
-                            int32_t spectrum_index = t * number_channels + spectrum_freq_index;
+                            int64_t spectrum_index = t * number_channels + spectrum_freq_index;
 
                             accumulated_spectrum += spectrum_grid_data[spectrum_index];
                             accumulated_bins += 1;
@@ -91,7 +91,7 @@ __global__ void integrate_drifts(float* drift_plane_data,
                         int32_t spectrum_freq_index = freq_channel + channel_offset;
 
                         if (spectrum_freq_index >= 0 && spectrum_freq_index < number_channels && freq_channel < number_channels) {
-                            int32_t spectrum_index = t * number_channels + spectrum_freq_index;
+                            int64_t spectrum_index = t * number_channels + spectrum_freq_index;
 
                             accumulated_spectrum += spectrum_grid_data[spectrum_index];
                             accumulated_bins += 1;
@@ -156,6 +156,19 @@ __global__ void integrate_drifts2(float* drift_plane_data,
     }
 }
 
+template <typename T, typename It>
+thrust::device_vector<T> safe_device_vector(It begin_alloc, It end_alloc) {
+    try {
+        return thrust::device_vector<T>(begin_alloc, end_alloc);
+    }
+    catch (std::exception &e) {
+        fmt::print("Error: {}\n", e.what());
+        throw std::runtime_error("Memory allocation failed for thrust::device_vector");
+    }
+}
+
+#include <thread>
+
 [[nodiscard]] frequency_drift_plane
 bliss::integrate_linear_rounded_bins_cuda(bland::ndarray    spectrum_grid,
                                          bland::ndarray    rfi_mask,
@@ -192,14 +205,13 @@ bliss::integrate_linear_rounded_bins_cuda(bland::ndarray    spectrum_grid,
     auto drift_plane_shape   = drift_plane.shape();
     auto drift_plane_strides = drift_plane.strides();
 
+    auto dev_drift_plane_shape = safe_device_vector<int32_t>(drift_plane_shape.begin(), drift_plane_shape.end());
+    auto dev_drift_plane_strides= safe_device_vector<int32_t>(drift_plane_strides.begin(), drift_plane_strides.end());
 
-    thrust::device_vector<int32_t> dev_drift_plane_shape(drift_plane_shape.begin(), drift_plane_shape.end());
-    thrust::device_vector<int32_t> dev_drift_plane_strides(drift_plane_strides.begin(), drift_plane_strides.end());
+    auto dev_spectrum_shape = safe_device_vector<int32_t>(spectrum_shape.begin(), spectrum_shape.end());
+    auto dev_spectrum_strides = safe_device_vector<int32_t>(spectrum_strides.begin(), spectrum_strides.end());
 
-    thrust::device_vector<int32_t> dev_spectrum_shape(spectrum_shape.begin(), spectrum_shape.end());
-    thrust::device_vector<int32_t> dev_spectrum_strides(spectrum_strides.begin(), spectrum_strides.end());
-
-    thrust::device_vector<frequency_drift_plane::drift_rate> dev_drift_slopes(drift_rates.begin(), drift_rates.end());
+    auto dev_drift_slopes = safe_device_vector<frequency_drift_plane::drift_rate>(drift_rates.begin(), drift_rates.end());
 
     dim3 grid(128, 1);
     dim3 block(512, 1);
