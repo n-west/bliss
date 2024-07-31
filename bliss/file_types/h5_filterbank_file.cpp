@@ -140,24 +140,33 @@ bliss::h5_filterbank_file::h5_filterbank_file(std::string_view file_path) {
         fmt::print("WARN: h5_filterbank_file: got an exception while reading mask. This is recoverable.\n");
     }
 
-    if (read_file_attr<std::string>("CLASS") != "FILTERBANK") {
-        throw std::invalid_argument("H5 file CLASS is not FILTERBANK");
+    try {
+        auto h5_file_class = read_file_attr<std::string>("CLASS");
+        if (h5_file_class != "FILTERBANK") {
+            fmt::print("WARN: the h5 file has a 'CLASS' attribute that is *not* set to 'FILTERBANK' (is {}). We will assume this is compatible with a FILTERBANK and resume.", h5_file_class);
+        }
+    } catch (std::invalid_argument &e) {
+        fmt::print("WARN: the h5 file does not have a 'CLASS' attribute. This should be set to FILTERBANK. Assuming this is a FILTERBANK file and resuming.");
     }
 
     // TODO: what is the support matrix we can handle?
     // We know most telescopes and archive data are 1.0 and GBT currently emits 2.0
     constexpr std::array<const char*, 2> supported_filterbank_versions = {"1.0", "2.0"};
 
-    auto filterbank_version = read_file_attr<std::string>("VERSION");
-    if (!std::any_of(supported_filterbank_versions.begin(),
-                     supported_filterbank_versions.end(),
-                     [filterbank_version](const char* supported_version) { return supported_version == filterbank_version; })) {
+    try {
+        auto filterbank_version = read_file_attr<std::string>("VERSION");
+        if (!std::any_of(supported_filterbank_versions.begin(),
+                        supported_filterbank_versions.end(),
+                        [filterbank_version](const char* supported_version) { return supported_version == filterbank_version; })) {
 
-        auto warning = fmt::format("WARN: h5_filterbank_file: H5 FILTERBANK file VERSION field ({}) is not in known supported "
-                    "versions list {}. Trying to read it anyway!\n",
-                    filterbank_version,
-                    supported_filterbank_versions);
-        fmt::print(warning);
+            auto warning = fmt::format("WARN: h5_filterbank_file: H5 FILTERBANK file VERSION field ({}) is not in known supported "
+                        "versions list {}. Trying to read it anyway!\n",
+                        filterbank_version,
+                        supported_filterbank_versions);
+            fmt::print(warning);
+        }
+    } catch (std::invalid_argument &e) {
+        fmt::print("WARN: the h5 file does not have a 'VERSION' attribute to indicate what version of FILTERBANK this is. Will assume it is compatible and resume.");
     }
 
 }
