@@ -2,6 +2,7 @@
 #include <core/scan.hpp>
 #include <core/cadence.hpp>
 #include <estimators/noise_estimate.hpp>
+#include <preprocess/normalize.hpp>
 #include <preprocess/passband_static_equalize.hpp>
 #include <drift_search/event_search.hpp>
 #include <drift_search/filter_hits.hpp>
@@ -79,17 +80,18 @@ int main(int argc, char *argv[]) {
 
     pipeline_object.set_device(device);
 
-    pipeline_object = bliss::flag_filter_rolloff(pipeline_object, 0.2);
+    pipeline_object = bliss::normalize(pipeline_object);
+    if (!channel_taps_path.empty()) {
+        pipeline_object = bliss::equalize_passband_filter(pipeline_object, channel_taps_path);
+    }
+
+    pipeline_object = bliss::flag_filter_rolloff(pipeline_object, 0.25);
     pipeline_object = bliss::flag_spectral_kurtosis(pipeline_object, 0.1, 25);
 
     pipeline_object = bliss::estimate_noise_power(
             pipeline_object,
             bliss::noise_power_estimate_options{.estimator_method = bliss::noise_power_estimator::STDDEV,
                                                 .masked_estimate  = true}); // estimate noise power of unflagged data
-
-    if (!channel_taps_path.empty()) {
-        pipeline_object = bliss::equalize_passband_filter(pipeline_object, channel_taps_path);
-    }
 
     pipeline_object = bliss::integrate_drifts(pipeline_object, dedrift_options);
 

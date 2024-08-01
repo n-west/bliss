@@ -131,20 +131,20 @@ class scan {
     // Read from h5 file
     double      _fch1;
     double      _foff;
-    int64_t     _machine_id;
+    std::optional<int64_t>     _machine_id;
     int64_t     _nbits;
     int64_t     _nchans;
     int64_t     _nifs;
     std::string _source_name;
-    double      _src_dej;
-    double      _src_raj;
-    int64_t     _telescope_id;
+    std::optional<double>      _src_dej;
+    std::optional<double>      _src_raj;
+    std::optional<int64_t>     _telescope_id;
     double      _tsamp;
     double      _tstart;
 
     int64_t _data_type;
-    double  _az_start;
-    double  _za_start;
+    std::optional<double>  _az_start;
+    std::optional<double>  _za_start;
 
 
     // Derived OR inferred

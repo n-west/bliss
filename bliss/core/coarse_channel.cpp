@@ -43,6 +43,39 @@ coarse_channel::coarse_channel(double      fch1,
         _az_start(az_start),
         _za_start(za_start) {}
 
+coarse_channel::coarse_channel(double              fch1,
+                   double                          foff,
+                   std::optional<int64_t>          machine_id,
+                   std::optional<int64_t>          nbits,
+                   int64_t                         nchans,
+                   int64_t                         ntsteps,
+                   int64_t                         nifs,
+                   std::string                     source_name,
+                   std::optional<double>           src_dej,
+                   std::optional<double>           src_raj,
+                   std::optional<int64_t>          telescope_id,
+                   double                          tsamp,
+                   double                          tstart,
+                   int64_t                         data_type,
+                   std::optional<double>           az_start,
+                   std::optional<double>           za_start) :
+        _fch1(fch1),
+        _foff(foff),
+        _machine_id(machine_id),
+        _nbits(nbits),
+        _nchans(nchans),
+        _ntsteps(ntsteps),
+        _nifs(nifs),
+        _source_name(source_name),
+        _src_dej(src_dej),
+        _src_raj(src_raj),
+        _telescope_id(telescope_id),
+        _tsamp(tsamp),
+        _tstart(tstart),
+        _data_type(data_type),
+        _az_start(az_start),
+        _za_start(za_start) {}
+
 coarse_channel::coarse_channel(std::function<bland::ndarray()> data,
                                std::function<bland::ndarray()> mask,
                                double                          fch1,
@@ -61,6 +94,44 @@ coarse_channel::coarse_channel(std::function<bland::ndarray()> data,
                                int64_t                         data_type,
                                double                          az_start,
                                double                          za_start) :
+        coarse_channel(fch1,
+                       foff,
+                       machine_id,
+                       nbits,
+                       nchans,
+                       ntsteps,
+                       nifs,
+                       source_name,
+                       src_dej,
+                       src_raj,
+                       telescope_id,
+                       tsamp,
+                       tstart,
+                       data_type,
+                       az_start,
+                       za_start) {
+    _data = data;
+    _mask = mask;
+}
+
+coarse_channel::coarse_channel(std::function<bland::ndarray()> data,
+                                std::function<bland::ndarray()> mask,
+                                double                          fch1,
+                                double                          foff,
+                                std::optional<int64_t>          machine_id,
+                                std::optional<int64_t>          nbits,
+                                int64_t                         nchans,
+                                int64_t                         ntsteps,
+                                int64_t                         nifs,
+                                std::string                     source_name,
+                                std::optional<double>           src_dej,
+                                std::optional<double>           src_raj,
+                                std::optional<int64_t>          telescope_id,
+                                double                          tsamp,
+                                double                          tstart,
+                                int64_t                         data_type,
+                                std::optional<double>           az_start,
+                                std::optional<double>           za_start) :
         coarse_channel(fch1,
                        foff,
                        machine_id,
@@ -233,14 +304,14 @@ double bliss::coarse_channel::foff() const {
 // }
 
 int64_t bliss::coarse_channel::machine_id() const {
-    return _machine_id;
+    return _machine_id.value();
 }
 // void bliss::scan::machine_id(int64_t machine_id) {
 //     _machine_id = machine_id;
 // }
 
 int64_t bliss::coarse_channel::nbits() const {
-    return _nbits;
+    return _nbits.value();
 }
 // void bliss::scan::nbits(int64_t nbits) {
 //     _nbits = nbits;
@@ -275,21 +346,21 @@ std::string bliss::coarse_channel::source_name() const {
 // }
 
 double bliss::coarse_channel::src_dej() const {
-    return _src_dej;
+    return _src_dej.value();
 }
 // void bliss::scan::src_dej(double src_dej) {
 //     _src_dej = src_dej;
 // }
 
 double bliss::coarse_channel::src_raj() const {
-    return _src_raj;
+    return _src_raj.value();
 }
 // void bliss::scan::src_raj(double src_raj) {
 //     _src_raj = src_raj;
 // }
 
 int64_t bliss::coarse_channel::telescope_id() const {
-    return _telescope_id;
+    return _telescope_id.value();
 }
 // void bliss::scan::telescope_id(int64_t telescope_id) {
 //     _telescope_id = telescope_id;
@@ -317,14 +388,14 @@ int64_t bliss::coarse_channel::data_type() const {
 // }
 
 double bliss::coarse_channel::az_start() const {
-    return _az_start;
+    return _az_start.value();
 }
 // void bliss::scan::az_start(double az_start) {
 //     _az_start = az_start;
 // }
 
 double bliss::coarse_channel::za_start() const {
-    return _za_start;
+    return _za_start.value();
 }
 // void bliss::scan::za_start(double za_start) {
 //     _za_start = za_start;

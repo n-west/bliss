@@ -125,13 +125,12 @@ scan::scan(h5_filterbank_file fb_file, int num_fine_channels_per_coarse) {
     // double      foff;
     _foff = fb_file.read_data_attr<double>("foff");
     // int64_t     machine_id;
-    _machine_id = fb_file.read_data_attr<int64_t>("machine_id");
-    // int64_t     nbits;
-    _nbits = fb_file.read_data_attr<int64_t>("nbits");
-    // int64_t     nchans;
-    _nchans = fb_file.read_data_attr<int64_t>("nchans");
-    // int64_t     nifs;
-    _nifs = fb_file.read_data_attr<int64_t>("nifs");
+    try {
+        _machine_id = fb_file.read_data_attr<int64_t>("machine_id");
+    } catch (std::invalid_argument &e) {
+        // machine_id not specified, that's OK
+    }
+
     // std::string source_name;
     _source_name = fb_file.read_data_attr<std::string>("source_name");
     // double      src_dej;
@@ -145,12 +144,45 @@ scan::scan(h5_filterbank_file fb_file, int num_fine_channels_per_coarse) {
     // double      tstart;
     _tstart = fb_file.read_data_attr<double>("tstart");
 
-    // int64_t data_type;
-    _data_type = fb_file.read_data_attr<int64_t>("data_type");
     // double  az_start;
-    _az_start = fb_file.read_data_attr<double>("az_start");
+    try {
+        _az_start = fb_file.read_data_attr<double>("az_start");
+    } catch (std::invalid_argument &e) {
+        // az_start is not specified, that's OK
+    }
     // double  za_start;
-    _za_start = fb_file.read_data_attr<double>("za_start");
+    try {
+        _za_start = fb_file.read_data_attr<double>("za_start");
+    } catch (std::invalid_argument &e) {
+        // za_start is not specified, that's OK
+    }
+
+    // int64_t data_type;
+    try {
+        _data_type = fb_file.read_data_attr<int64_t>("data_type");
+    } catch (std::invalid_argument &e) {
+        // data_type not specified, assume 1 (float32) because that's what it always is
+        _data_type = 1;
+    }
+    // int64_t     nbits;
+    try {
+        _nbits = fb_file.read_data_attr<int64_t>("nbits");
+    } catch (std::invalid_argument &e) {
+        // nbits is not specified, derive from datatype (if it's ever likely we get nbits but not datatype
+        // we can verify that nbits is 32 before assuming data_type)
+    }
+    // int64_t     nchans;
+    try {
+        _nchans = fb_file.read_data_attr<int64_t>("nchans");
+    } catch (std::invalid_argument &e) {
+        // nchans is not specified, derive from datashape
+    }
+    // int64_t     nifs;
+    try {
+        _nifs = fb_file.read_data_attr<int64_t>("nifs");
+    } catch (std::invalid_argument &e) {
+        // nifs is not specified, derive from datashape
+    }
 
     // This is expected to be [time, feed, freq]
     auto data_shape = _h5_file_handle->get_data_shape();
@@ -344,7 +376,7 @@ void bliss::scan::set_foff(double foff) {
 }
 
 int64_t bliss::scan::machine_id() const {
-    return _machine_id;
+    return _machine_id.value();
 }
 void bliss::scan::set_machine_id(int64_t machine_id) {
     _machine_id = machine_id;
@@ -379,21 +411,21 @@ void bliss::scan::set_source_name(std::string source_name) {
 }
 
 double bliss::scan::src_dej() const {
-    return _src_dej;
+    return _src_dej.value();
 }
 void bliss::scan::set_src_dej(double src_dej) {
     _src_dej = src_dej;
 }
 
 double bliss::scan::src_raj() const {
-    return _src_raj;
+    return _src_raj.value();
 }
 void bliss::scan::set_src_raj(double src_raj) {
     _src_raj = src_raj;
 }
 
 int64_t bliss::scan::telescope_id() const {
-    return _telescope_id;
+    return _telescope_id.value();
 }
 void bliss::scan::set_telescope_id(int64_t telescope_id) {
     _telescope_id = telescope_id;
@@ -421,14 +453,14 @@ void bliss::scan::set_data_type(int64_t data_type) {
 }
 
 double bliss::scan::az_start() const {
-    return _az_start;
+    return _az_start.value();
 }
 void bliss::scan::set_az_start(double az_start) {
     _az_start = az_start;
 }
 
 double bliss::scan::za_start() const {
-    return _za_start;
+    return _za_start.value();
 }
 void bliss::scan::set_za_start(double za_start) {
     _za_start = za_start;
