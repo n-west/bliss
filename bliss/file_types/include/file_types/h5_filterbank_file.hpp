@@ -86,7 +86,7 @@ T bliss::h5_filterbank_file::read_file_attr(const std::string &key) {
         attr.read(dtype, val);
         return val;
     } else {
-        auto err_msg = fmt::format("H5 file does not have an attribute key '{}'", key);
+        auto err_msg = fmt::format("H5 file does not have an attribute key '{}'\n", key);
         throw std::invalid_argument(err_msg);
     }
 }

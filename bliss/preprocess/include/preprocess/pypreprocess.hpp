@@ -1,5 +1,6 @@
 #pragma once
 
+#include "normalize.hpp"
 #include "passband_static_equalize.hpp"
 
 #include <nanobind/nanobind.h>
@@ -27,5 +28,10 @@ void bind_pypreprocess(nb::module_ m) {
 
       m.def("equalize_passband_filter", nb::overload_cast<bliss::coarse_channel, bland::ndarray>(bliss::equalize_passband_filter));
       m.def("equalize_passband_filter", nb::overload_cast<bliss::coarse_channel, std::string_view, bland::ndarray::datatype>(bliss::equalize_passband_filter));
+
+      m.def("normalize", nb::overload_cast<bliss::coarse_channel>(bliss::normalize));
+      m.def("normalize", nb::overload_cast<bliss::scan>(bliss::normalize));
+      m.def("normalize", nb::overload_cast<bliss::observation_target>(bliss::normalize));
+      m.def("normalize", nb::overload_cast<bliss::cadence>(bliss::normalize));
 
 }

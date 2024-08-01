@@ -143,10 +143,10 @@ bliss::h5_filterbank_file::h5_filterbank_file(std::string_view file_path) {
     try {
         auto h5_file_class = read_file_attr<std::string>("CLASS");
         if (h5_file_class != "FILTERBANK") {
-            fmt::print("WARN: the h5 file has a 'CLASS' attribute that is *not* set to 'FILTERBANK' (is {}). We will assume this is compatible with a FILTERBANK and resume.", h5_file_class);
+            fmt::print("WARN: the h5 file has a 'CLASS' attribute that is *not* set to 'FILTERBANK' (is {}). We will assume this is compatible with a FILTERBANK and resume.\n", h5_file_class);
         }
     } catch (std::invalid_argument &e) {
-        fmt::print("WARN: the h5 file does not have a 'CLASS' attribute. This should be set to FILTERBANK. Assuming this is a FILTERBANK file and resuming.");
+        fmt::print("WARN: the h5 file does not have a 'CLASS' attribute. This should be set to FILTERBANK. Assuming this is a FILTERBANK file and resuming.\n");
     }
 
     // TODO: what is the support matrix we can handle?
@@ -166,7 +166,7 @@ bliss::h5_filterbank_file::h5_filterbank_file(std::string_view file_path) {
             fmt::print(warning);
         }
     } catch (std::invalid_argument &e) {
-        fmt::print("WARN: the h5 file does not have a 'VERSION' attribute to indicate what version of FILTERBANK this is. Will assume it is compatible and resume.");
+        fmt::print("WARN: the h5 file does not have a 'VERSION' attribute to indicate what version of FILTERBANK this is. Will assume it is compatible and resume.\n");
     }
 
 }
