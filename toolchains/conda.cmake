@@ -16,9 +16,27 @@
 # specify the cross compiler
 set(CMAKE_C_COMPILER $ENV{CC})
 
+# Check if both CUDA_ROOT and CUDA_DIR are defined
+if(DEFINED ENV{CUDA_ROOT} AND DEFINED ENV{CUDA_DIR})
+    if(NOT "$ENV{CUDA_ROOT}" STREQUAL "$ENV{CUDA_DIR}")
+        message(FATAL_ERROR "CUDA_ROOT and CUDA_DIR are both defined but different. CUDA_ROOT: $ENV{CUDA_ROOT}, CUDA_DIR: $ENV{CUDA_DIR}")
+    else()
+        set(CUDA_PATH $ENV{CUDA_ROOT})
+    endif()
+elseif(DEFINED ENV{CUDA_ROOT})
+    set(CUDA_PATH $ENV{CUDA_ROOT})
+elseif(DEFINED ENV{CUDA_DIR})
+    set(CUDA_PATH $ENV{CUDA_DIR})
+else()
+    message(FATAL_ERROR "Neither CUDA_ROOT nor CUDA_DIR is defined.")
+endif()
+
+# Set the CUDA_PATH variable
+set(CUDA_PATH ${CUDA_PATH} CACHE PATH "Path to CUDA")
+
 set(CMAKE_SYSROOT $ENV{CONDA_PREFIX}/x86_64-conda-linux-gnu/sysroot)
 # where is the target environment
-set(CMAKE_FIND_ROOT_PATH $ENV{CONDA_PREFIX} $ENV{CONDA_PREFIX}/x86_64-conda-linux-gnu/sysroot $ENV{CUDA_DIR})
+set(CMAKE_FIND_ROOT_PATH $ENV{CONDA_PREFIX} $ENV{CONDA_PREFIX}/x86_64-conda-linux-gnu/sysroot ${CUDA_PATH})
 
 # search for programs in the build host directories
 set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
