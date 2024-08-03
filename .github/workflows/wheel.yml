@@ -8,7 +8,8 @@
 
 name: Build and upload python package
 
-# on:
+on:
+   push:
 #   release:
 #     types: [published]
 
