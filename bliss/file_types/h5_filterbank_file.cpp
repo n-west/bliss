@@ -132,7 +132,7 @@ bliss::h5_filterbank_file::h5_filterbank_file(std::string_view file_path) {
 
     try {
         // handle::nameExists is newer than hdf5 available from manylinux2014 centos
-        if (H5Lexists(_h5_file_handle, "mask") /*_h5_file_handle.nameExists("mask")*/) {
+        if (H5Lexists(_h5_file_handle.getId(), "mask", H5P_DEFAULT) /*_h5_file_handle.nameExists("mask")*/) {
                 _h5_mask_handle = _h5_file_handle.openDataSet("mask");
         } else {
             fmt::print("INFO: h5_filterbank_file: mask is not in this file. This is recoverable.\n");
