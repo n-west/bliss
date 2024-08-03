@@ -37,7 +37,7 @@ jobs:
 
       - name: Install cibuildwheel
         run: |
-          python3 -m pip install cibuildwheel==2.17.0
+          python3 -m pip install cibuildwheel==2.19.2
 
       - name: Build wheels for CPython
         run: |
