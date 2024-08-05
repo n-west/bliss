@@ -61,7 +61,7 @@ jobs:
             (yum install -y hdf5-devel fftw-devel || apt-get install -y libhdf5-dev || apk add --update --no-cache hdf5-dev || true) && true
             # cibuildwheel uses --no-dep, but docs suggest build-system.requires should be installed...
             # copying a version of fairseq approach https://github.com/facebookresearch/fairseq/blob/main/.github/workflows/release.yml#L128
-            python3 -m pip install py-build-cmake~=0.2.0a7 cmake~=3.29.0 ninja~=1.11
+            python3 -m pip install py-build-cmake~=0.2.0a7
             if [[ "${{ matrix.cuda_ver }}" != "none" ]]; then
               yum-config-manager --add-repo https://developer.download.nvidia.com/compute/cuda/repos/rhel7/x86_64/cuda-rhel7.repo
               yum clean all
