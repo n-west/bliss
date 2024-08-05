@@ -32,7 +32,7 @@ name = "bliss" # Import name
 directory = "bliss/python/"
 
 [tool.py-build-cmake.sdist]
-include = ["CMakeLists.txt", "bland/", "bliss/*"]
+include = ["CMakeLists.txt", "bland/", "bliss/*", "Doxyfile.in", "LICENSE", "README.md"]
 exclude = []
 
 [tool.py-build-cmake.cmake]
