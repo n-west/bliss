@@ -34,7 +34,7 @@ build-backend = "py_build_cmake.build"
 
 [tool.py-build-cmake.module]
 name = "blissdedrift" # Import name
-directory = "blissdedrift/python/"
+directory = "bliss/python/"
 
 [tool.py-build-cmake.sdist]
 include = ["CMakeLists.txt", "bland/", "bliss/*", "Doxyfile.in", "LICENSE", "README.md"]
