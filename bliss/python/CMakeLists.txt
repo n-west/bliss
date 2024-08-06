@@ -1,6 +1,6 @@
 
-nanobind_add_module(pybliss pybliss.cpp)
-target_link_libraries(pybliss
+nanobind_add_module(blissdedrift pybliss.cpp)
+target_link_libraries(blissdedrift
 PUBLIC
 pybliss_core
 pybland_header
@@ -14,19 +14,19 @@ fmt::fmt-header-only
 )
 
 if (WITH_CUDA)
-    target_link_libraries(pybliss PRIVATE CUDA::cudart_static)
+    target_link_libraries(blissdedrift PRIVATE CUDA::cudart_static)
 endif()
 
-file(GLOB_RECURSE PYTHON_FILES CONFIGURE_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/bliss/*.py)
+file(GLOB_RECURSE PYTHON_FILES CONFIGURE_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/blissdedrift/*.py)
 
 foreach(PY_FILE ${PYTHON_FILES})
-    file(RELATIVE_PATH REL_PATH ${CMAKE_CURRENT_SOURCE_DIR}/bliss ${PY_FILE})
+    file(RELATIVE_PATH REL_PATH ${CMAKE_CURRENT_SOURCE_DIR}/blissdedrift ${PY_FILE})
     get_filename_component(DIR_PATH ${REL_PATH} DIRECTORY)
-    set(OUTPUT_PATH "${CMAKE_CURRENT_BINARY_DIR}/bliss/${REL_PATH}")
+    set(OUTPUT_PATH "${CMAKE_CURRENT_BINARY_DIR}/blissdedrift/${REL_PATH}")
     
     add_custom_command(
         OUTPUT ${OUTPUT_PATH}
-        COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_CURRENT_BINARY_DIR}/bliss/${DIR_PATH}"
+        COMMAND ${CMAKE_COMMAND} -E make_directory "${CMAKE_CURRENT_BINARY_DIR}/blissdedrift/${DIR_PATH}"
         COMMAND ${CMAKE_COMMAND} -E create_symlink ${PY_FILE} ${OUTPUT_PATH}
         DEPENDS ${PY_FILE}
         COMMENT "Updating ${REL_PATH}"
@@ -41,12 +41,12 @@ add_custom_target(
 )
 
 add_custom_target(bliss-module ALL)
-add_dependencies(bliss-module UpdatePythonFiles pybliss pybland)
+add_dependencies(bliss-module UpdatePythonFiles blissdedrift pybland)
 
 add_custom_command(
     TARGET bliss-module POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E create_symlink $<TARGET_FILE:pybliss> "${CMAKE_CURRENT_BINARY_DIR}/bliss/$<TARGET_FILE_NAME:pybliss>"
-    COMMAND ${CMAKE_COMMAND} -E create_symlink $<TARGET_FILE:pybland> "${CMAKE_CURRENT_BINARY_DIR}/bliss/$<TARGET_FILE_NAME:pybland>"
+    COMMAND ${CMAKE_COMMAND} -E create_symlink $<TARGET_FILE:blissdedrift> "${CMAKE_CURRENT_BINARY_DIR}/blissdedrift/$<TARGET_FILE_NAME:blissdedrift>"
+    COMMAND ${CMAKE_COMMAND} -E create_symlink $<TARGET_FILE:pybland> "${CMAKE_CURRENT_BINARY_DIR}/blissdedrift/$<TARGET_FILE_NAME:pybland>"
 )
     
 
@@ -59,6 +59,6 @@ else()
     set(PYBLISS_MODULE_INSTALL_DIR "lib/python${PYTHON_VERSION}/site-packages")
 endif()
 
-install(TARGETS pybliss
+install(TARGETS blissdedrift
         COMPONENT python_modules
         LIBRARY DESTINATION ${PYBLISS_MODULE_INSTALL_DIR})

@@ -1,5 +1,5 @@
 [project]
-name = "dedrift"
+name = "bliss-dedrift"
 readme = "README.md"
 requires-python = ">=3.8"
 license = { "file" = "LICENSE" }
