@@ -33,8 +33,8 @@ requires = [
 build-backend = "py_build_cmake.build"
 
 [tool.py-build-cmake.module]
-name = "bliss" # Import name
-directory = "bliss/python/"
+name = "blissdedrift" # Import name
+directory = "blissdedrift/python/"
 
 [tool.py-build-cmake.sdist]
 include = ["CMakeLists.txt", "bland/", "bliss/*", "Doxyfile.in", "LICENSE", "README.md"]
