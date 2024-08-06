@@ -57,11 +57,11 @@ install_components = ["python_modules"]
 #generator = "Ninja Multi-Config"
 generator = "Unix Makefiles"
 config = ["RelWithDebInfo"]
-#env = { "CMAKE_PREFIX_PATH" = "${HOME}/.local" }
+build_args = ["-j", "8"]
 
 [tool.py-build-cmake.editable]
 mode = "symlink"  # Choose the desired mode (wrapper, hook, or symlink)
 
 [tool.py-build-cmake.stubgen]
-args = ["-v", "-j", "8"]
+args = ["-v"]
 
