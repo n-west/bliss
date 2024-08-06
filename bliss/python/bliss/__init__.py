@@ -10,4 +10,4 @@ from . import pybland as bland
 
 from . import plot_utils
 
-__version__ = '0.1rc2'
+__version__ = '0.1rc3'
