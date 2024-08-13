@@ -22,6 +22,8 @@ classifiers = [
 dependencies = ["numpy", "matplotlib"]
 dynamic = ["version", "description"]
 
+[project.optional-dependencies]
+plots = ["altair", "matplotlib"]
 
 [build-system]
 requires = [
