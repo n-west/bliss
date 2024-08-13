@@ -1,6 +1,6 @@
 
-nanobind_add_module(blissdedrift pybliss.cpp)
-target_link_libraries(blissdedrift
+nanobind_add_module(pybliss pybliss.cpp)
+target_link_libraries(pybliss
 PUBLIC
 pybliss_core
 pybland_header
@@ -14,7 +14,7 @@ fmt::fmt-header-only
 )
 
 if (WITH_CUDA)
-    target_link_libraries(blissdedrift PRIVATE CUDA::cudart_static)
+    target_link_libraries(pybliss PRIVATE CUDA::cudart_static)
 endif()
 
 file(GLOB_RECURSE PYTHON_FILES CONFIGURE_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/blissdedrift/*.py)
@@ -41,11 +41,11 @@ add_custom_target(
 )
 
 add_custom_target(bliss-module ALL)
-add_dependencies(bliss-module UpdatePythonFiles blissdedrift pybland)
+add_dependencies(bliss-module UpdatePythonFiles pybliss pybland)
 
 add_custom_command(
     TARGET bliss-module POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E create_symlink $<TARGET_FILE:blissdedrift> "${CMAKE_CURRENT_BINARY_DIR}/blissdedrift/$<TARGET_FILE_NAME:blissdedrift>"
+    COMMAND ${CMAKE_COMMAND} -E create_symlink $<TARGET_FILE:pybliss> "${CMAKE_CURRENT_BINARY_DIR}/blissdedrift/$<TARGET_FILE_NAME:pybliss>"
     COMMAND ${CMAKE_COMMAND} -E create_symlink $<TARGET_FILE:pybland> "${CMAKE_CURRENT_BINARY_DIR}/blissdedrift/$<TARGET_FILE_NAME:pybland>"
 )
     
@@ -59,6 +59,6 @@ else()
     set(PYBLISS_MODULE_INSTALL_DIR "lib/python${PYTHON_VERSION}/site-packages")
 endif()
 
-install(TARGETS blissdedrift
+install(TARGETS pybliss
         COMPONENT python_modules
         LIBRARY DESTINATION ${PYBLISS_MODULE_INSTALL_DIR})

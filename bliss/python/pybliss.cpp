@@ -22,7 +22,7 @@
 namespace nb = nanobind;
 using namespace nb::literals;
 
-NB_MODULE(blissdedrift, m) {
+NB_MODULE(pybliss, m) {
 
     int cuda_runtime_version = 0;
 #if BLISS_CUDA
