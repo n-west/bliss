@@ -62,3 +62,4 @@ endif()
 install(TARGETS pybliss
         COMPONENT python_modules
         LIBRARY DESTINATION ${PYBLISS_MODULE_INSTALL_DIR})
+
