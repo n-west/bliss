@@ -118,6 +118,7 @@ scan::scan(std::map<int, std::shared_ptr<coarse_channel>> coarse_channels) {
 scan::scan(h5_filterbank_file fb_file, int num_fine_channels_per_coarse) {
     // This is mostly duplicate of the inferred version and it would be useful to think
     // about better deferal method that allows inferring channelization OR this version
+    // _original_file_path = fb_file
     _h5_file_handle = std::make_shared<h5_filterbank_file>(fb_file);
     _coarse_channels = std::make_shared<std::map<int, std::shared_ptr<coarse_channel>>>();
     // double      fch1;
@@ -257,7 +258,8 @@ std::shared_ptr<coarse_channel> bliss::scan::read_coarse_channel(int coarse_chan
                                                            _tstart,
                                                            _data_type,
                                                            _az_start,
-                                                           _za_start);
+                                                           _za_start,
+                                                           global_offset_in_file);
         new_coarse->set_device(_device);
         _coarse_channels->insert({global_offset_in_file, new_coarse});
     }
@@ -292,6 +294,10 @@ int bliss::scan::get_coarse_channel_with_frequency(double frequency) const {
 
 int bliss::scan::get_number_coarse_channels() const {
     return _num_coarse_channels;
+}
+
+std::string bliss::scan::get_file_path() const {
+    return _h5_file_handle->get_file_path();
 }
 
 std::list<hit> bliss::scan::hits() {

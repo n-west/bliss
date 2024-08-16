@@ -69,6 +69,7 @@ void bind_pycore(nb::module_ m) {
         .def("peak_coarse_channel", &bliss::scan::peak_coarse_channel)
         .def("get_coarse_channel_with_frequency", &bliss::scan::get_coarse_channel_with_frequency, "frequency"_a)
         .def("slice_scan_channels", &bliss::scan::slice_scan_channels, "start"_a=0, "count"_a=1)
+        .def("get_file_path", &bliss::scan::get_file_path)
         .def("hits", &bliss::scan::hits)
         .def_prop_ro("num_coarse_channels", &bliss::scan::get_number_coarse_channels)
         .def_prop_ro("az_start", &bliss::scan::az_start)

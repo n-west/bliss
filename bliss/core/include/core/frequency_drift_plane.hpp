@@ -46,6 +46,7 @@ class frequency_drift_plane {
     int64_t _integration_steps;
 
     // info for each drift rate searched (consider changing to map with key being integer number of unit drifts)
+    // also consider a more rich class that contains a fully parameterized info like search resolution and max rate searched
     std::vector<drift_rate> _drift_rate_info;
 
     // The actual frequency drift plane

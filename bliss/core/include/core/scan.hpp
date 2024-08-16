@@ -67,6 +67,8 @@ class scan {
      */
     int get_number_coarse_channels() const;
 
+    std::string get_file_path() const;
+
     /**
      * gather hits in all coarse channels of this scan and return as a single list
      */
@@ -125,6 +127,7 @@ class scan {
     // may inadverdently increase vmem. It's a bit more work and not worth it right now because
     // it's not an active issue, but we can also keep track of "active_coarse_channels" which are
     // only those within the current slice / copy and only have set_device, etc effect those channels
+    // std::string _original_file_path={};
     std::shared_ptr<std::map<int, std::shared_ptr<coarse_channel>>> _coarse_channels = nullptr;
     std::shared_ptr<h5_filterbank_file>            _h5_file_handle = nullptr;
 

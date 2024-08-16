@@ -17,7 +17,7 @@ int main(int argc, char **argv) {
     //     hits_path = argv[1];
     // }
 
-    // auto cadence = bliss::read_cadence_hits_from_files(
+    // auto cadence = bliss::read_cadence_hits_from_capnp_files(
     //     {{"/home/nathan/Projects/bliss/build/testing_hits_obs0-unknown_0.cp", "/home/nathan/Projects/bliss/build/testing_hits_obs0-unknown_1.cp", "/home/nathan/Projects/bliss/build/testing_hits_obs0-unknown_2.cp"},
     //     {"/home/nathan/Projects/bliss/build/testing_hits_obs1-unknown_0.cp"},
     //     {"/home/nathan/Projects/bliss/build/testing_hits_obs2-unknown_0.cp"},

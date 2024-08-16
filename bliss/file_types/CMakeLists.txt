@@ -16,7 +16,10 @@ target_link_libraries(file_types
     fmt::fmt-header-only
 )
 
-add_library(bliss_serialization)
+add_library(bliss_serialization
+    dat_file.cpp
+    hits_file.cpp
+)
 target_include_directories(bliss_serialization
     PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/include

@@ -70,6 +70,11 @@ class h5_filterbank_file {
      */
     std::string repr();
 
+    /**
+     * Return the path to the source file
+     */
+    std::string get_file_path() const;
+
   private:
     H5::H5File  _h5_file_handle;
     H5::DataSet _h5_data_handle;

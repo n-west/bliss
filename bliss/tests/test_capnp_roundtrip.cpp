@@ -32,9 +32,9 @@ TEST_CASE("capnp hits", "[serialization]") {
 
         auto tempfname = std::tmpnam(nullptr);
 
-        bliss::write_hits_to_file(original_hits, tempfname);
+        bliss::write_hits_to_capnp_file(original_hits, tempfname);
 
-        auto deserialized_hits = bliss::read_hits_from_file(tempfname);
+        auto deserialized_hits = bliss::read_hits_from_capnp_file(tempfname);
 
         REQUIRE(deserialized_hits.size() == original_hits.size());
 
@@ -95,11 +95,11 @@ TEST_CASE("capnp coarse_channel hits", "[serialization]") {
         
         auto tempfname = std::tmpnam(nullptr);
 
-        bliss::write_coarse_channel_hits_to_file(original_cc, tempfname);
+        bliss::write_coarse_channel_hits_to_capnp_file(original_cc, tempfname);
 
         // Targets serialized to disk -- Read back and check round-trip
 
-        auto deserialized_cc = bliss::read_coarse_channel_hits_from_file(tempfname);
+        auto deserialized_cc = bliss::read_coarse_channel_hits_from_capnp_file(tempfname);
 
         REQUIRE(deserialized_cc.fch1() == original_cc.fch1());
         REQUIRE(deserialized_cc.foff() == original_cc.foff());
@@ -207,11 +207,11 @@ TEST_CASE("capnp scan hits", "[serialization]") {
         
         auto tempfname = std::tmpnam(nullptr);
 
-        bliss::write_scan_hits_to_file(original_scan, tempfname);
+        bliss::write_scan_hits_to_capnp_file(original_scan, tempfname);
 
         // Targets serialized to disk -- Read back and check round-trip
 
-        auto deserialized_scan = bliss::read_scan_hits_from_file(tempfname);
+        auto deserialized_scan = bliss::read_scan_hits_from_capnp_file(tempfname);
 
         REQUIRE(deserialized_scan.fch1() == original_scan.fch1());
         REQUIRE(deserialized_scan.foff() == original_scan.foff());

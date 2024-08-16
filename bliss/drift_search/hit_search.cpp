@@ -54,6 +54,7 @@ std::list<hit> bliss::hit_search(coarse_channel dedrifted_scan, hit_search_optio
         this_hit.start_freq_MHz = dedrifted_scan.fch1() + freq_offset;
         this_hit.start_time_sec = dedrifted_scan.tstart() * 24 * 60 * 60; // convert MJD to seconds since MJ
         this_hit.duration_sec   = dedrifted_scan.tsamp() * integration_length;
+        this_hit.coarse_channel_number = dedrifted_scan._coarse_channel_number;
         hits.push_back(this_hit);
     }
 
