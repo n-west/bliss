@@ -1,5 +1,5 @@
 [project]
-name = "dedrift"
+name = "bliss-dedrift"
 readme = "README.md"
 requires-python = ">=3.8"
 license = { "file" = "LICENSE" }
@@ -22,17 +22,24 @@ classifiers = [
 dependencies = ["numpy", "matplotlib"]
 dynamic = ["version", "description"]
 
+[project.optional-dependencies]
+plots = ["altair", "matplotlib"]
 
 [build-system]
-requires = ["py-build-cmake~=0.2.0a7", "cmake~=3.29.0", "ninja~=1.11"]
+requires = [
+    "py-build-cmake~=0.2.0a7",
+    "cmake~=3.29.0",
+    "ninja"
+]
+
 build-backend = "py_build_cmake.build"
 
 [tool.py-build-cmake.module]
-name = "bliss" # Import name
+name = "blissdedrift" # Import name
 directory = "bliss/python/"
 
 [tool.py-build-cmake.sdist]
-include = ["CMakeLists.txt", "bland/", "bliss/*"]
+include = ["CMakeLists.txt", "bland/", "bliss/*", "Doxyfile.in", "LICENSE", "README.md"]
 exclude = []
 
 [tool.py-build-cmake.cmake]
@@ -50,9 +57,9 @@ install_components = ["python_modules"]
 
 [tool.py-build-cmake.linux.cmake] # Linux-specific options
 #generator = "Ninja Multi-Config"
-generator = "Ninja"
+generator = "Unix Makefiles"
 config = ["RelWithDebInfo"]
-#env = { "CMAKE_PREFIX_PATH" = "${HOME}/.local" }
+build_args = ["-j", "8"]
 
 [tool.py-build-cmake.editable]
 mode = "symlink"  # Choose the desired mode (wrapper, hook, or symlink)
