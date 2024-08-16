@@ -43,7 +43,7 @@ int main(int argc, char *argv[]) {
     }
 
     for (const auto &f : hit_files) {
-        auto scan_with_hits = bliss::read_coarse_channel_hits_from_file(f);
+        auto scan_with_hits = bliss::read_coarse_channel_hits_from_capnp_file(f);
         auto hits = scan_with_hits.hits();
         fmt::print("Got {} hits\n", hits.size());
         for (auto &h : hits) {

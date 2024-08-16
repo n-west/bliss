@@ -25,7 +25,8 @@ coarse_channel::coarse_channel(double      fch1,
                                double      tstart,
                                int64_t     data_type,
                                double      az_start,
-                               double      za_start) :
+                               double      za_start,
+                               int64_t        coarse_channel_number) :
         _fch1(fch1),
         _foff(foff),
         _machine_id(machine_id),
@@ -41,7 +42,8 @@ coarse_channel::coarse_channel(double      fch1,
         _tstart(tstart),
         _data_type(data_type),
         _az_start(az_start),
-        _za_start(za_start) {}
+        _za_start(za_start),
+        _coarse_channel_number(coarse_channel_number) {}
 
 coarse_channel::coarse_channel(double              fch1,
                    double                          foff,
@@ -58,7 +60,8 @@ coarse_channel::coarse_channel(double              fch1,
                    double                          tstart,
                    int64_t                         data_type,
                    std::optional<double>           az_start,
-                   std::optional<double>           za_start) :
+                   std::optional<double>           za_start,
+                   int64_t                         coarse_channel_number) :
         _fch1(fch1),
         _foff(foff),
         _machine_id(machine_id),
@@ -74,7 +77,8 @@ coarse_channel::coarse_channel(double              fch1,
         _tstart(tstart),
         _data_type(data_type),
         _az_start(az_start),
-        _za_start(za_start) {}
+        _za_start(za_start),
+        _coarse_channel_number(coarse_channel_number) {}
 
 coarse_channel::coarse_channel(std::function<bland::ndarray()> data,
                                std::function<bland::ndarray()> mask,
@@ -93,7 +97,8 @@ coarse_channel::coarse_channel(std::function<bland::ndarray()> data,
                                double                          tstart,
                                int64_t                         data_type,
                                double                          az_start,
-                               double                          za_start) :
+                               double                          za_start,
+                               int64_t                         coarse_channel_number) :
         coarse_channel(fch1,
                        foff,
                        machine_id,
@@ -109,7 +114,8 @@ coarse_channel::coarse_channel(std::function<bland::ndarray()> data,
                        tstart,
                        data_type,
                        az_start,
-                       za_start) {
+                       za_start,
+                       coarse_channel_number) {
     _data = data;
     _mask = mask;
 }
@@ -131,7 +137,8 @@ coarse_channel::coarse_channel(std::function<bland::ndarray()> data,
                                 double                          tstart,
                                 int64_t                         data_type,
                                 std::optional<double>           az_start,
-                                std::optional<double>           za_start) :
+                                std::optional<double>           za_start,
+                                int64_t                         coarse_channel_number) :
         coarse_channel(fch1,
                        foff,
                        machine_id,
@@ -147,7 +154,8 @@ coarse_channel::coarse_channel(std::function<bland::ndarray()> data,
                        tstart,
                        data_type,
                        az_start,
-                       za_start) {
+                       za_start,
+                       coarse_channel_number) {
     _data = data;
     _mask = mask;
 }
@@ -169,7 +177,8 @@ coarse_channel::coarse_channel(bland::ndarray data,
                                double         tstart,
                                int64_t        data_type,
                                double         az_start,
-                               double         za_start) :
+                               double         za_start,
+                               int64_t        coarse_channel_number) :
         coarse_channel(fch1,
                        foff,
                        machine_id,
@@ -185,7 +194,8 @@ coarse_channel::coarse_channel(bland::ndarray data,
                        tstart,
                        data_type,
                        az_start,
-                       za_start) {
+                       za_start,
+                       coarse_channel_number) {
     _data = data;
     _mask = mask;
 }

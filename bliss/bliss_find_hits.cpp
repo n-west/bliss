@@ -11,8 +11,7 @@
 #include <flaggers/filter_rolloff.hpp>
 #include <flaggers/magnitude.hpp>
 #include <flaggers/spectral_kurtosis.hpp>
-#include <file_types/cpnp_files.hpp>
-#include <file_types/events_file.hpp>
+#include <file_types/hits_file.hpp>
 
 #include "fmt/core.h"
 #include <fmt/ranges.h>
@@ -21,7 +20,8 @@
 #include <vector>
 
 #include <chrono>
-#include <iostream>
+#include <iostream> // for printing help
+#include <filesystem>
 #include "clipp.h"
 
 int main(int argc, char *argv[]) {
@@ -35,6 +35,8 @@ int main(int argc, char *argv[]) {
     std::string device="cuda:0";
     int nchan_per_coarse=0;
     bliss::hit_search_options hit_search_options{.method = bliss::hit_search_methods::CONNECTED_COMPONENTS, .snr_threshold = 10.0f, .neighbor_l1_dist=7};
+    std::string output_path = "";
+    std::string output_format = "";
     bool help = false;
     auto cli = (
         (
@@ -61,7 +63,9 @@ int main(int argc, char *argv[]) {
             (clipp::option("--local-maxima") .set(hit_search_options.method, bliss::hit_search_methods::LOCAL_MAXIMA) |
              clipp::option("--connected-components").set(hit_search_options.method, bliss::hit_search_methods::CONNECTED_COMPONENTS)) % "select the hit search method",
             (clipp::option("-s", "--snr") & clipp::value("snr_threshold").set(hit_search_options.snr_threshold)) % "SNR threshold (10)",
-            (clipp::option("--distance") & clipp::value("l1_distance").set(hit_search_options.neighbor_l1_dist)) % "L1 distance to consider hits connected (7)"
+            (clipp::option("--distance") & clipp::value("l1_distance").set(hit_search_options.neighbor_l1_dist)) % "L1 distance to consider hits connected (7)",
+
+            (clipp::option("-o", "--output") & (clipp::value("output_file").set(output_path), clipp::opt_value("format").set(output_format))) % "Filename to store output"
         )
         |
         clipp::option("-h", "--help").set(help) % "Show this screen."
@@ -110,11 +114,19 @@ int main(int argc, char *argv[]) {
                 fmt::print("{}\n", h.repr());
             }
 
-            auto scan_results_file = fmt::format("hitsout_{}.cp", scan_index);
-            // bliss::write_scan_hits_to_file(sc, scan_results_file);
+            // auto scan_results_file = fmt::format("hitsout_{}.cp", scan_index);
+            if (output_path.empty()) {
+                auto path = std::filesystem::path(pipeline_files[scan_index]);
+
+                output_path = path.filename().replace_extension("capnp");
+                output_format = "capnp";
+            }
+            bliss::write_scan_hits_to_file(sc, output_path, output_format);
         }
     } catch (std::exception &e) {
-        fmt::print("ERROR: got a fatal exception ({}) while running pipeline. This is likely due to running out of memory. Ending processing.\n", e.what());
+        fmt::print("ERROR: got a fatal exception ({}) while running pipeline. This is likely due to running out of "
+                   "memory. Ending processing.\n",
+                   e.what());
     }
 
 }

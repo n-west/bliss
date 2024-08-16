@@ -29,6 +29,15 @@ void bind_pypreprocess(nb::module_ m) {
       m.def("equalize_passband_filter", nb::overload_cast<bliss::coarse_channel, bland::ndarray>(bliss::equalize_passband_filter));
       m.def("equalize_passband_filter", nb::overload_cast<bliss::coarse_channel, std::string_view, bland::ndarray::datatype>(bliss::equalize_passband_filter));
 
+      m.def("equalize_passband_filter", nb::overload_cast<bliss::scan, bland::ndarray>(bliss::equalize_passband_filter));
+      m.def("equalize_passband_filter", nb::overload_cast<bliss::scan, std::string_view, bland::ndarray::datatype>(bliss::equalize_passband_filter));
+
+      m.def("equalize_passband_filter", nb::overload_cast<bliss::observation_target, bland::ndarray>(bliss::equalize_passband_filter));
+      m.def("equalize_passband_filter", nb::overload_cast<bliss::observation_target, std::string_view, bland::ndarray::datatype>(bliss::equalize_passband_filter));
+
+      m.def("equalize_passband_filter", nb::overload_cast<bliss::cadence, bland::ndarray>(bliss::equalize_passband_filter));
+      m.def("equalize_passband_filter", nb::overload_cast<bliss::cadence, std::string_view, bland::ndarray::datatype>(bliss::equalize_passband_filter));
+
       m.def("normalize", nb::overload_cast<bliss::coarse_channel>(bliss::normalize));
       m.def("normalize", nb::overload_cast<bliss::scan>(bliss::normalize));
       m.def("normalize", nb::overload_cast<bliss::observation_target>(bliss::normalize));

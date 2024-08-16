@@ -36,7 +36,8 @@ struct coarse_channel {
                    double      tstart,
                    int64_t     data_type,
                    double      az_start,
-                   double      za_start);
+                   double      za_start,
+                   int64_t        coarse_channel_number=0);
 
     coarse_channel(double                          fch1,
                    double                          foff,
@@ -53,7 +54,8 @@ struct coarse_channel {
                    double                          tstart,
                    int64_t                         data_type,
                    std::optional<double>           az_start,
-                   std::optional<double>           za_start);
+                   std::optional<double>           za_start,
+                   int64_t        coarse_channel_number=0);
 
     coarse_channel(std::function<bland::ndarray()> data,
                    std::function<bland::ndarray()> mask,
@@ -72,7 +74,8 @@ struct coarse_channel {
                    double                          tstart,
                    int64_t                         data_type,
                    double                          az_start,
-                   double                          za_start);
+                   double                          za_start,
+                   int64_t        coarse_channel_number=0);
 
     coarse_channel(std::function<bland::ndarray()> data,
                    std::function<bland::ndarray()> mask,
@@ -91,7 +94,8 @@ struct coarse_channel {
                    double                          tstart,
                    int64_t                         data_type,
                    std::optional<double>           az_start,
-                   std::optional<double>           za_start);
+                   std::optional<double>           za_start,
+                   int64_t        coarse_channel_number=0);
 
     coarse_channel(bland::ndarray data,
                    bland::ndarray mask,
@@ -110,7 +114,8 @@ struct coarse_channel {
                    double         tstart,
                    int64_t        data_type,
                    double         az_start,
-                   double         za_start);
+                   double         za_start,
+                   int64_t        coarse_channel_number=0);
 
     bland::ndarray_deferred data();
     void                    set_data(bland::ndarray new_mask);
@@ -179,6 +184,8 @@ struct coarse_channel {
     double za_start() const;
     // void           za_start(double);
     
+
+    int64_t _coarse_channel_number; // the offset of this coarse channel within scan
     // All values will be specific to the coarse channel
     // such as fch1 being the first channel of this coarse channel
     double      _fch1;

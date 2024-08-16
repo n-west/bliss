@@ -21,7 +21,7 @@ using namespace bliss;
 
 
 template<template<typename> class Container>
-void bliss::write_hits_to_file(Container<hit> hits, std::string_view file_path) {
+void bliss::write_hits_to_capnp_file(Container<hit> hits, std::string_view file_path) {
 
     auto out_file = detail::raii_file_for_write(file_path);
 
@@ -34,11 +34,11 @@ void bliss::write_hits_to_file(Container<hit> hits, std::string_view file_path) 
         capnp::writeMessageToFd(out_file._fd, message);
     }
 }
-template void bliss::write_hits_to_file<std::vector>(std::vector<hit> hits, std::string_view file_path);
-template void bliss::write_hits_to_file<std::list>(std::list<hit> hits, std::string_view file_path);
+template void bliss::write_hits_to_capnp_file<std::vector>(std::vector<hit> hits, std::string_view file_path);
+template void bliss::write_hits_to_capnp_file<std::list>(std::list<hit> hits, std::string_view file_path);
 
 
-std::list<hit> bliss::read_hits_from_file(std::string_view file_path) {
+std::list<hit> bliss::read_hits_from_capnp_file(std::string_view file_path) {
     auto in_file = detail::raii_file_for_read(file_path);
 
     std::list<hit> hits;
@@ -61,7 +61,7 @@ std::list<hit> bliss::read_hits_from_file(std::string_view file_path) {
     return hits;
 }
 
-void bliss::write_coarse_channel_hits_to_file(coarse_channel cc, std::string_view file_path) {
+void bliss::write_coarse_channel_hits_to_capnp_file(coarse_channel cc, std::string_view file_path) {
     auto out_file = detail::raii_file_for_write(file_path);
 
     capnp::MallocMessageBuilder message;
@@ -72,7 +72,7 @@ void bliss::write_coarse_channel_hits_to_file(coarse_channel cc, std::string_vie
     capnp::writeMessageToFd(out_file._fd, message);
 }
 
-coarse_channel bliss::read_coarse_channel_hits_from_file(std::string_view file_path) {
+coarse_channel bliss::read_coarse_channel_hits_from_capnp_file(std::string_view file_path) {
 
     auto in_file = detail::raii_file_for_read(file_path);
 
@@ -84,7 +84,7 @@ coarse_channel bliss::read_coarse_channel_hits_from_file(std::string_view file_p
     return deserialized_cc; // return a copy, unique ptr will dealloc after copy
 }
 
-void bliss::write_scan_hits_to_file(scan scan_with_hits, std::string_view file_path) {
+void bliss::write_scan_hits_to_capnp_file(scan scan_with_hits, std::string_view file_path) {
     auto out_file = detail::raii_file_for_write(file_path);
 
     capnp::MallocMessageBuilder message;
@@ -95,7 +95,7 @@ void bliss::write_scan_hits_to_file(scan scan_with_hits, std::string_view file_p
     capnp::writeMessageToFd(out_file._fd, message);
 }
 
-scan bliss::read_scan_hits_from_file(std::string_view file_path) {
+scan bliss::read_scan_hits_from_capnp_file(std::string_view file_path) {
     auto in_file = detail::raii_file_for_read(file_path);
 
     capnp::StreamFdMessageReader message(in_file._fd);
@@ -106,7 +106,7 @@ scan bliss::read_scan_hits_from_file(std::string_view file_path) {
     return scan_with_hits;
 }
 
-void bliss::write_observation_target_hits_to_files(observation_target observation_with_hits,
+void bliss::write_observation_target_hits_to_capnp_files(observation_target observation_with_hits,
                                                    std::string_view   file_path) {
     auto out_file = detail::raii_file_for_write(file_path);
 
@@ -118,7 +118,7 @@ void bliss::write_observation_target_hits_to_files(observation_target observatio
     capnp::writeMessageToFd(out_file._fd, message);
 }
 
-observation_target bliss::read_observation_target_hits_from_files(std::string_view file_path) {
+observation_target bliss::read_observation_target_hits_from_capnp_files(std::string_view file_path) {
     auto in_file = detail::raii_file_for_read(file_path);
 
     capnp::StreamFdMessageReader message(in_file._fd);
@@ -129,7 +129,7 @@ observation_target bliss::read_observation_target_hits_from_files(std::string_vi
     return observations;
 }
 
-void bliss::write_cadence_hits_to_files(cadence cadence_with_hits, std::string_view file_path) {
+void bliss::write_cadence_hits_to_capnp_files(cadence cadence_with_hits, std::string_view file_path) {
     auto out_file = detail::raii_file_for_write(file_path);
 
     capnp::MallocMessageBuilder message;
@@ -140,7 +140,7 @@ void bliss::write_cadence_hits_to_files(cadence cadence_with_hits, std::string_v
     capnp::writeMessageToFd(out_file._fd, message);
 }
 
-cadence bliss::read_cadence_hits_from_files(std::string_view file_path) {
+cadence bliss::read_cadence_hits_from_capnp_files(std::string_view file_path) {
     auto in_file = detail::raii_file_for_read(file_path);
 
     capnp::StreamFdMessageReader message(in_file._fd);

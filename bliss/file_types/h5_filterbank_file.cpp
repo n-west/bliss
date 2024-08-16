@@ -84,13 +84,25 @@ std::string bliss::h5_filterbank_file::read_data_attr<std::string>(const std::st
 
         // Check if the attribute is a byte string
         if (dtype.getClass() == H5T_STRING && !dtype.isVariableStr()) {
-            // ATA pipeline emits bytestrings for the source_name
+            // ATA pipeline emits fixed-length bytestrings for the source_name
             hsize_t size = attr.getInMemDataSize();
             std::vector<uint8_t> val(size);
             attr.read(dtype, val.data());
 
             // Convert the byte string to a std::string
             return std::string(val.begin(), val.end());
+        } else if (dtype.getClass() == H5T_STRING && dtype.isVariableStr()) {
+            // Some pipelines generate variable length bytestrings
+            char* val;
+            // hdf5 will allocate space for val
+            attr.read(dtype, &val);
+
+            std::string result(val);
+
+            // Free the memory allocated by HDF5
+            H5free_memory(val);
+
+            return result;
         } else {
             std::string val;
             attr.read(dtype, &val);
@@ -328,4 +340,8 @@ std::string bliss::h5_filterbank_file::repr() {
     // _h5_file_handle.
     // fmt::format_to(repr, "    has datasets:\n");
     return repr;
+}
+
+std::string bliss::h5_filterbank_file::get_file_path() const {
+    return _h5_file_handle.getFileName();
 }

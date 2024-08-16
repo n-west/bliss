@@ -108,7 +108,7 @@ int main(int argc, char *argv[]) {
     //     }
 
     //     auto scan_results_file = fmt::format("hitsout_{}.cp", scan_index);
-    //     // bliss::write_coarse_channel_hits_to_file(sc, scan_results_file);
+    //     // bliss::write_coarse_channel_hits_to_capnp_file(sc, scan_results_file);
     // }
 
 }
