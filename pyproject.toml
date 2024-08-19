@@ -1,5 +1,5 @@
 [project]
-name = "bliss-dedrift"
+name = "blissdedrift"
 readme = "README.md"
 requires-python = ">=3.8"
 license = { "file" = "LICENSE" }
@@ -53,7 +53,7 @@ find_python = true
 build_args = []
 build_tool_args = []
 install_args = ["--verbose"]
-install_components = ["python_modules"]
+install_components = ["python_modules", "python_binaries"]
 
 [tool.py-build-cmake.linux.cmake] # Linux-specific options
 #generator = "Ninja Multi-Config"

@@ -16,7 +16,7 @@ target_include_directories(pybland_header
     ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
-nanobind_add_module(pybland pybland.cpp)
+nanobind_add_module(pybland NB_DOMAIN bland pybland.cpp)
 target_link_libraries(pybland PUBLIC bland)
 
 # Check if PY_BUILD_CMAKE_MODULE_NAME is defined
