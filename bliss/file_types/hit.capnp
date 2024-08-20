@@ -108,6 +108,7 @@ struct CoarseChannel {
 }
 
 struct Scan {
+  md @1: Filterbank;
   coarseChannels @0: List(CoarseChannel);
 }
  

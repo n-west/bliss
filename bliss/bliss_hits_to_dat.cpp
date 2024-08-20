@@ -1,17 +1,6 @@
 
 #include <file_types/cpnp_files.hpp>
-// #include <core/scan.hpp>
-// #include <core/cadence.hpp>
-// #include <estimators/noise_estimate.hpp>
-// #include <drift_search/event_search.hpp>
-// #include <drift_search/filter_hits.hpp>
-// #include <drift_search/hit_search.hpp>
-// #include <drift_search/integrate_drifts.hpp>
-// #include <flaggers/filter_rolloff.hpp>
-// #include <flaggers/magnitude.hpp>
-// #include <flaggers/spectral_kurtosis.hpp>
-// #include <file_types/hits_file.hpp>
-// #include <file_types/events_file.hpp>
+#include <file_types/dat_file.hpp>
 
 #include "fmt/core.h"
 #include <fmt/ranges.h>
@@ -21,15 +10,19 @@
 
 #include <chrono>
 #include <iostream>
+#include <filesystem>
 #include "clipp.h"
 
 int main(int argc, char *argv[]) {
 
-    std::vector<std::string> hit_files;
+    std::string input_file;
+    std::string output_path = "";
+
     bool help = false;
     auto cli = (
         (
-            clipp::values("files").set(hit_files) % "input hdf5 filterbank files"
+            (clipp::option("-i", "--input") & clipp::value("input_file").set(input_file)) % "input files with scan hits, expected to be capnp serialized",
+            (clipp::option("-o", "--output") & (clipp::value("output_file").set(output_path))) % "path to output file"
         )
         |
         clipp::option("-h", "--help").set(help) % "Show this screen."
@@ -37,28 +30,31 @@ int main(int argc, char *argv[]) {
 
     auto parse_result = clipp::parse(argc, argv, cli);
 
+    if (input_file.empty()) {
+        fmt::print("Missing an input file. Use '-i' or '--input' to provide a file to convert.\n");
+        help = true;
+    }
     if (!parse_result || help) {
-        std::cout << clipp::make_man_page(cli, "bliss_find_hits");
+        std::cout << clipp::make_man_page(cli, "bliss_hits_to_dat");
         return 0;
     }
 
-    for (const auto &f : hit_files) {
-        auto scan_with_hits = bliss::read_coarse_channel_hits_from_capnp_file(f);
-        auto hits = scan_with_hits.hits();
-        fmt::print("Got {} hits\n", hits.size());
-        for (auto &h : hits) {
-            std::cout << h.repr() << std::endl;
-        }
-
+    if (output_path.empty()) {
+        auto path = std::filesystem::path(input_file);
+        output_path = path.filename().replace_extension("dat");
     }
 
-    // // TODO: add cli args for where to send hits (stdout, file.dat, capn proto serialize,...)
-    // for (auto &sc : ) {
-    //     auto hits = sc.hits();
-    //     fmt::print("scan has {} hits\n", hits.size());
-    //     for (auto &h : hits) {
-    //         fmt::print("{}\n", h.repr());
-    //     }
-    // }
+    // How can we discover which type of capnp message/file this is?
+    auto scan_with_hits = bliss::read_scan_hits_from_capnp_file(input_file);
+    auto hits = scan_with_hits.hits();
+    fmt::print("Got {} hits\n", hits.size());
+    for (auto &h : hits) {
+        std::cout << h.repr() << std::endl;
+    }
+    if (output_path == "-" || output_path == "stdout") {
+
+    } else {
+        bliss::write_scan_hits_to_dat_file(scan_with_hits, output_path);
+    }
 
 }

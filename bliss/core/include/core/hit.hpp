@@ -23,7 +23,7 @@ struct hit {
     float   bandwidth;
     int64_t binwidth;
     rfi     rfi_counts;
-    int64_t coarse_channel_number; // the coarse channel index that this hit was found in
+    int64_t coarse_channel_number=0; // the coarse channel index that this hit was found in
 
   public:
     std::string repr() const;

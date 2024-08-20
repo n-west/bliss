@@ -41,7 +41,11 @@ std::list<hit> bliss::read_hits_from_file(std::string_view file_path, std::strin
     if (format.empty() || format == "capnp") {
         return read_hits_from_capnp_file(file_path);
     } else if (format == "dat" || format == "turboseti") {
-        return read_hits_from_dat_file(file_path);
+        throw std::runtime_error("read_hits_from_dat_file not implemented yet");
+        // return read_hits_from_dat_file(file_path);
+    } else {
+        fmt::print("ERROR: read_hits_from_file got format '{}' which is unknown. Expect one of 'capnp', 'dat', 'turboseti'\n");
+        throw std::invalid_argument("Unknown file format to read_hits_from_file");
     }
 }
 
@@ -66,6 +70,14 @@ void bliss::write_scan_hits_to_file(scan scan_with_hits, std::string_view file_p
 }
 
 scan bliss::read_scan_hits_from_file(std::string_view file_path, std::string format) {
-
+    if (format.empty() || format == "capnp") {
+        return read_scan_hits_from_capnp_file(file_path);
+    } else if (format == "dat" || format == "turboseti") {
+        throw std::runtime_error("read_hits_from_dat_file not implemented yet");
+        // return read_scan_hits_from_dat_file(file_path);
+    } else {
+        fmt::print("ERROR: read_scan_hits_from_file got format '{}' which is unknown. Expect one of 'capnp', 'dat', 'turboseti'\n");
+        throw std::invalid_argument("Unknown file format to read_scan_hits_from_file");
+    }
 }
 
