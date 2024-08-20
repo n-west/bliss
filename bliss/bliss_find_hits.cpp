@@ -21,7 +21,16 @@
 
 #include <chrono>
 #include <iostream> // for printing help
+#if __has_include(<filesystem>)
 #include <filesystem>
+namespace fs = std::filesystem;
+#elif __has_include(<experimental/filesystem>)
+#include <experimental/filesystem>
+namespace fs = std::experimental::filesystem;
+#else
+#error "Filesystem library not available"
+#endif
+
 #include "clipp.h"
 
 int main(int argc, char *argv[]) {
@@ -110,7 +119,7 @@ int main(int argc, char *argv[]) {
             auto hits = sc.hits();
 
             if (output_path.empty()) {
-                auto path = std::filesystem::path(pipeline_files[scan_index]);
+                auto path = fs::path(pipeline_files[scan_index]);
 
                 output_path = path.filename().replace_extension("capnp");
                 output_format = "capnp";

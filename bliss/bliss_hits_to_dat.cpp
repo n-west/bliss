@@ -10,7 +10,17 @@
 
 #include <chrono>
 #include <iostream>
+
+#if __has_include(<filesystem>)
 #include <filesystem>
+namespace fs = std::filesystem;
+#elif __has_include(<experimental/filesystem>)
+#include <experimental/filesystem>
+namespace fs = std::experimental::filesystem;
+#else
+#error "Filesystem library not available"
+#endif
+
 #include "clipp.h"
 
 int main(int argc, char *argv[]) {
@@ -40,7 +50,7 @@ int main(int argc, char *argv[]) {
     }
 
     if (output_path.empty()) {
-        auto path = std::filesystem::path(input_file);
+        auto path = fs::path(input_file);
         output_path = path.filename().replace_extension("dat");
     }
 
