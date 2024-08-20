@@ -27,7 +27,7 @@ void bliss_coarse_channel_to_capnp_coarse_channel_message(CoarseChannel::Builder
 
 coarse_channel capnp_coarse_channel_message_to_bliss_coarse_channel(CoarseChannel::Reader &cc_reader);
 
-void bliss_scan_to_capnp_coarse_scan(Scan::Builder &cc_builder, scan);
+void bliss_scan_to_capnp_scan(Scan::Builder &cc_builder, scan);
 
 scan capnp_scan_message_to_bliss_scan(Scan::Reader &cc_reader);
 

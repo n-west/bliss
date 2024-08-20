@@ -116,7 +116,23 @@ bliss::detail::capnp_coarse_channel_message_to_bliss_coarse_channel(CoarseChanne
     return deserialized_cc;
 }
 
-void bliss::detail::bliss_scan_to_capnp_coarse_scan(Scan::Builder &scan_builder, scan scan_with_hits) {
+void bliss::detail::bliss_scan_to_capnp_scan(Scan::Builder &scan_builder, scan scan_with_hits) {
+
+    auto md_builder = scan_builder.initMd();
+    md_builder.setFch1(scan_with_hits.fch1());
+    // fil_builder.setBeam(); // not dealing with multiple beams (yet)
+    // fil_builder.setCoarseChannel(); // not dealing with multiple coarse channels (yet)
+    // fil_builder.setData(); // don't need or want to duplicate large chunks of data (yet)
+    md_builder.setDec(scan_with_hits.src_dej());
+    md_builder.setRa(scan_with_hits.src_raj());
+    md_builder.setFoff(scan_with_hits.foff());
+    md_builder.setSourceName(scan_with_hits.source_name());
+    md_builder.setTelescopeId(scan_with_hits.telescope_id());
+    md_builder.setTsamp(scan_with_hits.tsamp());
+    md_builder.setTstart(scan_with_hits.tstart());
+    md_builder.setNumTimesteps(scan_with_hits.ntsteps());
+    md_builder.setNumChannels(scan_with_hits.nchans());
+
     auto number_coarse_channels = scan_with_hits.get_number_coarse_channels();
     auto serialized_coarse_channels = scan_builder.initCoarseChannels(number_coarse_channels);
 
@@ -131,7 +147,8 @@ void bliss::detail::bliss_scan_to_capnp_coarse_scan(Scan::Builder &scan_builder,
 
 scan bliss::detail::capnp_scan_message_to_bliss_scan(Scan::Reader &scan_reader) {
     auto capnp_coarse_channels = scan_reader.getCoarseChannels();
-    
+    auto md   = scan_reader.getMd();
+
     std::map<int, std::shared_ptr<coarse_channel>> coarse_channels;
 
     for(int cc_index=0; cc_index < capnp_coarse_channels.size(); ++cc_index) {
@@ -141,6 +158,14 @@ scan bliss::detail::capnp_scan_message_to_bliss_scan(Scan::Reader &scan_reader) 
     }
 
     scan scan_with_hits(coarse_channels);
+    scan_with_hits.set_src_raj(md.getRa());
+    scan_with_hits.set_src_dej(md.getDec());
+    scan_with_hits.set_source_name(md.getSourceName());
+    scan_with_hits.set_tstart(md.getTstart());
+    scan_with_hits.set_tsamp(md.getTsamp());
+    scan_with_hits.set_fch1(md.getFch1());
+    scan_with_hits.set_foff(md.getFoff());
+
     return scan_with_hits;
 }
 
@@ -149,7 +174,7 @@ void bliss::detail::bliss_observation_target_to_capnp_observation_target_message
     auto scan_builders = obstarget_builder.initScans(number_scans);
     for (int scan_index=0; scan_index < number_scans; ++scan_index) {
         auto scan_builder = scan_builders[scan_index];
-        bliss_scan_to_capnp_coarse_scan(scan_builder, observation_with_hits._scans[scan_index]);
+        bliss_scan_to_capnp_scan(scan_builder, observation_with_hits._scans[scan_index]);
     }
 }
 

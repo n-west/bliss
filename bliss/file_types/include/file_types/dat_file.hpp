@@ -11,16 +11,16 @@
 
 namespace bliss {
 
-/**
- * write hits as a .dat file similar to turboseti at the given path
-*/
-template<template<typename> class Container>
-void write_hits_to_dat_file(Container<hit> hits, std::string_view file_path);
+// /**
+//  * write hits as a .dat file similar to turboseti at the given path
+// */
+// template<template<typename> class Container>
+// void write_hits_to_dat_file(Container<hit> hits, std::string_view file_path);
 
-/**
- * read serialized hits from file as written by `write_hits_to_file` using given or assumed format
-*/
-std::list<hit> read_hits_from_dat_file(std::string_view file_path);
+// /**
+//  * read serialized hits from file as written by `write_hits_to_file` using given or assumed format
+// */
+// std::list<hit> read_hits_from_dat_file(std::string_view file_path);
 
 /**
  * write hits as a .dat file similar to turboseti at the given path

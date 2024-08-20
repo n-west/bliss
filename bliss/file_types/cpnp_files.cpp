@@ -90,7 +90,7 @@ void bliss::write_scan_hits_to_capnp_file(scan scan_with_hits, std::string_view 
     capnp::MallocMessageBuilder message;
     auto scan_message = message.initRoot<Scan>();
 
-    detail::bliss_scan_to_capnp_coarse_scan(scan_message, scan_with_hits);
+    detail::bliss_scan_to_capnp_scan(scan_message, scan_with_hits);
 
     capnp::writeMessageToFd(out_file._fd, message);
 }

@@ -297,7 +297,11 @@ int bliss::scan::get_number_coarse_channels() const {
 }
 
 std::string bliss::scan::get_file_path() const {
-    return _h5_file_handle->get_file_path();
+    if (_h5_file_handle != nullptr) {
+        return _h5_file_handle->get_file_path();
+    } else {
+        return "n/a";
+    }
 }
 
 std::list<hit> bliss::scan::hits() {
