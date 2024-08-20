@@ -135,8 +135,8 @@ struct coarse_channel {
 
     bool           has_hits();
     std::list<hit> hits() const;
-    void           add_hits(std::list<hit> new_hits);
-    void           add_hits(std::function<std::list<hit>()> find_hits_func);
+    void           set_hits(std::list<hit> new_hits);
+    void           set_hits(std::function<std::list<hit>()> find_hits_func);
 
     bland::ndarray::dev device();
 

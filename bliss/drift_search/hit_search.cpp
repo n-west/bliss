@@ -77,7 +77,7 @@ scan bliss::hit_search(scan dedrifted_scan, hit_search_options options) {
             }
             return hits;
         };
-        cc->add_hits(find_coarse_channel_hits_func);
+        cc->set_hits(find_coarse_channel_hits_func);
     }
     return dedrifted_scan;
 }

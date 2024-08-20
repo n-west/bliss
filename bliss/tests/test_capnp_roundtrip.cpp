@@ -91,7 +91,7 @@ TEST_CASE("capnp coarse_channel hits", "[serialization]") {
             .bandwidth = 3,
             .binwidth = 1
         });
-        original_cc.add_hits(original_hits);
+        original_cc.set_hits(original_hits);
         
         auto tempfname = std::tmpnam(nullptr);
 
@@ -167,7 +167,7 @@ TEST_CASE("capnp scan hits", "[serialization]") {
             .bandwidth = 3,
             .binwidth = 1
         });
-        first_cc->add_hits(first_cc_hits);
+        first_cc->set_hits(first_cc_hits);
 
         auto second_cc = std::make_shared<bliss::coarse_channel>(1001000 /* fch1 */,
                                                 1 /* foff */,
@@ -199,7 +199,7 @@ TEST_CASE("capnp scan hits", "[serialization]") {
             .bandwidth = 3,
             .binwidth = 1
         });
-        second_cc->add_hits(hits_for_2nd_cc);
+        second_cc->set_hits(hits_for_2nd_cc);
 
         coarse_channels.insert({0, first_cc});
         coarse_channels.insert({1, second_cc});

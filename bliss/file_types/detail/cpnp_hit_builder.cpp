@@ -112,7 +112,7 @@ bliss::detail::capnp_coarse_channel_message_to_bliss_coarse_channel(CoarseChanne
         deserialized_hits.push_back(this_hit);
     }
 
-    deserialized_cc.add_hits(deserialized_hits);
+    deserialized_cc.set_hits(deserialized_hits);
     return deserialized_cc;
 }
 

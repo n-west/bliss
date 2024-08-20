@@ -99,29 +99,31 @@ int main(int argc, char *argv[]) {
 
     pipeline_object = bliss::integrate_drifts(pipeline_object, dedrift_options);
 
-    // pipeline_object.set_device("cpu");
+    auto pipeline_object_with_hits = bliss::hit_search(pipeline_object, hit_search_options);
 
-    auto pipeline_object_with_hits = bliss::hit_search(
-            pipeline_object, hit_search_options);
+    pipeline_object_with_hits = bliss::filter_hits(pipeline_object_with_hits, bliss::filter_options{.filter_zero_drift = true});
 
     try {
         // TODO: add cli args for where to send hits (stdout, file.dat, capn proto serialize,...)
         for (int scan_index=0; scan_index < pipeline_object_with_hits._scans.size(); ++scan_index) {
             auto &sc = pipeline_object_with_hits._scans[scan_index];
             auto hits = sc.hits();
-            fmt::print("scan has {} hits\n", hits.size());
-            for (auto &h : hits) {
-                fmt::print("{}\n", h.repr());
-            }
 
-            // auto scan_results_file = fmt::format("hitsout_{}.cp", scan_index);
             if (output_path.empty()) {
                 auto path = std::filesystem::path(pipeline_files[scan_index]);
 
                 output_path = path.filename().replace_extension("capnp");
                 output_format = "capnp";
             }
-            bliss::write_scan_hits_to_file(sc, output_path, output_format);
+
+            if (output_path == "-" || output_path == "stdout") {
+                fmt::print("scan has {} hits\n", hits.size());
+                for (auto &h : hits) {
+                    fmt::print("{}\n", h.repr());
+                }
+            } else {
+                bliss::write_scan_hits_to_file(sc, output_path, output_format);
+            }
         }
     } catch (std::exception &e) {
         fmt::print("ERROR: got a fatal exception ({}) while running pipeline. This is likely due to running out of "
