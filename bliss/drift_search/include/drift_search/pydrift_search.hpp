@@ -63,12 +63,6 @@ void bind_pydrift_search(nb::module_ m) {
                 self.set_state(state);
             });
 
-
-    nb::class_<bliss::filter_options>(m, "filter_options")
-    .def(nb::init<>());
-    m.def("filter_hits", nb::overload_cast<std::list<bliss::hit>, bliss::filter_options>(&bliss::filter_hits));
-    m.def("filter_hits", nb::overload_cast<bliss::scan, bliss::filter_options>(&bliss::filter_hits));
-
     // ** hit finding methods **
 
     // Connected components variations
@@ -113,6 +107,18 @@ void bind_pydrift_search(nb::module_ m) {
             //         new (&self) bliss::event{.hits = state};
             //     })
             ;
+
+
+    nb::class_<bliss::filter_options>(m, "filter_options")
+    .def(nb::init<>())
+    .def_rw("filter_zero_drift", &bliss::filter_options::filter_zero_drift);
+
+    m.def("filter_hits", nb::overload_cast<std::list<bliss::hit>, bliss::filter_options>(&bliss::filter_hits));
+    m.def("filter_hits", nb::overload_cast<bliss::coarse_channel, bliss::filter_options>(&bliss::filter_hits));
+    m.def("filter_hits", nb::overload_cast<bliss::scan, bliss::filter_options>(&bliss::filter_hits));
+    m.def("filter_hits", nb::overload_cast<bliss::observation_target, bliss::filter_options>(&bliss::filter_hits));
+    m.def("filter_hits", nb::overload_cast<bliss::cadence, bliss::filter_options>(&bliss::filter_hits));
+
 
     m.def("event_search", &bliss::event_search);
 }

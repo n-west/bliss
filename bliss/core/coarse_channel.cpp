@@ -260,11 +260,11 @@ std::list<hit> bliss::coarse_channel::hits() const {
     return requested_hits;
 }
 
-void bliss::coarse_channel::add_hits(std::list<hit> new_hits) {
+void bliss::coarse_channel::set_hits(std::list<hit> new_hits) {
     _hits = std::make_shared<std::variant<std::list<hit>, std::function<std::list<hit>()>>>(new_hits);
 }
 
-void bliss::coarse_channel::add_hits(std::function<std::list<hit>()> find_hits_func) {
+void bliss::coarse_channel::set_hits(std::function<std::list<hit>()> find_hits_func) {
     _hits = std::make_shared<std::variant<std::list<hit>, std::function<std::list<hit>()>>>(find_hits_func);
 }
 
