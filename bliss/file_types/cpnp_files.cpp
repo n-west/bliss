@@ -20,8 +20,8 @@
 using namespace bliss;
 
 
-template<template<typename> class Container>
-void bliss::write_hits_to_capnp_file(Container<hit> hits, std::string_view file_path) {
+template<typename Container>
+void bliss::write_hits_to_capnp_file(Container hits, std::string_view file_path) {
 
     auto out_file = detail::raii_file_for_write(file_path);
 
@@ -34,8 +34,8 @@ void bliss::write_hits_to_capnp_file(Container<hit> hits, std::string_view file_
         capnp::writeMessageToFd(out_file._fd, message);
     }
 }
-template void bliss::write_hits_to_capnp_file<std::vector>(std::vector<hit> hits, std::string_view file_path);
-template void bliss::write_hits_to_capnp_file<std::list>(std::list<hit> hits, std::string_view file_path);
+template void bliss::write_hits_to_capnp_file<std::vector<hit>>(std::vector<hit> hits, std::string_view file_path);
+template void bliss::write_hits_to_capnp_file<std::list<hit>>(std::list<hit> hits, std::string_view file_path);
 
 
 std::list<hit> bliss::read_hits_from_capnp_file(std::string_view file_path) {

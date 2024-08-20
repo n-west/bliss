@@ -15,8 +15,8 @@ namespace bliss {
 /**
  * write hits as independently serialized cap'n proto messages packed in to a binary file at the given path
 */
-template<template<typename> class Container>
-void write_hits_to_capnp_file(Container<hit> hits, std::string_view file_path);
+template<typename Container>
+void write_hits_to_capnp_file(Container hits, std::string_view file_path);
 
 /**
  * read cap'n proto serialized hits from file as written by `write_hits_to_capnp_file`

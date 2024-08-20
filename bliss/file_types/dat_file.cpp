@@ -43,8 +43,8 @@ std::string format_degrees_to_sexagesimal(double src_dej) {
     return fmt::format("{}{:02}d{:02}m{:05.2f}s", dec_sign, std::abs(dec_degrees), dec_arcminutes, dec_arcseconds);
 }
 
-template<template<typename> class Container>
-std::string format_hits_to_dat_list(Container<hit> hits) {
+template<typename Container>
+std::string format_hits_to_dat_list(Container hits) {
     std::string table_string;
     auto hit_index = 1; // turbo-seti starts counting hits at 1, so might as well do the same
     for (auto this_hit : hits) {
@@ -88,7 +88,6 @@ void bliss::write_scan_hits_to_dat_file(scan scan_with_hits, std::string_view fi
 
     auto hits = scan_with_hits.hits();
     auto number_hits = hits.size();
-    output_file._fd;
 
     auto raj = scan_with_hits.src_raj();
     auto dej = scan_with_hits.src_dej();
@@ -111,8 +110,6 @@ void bliss::write_scan_hits_to_dat_file(scan scan_with_hits, std::string_view fi
     auto formatted_raj = format_archours_to_sexagesimal(raj);
     auto formatted_dej = format_degrees_to_sexagesimal(dej);
 
-
-
     std::string header =
             fmt::format("# -------------------------- o --------------------------\n"
                         "# File ID: {}\n"
@@ -134,7 +131,7 @@ void bliss::write_scan_hits_to_dat_file(scan scan_with_hits, std::string_view fi
                         "n/a",
                         scan_with_hits.ntsteps()*scan_with_hits.tsamp());
     write(output_file._fd, header.c_str(), header.size());
-    auto table_contents = format_hits_to_dat_list(scan_with_hits.hits());
+    auto table_contents = format_hits_to_dat_list(hits);
     write(output_file._fd, table_contents.c_str(), table_contents.size());
 }
 
