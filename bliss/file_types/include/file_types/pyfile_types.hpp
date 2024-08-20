@@ -23,7 +23,7 @@ void bind_pyfile_types(nb::module_ m) {
             .def("read_mask", &bliss::h5_filterbank_file::read_mask)
             .def("get_file_path", &bliss::h5_filterbank_file::get_file_path);
 
-    m.def("write_hits_to_capnp_file", &bliss::write_hits_to_capnp_file<std::list>);
+    m.def("write_hits_to_capnp_file", &bliss::write_hits_to_capnp_file<std::list<bliss::hit>>);
     m.def("read_hits_from_capnp_file", &bliss::read_hits_from_capnp_file);
     m.def("write_scan_hits_to_file",
           &bliss::write_scan_hits_to_capnp_file,

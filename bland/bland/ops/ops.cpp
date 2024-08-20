@@ -128,7 +128,7 @@ ndarray bland::to(ndarray src, DLDevice dest_dev) {
 
             // if (is_flat) {
                 int64_t offset = std::accumulate(src_offset.begin(), src_offset.end(), 0LL);
-                auto copy_src = src_ptr + offset*(src.dtype().bits / 8);
+                auto copy_src = reinterpret_cast<void*>(reinterpret_cast<std::byte*>(src_ptr) + offset*(src.dtype().bits / 8));
                 cudaMemcpy(dst_ptr, copy_src, copy_size, cudaMemcpyDeviceToHost);
             // }
             // } else if (src.ndim() == 2) {
