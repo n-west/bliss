@@ -27,6 +27,7 @@ target_include_directories(bliss_serialization
 target_link_libraries(bliss_serialization
     PRIVATE
     fmt::fmt-header-only
+    stdc++fs
 )
 
 # This is optional and only makes sense if capnp is available
