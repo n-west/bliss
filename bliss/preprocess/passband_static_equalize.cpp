@@ -110,6 +110,7 @@ coarse_channel bliss::equalize_passband_filter(coarse_channel cc, bland::ndarray
     // data is (or can be) a deferred tensor
     // we might need to make a copy of cc rather than pass a ref since we're accessing the deferred array and setting it all in one go
     auto cc_ptr = std::make_shared<coarse_channel>(cc);
+    h = h.to(cc_ptr->device());
     cc.set_data(bland::ndarray_deferred([cc_data=cc_ptr, h](){
         return bland::divide(cc_data->data(), h);
     }));

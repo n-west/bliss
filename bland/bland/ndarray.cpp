@@ -72,6 +72,11 @@ bool bland::ndarray::datatype::operator!=(const datatype&other) {
     return !(*this == other);
 }
 
+std::string bland::ndarray::datatype::repr() {
+    auto r = fmt::format("ndarray::datatype (.code={}, .bits={}, .lanes={})\n", static_cast<int8_t>(code), bits, lanes);
+    return r;
+}
+
 bland::ndarray::dev::dev(DLDevice d) : DLDevice(d) {}
 
 bool bland::ndarray::dev::operator==(const dev &other) {

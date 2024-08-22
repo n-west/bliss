@@ -37,6 +37,8 @@ class ndarray {
         bool operator==(const datatype &other);
         bool operator!=(const datatype &other);
 
+        std::string repr();
+
         static constexpr DLDataType float32 = DLDataType{.code = DLDataTypeCode::kDLFloat, .bits = 32, .lanes = 1};
         static constexpr DLDataType cfloat32 = DLDataType{.code = DLDataTypeCode::kDLComplex, .bits = 64, .lanes = 1};
         static constexpr DLDataType float64 = DLDataType{.code = DLDataTypeCode::kDLFloat, .bits = 64, .lanes = 1};

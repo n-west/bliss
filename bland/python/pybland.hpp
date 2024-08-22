@@ -64,7 +64,15 @@ void bind_pybland(nb::module_ m) {
     .def(nb::init<std::string_view>())
     .def_rw("device_type", &bland::ndarray::dev::device_type)
     .def_rw("device_id", &bland::ndarray::dev::device_id)
-    .def("__repr__", &bland::ndarray::dev::repr);
+    .def("__repr__", &bland::ndarray::dev::repr)
+    .def("__str__", &bland::ndarray::dev::repr);
+
+    nb::class_<bland::ndarray::datatype>(pyndarray, "datatype")
+    .def(nb::init<std::string_view>())
+    .def_ro("bits", &bland::ndarray::datatype::bits)
+    .def_ro("code", &bland::ndarray::datatype::code)
+    .def_ro("lanes", &bland::ndarray::datatype::lanes)
+    .def("__repr__", &bland::ndarray::datatype::repr);
 
     m.def("write_to_file", &bland::write_to_file);
 
