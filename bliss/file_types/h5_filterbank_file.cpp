@@ -100,7 +100,11 @@ std::string bliss::h5_filterbank_file::read_data_attr<std::string>(const std::st
             std::string result(val);
 
             // Free the memory allocated by HDF5
+            #if H5_VERSION_GE(1, 8, 13)
             H5free_memory(val);
+            #else
+            free(val);
+            #endif
 
             return result;
         } else {
@@ -134,6 +138,22 @@ std::vector<std::string> bliss::h5_filterbank_file::read_data_attr<std::vector<s
 }
 
 bliss::h5_filterbank_file::h5_filterbank_file(std::string_view file_path) {
+
+    #if H5_VERSION_GE(1, 10, 1)
+    unsigned int number_plugin_paths;
+    std::string filter_paths{};
+    auto h5_err = H5PLsize(&number_plugin_paths);
+    for (unsigned int plugin_path_index=0; plugin_path_index < number_plugin_paths; ++plugin_path_index) {
+        auto required_buffer_size = H5PLget(plugin_path_index, NULL, 0);
+        std::string path_buffer;
+        path_buffer.resize(required_buffer_size);
+        required_buffer_size = H5PLget(plugin_path_index, path_buffer.data(), required_buffer_size);
+
+        filter_paths += fmt::format("\t'{}'\n", path_buffer);
+    }
+    fmt::print("INFO: HDF5 looking for filter plugins in: \n{}", filter_paths);
+    #endif
+
     _h5_file_handle = H5::H5File(file_path.data(), H5F_ACC_RDONLY);
     try {
         _h5_data_handle = _h5_file_handle.openDataSet("data");

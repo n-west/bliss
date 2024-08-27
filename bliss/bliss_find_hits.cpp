@@ -53,7 +53,7 @@ int main(int argc, char *argv[]) {
 
             // Data slicing before any processing
             (clipp::option("-c", "--coarse-channel") & clipp::value("coarse_channel").set(coarse_channel)) % "Coarse channel to process",
-            (clipp::option("--number-coarse") & clipp::value("number_coarse_channels").set(number_coarse_channels)) % "Number of coarse channels to process",
+            (clipp::option("--number-coarse") & clipp::value("number_coarse_channels").set(number_coarse_channels)) % "Number of coarse channels to process (default: 1)",
             (clipp::option("--nchan-per-coarse") & clipp::value("nchan_per_coarse").set(nchan_per_coarse)) % "number of fine channels per coarse to use (default: 0 auto-detects)",
 
             // Preprocessing

@@ -57,12 +57,11 @@ int main(int argc, char *argv[]) {
     // How can we discover which type of capnp message/file this is?
     auto scan_with_hits = bliss::read_scan_hits_from_capnp_file(input_file);
     auto hits = scan_with_hits.hits();
-    fmt::print("Got {} hits\n", hits.size());
-    for (auto &h : hits) {
-        std::cout << h.repr() << std::endl;
-    }
     if (output_path == "-" || output_path == "stdout") {
-
+        fmt::print("Got {} hits\n", hits.size());
+        for (auto &h : hits) {
+            std::cout << h.repr() << std::endl;
+        }
     } else {
         bliss::write_scan_hits_to_dat_file(scan_with_hits, output_path);
     }
