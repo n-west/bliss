@@ -58,8 +58,8 @@ jobs:
           #CIBW_MANYLINUX_X86_64_IMAGE: manylinux1
           # CIBW_BEFORE_BUILD: python -m pip install py-build-cmake~=0.2.0a7 cmake~=3.29.0 ninja
           CIBW_BEFORE_ALL: python -m pip install py-build-cmake~=0.2.0a7 cmake~=3.29.0 ninja
-          CIBW_BEFORE_BUILD_LINUX: |
-            (yum install -y hdf5-devel fftw-devel || apt-get install -y libhdf5-dev || apk add --update --no-cache hdf5-dev || true) && true
+          CIBW_BEFORE_ALL_LINUX: |
+            (yum install -y fftw-devel && curl -s -L https://hdf-wordpress-1.s3.amazonaws.com/wp-content/uploads/manual/HDF5/HDF5_1_14_3/src/CMake-hdf5-1.14.3.tar.gz  | tar xz -C /tmp && cmake -DCMAKE_INSTALL_PREFIX=/usr/local -S /tmp/CMake-hdf5-1.14.3/hdf5-1.14.3 -B hdf5-build -C /tmp/CMake-hdf5-1.14.3/hdf5-1.14.3/config/cmake/cacheinit.cmake -DHDF5_BUILD_JAVA=OFF -DHDF5_BUILD_FORTRAN=OFF -DHDF5_ALLOW_EXTERNAL_SUPPORT=git && cmake --build hdf5-build -j $(nproc) --config Release && cmake --install hdf5-build || apt-get install -y libhdf5-dev || apk add --update --no-cache hdf5-dev || true) && true
             # cibuildwheel uses --no-dep, but docs suggest build-system.requires should be installed...
             # copying a version of fairseq approach https://github.com/facebookresearch/fairseq/blob/main/.github/workflows/release.yml#L128
             if [[ "${{ matrix.cuda_ver }}" != "none" ]]; then

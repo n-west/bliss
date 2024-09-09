@@ -10,6 +10,8 @@
 
 using namespace bliss;
 
+constexpr bool pedantic = false;
+
 // Default implementation for reading data_attr
 template <typename T>
 T bliss::h5_filterbank_file::read_data_attr(const std::string &key) {
@@ -20,34 +22,58 @@ T bliss::h5_filterbank_file::read_data_attr(const std::string &key) {
 
         // Check the data type and perform the appropriate casting
         if (dtype == H5::PredType::NATIVE_INT16) {
+            if constexpr (pedantic && !std::is_same_v<int16_t, T>) {
+                fmt::print("WARN: attr {} requested as {} but is NATIVE_INT16 in file\n", key, typeid(T).name());
+            }
             int16_t val;
             attr.read(dtype, &val);
             return static_cast<T>(val);
         } else if (dtype == H5::PredType::NATIVE_UINT16) {
+            if constexpr (pedantic && !std::is_same_v<uint16_t, T>) {
+                fmt::print("WARN: attr {} requested as {} but is NATIVE_UINT16 in file\n", key, typeid(T).name());
+            }
             uint16_t val;
             attr.read(dtype, &val);
             return static_cast<T>(val);
         } else if (dtype == H5::PredType::NATIVE_INT32) {
+            if constexpr (pedantic && !std::is_same_v<int32_t, T>) {
+                fmt::print("WARN: attr {} requested as {} but is NATIVE_INT32 in file\n", key, typeid(T).name());
+            }
             int32_t val;
             attr.read(dtype, &val);
             return static_cast<T>(val);
         } else if (dtype == H5::PredType::NATIVE_UINT32) {
+            if constexpr (pedantic && !std::is_same_v<uint32_t, T>) {
+                fmt::print("WARN: attr {} requested as {} but is NATIVE_UINT32 in file\n", key, typeid(T).name());
+            }
             uint32_t val;
             attr.read(dtype, &val);
             return static_cast<T>(val);
         }  else if (dtype == H5::PredType::NATIVE_INT64) {
+            if constexpr (pedantic && !std::is_same_v<int64_t, T>) {
+                fmt::print("WARN: attr {} requested as {} but is NATIVE_INT64 in file\n", key, typeid(T).name());
+            }
             int64_t val;
             attr.read(dtype, &val);
             return static_cast<T>(val);
         }  else if (dtype == H5::PredType::NATIVE_UINT64) {
+            if constexpr (pedantic && !std::is_same_v<uint64_t, T>) {
+                fmt::print("WARN: attr {} requested as {} but is NATIVE_UINT64 in file\n", key, typeid(T).name());
+            }
             uint64_t val;
             attr.read(dtype, &val);
             return static_cast<T>(val);
         }  else if (dtype == H5::PredType::NATIVE_FLOAT) {
+            if constexpr (pedantic && !std::is_same_v<float, T>) {
+                fmt::print("WARN: attr {} requested as {} but is NATIVE_FLOAT in file\n", key, typeid(T).name());
+            }
             float val;
             attr.read(dtype, &val);
             return static_cast<T>(val);
         }  else if (dtype == H5::PredType::NATIVE_DOUBLE) {
+            if constexpr (pedantic && !std::is_same_v<double, T>) {
+                fmt::print("WARN: attr {} requested as {} but is NATIVE_DOUBLE in file\n", key, typeid(T).name());
+            }
             double val;
             attr.read(dtype, &val);
             return static_cast<T>(val);
@@ -108,9 +134,8 @@ std::string bliss::h5_filterbank_file::read_data_attr<std::string>(const std::st
 
             return result;
         } else {
-            std::string val;
-            attr.read(dtype, &val);
-            return val;
+            auto err_msg = fmt::format("{} expected as string but is not a string type");
+            throw std::invalid_argument(err_msg);
         }
     } else {
         auto err_msg = fmt::format("H5 data does not have an attribute key {}", key);

@@ -46,7 +46,7 @@ exclude = []
 minimum_version = "3.18"
 build_type = "RelWithDebInfo"
 source_path = "." # Containing CMakeLists.txt
-build_path = "build"
+build_path = "build-wheel"
 options = { "WITH_PY_STUBS:BOOL" = "On" }
 args = ["-Wdev"]
 find_python = true
