@@ -36,7 +36,7 @@ target_link_libraries(
          bliss_serialization
          flaggers
          fmt::fmt-header-only
-	 stdc++fs
+         stdc++fs
 )
 
 install(TARGETS bliss_find_hits RUNTIME COMPONENT bliss_executables DESTINATION bin)
