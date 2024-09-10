@@ -5,6 +5,7 @@
 #endif
 
 #include <map>
+#include <string>
 #include <vector>
 
 namespace bland {
@@ -16,15 +17,15 @@ namespace bland {
 class config {
 public:
 
-#if BLAND_CUDA_CODE
-    using cuda_device_attributes = cudaDeviceProp;
-#else
+// #if BLAND_CUDA_CODE
+//     using cuda_device_attributes = cudaDeviceProp;
+// #else
     // Here to make the conditional compilation of used fields restricted to one place
     struct cuda_device_attributes {
-        char name[256];                  /**< ASCII string identifying device */
-        struct {char bytes[16];} uuid;    /**< 16-byte unique identifier */
+        std::string name;                  /**< ASCII string identifying device */
+        std::string uuid;                   /**< 16-byte unique identifier */
     };
-#endif
+// #endif
 
     static config& get_instance() {
         static config instance;
