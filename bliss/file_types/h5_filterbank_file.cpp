@@ -332,47 +332,45 @@ bland::ndarray bliss::h5_filterbank_file::read_data(std::vector<int64_t> offset,
 }
 
 bland::ndarray bliss::h5_filterbank_file::read_mask(std::vector<int64_t> offset, std::vector<int64_t> count) {
-    if (_h5_mask_handle.has_value()) {
-        auto h5_mask = _h5_mask_handle.value();
-        auto dataspace   = h5_mask.getSpace();
-        auto number_dims = dataspace.getSimpleExtentNdims();
+    // if (_h5_mask_handle.has_value()) {
+    //     auto h5_mask = _h5_mask_handle.value();
+    //     auto dataspace   = h5_mask.getSpace();
+    //     auto number_dims = dataspace.getSimpleExtentNdims();
 
-        bland::ndarray mask_grid;
+    //     auto shape = get_data_shape();
 
-        auto shape = get_data_shape();
+    //     if (offset.empty()) {
+    //         offset = std::vector<int64_t>(shape.size(), 0);
+    //     }
+    //     if (count.empty()) {
+    //         count = shape;
+    //         count[0] -= offset[0];
+    //         count[1] -= offset[1];
+    //         count[2] -= offset[2];
+    //     }
+    //     auto mask_grid = bland::ndarray(count, bland::ndarray::datatype::uint8, bland::ndarray::dev::cpu);
+    //     // TODO: validate both offset and count are size 3
 
-        if (offset.empty()) {
-            offset = std::vector<int64_t>(shape.size(), 0);
-        }
-        if (count.empty()) {
-            count = shape;
-            count[0] -= offset[0];
-            count[1] -= offset[1];
-            count[2] -= offset[2];
-        }
-        mask_grid = bland::ndarray(count, bland::ndarray::datatype::uint8, bland::ndarray::dev::cpu);
-        // TODO: validate both offset and count are size 3
+    //     std::vector<hsize_t> offset_hsize(offset.begin(), offset.end());
+    //     std::vector<hsize_t> count_hsize(count.begin(), count.end());
 
-        std::vector<hsize_t> offset_hsize(offset.begin(), offset.end());
-        std::vector<hsize_t> count_hsize(count.begin(), count.end());
+    //     dataspace.selectHyperslab(H5S_SELECT_SET, count_hsize.data(), offset_hsize.data());
 
-        dataspace.selectHyperslab(H5S_SELECT_SET, count_hsize.data(), offset_hsize.data());
+    //     // Define the memory dataspace to receive the read data
+    //     std::vector<hsize_t> grid_shape(count.begin(), count.end());
+    //     H5::DataSpace        memspace(grid_shape.size(), grid_shape.data());
 
-        // Define the memory dataspace to receive the read data
-        std::vector<hsize_t> grid_shape(count.begin(), count.end());
-        H5::DataSpace        memspace(grid_shape.size(), grid_shape.data());
+    //     // The row-major reading and axes we set up means frequency (most dense) is in last dim
+    //     h5_mask.read(mask_grid.data_ptr<uint8_t>(), H5::PredType::NATIVE_UINT8, memspace, dataspace);
 
-        // The row-major reading and axes we set up means frequency (most dense) is in last dim
-        h5_mask.read(mask_grid.data_ptr<float>(), H5::PredType::NATIVE_UINT8, memspace, dataspace);
-
-        mask_grid = mask_grid.squeeze(1); // squeeze out the feed_id
-        return mask_grid;
-    } else {
+    //     mask_grid = mask_grid.squeeze(1); // squeeze out the feed_id
+    //     return mask_grid;
+    // } else {
         // The file has no "mask" dataset, it's typically zeros anyway so just allocate the appropriate number of uint8 zeros
-        auto mask_grid = bland::zeros(count, bland::ndarray::datatype::uint8, bland::ndarray::dev::cpu);
+        auto mask_grid = bland::zeros(count, bland::ndarray::datatype::uint8, bland::ndarray::dev::cuda);
         mask_grid = mask_grid.squeeze(1); // squeeze out the feed_id
         return mask_grid;
-    }
+    // }
 }
 
 std::string bliss::h5_filterbank_file::repr() {
