@@ -22,7 +22,9 @@ bland::ndarray_deferred::ndarray_deferred(ndarray pod)
 ndarray_deferred bland::ndarray_deferred::to(bland::ndarray::dev device) {
     _device = device;
     if (std::holds_alternative<ndarray>(*_deferred_data)) {
-        *_deferred_data = std::get<ndarray>(*_deferred_data).to(_device.value());
+        auto unmemoized_array = std::get<ndarray>(*_deferred_data);
+        auto on_device = unmemoized_array.to(_device.value());
+        _deferred_data = std::make_shared<std::variant<bland::ndarray, std::function<bland::ndarray ()>>>(on_device);
     }
     return *this;
 }
