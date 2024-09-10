@@ -65,8 +65,9 @@ int main(int argc, char *argv[]) {
             // Drift intgration / dedoppler
             (clipp::option("--desmear") .set(dedrift_options.desmear, true) |
              clipp::option("--nodesmear").set(dedrift_options.desmear, false)) % "Desmear the drift plane to compensate for drift rate crossing channels",
-            (clipp::option("-m", "--min-rate") & clipp::value("min-rate").set(dedrift_options.low_rate)) % "Minimum drift rate (-5 Hz/sec)",
-            (clipp::option("-M", "--max-rate") & clipp::value("max-rate").set(dedrift_options.high_rate)) % "Maximum drift rate (+5 Hz/sec)",
+            (clipp::option("-m", "--min-rate") & clipp::value("min-rate").set(dedrift_options.low_rate)) % "Minimum drift rate (fourier bins)",
+            (clipp::option("-rs", "--rate-step") & clipp::value("rate-step").set(dedrift_options.rate_step_size)) % "Fourier bins to step per search",
+            (clipp::option("-M", "--max-rate") & clipp::value("max-rate").set(dedrift_options.high_rate)) % "Maximum drift rate (fourier bins)",
 
             // Hit search
             (clipp::option("--local-maxima") .set(hit_search_options.method, bliss::hit_search_methods::LOCAL_MAXIMA) |
