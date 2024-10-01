@@ -1,12 +1,14 @@
-
-#include <core/flag_values.hpp>
 #include <flaggers/spectral_kurtosis.hpp>
+
 #include <estimators/spectral_kurtosis.hpp>
+#include <core/flag_values.hpp>
 
 #include <bland/ops/ops.hpp>
 
-#include <fmt/core.h>
-#include <fmt/ranges.h>
+// #include <fmt/core.h>
+// #include <fmt/ranges.h>
+
+#include <cmath> // std::round
 
 using namespace bliss;
 
@@ -25,12 +27,10 @@ bland::ndarray bliss::flag_spectral_kurtosis(const bland::ndarray &data,
     return rfi;
 }
 
-// bland::ndarray_deferred bliss::flag_spectral_kurtosis(const bland::ndarray_deferred &data)
-
 coarse_channel bliss::flag_spectral_kurtosis(coarse_channel cc_data, float lower_threshold, float upper_threshold) {
 
     auto cc_ptr = std::make_shared<coarse_channel>(cc_data);
-    
+
     auto deferred_accumulated_rfi = bland::ndarray_deferred([cc_data = cc_ptr, lower_threshold, upper_threshold]() {
         bland::ndarray spectrum_grid = cc_data->data();
         bland::ndarray rfi_flags     = cc_data->mask();
@@ -58,7 +58,7 @@ scan bliss::flag_spectral_kurtosis(scan fil_data, float lower_threshold, float u
     auto number_coarse_channels = fil_data.get_number_coarse_channels();
     for (auto cc_index = 0; cc_index < number_coarse_channels; ++cc_index) {
         auto cc = fil_data.read_coarse_channel(cc_index);
-        *cc = flag_spectral_kurtosis(*cc, lower_threshold, upper_threshold);
+        *cc     = flag_spectral_kurtosis(*cc, lower_threshold, upper_threshold);
     }
     return fil_data;
 }

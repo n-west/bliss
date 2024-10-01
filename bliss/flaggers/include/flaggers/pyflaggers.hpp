@@ -2,6 +2,7 @@
 
 #include "filter_rolloff.hpp"
 #include "magnitude.hpp"
+#include "sigmaclip.hpp"
 #include "spectral_kurtosis.hpp"
 
 #include <core/flag_values.hpp>
@@ -18,7 +19,7 @@ using namespace nb::literals;
 
 void bind_pyflaggers(nb::module_ m) {
 
-      // Spectral Kurtosis
+    // Spectral Kurtosis
     m.def("flag_spectral_kurtosis",
           nb::overload_cast<bliss::coarse_channel, float, float>(&bliss::flag_spectral_kurtosis),
           "cc_data"_a,
@@ -48,7 +49,7 @@ void bind_pyflaggers(nb::module_ m) {
           "upper_threshold"_a,
           "return a cadence with non-gaussian samples are flagged");
 
-      // Rolloff
+    // Rolloff
     m.def("flag_filter_rolloff",
           nb::overload_cast<bliss::coarse_channel, float>(&bliss::flag_filter_rolloff),
           "cc_data"_a,
@@ -73,7 +74,7 @@ void bind_pyflaggers(nb::module_ m) {
           "rolloff_width"_a,
           "return a masked copy of scan where the frequency edges are flagged according to rolloff width");
 
-      // Magnitude
+    // Magnitude
     m.def("flag_magnitude",
           nb::overload_cast<const bland::ndarray &, float>(&bliss::flag_magnitude),
           "scan"_a,
@@ -106,15 +107,57 @@ void bind_pyflaggers(nb::module_ m) {
           "cadence"_a,
           "return a masked copy of cadence where magnitude exceeds the mean by given sigma");
 
+    // Sigma clipped
+// bland::ndarray bliss::flag_sigmaclip(const bland::ndarray &data, int max_iter, float low, float high) {
+    m.def("flag_sigmaclip",
+          nb::overload_cast<const bland::ndarray&, int, float, float>(&bliss::flag_sigmaclip),
+          "x"_a,
+          "max_iter"_a=3,
+          "lower_threshold"_a=4.0f,
+          "upper_threshold"_a=4.0f,
+          "return a mask indicating which values are above/below the sigma clipped threshold");
+
+    m.def("flag_sigmaclip",
+          nb::overload_cast<bliss::coarse_channel, int, float, float>(&bliss::flag_sigmaclip),
+          "cc_data"_a,
+          "max_iter"_a=3,
+          "lower_threshold"_a=4.0f,
+          "upper_threshold"_a=4.0f,
+          "return a masked copy of coarse_channel where sigmaclip indicates sample values outside of the deviation range given");
+
+    m.def("flag_sigmaclip",
+          nb::overload_cast<bliss::scan, int, float, float>(&bliss::flag_sigmaclip),
+          "scan"_a,
+          "max_iter"_a=3,
+          "lower_threshold"_a=4.0f,
+          "upper_threshold"_a=4.0f,
+          "return a masked copy of scan where sigmaclip indicates sample values outside of the deviation range given");
+
+    m.def("flag_sigmaclip",
+          nb::overload_cast<bliss::observation_target, int, float, float>(&bliss::flag_sigmaclip),
+          "observation"_a,
+          "max_iter"_a=3,
+          "lower_threshold"_a=4.0f,
+          "upper_threshold"_a=4.0f,
+          "return a masked copy of observation target where sigmaclip indicates sample values outside of the deviation range given");
+
+    m.def("flag_sigmaclip",
+          nb::overload_cast<bliss::cadence, int, float, float>(&bliss::flag_sigmaclip),
+          "cadence"_a,
+          "max_iter"_a=3,
+          "lower_threshold"_a=4.0f,
+          "upper_threshold"_a=4.0f,
+          "return a masked copy of cadence where sigmaclip indicates sample values outside of the deviation range given");
+
     static auto flag_names = std::vector<std::string>{"unflagged",
-                                               "filter_rolloff",
-                                               "low_spectral_kurtosis",
-                                               "high_spectral_kurtosis",
-                                               "RESERVED_0",
-                                               "magnitude",
-                                               "sigma_clip",
-                                               "RESERVED_1",
-                                               "RESERVED_2"};
+                                                      "filter_rolloff",
+                                                      "low_spectral_kurtosis",
+                                                      "high_spectral_kurtosis",
+                                                      "RESERVED_0",
+                                                      "magnitude",
+                                                      "sigmaclip",
+                                                      "RESERVED_1",
+                                                      "RESERVED_2"};
 
     nb::enum_<bliss::flag_values>(m, "flag_values")
             .value("unflagged", bliss::flag_values::unflagged)
@@ -123,9 +166,11 @@ void bind_pyflaggers(nb::module_ m) {
             .value("high_spectral_kurtosis", bliss::flag_values::high_spectral_kurtosis)
             .value("magnitude", bliss::flag_values::magnitude)
             .value("sigma_clip", bliss::flag_values::sigma_clip)
-            .def("__getstate__", [](const bliss::flag_values &self) { 
-                  std::cout << "get state is " << static_cast<int>(self) << std::endl;
-                  return std::make_tuple(static_cast<uint8_t>(self)); })
+            .def("__getstate__",
+                 [](const bliss::flag_values &self) {
+                     std::cout << "get state is " << static_cast<int>(self) << std::endl;
+                     return std::make_tuple(static_cast<uint8_t>(self));
+                 })
             // .def("__setstate__", [](bliss::flag_values &self, const std::tuple<uint8_t> &state) {
             //       std::cout << "called setstate" << std::endl;
             //       self = static_cast<bliss::flag_values>(std::get<0>(state));
@@ -133,9 +178,7 @@ void bind_pyflaggers(nb::module_ m) {
 
             // .def("__getstate__", [](const bliss::flag_values &self) { return std::string("filter_rolloff"); })
             .def("__setstate__", [](bliss::flag_values &self, const std::tuple<uint8_t> &state) {
-                  std::cout << "called setstate" << std::endl;
-                  self = static_cast<bliss::flag_values>(std::get<0>(state));
-            })
-            ;
-
+                std::cout << "called setstate" << std::endl;
+                self = static_cast<bliss::flag_values>(std::get<0>(state));
+            });
 }

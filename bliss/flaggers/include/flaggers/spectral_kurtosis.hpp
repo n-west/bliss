@@ -1,6 +1,6 @@
-
 #pragma once
 
+#include <core/coarse_channel.hpp>
 #include <core/scan.hpp>
 #include <core/cadence.hpp>
 
@@ -48,6 +48,6 @@ observation_target flag_spectral_kurtosis(observation_target observations, float
 /**
  * Flag all filterbanks in the cadence with given SK estimate
 */
-cadence flag_spectral_kurtosis(cadence fb_data, float lower_threshold=0.05f, float upper_threshold=0.05f);
+cadence flag_spectral_kurtosis(cadence cadence_data, float lower_threshold=0.05f, float upper_threshold=0.05f);
 
 } // namespace bliss

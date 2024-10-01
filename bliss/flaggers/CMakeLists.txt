@@ -2,6 +2,7 @@
 add_library(flaggers
     filter_rolloff.cpp
     magnitude.cpp
+    sigmaclip.cpp
     spectral_kurtosis.cpp
 )
 
