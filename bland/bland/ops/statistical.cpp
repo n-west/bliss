@@ -234,6 +234,93 @@ ndarray bland::masked_stddev(const ndarray &a, const ndarray &mask, std::vector<
     return masked_stddev(a, mask, out, reduced_axes);
 }
 
+std::pair<ndarray, ndarray> bland::mean_stddev(const ndarray &a, ndarray &out_mean, ndarray &out_stddev, std::vector<int64_t> reduced_axes) {
+    auto compute_device = a.device();
+
+    if (out_mean.device() != compute_device || out_stddev.device() != compute_device) {
+        throw std::runtime_error("out array is not on same device as input");
+    }
+    if (reduced_axes.empty()) {
+        for (int axis = 0; axis < a.ndim(); ++axis) {
+            reduced_axes.push_back(axis);
+        }
+    }
+
+#if BLAND_CUDA_CODE
+    if (compute_device.device_type == ndarray::dev::cuda.device_type || compute_device.device_type == ndarray::dev::cuda_managed.device_type) {
+        return cuda::mean_stddev(a, out_mean, out_stddev, reduced_axes);
+    } else
+#endif // BLAND_CUDA_CODE
+    if (compute_device.device_type == ndarray::dev::cpu.device_type) {
+        return cpu::mean_stddev(a, out_mean, out_stddev, reduced_axes);
+    } else {
+        throw std::runtime_error("unsupported device for stddev");
+    }
+}
+std::pair<ndarray, ndarray> bland::mean_stddev(const ndarray &a, std::vector<int64_t> reduced_axes) {
+    auto out_shape = std::vector<int64_t>();
+    auto a_shape   = a.shape();
+    if (!reduced_axes.empty()) {
+        for (int64_t axis = 0; axis < a_shape.size(); ++axis) {
+            if (std::find(reduced_axes.begin(), reduced_axes.end(), axis) == reduced_axes.end()) {
+                out_shape.push_back(a_shape[axis]);
+            }
+        }
+    }
+    // output shape will be empty either because axes is empty OR is all dims
+    if (out_shape.empty()) {
+        out_shape = {1};
+    }
+    ndarray out_mean(out_shape, a.dtype(), a.device());
+    ndarray out_stddev(out_shape, a.dtype(), a.device());
+    return mean_stddev(a, out_mean, out_stddev, reduced_axes);
+}
+
+std::pair<ndarray, ndarray> bland::masked_mean_stddev(const ndarray &a, const ndarray &mask, ndarray &out_mean, ndarray &out_stddev, std::vector<int64_t> reduced_axes) {
+    auto compute_device = a.device();
+
+    if (out_mean.device() != compute_device || out_stddev.device() != compute_device) {
+        throw std::runtime_error("out array is not on same device as input");
+    }
+    if (mask.device() != compute_device) {
+        throw std::runtime_error("mask is not on same device as input");
+    }
+    if (reduced_axes.empty()) {
+        for (int axis = 0; axis < a.ndim(); ++axis) {
+            reduced_axes.push_back(axis);
+        }
+    }
+
+#if BLAND_CUDA_CODE
+    if (compute_device.device_type == ndarray::dev::cuda.device_type || compute_device.device_type == ndarray::dev::cuda_managed.device_type) {
+        return cuda::masked_mean_stddev(a, mask, out_mean, out_stddev, reduced_axes);
+    } else
+#endif // BLAND_CUDA_CODE
+    if (compute_device.device_type == ndarray::dev::cpu.device_type) {
+        return cpu::masked_mean_stddev(a, mask, out_mean, out_stddev, reduced_axes);
+    } else {
+        throw std::runtime_error("unsupported device for masked_stddev");
+    }
+}
+
+std::pair<ndarray, ndarray> bland::masked_mean_stddev(const ndarray &a, const ndarray &mask, std::vector<int64_t> reduced_axes) {
+    auto out_shape = std::vector<int64_t>();
+    auto a_shape   = a.shape();
+    if (!reduced_axes.empty()) {
+        for (int64_t axis = 0; axis < a_shape.size(); ++axis) {
+            if (std::find(reduced_axes.begin(), reduced_axes.end(), axis) == reduced_axes.end()) {
+                out_shape.push_back(a_shape[axis]);
+            }
+        }
+    }
+    // output shape will be empty either because axes is empty OR is all dims
+    if (out_shape.empty()) {
+        out_shape = {1};
+    }
+    ndarray out_mean(out_shape, a.dtype(), a.device());
+    ndarray out_stddev(out_shape, a.dtype(), a.device());
+    return masked_mean_stddev(a, mask, out_mean, out_stddev, reduced_axes);
+}
 
 // TODO: we have a cuda var, implement a cpu one and dispatch appropriately...
 ndarray bland::var(const ndarray &a, ndarray &out, std::vector<int64_t> reduced_axes) {

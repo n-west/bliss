@@ -207,7 +207,7 @@ struct masked_mean_impl {
             if (elements_in_mean == 0) {
                 throw std::runtime_error("masked_mean: there are no non-masked elements to take the mean of");
             }
-            out_data[out_linear_index] = static_cast<out_datatype>(mean / (elements_in_mean - 1));
+            out_data[out_linear_index] = static_cast<out_datatype>(mean / (elements_in_mean));
             // Increment the multi-dimensional output index
             for (int axis = out_shape.size() - 1; axis >= 0; --axis) {
                 // If we're not at the end of this dim, keep going
@@ -270,16 +270,6 @@ struct stddev_impl {
         auto                 a_offset  = a.offsets();
         std::vector<int64_t> input_index(a_shape.size(), 0);
 
-        // TODO, do E[x^2] - E[x]^2 to reduce a redundant pass through data
-        auto means = ndarray(out.shape(), out.dtype(), out.device());
-        mean_impl::call<out_datatype, in_datatype>(means, a, reduced_axes);
-
-        auto                 mean_data    = means.data_ptr<out_datatype>();
-        auto                 mean_shape   = means.shape();
-        auto                 mean_strides = means.strides();
-        auto                 mean_offsets = means.offsets();
-        std::vector<int64_t> mean_index(mean_shape.size(), 0);
-
         // Number of elements that get reduced to a single output element
         int64_t reduced_elements = 1;
         for (auto &d : reduced_axes) {
@@ -290,30 +280,26 @@ struct stddev_impl {
         using accumulator_type = std::conditional_t<is_floating_point, double, out_datatype>;
 
         // TODO (flexibility): add correction option (noff in torch)
-        out_datatype scale = 1.0 / static_cast<out_datatype>(reduced_elements - 1);
+        out_datatype scale = 1.0 / static_cast<out_datatype>(reduced_elements);
 
         auto numel = out.numel();
         for (int i = 0; i < numel; ++i) {
             // Make a copy of the current input index, we'll fix the non-summed dims
             // and iterate over the reduced dims accumulating the total
             auto             reduce_nd_index = input_index;
-            accumulator_type dev             = 0;
+            accumulator_type accum_x         = 0;
+            accumulator_type accum_x2        = 0;
 
-            // TODO (perf): move this inside the nd_index increment similar to the elementwise binary ops
-            int64_t mean_linear_index = 0;
-            for (int axis = 0; axis < mean_shape.size(); ++axis) {
-                mean_linear_index += mean_offsets[axis] + (mean_index[axis] % mean_shape[axis]) * mean_strides[axis];
-            }
-
-            auto this_reduction_mean = mean_data[mean_linear_index];
+            // auto this_reduction_mean = mean_data[mean_linear_index];
             for (int jj = 0; jj < reduced_elements; ++jj) {
                 int64_t input_linear_index = 0;
                 // TODO (perf): move this inside the nd_index increment similar to the elementwise binary ops
                 for (int axis = 0; axis < a_shape.size(); ++axis) {
                     input_linear_index += a_offset[axis] + (reduce_nd_index[axis] % a_shape[axis]) * a_strides[axis];
                 }
-                auto deviation = (a_data[input_linear_index] - this_reduction_mean);
-                dev += (deviation * deviation * scale);
+                auto x = a_data[input_linear_index];
+                accum_x += x * scale;
+                accum_x2 += x*x * scale;
                 // Increment the multi-dimensional index
                 for (int i = reduced_axes.size() - 1; i >= 0; --i) {
                     auto d = reduced_axes[i];
@@ -333,7 +319,8 @@ struct stddev_impl {
                 out_linear_index += out_offset[axis] + (out_index[axis] % out_shape[axis]) * out_strides[axis];
             }
 
-            out_data[out_linear_index] = static_cast<out_datatype>(std::sqrt(dev));
+            auto diff = std::max((accumulator_type) 0, (accumulator_type)(accum_x2 - accum_x*accum_x));
+            out_data[out_linear_index] = static_cast<out_datatype>(std::sqrt(diff));
 
             // Increment the multi-dimensional output index
             for (int axis = out_shape.size() - 1; axis >= 0; --axis) {
@@ -343,15 +330,6 @@ struct stddev_impl {
                 } else {
                     // Otherwise, set it to 0 and move down to the next dim
                     out_index[axis] = 0;
-                }
-            }
-            for (int axis = mean_shape.size() - 1; axis >= 0; --axis) {
-                // If we're not at the end of this dim, keep going
-                if (++mean_index[axis] != mean_shape[axis]) {
-                    break;
-                } else {
-                    // Otherwise, set it to 0 and move down to the next dim
-                    mean_index[axis] = 0;
                 }
             }
             // Increment the multi-dimensional input index
@@ -418,16 +396,6 @@ struct masked_stddev_impl {
             throw std::runtime_error("mask_mean: dims of a shape does not match dims of mask shape");
         }
 
-        // TODO, do E[x^2] - E[x]^2 to reduce a redundant pass through data
-        auto means = ndarray(out.shape(), out.dtype(), out.device());
-        masked_mean_impl::call<out_datatype, in_datatype>(means, a, mask, reduced_axes);
-
-        auto                 mean_data    = means.data_ptr<out_datatype>();
-        auto                 mean_shape   = means.shape();
-        auto                 mean_strides = means.strides();
-        auto                 mean_offsets = means.offsets();
-        std::vector<int64_t> mean_index(mean_shape.size(), 0);
-
         // Number of elements that get reduced to a single output element
         int64_t reduced_elements = 1;
         for (auto &d : reduced_axes) {
@@ -438,7 +406,7 @@ struct masked_stddev_impl {
         using accumulator_type = std::conditional_t<is_floating_point, double, out_datatype>;
 
         // TODO (flexibility): add correction option (noff in torch)
-        out_datatype scale = 1.0 / static_cast<out_datatype>(reduced_elements - 1);
+        out_datatype scale = 1.0 / static_cast<out_datatype>(reduced_elements);
 
         auto numel = out.numel();
         for (int i = 0; i < numel; ++i) {
@@ -448,13 +416,9 @@ struct masked_stddev_impl {
             accumulator_type dev             = 0;
             int64_t          elements_in_dev = 0;
 
-            // TODO (perf): move this inside the nd_index increment similar to the elementwise binary ops
-            int64_t mean_linear_index = 0;
-            for (int axis = 0; axis < mean_shape.size(); ++axis) {
-                mean_linear_index += mean_offsets[axis] + (mean_index[axis] % mean_shape[axis]) * mean_strides[axis];
-            }
+            accumulator_type accum_x = 0;
+            accumulator_type accum_x2 = 0;
 
-            auto this_reduction_mean = mean_data[mean_linear_index];
             for (int jj = 0; jj < reduced_elements; ++jj) {
                 int64_t input_linear_index = 0;
                 // TODO (perf): move this inside the nd_index increment similar to the elementwise binary ops
@@ -462,8 +426,9 @@ struct masked_stddev_impl {
                     input_linear_index += a_offset[axis] + (reduce_nd_index[axis] % a_shape[axis]) * a_strides[axis];
                 }
                 if (mask_data[input_linear_index] == 0) {
-                    auto deviation = (a_data[input_linear_index] - this_reduction_mean);
-                    dev += (deviation * deviation);
+                    auto x = a_data[input_linear_index];
+                    accum_x += x;
+                    accum_x2 += x*x;
                     elements_in_dev += 1;
                 }
                 // Increment the multi-dimensional index
@@ -488,7 +453,8 @@ struct masked_stddev_impl {
             if (elements_in_dev == 0) {
                 throw std::runtime_error("masked_stddev: there are no non-masked elements to take the mean of");
             }
-            out_data[out_linear_index] = static_cast<out_datatype>(std::sqrt(dev / elements_in_dev));
+            auto mean = accum_x / elements_in_dev;
+            out_data[out_linear_index] = static_cast<out_datatype>(std::sqrt(accum_x2 / elements_in_dev - mean*mean));
 
             // Increment the multi-dimensional output index
             for (int axis = out_shape.size() - 1; axis >= 0; --axis) {
@@ -500,15 +466,7 @@ struct masked_stddev_impl {
                     out_index[axis] = 0;
                 }
             }
-            for (int axis = mean_shape.size() - 1; axis >= 0; --axis) {
-                // If we're not at the end of this dim, keep going
-                if (++mean_index[axis] != mean_shape[axis]) {
-                    break;
-                } else {
-                    // Otherwise, set it to 0 and move down to the next dim
-                    mean_index[axis] = 0;
-                }
-            }
+
             // Increment the multi-dimensional input index
             // TODO: I think I can dedupe this with above by checking if axis is in reduce axis but that may actually be
             // less efficient
@@ -531,6 +489,258 @@ struct masked_stddev_impl {
 
 ndarray bland::cpu::masked_stddev(const ndarray &a, const ndarray &mask, ndarray &out, std::vector<int64_t> reduced_axes) {
     return dispatch_new<masked_stddev_impl>(out, a, mask, reduced_axes);
+}
+
+std::pair<ndarray, ndarray>
+bland::cpu::mean_stddev(const ndarray &a, ndarray &out_mean, ndarray &out_stddev, std::vector<int64_t> reduced_axes) {
+    // Hard code to float for now...
+    using in_datatype  = float;
+    using out_datatype = float;
+
+    if (reduced_axes.empty()) {
+        for (int axis = 0; axis < a.ndim(); ++axis) {
+            reduced_axes.push_back(axis);
+        }
+    }
+
+    // The out array may actually be a slice! So need to respect its strides, shapes, and offsets
+    auto                 out_mean_data    = out_mean.data_ptr<out_datatype>();
+    auto                 out_mean_shape   = out_mean.shape();
+    auto                 out_mean_strides = out_mean.strides();
+    auto                 out_mean_offset  = out_mean.offsets();
+    std::vector<int64_t> out_mean_index(out_mean_shape.size(), 0);
+
+    auto                 out_stddev_data    = out_stddev.data_ptr<out_datatype>();
+    auto                 out_stddev_shape   = out_stddev.shape();
+    auto                 out_stddev_strides = out_stddev.strides();
+    auto                 out_stddev_offset  = out_stddev.offsets();
+    std::vector<int64_t> out_stddev_index(out_stddev_shape.size(), 0);
+
+    auto                 a_data    = a.data_ptr<in_datatype>();
+    auto                 a_shape   = a.shape();
+    auto                 a_strides = a.strides();
+    auto                 a_offset  = a.offsets();
+    std::vector<int64_t> input_index(a_shape.size(), 0);
+
+    // Number of elements that get reduced to a single output element
+    int64_t reduced_elements = 1;
+    for (auto &d : reduced_axes) {
+        reduced_elements *= a_shape[d];
+    }
+
+    constexpr bool is_floating_point = std::is_floating_point<out_datatype>::value;
+    using accumulator_type           = std::conditional_t<is_floating_point, double, out_datatype>;
+
+    // TODO (flexibility): add correction option (noff in torch)
+    out_datatype scale = 1.0 / static_cast<out_datatype>(reduced_elements);
+
+    auto numel = out_mean.numel();
+    for (int i = 0; i < numel; ++i) {
+        // Make a copy of the current input index, we'll fix the non-summed dims
+        // and iterate over the reduced dims accumulating the total
+        auto             reduce_nd_index = input_index;
+        accumulator_type accum_x         = 0;
+        accumulator_type accum_x2        = 0;
+
+        // auto this_reduction_mean = mean_data[mean_linear_index];
+        for (int jj = 0; jj < reduced_elements; ++jj) {
+            int64_t input_linear_index = 0;
+            // TODO (perf): move this inside the nd_index increment similar to the elementwise binary ops
+            for (int axis = 0; axis < a_shape.size(); ++axis) {
+                input_linear_index += a_offset[axis] + (reduce_nd_index[axis] % a_shape[axis]) * a_strides[axis];
+            }
+            auto x = a_data[input_linear_index];
+            accum_x += x * scale;
+            accum_x2 += x * x * scale;
+            // Increment the multi-dimensional index
+            for (int i = reduced_axes.size() - 1; i >= 0; --i) {
+                auto d = reduced_axes[i];
+                // If we're not at the end of this dim, keep going
+                if (++reduce_nd_index[d] != a_shape[d]) {
+                    break;
+                } else {
+                    // Otherwise, set it to 0 and move down to the next dim
+                    reduce_nd_index[d] = 0;
+                }
+            }
+        }
+
+        // TODO (perf): move this inside the nd_index increment similar to the elementwise binary ops
+        int64_t out_linear_index = 0;
+        for (int axis = 0; axis < out_mean_shape.size(); ++axis) {
+            out_linear_index +=
+                    out_mean_offset[axis] + (out_mean_index[axis] % out_mean_shape[axis]) * out_mean_strides[axis];
+        }
+
+        auto diff = std::max((accumulator_type)0, (accumulator_type)(accum_x2 - accum_x * accum_x));
+        out_mean_data[out_linear_index]   = static_cast<out_datatype>(accum_x);
+        out_stddev_data[out_linear_index] = static_cast<out_datatype>(std::sqrt(diff));
+
+        // Increment the multi-dimensional output index
+        for (int axis = out_mean_shape.size() - 1; axis >= 0; --axis) {
+            // If we're not at the end of this dim, keep going
+            if (++out_mean_index[axis] != out_mean_shape[axis]) {
+                break;
+            } else {
+                // Otherwise, set it to 0 and move down to the next dim
+                out_mean_index[axis] = 0;
+            }
+        }
+        // Increment the multi-dimensional input index
+        // TODO: I think I can dedupe this with above by checking if axis is in reduce axis but that may actually be
+        // less efficient
+        for (int axis = a_shape.size() - 1; axis >= 0; --axis) {
+            if (std::find(reduced_axes.begin(), reduced_axes.end(), axis) == reduced_axes.end()) {
+                // If we're not at the end of this dim, keep going
+                if (++input_index[axis] != a_shape[axis]) {
+                    break;
+                } else {
+                    // Otherwise, set it to 0 and move down to the next dim
+                    input_index[axis] = 0;
+                }
+            }
+        }
+    }
+
+    return std::make_pair(out_mean, out_stddev);
+}
+
+std::pair<ndarray, ndarray> bland::cpu::masked_mean_stddev(const ndarray &a, const ndarray &mask, ndarray &out_mean, ndarray &out_stddev, std::vector<int64_t> reduced_axes) {
+    using in_datatype = float;
+    using out_datatype = float;
+
+        if (reduced_axes.empty()) {
+            for (int axis = 0; axis < a.ndim(); ++axis) {
+                reduced_axes.push_back(axis);
+            }
+        }
+
+        // The out array may actually be a slice! So need to respect its strides, shapes, and offsets
+        auto                 out_mean_data    = out_mean.data_ptr<out_datatype>();
+        auto                 out_mean_shape   = out_mean.shape();
+        auto                 out_mean_strides = out_mean.strides();
+        auto                 out_mean_offset  = out_mean.offsets();
+        std::vector<int64_t> out_mean_index(out_mean_shape.size(), 0);
+
+        auto                 out_stddev_data    = out_stddev.data_ptr<out_datatype>();
+        auto                 out_stddev_shape   = out_stddev.shape();
+        auto                 out_stddev_strides = out_stddev.strides();
+        auto                 out_stddev_offset  = out_stddev.offsets();
+        std::vector<int64_t> out_stddev_index(out_stddev_shape.size(), 0);
+
+        auto                 a_data    = a.data_ptr<in_datatype>();
+        auto                 a_shape   = a.shape();
+        auto                 a_strides = a.strides();
+        auto                 a_offset  = a.offsets();
+        std::vector<int64_t> input_index(a_shape.size(), 0);
+
+        if (mask.dtype().code != ndarray::datatype::uint8.code && mask.dtype().bits != 8) {
+            throw std::runtime_error("masked_mean: mask dtype is not uint8_t");
+        }
+        auto mask_data    = mask.data_ptr<uint8_t>();
+        auto mask_shape   = mask.shape();
+        auto mask_strides = mask.strides();
+        auto mask_offset  = mask.offsets();
+
+        if (a.ndim() == mask.ndim()) {
+            for (int dim = 0; dim < a.ndim(); ++dim) {
+                if (a_shape[dim] != mask_shape[dim]) {
+                    throw std::runtime_error("mask_mean: a shape does not match mask shape");
+                }
+            }
+        } else {
+            throw std::runtime_error("mask_mean: dims of a shape does not match dims of mask shape");
+        }
+
+        // Number of elements that get reduced to a single output element
+        int64_t reduced_elements = 1;
+        for (auto &d : reduced_axes) {
+            reduced_elements *= a_shape[d];
+        }
+
+        constexpr bool is_floating_point = std::is_floating_point<out_datatype>::value;
+        using accumulator_type = std::conditional_t<is_floating_point, double, out_datatype>;
+
+        // TODO (flexibility): add correction option (noff in torch)
+        out_datatype scale = 1.0 / static_cast<out_datatype>(reduced_elements);
+
+        auto numel = out_mean.numel();
+        for (int i = 0; i < numel; ++i) {
+            // Make a copy of the current input index, we'll fix the non-summed dims
+            // and iterate over the reduced dims accumulating the total
+            auto             reduce_nd_index = input_index;
+            accumulator_type dev             = 0;
+            int64_t          elements_in_dev = 0;
+
+            accumulator_type accum_x = 0;
+            accumulator_type accum_x2 = 0;
+
+            for (int jj = 0; jj < reduced_elements; ++jj) {
+                int64_t input_linear_index = 0;
+                // TODO (perf): move this inside the nd_index increment similar to the elementwise binary ops
+                for (int axis = 0; axis < a_shape.size(); ++axis) {
+                    input_linear_index += a_offset[axis] + (reduce_nd_index[axis] % a_shape[axis]) * a_strides[axis];
+                }
+                if (mask_data[input_linear_index] == 0) {
+                    auto x = a_data[input_linear_index];
+                    accum_x += x;
+                    accum_x2 += x*x;
+                    elements_in_dev += 1;
+                }
+                // Increment the multi-dimensional index
+                for (int i = reduced_axes.size() - 1; i >= 0; --i) {
+                    auto d = reduced_axes[i];
+                    // If we're not at the end of this dim, keep going
+                    if (++reduce_nd_index[d] != a_shape[d]) {
+                        break;
+                    } else {
+                        // Otherwise, set it to 0 and move down to the next dim
+                        reduce_nd_index[d] = 0;
+                    }
+                }
+            }
+
+            // TODO (perf): move this inside the nd_index increment similar to the elementwise binary ops
+            int64_t out_linear_index = 0;
+            for (int axis = 0; axis < out_mean_shape.size(); ++axis) {
+                out_linear_index += out_mean_offset[axis] + (out_mean_index[axis] % out_mean_shape[axis]) * out_mean_strides[axis];
+            }
+
+            if (elements_in_dev == 0) {
+                throw std::runtime_error("masked_stddev: there are no non-masked elements to take the mean of");
+            }
+            auto mean = accum_x / elements_in_dev;
+            out_mean_data[out_linear_index] = static_cast<out_datatype>(mean);
+            out_stddev_data[out_linear_index] = static_cast<out_datatype>(std::sqrt(accum_x2 / elements_in_dev - mean*mean));
+
+            // Increment the multi-dimensional output index
+            for (int axis = out_mean_shape.size() - 1; axis >= 0; --axis) {
+                // If we're not at the end of this dim, keep going
+                if (++out_mean_index[axis] != out_mean_shape[axis]) {
+                    break;
+                } else {
+                    // Otherwise, set it to 0 and move down to the next dim
+                    out_mean_index[axis] = 0;
+                }
+            }
+
+            // Increment the multi-dimensional input index
+            // TODO: I think I can dedupe this with above by checking if axis is in reduce axis but that may actually be
+            // less efficient
+            for (int axis = a_shape.size() - 1; axis >= 0; --axis) {
+                if (std::find(reduced_axes.begin(), reduced_axes.end(), axis) == reduced_axes.end()) {
+                    // If we're not at the end of this dim, keep going
+                    if (++input_index[axis] != a_shape[axis]) {
+                        break;
+                    } else {
+                        // Otherwise, set it to 0 and move down to the next dim
+                        input_index[axis] = 0;
+                    }
+                }
+            }
+        }
+
+        return std::make_pair(out_mean, out_stddev);
 }
 
 ndarray bland::cpu::var(const ndarray &a, ndarray &out, std::vector<int64_t> reduced_axes) {

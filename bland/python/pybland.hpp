@@ -6,6 +6,7 @@
 #include <nanobind/stl/string.h>
 #include <nanobind/stl/string_view.h>
 #include <nanobind/stl/vector.h>
+#include <nanobind/stl/pair.h>
 
 namespace nb = nanobind;
 using namespace nb::literals;
@@ -232,6 +233,10 @@ void bind_pybland(nb::module_ m) {
         return bland::mean(nb_to_bland(a), axes);
     }, "a"_a, "axes"_a=std::vector<int64_t>{});
 
+    m.def("masked_mean", [](nb::ndarray<> a, nb::ndarray<> m, std::vector<int64_t>axes={}) {
+        return bland::masked_mean(nb_to_bland(a), nb_to_bland(m), axes);
+    }, "a"_a, "m"_a, "axes"_a=std::vector<int64_t>{});
+
     m.def("median", [](nb::ndarray<> a, std::vector<int64_t>axes={}) {
         return bland::median(nb_to_bland(a), axes);
     }, "a"_a, "axes"_a=std::vector<int64_t>{});
@@ -240,9 +245,21 @@ void bind_pybland(nb::module_ m) {
         return bland::stddev(nb_to_bland(a), axes);
     }, "a"_a, "axes"_a=std::vector<int64_t>{});
 
+    m.def("masked_stddev", [](nb::ndarray<> a, nb::ndarray<> m, std::vector<int64_t>axes={}) {
+        return bland::masked_stddev(nb_to_bland(a), nb_to_bland(m), axes);
+    }, "a"_a, "m"_a, "axes"_a=std::vector<int64_t>{});
+
     m.def("var", [](nb::ndarray<> a, std::vector<int64_t>axes={}) {
         return bland::var(nb_to_bland(a), axes);
     }, "a"_a, "axes"_a=std::vector<int64_t>{});
+
+    m.def("mean_stddev", [](nb::ndarray<> a, std::vector<int64_t>axes={}) {
+        return bland::mean_stddev(nb_to_bland(a), axes);
+    }, "a"_a, "axes"_a=std::vector<int64_t>{});
+
+    m.def("masked_mean_stddev", [](nb::ndarray<> a, nb::ndarray<> m, std::vector<int64_t>axes={}) {
+        return bland::masked_mean_stddev(nb_to_bland(a), nb_to_bland(m), axes);
+    }, "a"_a, "m"_a, "axes"_a=std::vector<int64_t>{});
 
     m.def("standardized_moment", [](nb::ndarray<> a, int degree, std::vector<int64_t>axes={}) {
         return bland::standardized_moment(nb_to_bland(a), degree, axes);
