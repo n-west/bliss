@@ -21,12 +21,13 @@ void bind_pyestimators(nb::module_ m) {
           "spectrum_grid"_a,
           "N"_a,
           "M"_a,
-          "d"_a = 1,
+          "d"_a = 2,
           "Compute spectral kurtosis of the given spectra");
 
     m.def("estimate_spectral_kurtosis",
-          nb::overload_cast<bliss::coarse_channel &>(&bliss::estimate_spectral_kurtosis),
+          nb::overload_cast<bliss::coarse_channel &, float>(&bliss::estimate_spectral_kurtosis),
           "fil_data"_a,
+          "d"_a = 2,
           "Compute spectral kurtosis of the given filterbank data");
 
     nb::enum_<bliss::noise_power_estimator>(m, "noise_power_estimator")

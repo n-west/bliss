@@ -21,32 +21,36 @@ void bind_pyflaggers(nb::module_ m) {
 
     // Spectral Kurtosis
     m.def("flag_spectral_kurtosis",
-          nb::overload_cast<bliss::coarse_channel, float, float>(&bliss::flag_spectral_kurtosis),
+          nb::overload_cast<bliss::coarse_channel, float, float, float>(&bliss::flag_spectral_kurtosis),
           "cc_data"_a,
           "lower_threshold"_a,
           "upper_threshold"_a,
+          "d"_a = 2.0,
           "return a masked copy of scan where estimate_spectral_kurtosis indicates non-gaussian samples");
 
     m.def("flag_spectral_kurtosis",
-          nb::overload_cast<bliss::scan, float, float>(&bliss::flag_spectral_kurtosis),
+          nb::overload_cast<bliss::scan, float, float, float>(&bliss::flag_spectral_kurtosis),
           "scan"_a,
           "lower_threshold"_a,
           "upper_threshold"_a,
+          "d"_a = 2.0,
           "return a masked copy of scan where estimate_spectral_kurtosis indicates non-gaussian samples");
 
     m.def("flag_spectral_kurtosis",
-          nb::overload_cast<bliss::observation_target, float, float>(&bliss::flag_spectral_kurtosis),
+          nb::overload_cast<bliss::observation_target, float, float, float>(&bliss::flag_spectral_kurtosis),
           "observation"_a,
           "lower_threshold"_a,
           "upper_threshold"_a,
+          "d"_a = 2.0,
           "return an observation target where all scan have non-gaussian samples flagged by spectral "
           "kurtosis");
 
     m.def("flag_spectral_kurtosis",
-          nb::overload_cast<bliss::cadence, float, float>(&bliss::flag_spectral_kurtosis),
+          nb::overload_cast<bliss::cadence, float, float, float>(&bliss::flag_spectral_kurtosis),
           "cadence"_a,
           "lower_threshold"_a,
           "upper_threshold"_a,
+          "d"_a=2.0,
           "return a cadence with non-gaussian samples are flagged");
 
     // Rolloff
