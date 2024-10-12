@@ -10,6 +10,7 @@
 #include <drift_search/integrate_drifts.hpp>
 #include <flaggers/filter_rolloff.hpp>
 #include <flaggers/magnitude.hpp>
+#include <flaggers/sigmaclip.hpp>
 #include <flaggers/spectral_kurtosis.hpp>
 #include <file_types/hits_file.hpp>
 
@@ -101,6 +102,7 @@ int main(int argc, char *argv[]) {
 
     pipeline_object = bliss::flag_filter_rolloff(pipeline_object, 0.25);
     pipeline_object = bliss::flag_spectral_kurtosis(pipeline_object, 0.1, 25);
+    pipeline_object = bliss::flag_sigmaclip(pipeline_object, 3, 5, 5);
 
     pipeline_object = bliss::estimate_noise_power(
             pipeline_object,
