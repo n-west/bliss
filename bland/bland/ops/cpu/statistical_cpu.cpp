@@ -820,7 +820,7 @@ struct standardized_moment_impl {
                 }
                 auto deviation = (a_data[input_linear_index] - this_reduction_mean);
                 moment += std::pow(deviation, degree) * scale;
-                squared_dev += deviation * deviation * scale;
+                squared_dev += static_cast<double>(deviation) * deviation * scale;
                 // Increment the multi-dimensional index
                 for (int i = reduced_axes.size() - 1; i >= 0; --i) {
                     auto d = reduced_axes[i];
