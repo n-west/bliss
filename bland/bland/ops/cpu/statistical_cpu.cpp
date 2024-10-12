@@ -55,7 +55,7 @@ struct mean_impl {
         constexpr bool is_floating_point = std::is_floating_point<out_datatype>::value;
         using accumulator_type = std::conditional_t<is_floating_point, double, out_datatype>;
 
-        out_datatype scale = 1.0 / static_cast<out_datatype>(reduced_elements - 1);
+        accumulator_type scale = 1.0 / static_cast<accumulator_type>(reduced_elements - 1);
         auto numel = out.numel();
         for (int i = 0; i < numel; ++i) {
             // Make a copy of the current input index, we'll fix the non-summed dims
@@ -280,7 +280,7 @@ struct stddev_impl {
         using accumulator_type = std::conditional_t<is_floating_point, double, out_datatype>;
 
         // TODO (flexibility): add correction option (noff in torch)
-        out_datatype scale = 1.0 / static_cast<out_datatype>(reduced_elements);
+        accumulator_type scale = 1.0 / static_cast<accumulator_type>(reduced_elements);
 
         auto numel = out.numel();
         for (int i = 0; i < numel; ++i) {
@@ -299,7 +299,7 @@ struct stddev_impl {
                 }
                 auto x = a_data[input_linear_index];
                 accum_x += x * scale;
-                accum_x2 += x*x * scale;
+                accum_x2 += static_cast<accumulator_type>(x) * x * scale;
                 // Increment the multi-dimensional index
                 for (int i = reduced_axes.size() - 1; i >= 0; --i) {
                     auto d = reduced_axes[i];
@@ -406,7 +406,7 @@ struct masked_stddev_impl {
         using accumulator_type = std::conditional_t<is_floating_point, double, out_datatype>;
 
         // TODO (flexibility): add correction option (noff in torch)
-        out_datatype scale = 1.0 / static_cast<out_datatype>(reduced_elements);
+        accumulator_type scale = 1.0 / static_cast<accumulator_type>(reduced_elements);
 
         auto numel = out.numel();
         for (int i = 0; i < numel; ++i) {
@@ -428,7 +428,7 @@ struct masked_stddev_impl {
                 if (mask_data[input_linear_index] == 0) {
                     auto x = a_data[input_linear_index];
                     accum_x += x;
-                    accum_x2 += x*x;
+                    accum_x2 += static_cast<accumulator_type>(x) * x;
                     elements_in_dev += 1;
                 }
                 // Increment the multi-dimensional index
@@ -532,7 +532,7 @@ bland::cpu::mean_stddev(const ndarray &a, ndarray &out_mean, ndarray &out_stddev
     using accumulator_type           = std::conditional_t<is_floating_point, double, out_datatype>;
 
     // TODO (flexibility): add correction option (noff in torch)
-    out_datatype scale = 1.0 / static_cast<out_datatype>(reduced_elements);
+    accumulator_type scale = 1.0 / static_cast<accumulator_type>(reduced_elements);
 
     auto numel = out_mean.numel();
     for (int i = 0; i < numel; ++i) {
@@ -551,7 +551,7 @@ bland::cpu::mean_stddev(const ndarray &a, ndarray &out_mean, ndarray &out_stddev
             }
             auto x = a_data[input_linear_index];
             accum_x += x * scale;
-            accum_x2 += x * x * scale;
+            accum_x2 += static_cast<accumulator_type>(x) * x * scale;
             // Increment the multi-dimensional index
             for (int i = reduced_axes.size() - 1; i >= 0; --i) {
                 auto d = reduced_axes[i];
@@ -662,7 +662,7 @@ std::pair<ndarray, ndarray> bland::cpu::masked_mean_stddev(const ndarray &a, con
         using accumulator_type = std::conditional_t<is_floating_point, double, out_datatype>;
 
         // TODO (flexibility): add correction option (noff in torch)
-        out_datatype scale = 1.0 / static_cast<out_datatype>(reduced_elements);
+        accumulator_type scale = 1.0 / static_cast<accumulator_type>(reduced_elements);
 
         auto numel = out_mean.numel();
         for (int i = 0; i < numel; ++i) {
@@ -684,7 +684,7 @@ std::pair<ndarray, ndarray> bland::cpu::masked_mean_stddev(const ndarray &a, con
                 if (mask_data[input_linear_index] == 0) {
                     auto x = a_data[input_linear_index];
                     accum_x += x;
-                    accum_x2 += x*x;
+                    accum_x2 += static_cast<accumulator_type>(x) * x;
                     elements_in_dev += 1;
                 }
                 // Increment the multi-dimensional index
@@ -795,7 +795,7 @@ struct standardized_moment_impl {
         std::vector<int64_t> input_index(a_shape.size(), 0);
 
         // TODO (flexibility): add correction option (noff in torch)
-        out_datatype scale = 1.0 / static_cast<out_datatype>(reduced_elements - 1);
+        double scale = 1.0 / static_cast<double>(reduced_elements - 1);
 
         auto numel = out.numel();
         for (int i = 0; i < numel; ++i) {
