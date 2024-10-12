@@ -51,7 +51,7 @@ struct observation_target {
     /**
      * create a new observation_target consisting of a slice of coarse channels
     */
-    observation_target slice_observation_channels(int start_channel=0, int count=1);
+    observation_target slice_observation_channels(int64_t start_channel=0, int64_t count=1);
 
     bland::ndarray::dev device();
     void set_device(bland::ndarray::dev &device, bool verbose=true);
@@ -118,7 +118,7 @@ struct cadence {
     /**
      * create a new cadence consisting of a slice of coarse channels
     */
-    cadence slice_cadence_channels(int start_channel=0, int count=1);
+    cadence slice_cadence_channels(int64_t start_channel=0, int64_t count=1);
 
     bland::ndarray::dev device();
     void set_device(bland::ndarray::dev &device, bool verbose=true);

@@ -86,7 +86,7 @@ int bliss::observation_target::get_number_coarse_channels() {
     }
 }
 
-bliss::observation_target bliss::observation_target::slice_observation_channels(int start_channel, int count) {
+bliss::observation_target bliss::observation_target::slice_observation_channels(int64_t start_channel, int64_t count) {
     observation_target target_coarse_channel;
     for (auto &sc : _scans) {
         target_coarse_channel._scans.push_back(sc.slice_scan_channels(start_channel, count));
@@ -179,7 +179,7 @@ int bliss::cadence::get_number_coarse_channels() {
     throw std::runtime_error("scans inside observation target are not consistent enough to return a number of channels");
 }
 
-bliss::cadence bliss::cadence::slice_cadence_channels(int start_channel, int count) {
+bliss::cadence bliss::cadence::slice_cadence_channels(int64_t start_channel, int64_t count) {
     cadence cadence_coarse_channel;
     for (auto &obs : _observations) {
         cadence_coarse_channel._observations.push_back(obs.slice_observation_channels(start_channel, count));

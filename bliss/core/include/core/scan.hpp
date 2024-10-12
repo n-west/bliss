@@ -82,7 +82,7 @@ class scan {
     /**
      * create a new scan consisting of the selected coarse channel
      */
-    scan slice_scan_channels(int start_channel = 0, int count = 1);
+    scan slice_scan_channels(int64_t start_channel = 0, int64_t count = 1);
 
     // Setters and getters for values read from disk
     double      fch1() const;
