@@ -46,9 +46,9 @@ namespace bliss {
 /**
  * Integrate energy through a track in the spectrum according to the selected method for selecting tracks
  */
-[[nodiscard]] bland::ndarray integrate_drifts(const bland::ndarray    &spectrum_grid,
-                                              integrate_drifts_options options = integrate_drifts_options{
-                                                      .desmear = true});
+// [[nodiscard]] bland::ndarray integrate_drifts(const bland::ndarray    &spectrum_grid,
+//                                               integrate_drifts_options options = integrate_drifts_options{
+//                                                       .desmear = true});
 
 [[nodiscard]] coarse_channel
 integrate_drifts(coarse_channel cc_data, integrate_drifts_options options = integrate_drifts_options{.desmear = true});

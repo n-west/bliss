@@ -36,6 +36,7 @@ else()
   message("**BLISS:: CUDA not found, building without it")
 endif()
 
+set(CMAKE_MODULE_PATH "${PROJECT_SOURCE_DIR}/cmake/" ${CMAKE_MODULE_PATH})
 #
 # options
 #
@@ -170,27 +171,14 @@ add_subdirectory(bland)
 
 # Find Doxygen package
 find_package(Doxygen)
+find_package(Sphinx QUIET)
 
 # Check if Doxygen is installed
-if(DOXYGEN_FOUND)
-  set(DOXYGEN_INPUT_DIR ${CMAKE_SOURCE_DIR})
-  # Set input and output files
-  set(DOXYGEN_IN ${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile.in)
-  set(DOXYGEN_OUT ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile)
+cmake_dependent_option(BUILD_DOCS "Build docs (doxygen + sphinx/breathe)" ON "DOXYGEN_FOUND;SPHINX_FOUND" OFF)
+add_feature_info(DOCUMENTATION BUILD_DOCS "doxygen and sphinx based documentation")
 
-  # Request to configure the file
-  configure_file(${DOXYGEN_IN} ${DOXYGEN_OUT} @ONLY)
-  message("Doxygen build started")
-
-  # Note the option ALL which allows to build the docs together with the application
-  add_custom_target(
-    doc
-    COMMAND ${DOXYGEN_EXECUTABLE} ${DOXYGEN_OUT}
-    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-    COMMENT "Generating API documentation with Doxygen"
-    VERBATIM
-  )
-  set_target_properties(doc PROPERTIES EXCLUDE_FROM_ALL TRUE)
+if(BUILD_DOCS)
+  add_subdirectory(docs)
 else()
   message("Doxygen needs to be installed to generate the doxygen documentation")
 endif()

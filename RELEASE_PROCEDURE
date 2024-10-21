@@ -3,6 +3,6 @@
 ## Update version strings:
 
 * CMakeLists.txt
-* bliss/python/bliss/__init__.py
+* bliss/python/blissdedrift/__init__.py
 
 tag commit, push, create release in github

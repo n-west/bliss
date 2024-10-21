@@ -1,0 +1,38 @@
+{% set build_number = 1 %}
+
+
+package:
+    name: blissdedrift
+    version: 0.0.1
+
+build:
+    number: {{ build_number }}
+    string: cu{{ cuda_version }}_py{{ PY_VER }}_hdf{{ hdf5 }}_h{{ PKG_HASH }}_{{ build_number }}
+
+source:
+    path: ../
+
+requirements:
+    build:
+        - {{ compiler('cxx') }}
+        - cuda-nvcc {{ cuda_version }}
+        - cmake
+        - make
+    host:
+        - hdf5
+        - fftw
+        - cuda {{ cuda_version }}
+        - python
+    run:
+        - hdf5
+        - fftw
+        - python
+        - cuda {{ cuda_version }}
+
+about:
+    summary: technosignature search
+    license: MIT
+    home: https://github.com/n-west/blissdedrift
+
+extras:
+    maintainer: nathanwest

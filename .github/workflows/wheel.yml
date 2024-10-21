@@ -9,8 +9,12 @@
 name: Build and upload python package
 
 on:
-   release:
-     types: [published]
+  release:
+    types: [published]
+  push:
+    branches:
+      - 'releases/**'
+      - 'docs-and-conda'
 
 permissions:
   contents: read
@@ -52,25 +56,11 @@ jobs:
           fi
           python3 -m cibuildwheel --output-dir dist/
         env:
-          CIBW_BUILD: "cp*-*64"
-          CIBW_SKIP: "*musllinux*"
           CUDA_VER: ${{ matrix.cuda_ver }}
-          #CIBW_MANYLINUX_X86_64_IMAGE: manylinux1
-          # CIBW_BEFORE_BUILD: python -m pip install py-build-cmake~=0.2.0a7 cmake~=3.29.0 ninja
-          CIBW_BEFORE_ALL: python -m pip install py-build-cmake~=0.2.0a7 cmake~=3.29.0 ninja
-          CIBW_BEFORE_ALL_LINUX: |
-            (yum install -y fftw-devel && curl -s -L https://hdf-wordpress-1.s3.amazonaws.com/wp-content/uploads/manual/HDF5/HDF5_1_14_3/src/CMake-hdf5-1.14.3.tar.gz  | tar xz -C /tmp && cmake -DCMAKE_INSTALL_PREFIX=/usr/local -S /tmp/CMake-hdf5-1.14.3/hdf5-1.14.3 -B hdf5-build -C /tmp/CMake-hdf5-1.14.3/hdf5-1.14.3/config/cmake/cacheinit.cmake -DHDF5_BUILD_JAVA=OFF -DHDF5_BUILD_FORTRAN=OFF -DHDF5_ALLOW_EXTERNAL_SUPPORT=git && cmake --build hdf5-build -j $(nproc) --config Release && cmake --install hdf5-build || apt-get install -y libhdf5-dev || apk add --update --no-cache hdf5-dev || true) && true
-            # cibuildwheel uses --no-dep, but docs suggest build-system.requires should be installed...
-            # copying a version of fairseq approach https://github.com/facebookresearch/fairseq/blob/main/.github/workflows/release.yml#L128
-            if [[ "${{ matrix.cuda_ver }}" != "none" ]]; then
-              yum-config-manager --add-repo https://developer.download.nvidia.com/compute/cuda/repos/rhel7/x86_64/cuda-rhel7.repo
-              yum clean all
-              yum install -y cuda-toolkit-${{ matrix.cuda_ver }}.x86_64
-              export PATH=$PATH:/usr/local/cuda/bin
-            fi
 
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v4
         with:
+          name: dist-${{ matrix.cuda_ver }}
           path: dist
 
 
@@ -78,11 +68,14 @@ jobs:
   upload:
     name: Upload to PyPi and create release
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        cuda_ver: ['none', '11.4', '12.4']
     needs: [build_wheels]
     steps:
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v4
         with:
-          name: artifact
+          name: dist-${{ matrix.cuda_ver }}
           path: dist
 
       - name: Publish package

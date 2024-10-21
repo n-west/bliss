@@ -48,12 +48,6 @@ __global__ void elementwise_scalar_op_cuda_impl(Out* out_data, int64_t* out_shap
             a_index += nd_index[dim] * a_strides[dim];
         }
         out_data[out_index] = Op::template call<Out, A, B>(a_data[a_index], scalar_val);
-        // if constexpr (is_floating<B>::value ) {
-        // printf("storing %f [%lld] = f(%f [%lld], %f) at ind=%i with tid=%i.%i\n", out_data[out_index], out_index,
-        //                                                                         a_data[a_index], a_index,
-        //                                                                         scalar_val,
-        //                                                                         n, threadIdx.x, blockIdx.x);
-        // }
 
         auto increment_amount = grid_size;
         for (int dim = ndim - 1; dim >= 0; --dim) {

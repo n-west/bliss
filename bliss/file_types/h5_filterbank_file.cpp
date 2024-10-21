@@ -367,7 +367,7 @@ bland::ndarray bliss::h5_filterbank_file::read_mask(std::vector<int64_t> offset,
     //     return mask_grid;
     // } else {
         // The file has no "mask" dataset, it's typically zeros anyway so just allocate the appropriate number of uint8 zeros
-        auto mask_grid = bland::zeros(count, bland::ndarray::datatype::uint8, bland::ndarray::dev::cuda);
+        auto mask_grid = bland::zeros(count, bland::ndarray::datatype::uint8, bland::ndarray::dev::cpu);
         mask_grid = mask_grid.squeeze(1); // squeeze out the feed_id
         return mask_grid;
     // }

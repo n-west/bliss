@@ -47,10 +47,10 @@ std::vector<frequency_drift_plane::drift_rate> compute_drifts(int time_steps, do
     return drift_rate_info;
 }
 
-bland::ndarray bliss::integrate_drifts(const bland::ndarray &spectrum_grid, integrate_drifts_options options) {
-    auto compute_device = spectrum_grid.device();
-    auto drifts = compute_drifts(spectrum_grid.size(0), 1, 1, options);
-}
+// bland::ndarray bliss::integrate_drifts(const bland::ndarray &spectrum_grid, integrate_drifts_options options) {
+//     auto compute_device = spectrum_grid.device();
+//     auto drifts = compute_drifts(spectrum_grid.size(0), 1, 1, options);
+// }
 
 coarse_channel bliss::integrate_drifts(coarse_channel cc_data, integrate_drifts_options options) {
     auto compute_device = cc_data.device();

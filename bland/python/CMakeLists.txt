@@ -22,12 +22,12 @@ target_link_libraries(pybland PUBLIC bland)
 # Check if PY_BUILD_CMAKE_MODULE_NAME is defined
 if(DEFINED PY_BUILD_CMAKE_MODULE_NAME)
     # Use the defined value
-    set(PYBLISS_MODULE_INSTALL_DIR ${PY_BUILD_CMAKE_MODULE_NAME})
+    set(PYBLAND_MODULE_INSTALL_DIR ${PY_BUILD_CMAKE_MODULE_NAME})
 else()
     # Set a default value (e.g., install in site-packages)
-    set(PYBLISS_MODULE_INSTALL_DIR "lib/python${PYTHON_VERSION}/site-packages")
+    set(PYBLAND_MODULE_INSTALL_DIR "lib/python${PYTHON_VERSION}/site-packages/blissdedrift")
 endif()
 
 install(TARGETS pybland
         COMPONENT python_modules
-        LIBRARY DESTINATION ${PYBLISS_MODULE_INSTALL_DIR})
+        LIBRARY DESTINATION ${PYBLAND_MODULE_INSTALL_DIR})

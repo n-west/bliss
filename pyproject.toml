@@ -67,3 +67,13 @@ mode = "symlink"  # Choose the desired mode (wrapper, hook, or symlink)
 [tool.py-build-cmake.stubgen]
 args = ["-v"]
 
+[tool.cibuildwheel]
+
+skip="*musllinux*"
+build="cp*-*64"
+before-all="python -m pip install py-build-cmake~=0.2.0a7 cmake~=3.29.0 ninja"
+
+[tool.cibuildwheel.linux]
+before-all="(yum install -y fftw-devel lz4-devel && curl -s -L https://hdf-wordpress-1.s3.amazonaws.com/wp-content/uploads/manual/HDF5/HDF5_1_14_3/src/CMake-hdf5-1.14.3.tar.gz  | tar xz -C /tmp && cmake -DCMAKE_INSTALL_PREFIX=/usr/local -S /tmp/CMake-hdf5-1.14.3/hdf5-1.14.3 -B hdf5-build -C /tmp/CMake-hdf5-1.14.3/hdf5-1.14.3/config/cmake/cacheinit.cmake -DHDF5_BUILD_JAVA=OFF -DHDF5_BUILD_FORTRAN=OFF -DHDF5_ALLOW_EXTERNAL_SUPPORT=git && cmake --build hdf5-build -j $(nproc) --config Release && cmake --install hdf5-build && curl -s -L https://github.com/nexusformat/HDF5-External-Filter-Plugins/archive/refs/tags/v0.1.0.tar.gz | tar xz -C /tmp && cmake -DCMAKE_INSTALL_PREFIX=/project/bliss/python/blissdedrift -S /tmp/HDF5-External-Filter-Plugins-0.1.0 -B filter-plugins-build -DENABLE_BITSHUFFLE_PLUGIN=yes -DENABLE_LZ4_PLUGIN=no -DENABLE_BZIP2_PLUGIN=no && cmake --build filter-plugins-build -j $(nproc) --config Release && cmake --install filter-plugins-build); if [[ '${CUDA_VER}' != 'none' ]]; then yum-config-manager --add-repo https://developer.download.nvidia.com/compute/cuda/repos/rhel7/x86_64/cuda-rhel7.repo; yum clean all; yum install -y cuda-toolkit-${CUDA_VER}.x86_64; export PATH=$PATH:/usr/local/cuda/bin; fi"
+
+

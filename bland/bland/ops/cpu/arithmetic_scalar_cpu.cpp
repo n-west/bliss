@@ -20,7 +20,7 @@ using namespace bland::cpu;
 template <typename T> // the scalar case (explicitly instantiated below)
 ndarray bland::cpu::add_cpu(ndarray a, T b) {
     auto out = ndarray(a.shape(), a.dtype(), a.device());
-    return dispatch_new3<scalar_op_impl_wrapper, T, elementwise_add_op_ts>(out, a, b);
+    return dispatch_nd_sc<scalar_op_impl_wrapper, T, elementwise_add_op_ts>(out, a, b);
 }
 template ndarray bland::cpu::add_cpu<float>(ndarray a, float b);
 // template ndarray bland::cpu::add_cpu<double>(ndarray a, double b);
@@ -38,7 +38,7 @@ template ndarray bland::cpu::add_cpu<uint32_t>(ndarray a, uint32_t b);
 template <typename T> // the scalar case (explicitly instantiated below)
 ndarray bland::cpu::subtract_cpu(ndarray a, T b) {
     auto out = ndarray(a.shape(), a.dtype(), a.device());
-    return dispatch_new3<scalar_op_impl_wrapper, T, elementwise_subtract_op_ts>(out, a, b);
+    return dispatch_nd_sc<scalar_op_impl_wrapper, T, elementwise_subtract_op_ts>(out, a, b);
 }
 template ndarray bland::cpu::subtract_cpu<float>(ndarray a, float b);
 // template ndarray bland::cpu::subtract_cpu<double>(ndarray a, double b);
@@ -55,7 +55,7 @@ template ndarray bland::cpu::subtract_cpu<uint32_t>(ndarray a, uint32_t b);
 template <typename T> // the scalar case (explicitly instantiated below)
 ndarray bland::cpu::multiply_cpu(ndarray a, T b) {
     auto out = ndarray(a.shape(), a.dtype(), a.device());
-    return dispatch_new3<scalar_op_impl_wrapper, T, elementwise_multiply_op_ts>(out, a, b);
+    return dispatch_nd_sc<scalar_op_impl_wrapper, T, elementwise_multiply_op_ts>(out, a, b);
 }
 
 template ndarray bland::cpu::multiply_cpu<float>(ndarray a, float b);
@@ -73,7 +73,7 @@ template ndarray bland::cpu::multiply_cpu<uint32_t>(ndarray a, uint32_t b);
 template <typename T> // the scalar case (explicitly instantiated below)
 ndarray bland::cpu::divide_cpu(ndarray a, T b) {
     auto out = ndarray(a.shape(), a.dtype(), a.device());
-    return dispatch_new3<scalar_op_impl_wrapper, T, elementwise_divide_op_ts>(out, a, b);
+    return dispatch_nd_sc<scalar_op_impl_wrapper, T, elementwise_divide_op_ts>(out, a, b);
 }
 template ndarray bland::cpu::divide_cpu<float>(ndarray a, float b);
 // template ndarray bland::cpu::divide_cpu<double>(ndarray a, double b);

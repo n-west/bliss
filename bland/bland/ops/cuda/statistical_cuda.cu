@@ -353,6 +353,11 @@ __global__ void mean_stddev_impl(float* mean_out_data, int64_t* mean_out_shape, 
         flattened_work_item /= mean_out_shape[dim];
     }
     flattened_work_item = outer_workid;
+    for (int dim = stddev_out_ndim - 1; dim >= 0; --dim) {
+        stddev_out_index[dim] = flattened_work_item % mean_out_shape[dim];
+        flattened_work_item /= stddev_out_shape[dim];
+    }
+    flattened_work_item = outer_workid;
     for (int dim = a_ndim - 1; dim >= 0; --dim) {
         bool reduce_this_dim = false;
         for (int ra=0; ra < nreduced_dim; ++ra) {
@@ -455,8 +460,10 @@ __global__ void mean_stddev_impl(float* mean_out_data, int64_t* mean_out_shape, 
         }
 
         int64_t out_linear_index = 0;
+        int64_t stddev_out_linear_index = 0;
         for (int dim = 0; dim < mean_out_ndim; ++dim) {
             out_linear_index += mean_out_index[dim] * mean_out_strides[dim];
+            stddev_out_linear_index += stddev_out_index[dim] * stddev_out_strides[dim];
         }
 
         // Normalize accumulated inputs as needed.
@@ -479,7 +486,7 @@ __global__ void mean_stddev_impl(float* mean_out_data, int64_t* mean_out_shape, 
             auto diff = (s2data[0] - sdata[0]*sdata[0]);
             diff = max((in_datatype)0, diff);
             mean_out_data[out_linear_index] = static_cast<out_datatype>(sdata[0]);
-            stddev_out_data[out_linear_index] = static_cast<out_datatype>(sqrt(diff));
+            stddev_out_data[stddev_out_linear_index] = static_cast<out_datatype>(sqrt(diff));
         }
 
         increment_size = gridDim.x;
@@ -491,6 +498,15 @@ __global__ void mean_stddev_impl(float* mean_out_data, int64_t* mean_out_shape, 
             } else {
                 increment_size = mean_out_index[dim] / mean_out_shape[dim];
                 mean_out_index[dim] = mean_out_index[dim] % mean_out_shape[dim];
+            }
+        }
+        for (int dim = stddev_out_ndim - 1; dim >= 0; --dim) {
+            stddev_out_index[dim] += increment_size;
+            if (stddev_out_index[dim] < stddev_out_shape[dim]) {
+                break;
+            } else {
+                increment_size = stddev_out_index[dim] / stddev_out_shape[dim];
+                stddev_out_index[dim] = stddev_out_index[dim] % stddev_out_shape[dim];
             }
         }
 
@@ -975,9 +991,9 @@ __global__ void mean_stddev_impl(float* mean_out_data, int64_t* mean_out_shape, 
 /**
  * max,...
  */
-template <typename datatype, comparison_reductiontype Op>
-__global__ void comparison_reduction_impl(datatype* out_data, int64_t* out_shape, int64_t* out_strides, int64_t out_ndim, int64_t out_numel,
-                        datatype* a_data, int64_t* a_shape, int64_t* a_strides, int64_t a_ndim,
+template <typename out_datatype, comparison_reductiontype Op>
+__global__ void comparison_reduction_impl(out_datatype* out_data, int64_t* out_shape, int64_t* out_strides, int64_t out_ndim, int64_t out_numel,
+                        out_datatype* a_data, int64_t* a_shape, int64_t* a_strides, int64_t a_ndim,
                         // uint8_t* mask_data, int64_t* mask_shape, int64_t* mask_strides, int64_t mask_ndim,
                         int64_t* reduced_axes, int64_t nreduced_dim, int64_t reduction_factor) {
     // A good primer on reduction kernels: https://developer.download.nvidia.com/assets/cuda/files/reduction.pdf
@@ -990,7 +1006,7 @@ __global__ void comparison_reduction_impl(datatype* out_data, int64_t* out_shape
     // to hold its stat
     // Break that shared memory up in to appropriate chunks easily indexed by smem
     extern __shared__ char shared_memory[];
-    datatype* sdata = reinterpret_cast<datatype*>(shared_memory);
+    out_datatype* sdata = reinterpret_cast<out_datatype*>(shared_memory);
     // where do we initialize_sdata?
 
     // datatype sdata_c = 0; // need this to be min
@@ -1029,7 +1045,7 @@ __global__ void comparison_reduction_impl(datatype* out_data, int64_t* out_shape
     for (int64_t i = outer_workid; i < numel; i+=outer_gridsize) {
         // Reset accumulators
         // sdata[tid] = 0; // Initialize to datatype min value
-        sdata[tid] = ::cuda::std::numeric_limits<datatype>::lowest();
+        sdata[tid] = ::cuda::std::numeric_limits<out_datatype>::lowest();
         // scount[tid] = 0;
         // Deep copy the input index which is advancing over non-reduced inputs
         // to reduced_nd_index which will be used in inner loop to advance through
@@ -1177,7 +1193,7 @@ __global__ void comparison_reduction_impl(datatype* out_data, int64_t* out_shape
             //     // sum
             //     out_data[out_linear_index] = static_cast<out_datatype>(sdata[0]);
             // }
-            out_data[out_linear_index] = static_cast<datatype>(sdata[0]);
+            out_data[out_linear_index] = static_cast<out_datatype>(sdata[0]);
         }
 
         increment_size = gridDim.x;
@@ -1360,9 +1376,9 @@ struct statistical_launch_wrapper {
 
 template <comparison_reductiontype Reduction>
 struct comparison_reduction_launch_wrapper {
-    template <typename datatype>
+    template <typename out_datatype, typename in_datatype>
     static inline ndarray call(ndarray out, const ndarray &a, std::vector<int64_t> reduced_axes) {
-        auto       out_data  = out.data_ptr<datatype>();
+        auto       out_data  = out.data_ptr<out_datatype>();
         const auto out_offset = out.offsets();
         const auto out_shape = out.shape();
         const auto out_strides = out.strides();
@@ -1371,7 +1387,7 @@ struct comparison_reduction_launch_wrapper {
         thrust::device_vector<int64_t> dev_out_strides(out_strides.begin(), out_strides.end());
 
         auto a_shape = a.shape();
-        auto a_data = a.data_ptr<datatype>();
+        auto a_data = a.data_ptr<in_datatype>();
         const auto a_offset  = a.offsets();
         const auto a_strides = a.strides();
 
@@ -1388,7 +1404,7 @@ struct comparison_reduction_launch_wrapper {
         cudaGetDeviceProperties(&props, a.device().device_id);
 
         int block_size = 512;
-        int required_smem_per_thread = sizeof(datatype);
+        int required_smem_per_thread = sizeof(out_datatype);
         if (reduced_elements < block_size) {
             // Reduce to a block size that is a power of 2 but less than number of items that need reducing
             block_size = reduced_elements | (reduced_elements >> 1);
@@ -1401,7 +1417,7 @@ struct comparison_reduction_launch_wrapper {
         auto out_numel = out.numel();
         int num_blocks = std::min<int64_t>(1024, out_numel);
         int smem_per_block = required_smem_per_thread * block_size;
-        comparison_reduction_impl<datatype, Reduction><<<num_blocks, block_size, smem_per_block>>>(out_data, thrust::raw_pointer_cast(dev_out_shape.data()), thrust::raw_pointer_cast(dev_out_strides.data()), dev_out_shape.size(), out_numel,
+        comparison_reduction_impl<out_datatype, Reduction><<<num_blocks, block_size, smem_per_block>>>(out_data, thrust::raw_pointer_cast(dev_out_shape.data()), thrust::raw_pointer_cast(dev_out_strides.data()), dev_out_shape.size(), out_numel,
                                                                 a_data, thrust::raw_pointer_cast(dev_a_shape.data()), thrust::raw_pointer_cast(dev_a_strides.data()), dev_a_shape.size(),
                                                                 thrust::raw_pointer_cast(dev_reduced_axes.data()), dev_reduced_axes.size(), reduced_elements
                                                                 );
@@ -1571,32 +1587,33 @@ std::pair<ndarray, ndarray> mean_stddev_wrapper(ndarray mean_out, ndarray stddev
 
 
 ndarray bland::cuda::max(const ndarray &a, ndarray &out, std::vector<int64_t> reduced_axes) {
-    return dispatch_new4<comparison_reduction_launch_wrapper<comparison_reductiontype::max>>(out, a, reduced_axes);
+    // return dispatch_new4<comparison_reduction_launch_wrapper<comparison_reductiontype::max>>(out, a, reduced_axes);
+    return constrained_dispatch_nd<Constraints::NoInt | Constraints::NoUInt, comparison_reduction_launch_wrapper<comparison_reductiontype::max>>(out, a, reduced_axes);
 }
 
 
 ndarray bland::cuda::sum(const ndarray &a, ndarray &out, std::vector<int64_t> reduced_axes) {
-    return dispatch_new<statistical_launch_wrapper<reductiontype::sum>>(out, a, reduced_axes);
+    return constrained_dispatch_nd<Constraints::NoInt | Constraints::NoUInt, statistical_launch_wrapper<reductiontype::sum>>(out, a, reduced_axes);
 }
 
 ndarray bland::cuda::masked_sum(const ndarray &a, const ndarray &mask, ndarray &out, std::vector<int64_t> reduced_axes) {
-    return dispatch_new<statistical_launch_wrapper<reductiontype::sum>>(out, a, mask, reduced_axes);
+    return constrained_dispatch_nd<Constraints::NoInt | Constraints::NoUInt, statistical_launch_wrapper<reductiontype::sum>>(out, a, mask, reduced_axes);
 }
 
 ndarray bland::cuda::mean(const ndarray &a, ndarray &out, std::vector<int64_t> reduced_axes) {
-    return dispatch_new<statistical_launch_wrapper<reductiontype::mean>>(out, a, reduced_axes);
+    return constrained_dispatch_nd<Constraints::NoInt | Constraints::NoUInt, statistical_launch_wrapper<reductiontype::mean>>(out, a, reduced_axes);
 }
 
 ndarray bland::cuda::masked_mean(const ndarray &a, const ndarray &mask, ndarray &out, std::vector<int64_t> reduced_axes) {
-    return dispatch_new<statistical_launch_wrapper<reductiontype::mean>>(out, a, mask, reduced_axes);
+    return constrained_dispatch_nd<Constraints::NoInt | Constraints::NoUInt, statistical_launch_wrapper<reductiontype::mean>>(out, a, mask, reduced_axes);
 }
 
 ndarray bland::cuda::stddev(const ndarray &a, ndarray &out, std::vector<int64_t> reduced_axes) {
-    return dispatch_new<statistical_launch_wrapper<reductiontype::stddev>>(out, a, reduced_axes);
+    return constrained_dispatch_nd<Constraints::NoInt | Constraints::NoUInt, statistical_launch_wrapper<reductiontype::stddev>>(out, a, reduced_axes);
 }
 
 ndarray bland::cuda::masked_stddev(const ndarray &a, const ndarray &mask, ndarray &out, std::vector<int64_t> reduced_axes) {
-    return dispatch_new<statistical_launch_wrapper<reductiontype::stddev>>(out, a, mask, reduced_axes);
+    return constrained_dispatch_nd<Constraints::NoInt | Constraints::NoUInt, statistical_launch_wrapper<reductiontype::stddev>>(out, a, mask, reduced_axes);
 }
 
 std::pair<ndarray, ndarray> bland::cuda::mean_stddev(const ndarray &a, ndarray &out_mean, ndarray &out_stddev, std::vector<int64_t> reduced_axes) {
@@ -1608,11 +1625,11 @@ std::pair<ndarray, ndarray> bland::cuda::masked_mean_stddev(const ndarray &a, co
 }
 
 ndarray bland::cuda::var(const ndarray &a, ndarray &out, std::vector<int64_t> reduced_axes) {
-    return dispatch_new<statistical_launch_wrapper<reductiontype::var>>(out, a, reduced_axes);
+    return constrained_dispatch_nd<Constraints::NoInt | Constraints::NoUInt, statistical_launch_wrapper<reductiontype::var>>(out, a, reduced_axes);
 }
 
 ndarray bland::cuda::masked_var(const ndarray &a, const ndarray &mask, ndarray &out, std::vector<int64_t> reduced_axes) {
-    return dispatch_new<statistical_launch_wrapper<reductiontype::var>>(out, a, mask, reduced_axes);
+    return constrained_dispatch_nd<Constraints::NoInt | Constraints::NoUInt, statistical_launch_wrapper<reductiontype::var>>(out, a, mask, reduced_axes);
 }
 
 int64_t bland::cuda::count_true(ndarray x) {

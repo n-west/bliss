@@ -22,7 +22,7 @@ using namespace bland::cuda;
 template <typename T> // the scalar case (explicitly instantiated below)
 ndarray bland::cuda::add_cuda(ndarray a, T b) {
     auto out = ndarray(a.shape(), a.dtype(), a.device());
-    return dispatch_new3<scalar_op_impl_wrapper_cuda, T, elementwise_add_op_ts>(out, a, b);
+    return dispatch_nd_sc<scalar_op_impl_wrapper_cuda, T, elementwise_add_op_ts>(out, a, b);
 }
 template ndarray bland::cuda::add_cuda<float>(ndarray a, float b);
 // template ndarray bland::cuda::add_cuda<double>(ndarray a, double b);
@@ -40,7 +40,7 @@ template ndarray bland::cuda::add_cuda<uint32_t>(ndarray a, uint32_t b);
 template <typename T> // the scalar case (explicitly instantiated below)
 ndarray bland::cuda::subtract_cuda(ndarray a, T b) {
     auto out = ndarray(a.shape(), a.dtype(), a.device());
-    return dispatch_new3<scalar_op_impl_wrapper_cuda, T, elementwise_subtract_op_ts>(out, a, b);
+    return dispatch_nd_sc<scalar_op_impl_wrapper_cuda, T, elementwise_subtract_op_ts>(out, a, b);
 }
 template ndarray bland::cuda::subtract_cuda<float>(ndarray a, float b);
 // template ndarray bland::cuda::subtract_cuda<double>(ndarray a, double b);
@@ -57,7 +57,7 @@ template ndarray bland::cuda::subtract_cuda<uint32_t>(ndarray a, uint32_t b);
 template <typename T> // the scalar case (explicitly instantiated below)
 ndarray bland::cuda::multiply_cuda(ndarray a, T b) {
     auto out = ndarray(a.shape(), a.dtype(), a.device());
-    return dispatch_new3<scalar_op_impl_wrapper_cuda, T, elementwise_multiply_op_ts>(out, a, b);
+    return dispatch_nd_sc<scalar_op_impl_wrapper_cuda, T, elementwise_multiply_op_ts>(out, a, b);
 }
 
 template ndarray bland::cuda::multiply_cuda<float>(ndarray a, float b);
@@ -75,7 +75,7 @@ template ndarray bland::cuda::multiply_cuda<uint32_t>(ndarray a, uint32_t b);
 template <typename T> // the scalar case (explicitly instantiated below)
 ndarray bland::cuda::divide_cuda(ndarray a, T b) {
     auto out = ndarray(a.shape(), a.dtype(), a.device());
-    return dispatch_new3<scalar_op_impl_wrapper_cuda, T, elementwise_divide_op_ts>(out, a, b);
+    return dispatch_nd_sc<scalar_op_impl_wrapper_cuda, T, elementwise_divide_op_ts>(out, a, b);
 }
 template ndarray bland::cuda::divide_cuda<float>(ndarray a, float b);
 // template ndarray bland::cuda::divide_cuda<double>(ndarray a, double b);
