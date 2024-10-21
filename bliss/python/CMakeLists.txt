@@ -53,8 +53,14 @@ if(DEFINED PY_BUILD_CMAKE_MODULE_NAME)
   set(PYBLISS_MODULE_INSTALL_DIR ${PY_BUILD_CMAKE_MODULE_NAME})
 else()
   # Set a default value (e.g., install in site-packages)
-  set(PYBLISS_MODULE_INSTALL_DIR "lib/python${PYTHON_VERSION}/site-packages")
+  set(PYBLISS_MODULE_INSTALL_DIR "${CMAKE_INSTALL_PREFIX}/lib/python${PYTHON_VERSION}/site-packages/blissdedrift")
 endif()
+
+install(
+  DIRECTORY blissdedrift
+  COMPONENT python_package
+  DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/python${PYTHON_VERSION}/site-packages/"
+  )
 
 install(
   TARGETS pybliss

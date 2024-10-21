@@ -19,14 +19,14 @@ template <typename L, typename R>
 ndarray bland::cuda::greater_than(L lhs, R rhs) {
     if constexpr (std::is_arithmetic<L>::value) {
         auto out = ndarray(rhs.shape(), ndarray::datatype::uint8, rhs.device());
-        return dispatch_new3<scalar_op_impl_wrapper_cuda, uint8_t, L, greater_than_impl>(out, rhs, lhs);
+        return constrained_dispatch_nd_sc<Constraints::None, scalar_op_impl_wrapper_cuda, uint8_t, L, greater_than_impl>(out, rhs, lhs);
     } else if constexpr (std::is_arithmetic<R>::value) {
         auto out = ndarray(lhs.shape(), ndarray::datatype::uint8, lhs.device());
-        return dispatch_new3<scalar_op_impl_wrapper_cuda, uint8_t, R, greater_than_impl>(out, lhs, rhs);
+        return constrained_dispatch_nd_sc<Constraints::None, scalar_op_impl_wrapper_cuda, uint8_t, R, greater_than_impl>(out, lhs, rhs);
     } else {
         // TODO: more sanity checking...
         auto out = ndarray(lhs.shape(), ndarray::datatype::uint8, lhs.device());
-        return dispatch<elementwise_binary_op_impl_wrapper_cuda<greater_than_impl>, uint8_t>(out, lhs, rhs);
+        return constrained_dispatch<Constraints::None, elementwise_binary_op_impl_wrapper_cuda<greater_than_impl>, uint8_t>(out, lhs, rhs);
     }
 }
 
@@ -66,14 +66,14 @@ template <typename L, typename R>
 ndarray bland::cuda::greater_than_equal_to(L lhs, R rhs) {
     if constexpr (std::is_arithmetic<L>::value) {
         auto out = ndarray(rhs.shape(), ndarray::datatype::uint8, rhs.device());
-        return dispatch_new3<scalar_op_impl_wrapper_cuda, uint8_t, L, greater_than_equal_to_impl>(out, rhs, lhs);
+        return constrained_dispatch_nd_sc<Constraints::None, scalar_op_impl_wrapper_cuda, uint8_t, L, greater_than_equal_to_impl>(out, rhs, lhs);
     } else if constexpr (std::is_arithmetic<R>::value) {
         auto out = ndarray(lhs.shape(), ndarray::datatype::uint8, lhs.device());
-        return dispatch_new3<scalar_op_impl_wrapper_cuda, uint8_t, R, greater_than_equal_to_impl>(out, lhs, rhs);
+        return constrained_dispatch_nd_sc<Constraints::None, scalar_op_impl_wrapper_cuda, uint8_t, R, greater_than_equal_to_impl>(out, lhs, rhs);
     } else {
         // TODO: more sanity checking...
         auto out = ndarray(lhs.shape(), ndarray::datatype::uint8, lhs.device());
-        return dispatch<elementwise_binary_op_impl_wrapper_cuda<greater_than_equal_to_impl>, uint8_t>(out, lhs, rhs);
+        return constrained_dispatch<Constraints::None, elementwise_binary_op_impl_wrapper_cuda<greater_than_equal_to_impl>, uint8_t>(out, lhs, rhs);
     }
 }
 
@@ -110,14 +110,14 @@ template <typename L, typename R>
 ndarray bland::cuda::less_than(L lhs, R rhs) {
     if constexpr (std::is_arithmetic<L>::value) {
         auto out = ndarray(rhs.shape(), ndarray::datatype::uint8, rhs.device());
-        return dispatch_new3<scalar_op_impl_wrapper_cuda, uint8_t, L, less_than_impl>(out, rhs, lhs);
+        return constrained_dispatch_nd_sc<Constraints::None, scalar_op_impl_wrapper_cuda, uint8_t, L, less_than_impl>(out, rhs, lhs);
     } else if constexpr (std::is_arithmetic<R>::value) {
         auto out = ndarray(lhs.shape(), ndarray::datatype::uint8, lhs.device());
-        return dispatch_new3<scalar_op_impl_wrapper_cuda, uint8_t, R, less_than_impl>(out, lhs, rhs);
+        return constrained_dispatch_nd_sc<Constraints::None, scalar_op_impl_wrapper_cuda, uint8_t, R, less_than_impl>(out, lhs, rhs);
     } else {
         // TODO: more sanity checking...
         auto out = ndarray(lhs.shape(), ndarray::datatype::uint8, lhs.device());
-        return dispatch<elementwise_binary_op_impl_wrapper_cuda<less_than_impl>, uint8_t>(out, lhs, rhs);
+        return constrained_dispatch<Constraints::None, elementwise_binary_op_impl_wrapper_cuda<less_than_impl>, uint8_t>(out, lhs, rhs);
     }
 }
 
@@ -154,14 +154,14 @@ template <typename L, typename R>
 ndarray bland::cuda::less_than_equal_to(L lhs, R rhs) {
     if constexpr (std::is_arithmetic<L>::value) {
         auto out = ndarray(rhs.shape(), ndarray::datatype::uint8, rhs.device());
-        return dispatch_new3<scalar_op_impl_wrapper_cuda, uint8_t, L, less_than_equal_to_impl>(out, rhs, lhs);
+        return constrained_dispatch_nd_sc<Constraints::None, scalar_op_impl_wrapper_cuda, uint8_t, L, less_than_equal_to_impl>(out, rhs, lhs);
     } else if constexpr (std::is_arithmetic<R>::value) {
         auto out = ndarray(lhs.shape(), ndarray::datatype::uint8, lhs.device());
-        return dispatch_new3<scalar_op_impl_wrapper_cuda, uint8_t, R, less_than_equal_to_impl>(out, lhs, rhs);
+        return constrained_dispatch_nd_sc<Constraints::None, scalar_op_impl_wrapper_cuda, uint8_t, R, less_than_equal_to_impl>(out, lhs, rhs);
     } else {
         // TODO: more sanity checking...
         auto out = ndarray(lhs.shape(), ndarray::datatype::uint8, lhs.device());
-        return dispatch<elementwise_binary_op_impl_wrapper_cuda<less_than_equal_to_impl>, uint8_t>(out, lhs, rhs);
+        return constrained_dispatch<Constraints::None, elementwise_binary_op_impl_wrapper_cuda<less_than_equal_to_impl>, uint8_t>(out, lhs, rhs);
     }
 }
 
@@ -197,15 +197,17 @@ template ndarray bland::cuda::less_than_equal_to<int32_t, ndarray>(int32_t lhs, 
 template <typename L, typename R>
 ndarray bland::cuda::logical_and(L lhs, R rhs) {
     if constexpr (std::is_arithmetic<L>::value) {
+        //static_assert(!std::is_floating_point_v<L>, "Cannot perform logical_and (&) with floating point array");
         auto out = ndarray(rhs.shape(), ndarray::datatype::uint8, rhs.device());
-        return dispatch_new3<scalar_op_impl_wrapper_cuda, uint8_t, L, logical_and_impl>(out, rhs, lhs);
+        return constrained_dispatch_nd_sc<Constraints::NoFloat, scalar_op_impl_wrapper_cuda, uint8_t, L, logical_and_impl>(out, rhs, lhs);
     } else if constexpr (std::is_arithmetic<R>::value) {
+        //static_assert(!std::is_floating_point_v<R>, "Cannot perform logical_and (&) with floating point array");
         auto out = ndarray(lhs.shape(), ndarray::datatype::uint8, lhs.device());
-        return dispatch_new3<scalar_op_impl_wrapper_cuda, uint8_t, R, logical_and_impl>(out, lhs, rhs);
+        return constrained_dispatch_nd_sc<Constraints::NoFloat, scalar_op_impl_wrapper_cuda, uint8_t, R, logical_and_impl>(out, lhs, rhs);
     } else {
         // TODO: more sanity checking...
         auto out = ndarray(lhs.shape(), ndarray::datatype::uint8, lhs.device());
-        return dispatch<elementwise_binary_op_impl_wrapper_cuda<logical_and_impl>, uint8_t>(out, lhs, rhs);
+        return constrained_dispatch<Constraints::NoFloat, elementwise_binary_op_impl_wrapper_cuda<logical_and_impl>, uint8_t>(out, lhs, rhs);
     }
 }
 
@@ -213,7 +215,7 @@ ndarray bland::cuda::logical_and(L lhs, R rhs) {
 template ndarray bland::cuda::logical_and<ndarray, ndarray>(ndarray lhs, ndarray rhs);
 
 // template ndarray bland::cuda::logical_and<ndarray, double>(ndarray lhs, double rhs);
-template ndarray bland::cuda::logical_and<ndarray, float>(ndarray lhs, float rhs);
+// template ndarray bland::cuda::logical_and<ndarray, float>(ndarray lhs, float rhs);
 template ndarray bland::cuda::logical_and<ndarray, uint8_t>(ndarray lhs, uint8_t rhs);
 // template ndarray bland::cuda::logical_and<ndarray, uint16_t>(ndarray lhs, uint16_t rhs);
 template ndarray bland::cuda::logical_and<ndarray, uint32_t>(ndarray lhs, uint32_t rhs);
@@ -224,7 +226,7 @@ template ndarray bland::cuda::logical_and<ndarray, int32_t>(ndarray lhs, int32_t
 // template ndarray bland::cuda::logical_and<ndarray, int64_t>(ndarray lhs, int64_t rhs);
 
 // template ndarray bland::cuda::logical_and<double, ndarray>(double lhs, ndarray rhs);
-template ndarray bland::cuda::logical_and<float, ndarray>(float lhs, ndarray rhs);
+// template ndarray bland::cuda::logical_and<float, ndarray>(float lhs, ndarray rhs);
 template ndarray bland::cuda::logical_and<uint8_t, ndarray>(uint8_t lhs, ndarray rhs);
 // template ndarray bland::cuda::logical_and<uint16_t, ndarray>(uint16_t lhs, ndarray rhs);
 template ndarray bland::cuda::logical_and<uint32_t, ndarray>(uint32_t lhs, ndarray rhs);
@@ -244,14 +246,14 @@ template <typename L, typename R>
 ndarray bland::cuda::equal_to(L lhs, R rhs) {
     if constexpr (std::is_arithmetic<L>::value) {
         auto out = ndarray(rhs.shape(), ndarray::datatype::uint8, rhs.device());
-        return dispatch_new3<scalar_op_impl_wrapper_cuda, uint8_t, L, equal_to_impl>(out, rhs, lhs);
+        return constrained_dispatch_nd_sc<Constraints::None, scalar_op_impl_wrapper_cuda, uint8_t, L, equal_to_impl>(out, rhs, lhs);
     } else if constexpr (std::is_arithmetic<R>::value) {
         auto out = ndarray(lhs.shape(), ndarray::datatype::uint8, lhs.device());
-        return dispatch_new3<scalar_op_impl_wrapper_cuda, uint8_t, R, equal_to_impl>(out, lhs, rhs);
+        return constrained_dispatch_nd_sc<Constraints::None, scalar_op_impl_wrapper_cuda, uint8_t, R, equal_to_impl>(out, lhs, rhs);
     } else {
         // TODO: more sanity checking...
         auto out = ndarray(lhs.shape(), ndarray::datatype::uint8, lhs.device());
-        return dispatch<elementwise_binary_op_impl_wrapper_cuda<equal_to_impl>, uint8_t>(out, lhs, rhs);
+        return constrained_dispatch<Constraints::None, elementwise_binary_op_impl_wrapper_cuda<equal_to_impl>, uint8_t>(out, lhs, rhs);
     }
 }
 

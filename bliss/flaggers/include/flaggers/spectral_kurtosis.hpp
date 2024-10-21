@@ -25,12 +25,12 @@ namespace bliss {
  * The non-averaged estimator (N=1) and background derivation can be found in
  * "Radio Frequency Interference Excision Using Spectral-Domain Statistics"
 */
-bland::ndarray flag_spectral_kurtosis(const bland::ndarray &data, int64_t N, int64_t M, float d=2, float lower_threshold=0.1, float upper_threshold=10);
+bland::ndarray flag_spectral_kurtosis(const bland::ndarray &data, int64_t N, int64_t M, float d=2, float lower_threshold=0.25, float upper_threshold=50);
 
 /**
  * Flag the filterbank data based on spectral kurtosis bounds and return the flagged filterbank
 */
-coarse_channel flag_spectral_kurtosis(coarse_channel channel_data, float lower_threshold=0.05f, float upper_threshold=0.05f, float d=2);
+coarse_channel flag_spectral_kurtosis(coarse_channel channel_data, float lower_threshold=0.05f, float upper_threshold=50.f, float d=2);
 
 /**
  * Flag the filterbank data based on spectral kurtosis bounds and return the flagged filterbank
@@ -38,16 +38,16 @@ coarse_channel flag_spectral_kurtosis(coarse_channel channel_data, float lower_t
  * TODO: make this work on *all* coarse channels in a filterbank, it might be useful to
  * defer computing perhaps with a future 
 */
-scan flag_spectral_kurtosis(scan fb_data, float lower_threshold=0.05f, float upper_threshold=0.05f, float d=2);
+scan flag_spectral_kurtosis(scan fb_data, float lower_threshold=0.25f, float upper_threshold=50.f, float d=2);
 
 /**
  * Flag all filterbanks in an observation target
 */
-observation_target flag_spectral_kurtosis(observation_target observations, float lower_threshold, float upper_threshold, float d=2);
+observation_target flag_spectral_kurtosis(observation_target observations, float lower_threshold=0.25f, float upper_threshold=50.f, float d=2);
 
 /**
  * Flag all filterbanks in the cadence with given SK estimate
 */
-cadence flag_spectral_kurtosis(cadence cadence_data, float lower_threshold=0.05f, float upper_threshold=0.05f, float d=2);
+cadence flag_spectral_kurtosis(cadence cadence_data, float lower_threshold=0.25f, float upper_threshold=50.f, float d=2);
 
 } // namespace bliss

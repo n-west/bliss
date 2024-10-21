@@ -43,13 +43,18 @@ struct equal_to_impl {
 
 struct logical_and_impl {
     // TODO: think about the Out type...
-    template <typename Out, typename A, typename B>
+    template <typename Out, typename A, typename B, 
+          typename = std::enable_if_t<!std::is_floating_point_v<A> && 
+                                      !std::is_floating_point_v<B> && 
+                                      !std::is_floating_point_v<Out>>>
+    //template <typename Out, typename A, typename B>
     static __device__ inline Out call(const A &a, const B &b) {
-        if constexpr (std::is_floating_point_v<A> || std::is_floating_point_v<B> || std::is_floating_point_v<Out>) {
-            // TODO: how to signal an error from device
-        } else {
-            return static_cast<Out>(a & b);
-        }
+        // if constexpr (std::is_floating_point_v<A> || std::is_floating_point_v<B> || std::is_floating_point_v<Out>) {
+        //     // TODO: how to signal an error from device
+        // } else {
+        //     return static_cast<Out>(a & b);
+        // }
+        return static_cast<Out>(a & b);
     }
 };
 } // namespace

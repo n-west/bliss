@@ -17,11 +17,11 @@
 void bind_pydrift_search(nb::module_ m) {
 
     // Integration / dedoppler methods
-    m.def("integrate_drifts", [](nb::ndarray<> spectrum, bliss::integrate_drifts_options options) {
-        auto bland_spectrum  = nb_to_bland(spectrum);
-        auto detection_plane = bliss::integrate_drifts(bland_spectrum, options);
-        return detection_plane;
-    });
+    // m.def("integrate_drifts", [](nb::ndarray<> spectrum, bliss::integrate_drifts_options options) {
+    //     auto bland_spectrum  = nb_to_bland(spectrum);
+    //     auto detection_plane = bliss::integrate_drifts(bland_spectrum, options);
+    //     return detection_plane;
+    // });
 
     m.def("integrate_drifts",
         nb::overload_cast<bliss::coarse_channel, bliss::integrate_drifts_options>(&bliss::integrate_drifts));

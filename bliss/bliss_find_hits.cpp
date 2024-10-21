@@ -47,6 +47,15 @@ int main(int argc, char *argv[]) {
     bliss::hit_search_options hit_search_options{.method = bliss::hit_search_methods::CONNECTED_COMPONENTS, .snr_threshold = 10.0f, .neighbor_l1_dist=7};
     std::string output_path = "";
     std::string output_format = "";
+    struct {
+        float filter_rolloff = 0.25;
+        float sk_low = 0.25;
+        float sk_high = 50;
+        float sk_d = 2;
+        int sigmaclip_iters = 5;
+        float sigmaclip_low = 3;
+        float sigmaclip_high = 4;
+    } flag_options;
     bool help = false;
     auto cli = (
         (
@@ -69,6 +78,17 @@ int main(int argc, char *argv[]) {
             (clipp::option("-m", "--min-rate") & clipp::value("min-rate").set(dedrift_options.low_rate)) % "Minimum drift rate (fourier bins)",
             (clipp::option("-rs", "--rate-step") & clipp::value("rate-step").set(dedrift_options.rate_step_size)) % "Fourier bins to step per search",
             (clipp::option("-M", "--max-rate") & clipp::value("max-rate").set(dedrift_options.high_rate)) % "Maximum drift rate (fourier bins)",
+
+            // Flagging
+            (clipp::option("--filter-rolloff") & clipp::value("filter_rolloff").set(flag_options.filter_rolloff)) % "Flagging a percentage of band edges",
+
+            (clipp::option("--sigmaclip-iters") & clipp::value("sigma clip iterations").set(flag_options.sigmaclip_iters)) % "Flagging sigmaclipping number of iterations",
+            (clipp::option("--sigmaclip-low") & clipp::value("sigma clip lower").set(flag_options.sigmaclip_low)) % "Flagging sigmaclipping lower threshold factor",
+            (clipp::option("--sigmaclip-high") & clipp::value("sigma clip high").set(flag_options.sigmaclip_high)) % "Flagging sigmaclipping upper threshold factor",
+
+            (clipp::option("--sk-low") & clipp::value("spectral kurtosis lower").set(flag_options.sk_low)) % "Flagging lower threshold for spectral kurtosis",
+            (clipp::option("--sk-high") & clipp::value("spectral kurtsosis high").set(flag_options.sk_high)) % "Flagging high threshold for spectral kurtosis",
+            (clipp::option("--sk-d") & clipp::value("spectral kurtosis d").set(flag_options.sk_d)) % "Flagging shape parameter for spectral kurtosis",
 
             // Hit search
             (clipp::option("--local-maxima") .set(hit_search_options.method, bliss::hit_search_methods::LOCAL_MAXIMA) |
@@ -98,11 +118,11 @@ int main(int argc, char *argv[]) {
     pipeline_object = bliss::normalize(pipeline_object);
     if (!channel_taps_path.empty()) {
         pipeline_object = bliss::equalize_passband_filter(pipeline_object, channel_taps_path);
+    } else {
+        pipeline_object = bliss::flag_filter_rolloff(pipeline_object, flag_options.filter_rolloff);
     }
-
-    pipeline_object = bliss::flag_filter_rolloff(pipeline_object, 0.25);
-    pipeline_object = bliss::flag_spectral_kurtosis(pipeline_object, 0.1, 25);
-    pipeline_object = bliss::flag_sigmaclip(pipeline_object, 3, 5, 5);
+    pipeline_object = bliss::flag_spectral_kurtosis(pipeline_object, flag_options.sk_low, flag_options.sk_high, flag_options.sk_d);
+    pipeline_object = bliss::flag_sigmaclip(pipeline_object, flag_options.sigmaclip_iters, flag_options.sigmaclip_low, flag_options.sigmaclip_high);
 
     pipeline_object = bliss::estimate_noise_power(
             pipeline_object,

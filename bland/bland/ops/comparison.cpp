@@ -308,7 +308,7 @@ ndarray bland::logical_and(L lhs, R rhs) {
 template ndarray bland::logical_and<ndarray, ndarray>(ndarray lhs, ndarray rhs);
 
 // template ndarray bland::logical_and<ndarray, double>(ndarray lhs, double rhs);
-template ndarray bland::logical_and<ndarray, float>(ndarray lhs, float rhs);
+// template ndarray bland::logical_and<ndarray, float>(ndarray lhs, float rhs);
 template ndarray bland::logical_and<ndarray, uint8_t>(ndarray lhs, uint8_t rhs);
 // template ndarray bland::logical_and<ndarray, uint16_t>(ndarray lhs, uint16_t rhs);
 template ndarray bland::logical_and<ndarray, uint32_t>(ndarray lhs, uint32_t rhs);
@@ -319,7 +319,7 @@ template ndarray bland::logical_and<ndarray, int32_t>(ndarray lhs, int32_t rhs);
 // template ndarray bland::logical_and<ndarray, int64_t>(ndarray lhs, int64_t rhs);
 
 // template ndarray bland::logical_and<double>(double lhs, ndarray rhs);
-template ndarray bland::logical_and<float>(float lhs, ndarray rhs);
+// template ndarray bland::logical_and<float>(float lhs, ndarray rhs);
 template ndarray bland::logical_and<uint8_t>(uint8_t lhs, ndarray rhs);
 // template ndarray bland::logical_and<uint16_t>(uint16_t lhs, ndarray rhs);
 template ndarray bland::logical_and<uint32_t>(uint32_t lhs, ndarray rhs);
@@ -342,7 +342,7 @@ bland::operator&(L lhs, R rhs) {
 template ndarray bland::operator&<ndarray, ndarray>(ndarray lhs, ndarray rhs);
 
 // template ndarray bland::operator&<ndarray, double>(ndarray lhs, double rhs);
-template ndarray bland::operator&<ndarray, float>(ndarray lhs, float rhs);
+// template ndarray bland::operator&<ndarray, float>(ndarray lhs, float rhs);
 template ndarray bland::operator&<ndarray, uint8_t>(ndarray lhs, uint8_t rhs);
 // template ndarray bland::operator&<ndarray, uint16_t>(ndarray lhs, uint16_t rhs);
 template ndarray bland::operator&<ndarray, uint32_t>(ndarray lhs, uint32_t rhs);
@@ -353,7 +353,7 @@ template ndarray bland::operator&<ndarray, int32_t>(ndarray lhs, int32_t rhs);
 // template ndarray bland::operator&<ndarray, int64_t>(ndarray lhs, int64_t rhs);
 
 // template ndarray bland::operator&<double, ndarray>(double lhs, ndarray rhs);
-template ndarray bland::operator&<float, ndarray>(float lhs, ndarray rhs);
+// template ndarray bland::operator&<float, ndarray>(float lhs, ndarray rhs);
 template ndarray bland::operator&<uint8_t, ndarray>(uint8_t lhs, ndarray rhs);
 // template ndarray bland::operator&<uint16_t, ndarray>(uint16_t lhs, ndarray rhs);
 template ndarray bland::operator&<uint32_t, ndarray>(uint32_t lhs, ndarray rhs);
