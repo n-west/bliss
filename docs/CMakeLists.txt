@@ -38,6 +38,7 @@ set(SPHINX_SOURCE ${CMAKE_CURRENT_SOURCE_DIR})
 set(SPHINX_BUILD ${CMAKE_CURRENT_BINARY_DIR}/docs/sphinx)
 
 add_custom_target(Sphinx ALL
+                    DEPENDS ${DOXYGEN_INDEX_FILE}
                     COMMAND
                     ${SPHINX_EXECUTABLE} -b html
                     -Dbreathe_projects.bliss=${DOXYGEN_OUTPUT_DIR}/xml
