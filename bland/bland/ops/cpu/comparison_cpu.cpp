@@ -19,10 +19,10 @@ template <typename L, typename R>
 ndarray bland::cpu::greater_than(L lhs, R rhs) {
     if constexpr (std::is_arithmetic<L>::value) {
         auto out = ndarray(rhs.shape(), ndarray::datatype::uint8, rhs.device());
-        return dispatch_new3<scalar_op_impl_wrapper, uint8_t, L, greater_than_impl>(out, rhs, lhs);
+        return dispatch_nd_sc<scalar_op_impl_wrapper, uint8_t, L, greater_than_impl>(out, rhs, lhs);
     } else if constexpr (std::is_arithmetic<R>::value) {
         auto out = ndarray(lhs.shape(), ndarray::datatype::uint8, lhs.device());
-        return dispatch_new3<scalar_op_impl_wrapper, uint8_t, R, greater_than_impl>(out, lhs, rhs);
+        return dispatch_nd_sc<scalar_op_impl_wrapper, uint8_t, R, greater_than_impl>(out, lhs, rhs);
     } else {
         // TODO: more sanity checking...
         auto out = ndarray(lhs.shape(), ndarray::datatype::uint8, lhs.device());
@@ -66,10 +66,10 @@ template <typename L, typename R>
 ndarray bland::cpu::greater_than_equal_to(L lhs, R rhs) {
     if constexpr (std::is_arithmetic<L>::value) {
         auto out = ndarray(rhs.shape(), ndarray::datatype::uint8, rhs.device());
-        return dispatch_new3<scalar_op_impl_wrapper, uint8_t, L, greater_than_equal_to_impl>(out, rhs, lhs);
+        return dispatch_nd_sc<scalar_op_impl_wrapper, uint8_t, L, greater_than_equal_to_impl>(out, rhs, lhs);
     } else if constexpr (std::is_arithmetic<R>::value) {
         auto out = ndarray(lhs.shape(), ndarray::datatype::uint8, lhs.device());
-        return dispatch_new3<scalar_op_impl_wrapper, uint8_t, R, greater_than_equal_to_impl>(out, lhs, rhs);
+        return dispatch_nd_sc<scalar_op_impl_wrapper, uint8_t, R, greater_than_equal_to_impl>(out, lhs, rhs);
     } else {
         // TODO: more sanity checking...
         auto out = ndarray(lhs.shape(), ndarray::datatype::uint8, lhs.device());
@@ -110,10 +110,10 @@ template <typename L, typename R>
 ndarray bland::cpu::less_than(L lhs, R rhs) {
     if constexpr (std::is_arithmetic<L>::value) {
         auto out = ndarray(rhs.shape(), ndarray::datatype::uint8, rhs.device());
-        return dispatch_new3<scalar_op_impl_wrapper, uint8_t, L, less_than_impl>(out, rhs, lhs);
+        return dispatch_nd_sc<scalar_op_impl_wrapper, uint8_t, L, less_than_impl>(out, rhs, lhs);
     } else if constexpr (std::is_arithmetic<R>::value) {
         auto out = ndarray(lhs.shape(), ndarray::datatype::uint8, lhs.device());
-        return dispatch_new3<scalar_op_impl_wrapper, uint8_t, R, less_than_impl>(out, lhs, rhs);
+        return dispatch_nd_sc<scalar_op_impl_wrapper, uint8_t, R, less_than_impl>(out, lhs, rhs);
     } else {
         // TODO: more sanity checking...
         auto out = ndarray(lhs.shape(), ndarray::datatype::uint8, lhs.device());
@@ -154,10 +154,10 @@ template <typename L, typename R>
 ndarray bland::cpu::less_than_equal_to(L lhs, R rhs) {
     if constexpr (std::is_arithmetic<L>::value) {
         auto out = ndarray(rhs.shape(), ndarray::datatype::uint8, rhs.device());
-        return dispatch_new3<scalar_op_impl_wrapper, uint8_t, L, less_than_equal_to_impl>(out, rhs, lhs);
+        return dispatch_nd_sc<scalar_op_impl_wrapper, uint8_t, L, less_than_equal_to_impl>(out, rhs, lhs);
     } else if constexpr (std::is_arithmetic<R>::value) {
         auto out = ndarray(lhs.shape(), ndarray::datatype::uint8, lhs.device());
-        return dispatch_new3<scalar_op_impl_wrapper, uint8_t, R, less_than_equal_to_impl>(out, lhs, rhs);
+        return dispatch_nd_sc<scalar_op_impl_wrapper, uint8_t, R, less_than_equal_to_impl>(out, lhs, rhs);
     } else {
         // TODO: more sanity checking...
         auto out = ndarray(lhs.shape(), ndarray::datatype::uint8, lhs.device());
@@ -198,10 +198,10 @@ template <typename L, typename R>
 ndarray bland::cpu::logical_and(L lhs, R rhs) {
     if constexpr (std::is_arithmetic<L>::value) {
         auto out = ndarray(rhs.shape(), ndarray::datatype::uint8, rhs.device());
-        return dispatch_new3<scalar_op_impl_wrapper, uint8_t, L, logical_and_impl>(out, rhs, lhs);
+        return dispatch_nd_sc<scalar_op_impl_wrapper, uint8_t, L, logical_and_impl>(out, rhs, lhs);
     } else if constexpr (std::is_arithmetic<R>::value) {
         auto out = ndarray(lhs.shape(), ndarray::datatype::uint8, lhs.device());
-        return dispatch_new3<scalar_op_impl_wrapper, uint8_t, R, logical_and_impl>(out, lhs, rhs);
+        return dispatch_nd_sc<scalar_op_impl_wrapper, uint8_t, R, logical_and_impl>(out, lhs, rhs);
     } else {
         // TODO: more sanity checking...
         auto out = ndarray(lhs.shape(), ndarray::datatype::uint8, lhs.device());
@@ -245,10 +245,10 @@ template <typename L, typename R>
 ndarray bland::cpu::equal_to(L lhs, R rhs) {
     if constexpr (std::is_arithmetic<L>::value) {
         auto out = ndarray(rhs.shape(), ndarray::datatype::uint8, rhs.device());
-        return dispatch_new3<scalar_op_impl_wrapper, uint8_t, L, equal_to_impl>(out, rhs, lhs);
+        return dispatch_nd_sc<scalar_op_impl_wrapper, uint8_t, L, equal_to_impl>(out, rhs, lhs);
     } else if constexpr (std::is_arithmetic<R>::value) {
         auto out = ndarray(lhs.shape(), ndarray::datatype::uint8, lhs.device());
-        return dispatch_new3<scalar_op_impl_wrapper, uint8_t, R, equal_to_impl>(out, lhs, rhs);
+        return dispatch_nd_sc<scalar_op_impl_wrapper, uint8_t, R, equal_to_impl>(out, lhs, rhs);
     } else {
         // TODO: more sanity checking...
         auto out = ndarray(lhs.shape(), ndarray::datatype::uint8, lhs.device());

@@ -1,0 +1,30 @@
+package:
+    name: blissdedrift
+    version: 0.0.1
+
+build:
+    number: 0
+    string: cu{{ cuda_version }}_py{{ PY_VER }}
+
+source:
+    path: ../
+
+requirements:
+    build:
+        - {{ compiler('cxx') }}
+        - cuda-nvcc {{ cuda_version }}
+        - cmake
+        - make
+    host:
+        - hdf5
+        - fftw
+        - cuda {{ cuda_version }}
+        - python
+    run:
+        - hdf5
+        - fftw
+
+about:
+    summary: technosignature search
+
+
