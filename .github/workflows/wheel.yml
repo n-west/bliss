@@ -68,11 +68,14 @@ jobs:
   upload:
     name: Upload to PyPi and create release
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        cuda_ver: ['none', '11.4', '12.4']
     needs: [build_wheels]
     steps:
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v4
         with:
-          name: artifact
+          name: dist-${{ matrix.cuda_ver }}
           path: dist
 
       - name: Publish package
