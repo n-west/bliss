@@ -1,10 +1,13 @@
+{% set build_number = 1 %}
+
+
 package:
     name: blissdedrift
     version: 0.0.1
 
 build:
-    number: 0
-    string: cu{{ cuda_version }}_py{{ PY_VER }}
+    number: {{ build_number }}
+    string: cu{{ cuda_version }}_py{{ PY_VER }}_hdf{{ hdf5 }}_h{{ PKG_HASH }}_{{ build_number }}
 
 source:
     path: ../
@@ -23,8 +26,13 @@ requirements:
     run:
         - hdf5
         - fftw
+        - python
+        - cuda {{ cuda_version }}
 
 about:
     summary: technosignature search
+    license: MIT
+    home: https://github.com/n-west/blissdedrift
 
-
+extras:
+    maintainer: nathanwest

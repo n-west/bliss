@@ -103,7 +103,7 @@ if(CCACHE_PROGRAM)
 endif()
 
 # HDF5 set(HDF5_USE_STATIC_LIBRARIES ON)
-find_package(HDF5 REQUIRED COMPONENTS CXX)
+find_package(HDF5 1.10 REQUIRED COMPONENTS CXX)
 set_package_properties(
   HDF5 PROPERTIES
   URL "https://www.hdfgroup.org/solutions/hdf5/"
