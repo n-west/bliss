@@ -17,3 +17,19 @@ hdf5:
     - 1.10
     - 1.12
     - 1.14
+
+# Define valid combinations
+zip_keys:
+  - python
+  - hdf5
+
+# Specify valid combinations
+zip_values:
+  - [3.10, 1.12]
+  - [3.10, 1.14]
+  - [3.11, 1.12]
+  - [3.11, 1.14]
+  - [3.12, 1.12]
+  - [3.12, 1.14]
+  - [3.13, 1.12]
+  - [3.13, 1.14]
