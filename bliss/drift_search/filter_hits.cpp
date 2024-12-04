@@ -53,19 +53,10 @@ coarse_channel bliss::filter_hits(coarse_channel cc_with_hits, filter_options op
 
 
 scan bliss::filter_hits(scan scan_with_hits, filter_options options) {
-    // scan_with_hits.hits(filter_hits(scan_with_hits.hits(), options));
-    // iterate over all of the coarse channels, calling filter_hits per coarse channel
-    int number_coarse_channels = scan_with_hits.get_number_coarse_channels();
-    for (int cc_index = 0; cc_index < number_coarse_channels; ++cc_index) {
-        auto cc = scan_with_hits.peak_coarse_channel(cc_index);
-        if (cc != nullptr) {
-            try {
-                *cc = filter_hits(*cc, options);
-            } catch (const std::logic_error &e) {
-                fmt::print("WARN: caught exception ({}) while filtering hits from pipeline on coarse channel {}, this might indicate a bad pipeline that didn't produce hits\n", e.what(), cc_index);
-            }
-        }
-    }
+    scan_with_hits.add_coarse_channel_transform([options](coarse_channel cc) {
+        return filter_hits(cc, options);
+    });
+
     return scan_with_hits;
 }
 

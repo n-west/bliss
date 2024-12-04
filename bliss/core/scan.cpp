@@ -99,12 +99,12 @@ infer_number_coarse_channels(int number_fine_channels, double foff, double tsamp
 }
 
 scan::scan(std::map<int, std::shared_ptr<coarse_channel>> coarse_channels) {
-    _coarse_channels = std::make_shared<std::map<int, std::shared_ptr<bliss::coarse_channel> > >(coarse_channels);
+    _coarse_channels = coarse_channels;
     // Grab the first coarse channel
-    auto first_cc = _coarse_channels->at(0);
+    auto first_cc = _coarse_channels.at(0);
 
     // Use it to initialize a bunch of metadata
-    _num_coarse_channels = _coarse_channels->size();
+    _num_coarse_channels = _coarse_channels.size();
     _foff = first_cc->foff();
     _fch1 = first_cc->fch1();
     _nchans = first_cc->nchans() * _num_coarse_channels;
@@ -120,7 +120,7 @@ scan::scan(h5_filterbank_file fb_file, int num_fine_channels_per_coarse) {
     // about better deferal method that allows inferring channelization OR this version
     // _original_file_path = fb_file
     _h5_file_handle = std::make_shared<h5_filterbank_file>(fb_file);
-    _coarse_channels = std::make_shared<std::map<int, std::shared_ptr<coarse_channel>>>();
+    _coarse_channels = std::map<int, std::shared_ptr<coarse_channel>>();
     // double      fch1;
     _fch1 = fb_file.read_data_attr<double>("fch1");
     // double      foff;
@@ -217,7 +217,7 @@ std::shared_ptr<coarse_channel> bliss::scan::read_coarse_channel(int coarse_chan
     }
 
     auto global_offset_in_file = coarse_channel_index + _coarse_channel_offset;
-    if (_coarse_channels->find(global_offset_in_file) == _coarse_channels->end()) {
+    if (_coarse_channels.find(global_offset_in_file) == _coarse_channels.end()) {
         // This is expected to be [time, feed, freq]
         auto data_count = _h5_file_handle->get_data_shape();
         std::vector<int64_t> data_offset(3, 0);
@@ -229,12 +229,10 @@ std::shared_ptr<coarse_channel> bliss::scan::read_coarse_channel(int coarse_chan
         // fmt::print("DEBUG: reading data from coarse channel {} which translates to offset {} + count {}\n",
         //            global_offset_in_file,
         //            data_offset,
-        //            data_count);
-        auto data_reader = [h5_file_handle=this->_h5_file_handle, data_offset, data_count](){
-            auto data = h5_file_handle->read_data(data_offset, data_count);
-            return data;
+        auto data_reader = [h5_file_handle = this->_h5_file_handle, data_offset, data_count]() {
+            return h5_file_handle->read_data(data_offset, data_count);
         };
-        auto mask_reader = [h5_file_handle=this->_h5_file_handle, data_offset, data_count](){
+        auto mask_reader = [h5_file_handle = this->_h5_file_handle, data_offset, data_count]() {
             return h5_file_handle->read_mask(data_offset, data_count);
         };
 
@@ -261,11 +259,15 @@ std::shared_ptr<coarse_channel> bliss::scan::read_coarse_channel(int coarse_chan
                                                            _za_start,
                                                            global_offset_in_file);
         new_coarse->set_device(_device);
-        _coarse_channels->insert({global_offset_in_file, new_coarse});
+        _coarse_channels.insert({global_offset_in_file, new_coarse});
     }
-    auto cc = _coarse_channels->at(global_offset_in_file);
+    auto cc = _coarse_channels.at(global_offset_in_file);
     cc->set_device(_device);
-    return cc;
+    auto transformed_cc = *cc;
+    for (auto &transform : _coarse_channel_pipeline) {
+        transformed_cc = transform(transformed_cc);
+    }
+    return std::make_shared<coarse_channel>(transformed_cc);
 }
 
 
@@ -275,15 +277,22 @@ std::shared_ptr<coarse_channel> bliss::scan::peak_coarse_channel(int coarse_chan
     }
 
     auto global_offset_in_file = coarse_channel_index + _coarse_channel_offset;
-    if (_coarse_channels->find(global_offset_in_file) != _coarse_channels->end()) {
-        auto cc = _coarse_channels->at(global_offset_in_file);
+    if (_coarse_channels.find(global_offset_in_file) != _coarse_channels.end()) {
+        auto cc = _coarse_channels.at(global_offset_in_file);
         cc->set_device(_device);
-        return cc;
+        auto transformed_cc = *cc;
+        for (auto &transform : _coarse_channel_pipeline) {
+            transformed_cc = transform(transformed_cc);
+        }
+        return std::make_shared<coarse_channel>(transformed_cc);
     } else {
         return nullptr;
     }
 }
 
+void bliss::scan::add_coarse_channel_transform(std::function<coarse_channel(coarse_channel)> transform) {
+    _coarse_channel_pipeline.push_back(transform);
+}
 
 int bliss::scan::get_coarse_channel_with_frequency(double frequency) const {
     auto band_fraction = ((frequency - _fch1) / _foff / static_cast<double>(_nchans));
@@ -308,7 +317,7 @@ std::list<hit> bliss::scan::hits() {
     std::list<hit> all_hits;
     int            number_coarse_channels = get_number_coarse_channels();
     for (int cc_index = 0; cc_index < number_coarse_channels; ++cc_index) {
-        auto cc = peak_coarse_channel(cc_index);
+        auto cc = read_coarse_channel(cc_index);
         if (cc != nullptr) {
             try {
                 auto this_channel_hits = cc->hits();
@@ -336,7 +345,7 @@ void bliss::scan::set_device(bland::ndarray::dev &device, bool verbose) {
         }
     }
 
-    for (auto &[channel_index, cc] : *_coarse_channels) {
+    for (auto &[channel_index, cc] : _coarse_channels) {
         cc->set_device(device);
     }
 }
@@ -347,7 +356,7 @@ void bliss::scan::set_device(std::string_view dev_str, bool verbose) {
 }
 
 void bliss::scan::push_device() {
-    for (auto &[channel_index, cc] : *_coarse_channels) {
+    for (auto &[channel_index, cc] : _coarse_channels) {
         cc->set_device(_device);
         cc->push_device();
     }

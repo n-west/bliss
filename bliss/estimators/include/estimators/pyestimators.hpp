@@ -43,7 +43,7 @@ void bind_pyestimators(nb::module_ m) {
         return bliss::estimate_noise_power(nb_to_bland(arr), opts);
     });
     m.def("estimate_noise_power",
-          nb::overload_cast<bland::ndarray_deferred, bliss::noise_power_estimate_options>(&bliss::estimate_noise_power));
+          nb::overload_cast<bland::ndarray, bliss::noise_power_estimate_options>(&bliss::estimate_noise_power));
     m.def("estimate_noise_power",
           nb::overload_cast<bliss::coarse_channel, bliss::noise_power_estimate_options>(&bliss::estimate_noise_power));
     m.def("estimate_noise_power",

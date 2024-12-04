@@ -21,12 +21,8 @@ std::list<hit> bliss::hit_search(coarse_channel dedrifted_scan, hit_search_optio
 
     auto protohits = protohit_search(dedrifted_plane, noise_estimate, options);
 
-    // We have to be on cpu for now
-    dedrifted_scan.set_device("cpu");
-    dedrifted_scan.push_device();
-
-    auto drift_rate_info    = dedrifted_plane.drift_rate_info();
     auto integration_length = dedrifted_plane.integration_steps();
+    auto drift_rate_info    = dedrifted_plane.drift_rate_info();
 
     std::list<hit> hits;
     for (const auto &c : protohits) {
@@ -61,24 +57,12 @@ std::list<hit> bliss::hit_search(coarse_channel dedrifted_scan, hit_search_optio
     return hits;
 }
 
-// TODO: defer execution of hit search until hits from a specific cc are requested
 scan bliss::hit_search(scan dedrifted_scan, hit_search_options options) {
-    auto number_coarse_channels = dedrifted_scan.get_number_coarse_channels();
-    for (auto cc_index = 0; cc_index < number_coarse_channels; ++cc_index) {
-        // We need a copy of this coarse_channel so that the current device settings
-        // in the channel stick around even if something downstream changes the device
-        // before we process this function.
-        auto cc = dedrifted_scan.read_coarse_channel(cc_index);
-        auto cc_copy = std::make_shared<coarse_channel>(*cc);
-        auto find_coarse_channel_hits_func = [cc_copy, options]() {
-            auto hits = hit_search(*cc_copy, options);
-            if (options.detach_graph) {
-                cc_copy->detach_drift_plane();
-            }
-            return hits;
-        };
-        cc->set_hits(find_coarse_channel_hits_func);
-    }
+    dedrifted_scan.add_coarse_channel_transform([options](coarse_channel cc) {
+        auto hits = hit_search(cc, options);
+        cc.set_hits(hits);
+        return cc;
+    });
     return dedrifted_scan;
 }
 

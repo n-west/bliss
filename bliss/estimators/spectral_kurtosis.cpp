@@ -7,7 +7,7 @@
 using namespace bliss;
 
 bland::ndarray bliss::estimate_spectral_kurtosis(const bland::ndarray &spectrum_grid, int32_t N, int32_t M, float d) {
-    fmt::print("INFO: spec kurtosis with M={}, N={}, d={}\n", M, N, d);
+    // fmt::print("INFO: spec kurtosis with M={}, N={}, d={}\n", M, N, d);
     auto s1 = bland::square(bland::sum(spectrum_grid, {0}));
     auto s2 = bland::sum(bland::square(spectrum_grid), {0});
     auto sk = ((M * N * d + 1) / (M - 1)) * (M * (s2 / s1) - 1);

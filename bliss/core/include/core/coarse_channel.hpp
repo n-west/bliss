@@ -117,18 +117,17 @@ struct coarse_channel {
                    double         za_start,
                    int64_t        coarse_channel_number=0);
 
-    bland::ndarray_deferred data();
+    bland::ndarray data();
     void                    set_data(bland::ndarray new_mask);
     void                    set_data(bland::ndarray_deferred new_mask);
 
-    bland::ndarray_deferred mask();
+    bland::ndarray mask();
     void                    set_mask(bland::ndarray new_mask);
     void                    set_mask(bland::ndarray_deferred new_mask);
 
     frequency_drift_plane integrated_drift_plane();
     void                  set_integrated_drift_plane(frequency_drift_plane integrated_plane);
     void                  set_integrated_drift_plane(std::function<frequency_drift_plane()> integrated_plane);
-    void                  detach_drift_plane();
 
     noise_stats noise_estimate() const;
     void        set_noise_estimate(noise_stats estimate);

@@ -388,8 +388,8 @@ bliss::find_components_above_threshold_cuda(bland::ndarray                   dop
     //
     // We have ~60 B / dev_protohit and we should be able to have a maximum of channels * time / sizeof(neighborhood) local maxima but the
     // practical limit is likely much lower than that. In order to make space for these other dumb protohits
-    int number_blocks = 112;
-    int block_size = 512;
+    int number_blocks = 4096;
+    int block_size = 64;
     initialize_components_kernel<<<number_blocks, block_size>>>(
         doppler_spectrum_data,
         g_labels,

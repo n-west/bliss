@@ -32,31 +32,25 @@ bland::ndarray bliss::flag_sigmaclip(const bland::ndarray &data, int max_iter, f
 }
 
 coarse_channel bliss::flag_sigmaclip(coarse_channel cc_data, int max_iter, float low, float high) {
-    auto cc_ptr = std::make_shared <coarse_channel>(cc_data);
 
-    auto deferred_accumulated_rfi = bland::ndarray_deferred([cc_dat = cc_ptr, max_iter, low, high]() {
-        bland::ndarray spectrum_grid = cc_dat->data();
-        bland::ndarray rfi_flags     = cc_dat->mask();
+    bland::ndarray spectrum_grid = cc_data.data();
+    bland::ndarray rfi_flags     = cc_data.mask();
 
-        // 2. Generate SK flag
-        auto rfi = flag_sigmaclip(spectrum_grid, max_iter, low, high);
+    // 2. Generate SK flag
+    auto rfi = flag_sigmaclip(spectrum_grid, max_iter, low, high);
 
-        auto accumulated_rfi = rfi_flags + rfi; // a | operator would be more appropriate
-        return accumulated_rfi;
-    });
+    auto accumulated_rfi = rfi_flags + rfi; // a | operator would be more appropriate
 
     // 3. Store back accumulated rfi
-    cc_data.set_mask(deferred_accumulated_rfi);
+    cc_data.set_mask(accumulated_rfi);
 
     return cc_data;
 }
 
 scan bliss::flag_sigmaclip(scan fil_data, int max_iter, float low, float high) {
-    auto number_coarse_channels = fil_data.get_number_coarse_channels();
-    for (auto cc_index = 0; cc_index < number_coarse_channels; ++cc_index) {
-        auto cc = fil_data.read_coarse_channel(cc_index);
-        *cc     = flag_sigmaclip(*cc, max_iter, low, high);
-    }
+    fil_data.add_coarse_channel_transform([max_iter, low, high](coarse_channel cc) {
+        return flag_sigmaclip(cc, max_iter, low, high);
+    });
     return fil_data;
 }
 

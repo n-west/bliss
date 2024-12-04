@@ -51,6 +51,12 @@ class scan {
     std::shared_ptr<coarse_channel> peak_coarse_channel(int coarse_channel_index = 0);
 
     /**
+     * A function that will be called on each coarse_channel when read with read_coarse_channel
+     * or poke_coarse_channel
+     */
+    void add_coarse_channel_transform(std::function<coarse_channel(coarse_channel)> transform);
+
+    /**
      * return the coarse channel index that the given frequency is in
      * 
      * useful for reinvestigating hits by looking up frequency
@@ -128,8 +134,9 @@ class scan {
     // it's not an active issue, but we can also keep track of "active_coarse_channels" which are
     // only those within the current slice / copy and only have set_device, etc effect those channels
     // std::string _original_file_path={};
-    std::shared_ptr<std::map<int, std::shared_ptr<coarse_channel>>> _coarse_channels = nullptr;
+    std::map<int, std::shared_ptr<coarse_channel>> _coarse_channels;
     std::shared_ptr<h5_filterbank_file>            _h5_file_handle = nullptr;
+    std::vector<std::function<coarse_channel(coarse_channel)>> _coarse_channel_pipeline;
 
     // Read from h5 file
     double      _fch1;

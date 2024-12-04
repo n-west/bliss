@@ -1090,34 +1090,6 @@ __global__ void comparison_reduction_impl(out_datatype* out_data, int64_t* out_s
                 sdata[tid] = in_val;
             }
 
-            // if (mask_data[mask_linear_index] == 0) {
-                // Actually do reduction (compare and replace vals to the smem)
-                // scount[tid] += 1;
-
-                
-                // // use a corrected sum (kahan sum) to preserve precision
-                // if constexpr (is_floating<in_datatype>::value) {
-                //     auto y = in_val - sdata_c;
-                //     kahan(sdata[tid], y);
-                //     sdata_c = y;
-                // } else {
-                //     // naive sum
-                //     sdata[tid] += in_val;
-                // }
-                
-                // // stddev and variance will also keep track of x^2 accumulation
-                // if constexpr (Op == reductiontype::stddev || Op == reductiontype::var) {
-                //     auto x_square = in_val * in_val;
-                //     if constexpr (is_floating<in_datatype>::value) {
-                //         auto y2 = x_square - s2data_c;
-                //         kahan(s2data[tid], y2);
-                //         s2data_c = y2;
-                //     } else {
-                //         s2data[tid] += x_square;
-                //     }
-                // }
-            // }
-
             // Increment nd_index for reduced dimensions
             auto increment_size = blockDim.x;
             for (int dim = a_ndim - 1; dim >= 0; --dim) {
@@ -1153,46 +1125,12 @@ __global__ void comparison_reduction_impl(out_datatype* out_data, int64_t* out_s
                 if (sdata[tid+s] > sdata[tid] ) {
                     sdata[tid] = sdata[tid+s];
                 }
-                // __syncthreads();
-                // printf("(%i) reduced sum is sdata[%i] + sdata[%i]. (%f + %f)\n", tid, tid, tid+s, sdata[tid], sdata[tid+s]);
 
-                // Need to compare the smem maxes...
-                // sdata[tid] += sdata[tid+s];
-                // scount[tid] += scount[tid+s];
-                // if constexpr (Op == reductiontype::stddev || Op == reductiontype::var) {
-                //     s2data[tid] += s2data[tid+s];
-                // }
             }
             __syncthreads();
         }
         // Write the final accumulated value to global output
         if (tid == 0) {
-            // TODO: guard against scount == 0
-            // if constexpr (Op == reductiontype::stddev) {
-            //     sdata[0] /= scount[0];
-            //     s2data[0] /= scount[0];
-            //     // out_data[out_linear_index] = static_cast<out_datatype>((s2data[0] - sdata[0]*sdata[0]));
-            //     // printf("E[X^2] = %f - E[X]^2 = %f\n", s2data[0], sdata[0]*sdata[0]);
-            //     auto diff = (s2data[0] - sdata[0]*sdata[0]);
-            //     diff = max((in_datatype)0, diff);
-            //     if constexpr (is_floating<in_datatype>::value) {
-            //         out_data[out_linear_index] = static_cast<out_datatype>(sqrt(diff));
-            //     } else {
-            //         out_data[out_linear_index] = static_cast<out_datatype>(sqrt((float)diff));
-            //     }
-            // } else if constexpr (Op == reductiontype::var) {
-            //     // Var is E[x^2] - E[x]^2, both were calculated at once to avoid redundant passes through data
-            //     sdata[0] /= scount[0];
-            //     s2data[0] /= scount[0];
-            //     auto diff = (s2data[0] - sdata[0]*sdata[0]);
-            //     diff = max((in_datatype)0, diff);
-            //     out_data[out_linear_index] = static_cast<out_datatype>(diff);
-            // } else if constexpr (Op == reductiontype::mean) {
-            //     out_data[out_linear_index] = static_cast<out_datatype>(sdata[0] / scount[0]);
-            // } else {
-            //     // sum
-            //     out_data[out_linear_index] = static_cast<out_datatype>(sdata[0]);
-            // }
             out_data[out_linear_index] = static_cast<out_datatype>(sdata[0]);
         }
 

@@ -13,7 +13,7 @@ float bliss::noise_stats::noise_power() {
     return bland::to(_noise_power, "cpu").scalarize<float>();
 }
 
-void bliss::noise_stats::set_noise_power(bland::ndarray_deferred power) {
+void bliss::noise_stats::set_noise_power(bland::ndarray power) {
     _noise_power = power;
 }
 
@@ -25,7 +25,7 @@ float bliss::noise_stats::noise_floor() {
     return bland::to(_noise_floor, "cpu").scalarize<float>();
 }
 
-void bliss::noise_stats::set_noise_floor(bland::ndarray_deferred nf) {
+void bliss::noise_stats::set_noise_floor(bland::ndarray nf) {
     _noise_floor = nf;
 }
 

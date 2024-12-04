@@ -14,23 +14,15 @@
 using namespace bliss;
 
 coarse_channel bliss::normalize(coarse_channel cc) {
-    // data is (or can be) a deferred tensor
-    // we might need to make a copy of cc rather than pass a ref since we're accessing the deferred array and setting it all in one go
-    auto cc_ptr = std::make_shared<coarse_channel>(cc);
-    cc.set_data(bland::ndarray_deferred([cc_data=cc_ptr]() {
-        auto norm_value = bland::max(cc_data->data());
-        return bland::divide(cc_data->data(), norm_value);
-    }));
-    // cc.set_data(bland::divide(cc.data(), h));
+    auto data = cc.data();
+    auto norm_value = bland::max(data);
+    auto normalized = bland::divide(data, norm_value);
+    cc.set_data(normalized);
     return cc;
 }
 
 scan bliss::normalize(scan sc) {
-    auto number_coarse_channels = sc.get_number_coarse_channels();
-    for (auto cc_index = 0; cc_index < number_coarse_channels; ++cc_index) {
-        auto cc = sc.read_coarse_channel(cc_index);
-        *cc = normalize(*cc);
-    }
+    sc.add_coarse_channel_transform([](coarse_channel cc) { return normalize(cc); });
     return sc;
 }
 
