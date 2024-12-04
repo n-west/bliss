@@ -11,13 +11,13 @@ using namespace bliss;
 
 coarse_channel bliss::flag_filter_rolloff(coarse_channel cc_data, float rolloff_width) {
 
-    auto cc_ptr = std::make_shared<coarse_channel>(cc_data);
-    auto deferred_rfi_mask = bland::ndarray_deferred([cc_data = cc_ptr, rolloff_width]() {
-        auto rfi_flags = cc_data->mask();
+    auto deferred_rfi_mask = bland::ndarray_deferred([mask=cc_data.mask(), rolloff_width]() mutable {
+        bland::ndarray rfi_flags = mask;
 
-        int64_t one_sided_channels = std::round(cc_data->nchans() * rolloff_width);
+        auto nchans = rfi_flags.shape()[1];
+        int64_t one_sided_channels = std::round(nchans * rolloff_width);
         bland::slice(rfi_flags, {1, 0, one_sided_channels}) = bland::slice(rfi_flags, {1, 0, one_sided_channels}) + static_cast<uint8_t>(flag_values::filter_rolloff);
-        bland::slice(rfi_flags, {1, -one_sided_channels, cc_data->nchans()}) = bland::slice(rfi_flags, {1, -one_sided_channels, cc_data->nchans()}) + static_cast<uint8_t>(flag_values::filter_rolloff);
+        bland::slice(rfi_flags, {1, -one_sided_channels, nchans}) = bland::slice(rfi_flags, {1, -one_sided_channels, nchans}) + static_cast<uint8_t>(flag_values::filter_rolloff);
         return rfi_flags;
     });
     
@@ -27,11 +27,9 @@ coarse_channel bliss::flag_filter_rolloff(coarse_channel cc_data, float rolloff_
 
 
 scan bliss::flag_filter_rolloff(scan fil_data, float rolloff_width) {
-    auto number_coarse_channels = fil_data.get_number_coarse_channels();
-    for (auto cc_index = 0; cc_index < number_coarse_channels; ++cc_index) {
-        auto cc = fil_data.read_coarse_channel(cc_index);
-        *cc = flag_filter_rolloff(*cc, rolloff_width);
-    }
+    fil_data.add_coarse_channel_transform([rolloff_width](coarse_channel cc) {
+        return flag_filter_rolloff(cc, rolloff_width);
+    });
     return fil_data;
 }
 

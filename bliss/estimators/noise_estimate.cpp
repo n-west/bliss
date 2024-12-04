@@ -15,18 +15,11 @@ namespace detail {
  * Compute noise floor as the mean of the population
  * Compute noise power as the variance of the population
  */
-noise_stats noise_power_estimate_stddev(bland::ndarray_deferred x) {
+noise_stats noise_power_estimate_stddev(bland::ndarray x) {
     noise_stats estimated_stats;
-    auto x_copy = std::make_shared<bland::ndarray_deferred>(x);
-    auto delayed_mean = bland::ndarray_deferred([x = x_copy]() {
-        return bland::mean(*x);
-    });
-    estimated_stats.set_noise_floor(delayed_mean);
-    
-    auto delayed_power = bland::ndarray_deferred([x = x_copy]() {
-        return bland::stddev(*x);
-    });
-    estimated_stats.set_noise_power(delayed_power);
+    auto mean_std = bland::mean_stddev(x);
+    estimated_stats.set_noise_floor(mean_std.first);
+    estimated_stats.set_noise_power(mean_std.second);
 
     return estimated_stats;
 }
@@ -35,21 +28,11 @@ noise_stats noise_power_estimate_stddev(bland::ndarray_deferred x) {
  * Compute noise floor as the mean of the population where the mask == 0
  * Compute noise power as the variance of the population where the mask == 0
  */
-noise_stats noise_power_estimate_stddev(bland::ndarray_deferred x, bland::ndarray_deferred mask) {
+noise_stats noise_power_estimate_stddev(bland::ndarray x, bland::ndarray mask) {
     noise_stats estimated_stats;
-
-    auto x_copy = std::make_shared<bland::ndarray_deferred>(x);
-    auto mask_copy = std::make_shared<bland::ndarray_deferred>(mask);
-
-    auto delayed_mean = bland::ndarray_deferred([x = x_copy, mask = mask_copy]() {
-        return bland::masked_mean(*x, *mask);
-    });
-    estimated_stats.set_noise_floor(delayed_mean);
-
-    auto delayed_power = bland::ndarray_deferred([x = x_copy, mask = mask_copy]() {
-        return bland::masked_stddev(*x, *mask);
-    });
-    estimated_stats.set_noise_power(delayed_power);
+    auto mean_std = bland::masked_mean_stddev(x, mask);
+    estimated_stats.set_noise_floor(mean_std.first);
+    estimated_stats.set_noise_power(mean_std.second);
 
     return estimated_stats;
 }
@@ -92,7 +75,7 @@ noise_stats noise_power_estimate_mad(const bland::ndarray &x, const bland::ndarr
 
 } // namespace detail
 
-noise_stats bliss::estimate_noise_power(bland::ndarray_deferred x, noise_power_estimate_options options) {
+noise_stats bliss::estimate_noise_power(bland::ndarray x, noise_power_estimate_options options) {
     noise_stats estimated_stats;
 
     if (options.masked_estimate) {
@@ -119,36 +102,32 @@ noise_stats bliss::estimate_noise_power(bland::ndarray_deferred x, noise_power_e
  *
  * If the mask has no free flags
  */
-bland::ndarray_deferred correct_mask(const bland::ndarray_deferred &mask) {
-    auto mask_copy = std::make_shared<bland::ndarray_deferred>(mask);
+bland::ndarray_deferred correct_mask(const bland::ndarray &mask) {
 
-    auto updated_mask = bland::ndarray_deferred([mask = mask_copy](){
-        auto unmasked_samples = bland::count_true(bland::ndarray(*mask) == 0);
-        if (unmasked_samples == 0) {
-            // TODO: issue warning & "correct" the mask in some intelligent way
-            auto err = fmt::format("correct_mask: the mask is completely flagged, so a flagged noise estimate is not possible.");
-            /*
-            * This is a pretty strange condition where the entire scan is flagged which makes estimating noise using
-            * unflagged samples pretty awkward... There's not an obviously right way to handle this and anyone caring
-            * about this pipeline output should probably be made aware of it, but it's also not fatal.
-            * Known instances of this condition occurring:
-            * * Voyager 2020 data from GBT experiences a sudden increase in noise floor/power of ~ 3dB in the B target scan
-            *   which generates high spectral kurtosis across the entire band
-            *   filename w/in BL: single_coarse_guppi_59046_80354_DIAG_VOYAGER-1_0012.rawspec.0000.h5
-            */
-            // TODO: we can attempt to correct this, since it's only been known to occur based on SK with high thresholds of
-            // ~5 that threshold can be increased. Some ideas:
-            // * have an "auto" mode for SK that starts with threshold of 5 and iteratively increases until the whole
-            // channel
-            //   is not falled
-            // * ignore high SK here (or try to identify what flag is causing issues and ignore it)
-            // * warn earlier in flagging step
-            throw std::runtime_error(err);
-        }
-        return *mask;
-    });
+    auto unmasked_samples = bland::count_true(bland::ndarray(mask) == 0);
+    if (unmasked_samples == 0) {
+        // TODO: issue warning & "correct" the mask in some intelligent way
+        auto err = fmt::format("correct_mask: the mask is completely flagged, so a flagged noise estimate is not possible.");
+        /*
+        * This is a pretty strange condition where the entire scan is flagged which makes estimating noise using
+        * unflagged samples pretty awkward... There's not an obviously right way to handle this and anyone caring
+        * about this pipeline output should probably be made aware of it, but it's also not fatal.
+        * Known instances of this condition occurring:
+        * * Voyager 2020 data from GBT experiences a sudden increase in noise floor/power of ~ 3dB in the B target scan
+        *   which generates high spectral kurtosis across the entire band
+        *   filename w/in BL: single_coarse_guppi_59046_80354_DIAG_VOYAGER-1_0012.rawspec.0000.h5
+        */
+        // TODO: we can attempt to correct this, since it's only been known to occur based on SK with high thresholds of
+        // ~5 that threshold can be increased. Some ideas:
+        // * have an "auto" mode for SK that starts with threshold of 5 and iteratively increases until the whole
+        // channel
+        //   is not falled
+        // * ignore high SK here (or try to identify what flag is causing issues and ignore it)
+        // * warn earlier in flagging step
+        throw std::runtime_error(err);
+    }
 
-    return updated_mask;
+    return mask;
 }
 
 
@@ -189,14 +168,14 @@ noise_stats bliss::estimate_noise_power(coarse_channel cc_data, noise_power_esti
     return estimated_stats;
 }
 
-scan bliss::estimate_noise_power(scan fil_data, noise_power_estimate_options options) {
-    auto number_coarse_channels = fil_data.get_number_coarse_channels();
-    for (auto cc_index = 0; cc_index < number_coarse_channels; ++cc_index) {
-        auto cc = fil_data.read_coarse_channel(cc_index);
-        auto cc_noise_estimate = estimate_noise_power(*cc, options);
-        cc->set_noise_estimate(cc_noise_estimate);
-    }
-    return fil_data;
+scan bliss::estimate_noise_power(scan sc, noise_power_estimate_options options) {
+    sc.add_coarse_channel_transform([options](coarse_channel cc) {
+        auto noise_stats = estimate_noise_power(cc, options);
+        cc.set_noise_estimate(noise_stats);
+        return cc;
+    });
+
+    return sc;
 }
 
 observation_target bliss::estimate_noise_power(observation_target observations, noise_power_estimate_options options) {

@@ -34,7 +34,7 @@ class ndarray_deferred {
      * create a deferred tensor from a function that will be called when this
      * ndarray_deferred is converted to an ndarray
     */
-    ndarray_deferred(std::function<ndarray()> callable, eval_policy policy=eval_policy::memoize);
+    ndarray_deferred(std::function<ndarray()> callable, eval_policy policy=eval_policy::lazy);
     
     /**
      * create a deferred tensor that is actual data. This allows treating an ndarray_deferred

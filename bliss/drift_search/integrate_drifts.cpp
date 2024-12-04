@@ -47,10 +47,6 @@ std::vector<frequency_drift_plane::drift_rate> compute_drifts(int time_steps, do
     return drift_rate_info;
 }
 
-// bland::ndarray bliss::integrate_drifts(const bland::ndarray &spectrum_grid, integrate_drifts_options options) {
-//     auto compute_device = spectrum_grid.device();
-//     auto drifts = compute_drifts(spectrum_grid.size(0), 1, 1, options);
-// }
 
 coarse_channel bliss::integrate_drifts(coarse_channel cc_data, integrate_drifts_options options) {
     auto compute_device = cc_data.device();
@@ -61,23 +57,16 @@ coarse_channel bliss::integrate_drifts(coarse_channel cc_data, integrate_drifts_
                drifts.front().drift_rate_Hz_per_sec,
                drifts.back().drift_rate_Hz_per_sec);
 
-    auto cc_copy = std::make_shared<coarse_channel>(cc_data);
     if (compute_device.device_type == kDLCPU) {
-        auto integrated_dedrift = [cc_data = cc_copy, drifts, options]() {
-            return integrate_linear_rounded_bins_cpu(cc_data->data(), cc_data->mask(), drifts, options);
-        };
+        auto integrated_dedrift = integrate_linear_rounded_bins_cpu(cc_data.data(), cc_data.mask(), drifts, options);
         cc_data.set_integrated_drift_plane(integrated_dedrift);
 #if BLISS_CUDA
     } else if (compute_device.device_type == kDLCUDA) {
-        auto integrated_dedrift = [cc_data = cc_copy, drifts, options]() {
-            return integrate_linear_rounded_bins_cuda(cc_data->data(), cc_data->mask(), drifts, options);
-        };
+        auto integrated_dedrift = integrate_linear_rounded_bins_cuda(cc_data.data(), cc_data.mask(), drifts, options);
         cc_data.set_integrated_drift_plane(integrated_dedrift);
 #endif
     } else {
-        auto integrated_dedrift = [cc_data = cc_copy, drifts, options]() {
-            return integrate_linear_rounded_bins_bland(cc_data->data(), cc_data->mask(), drifts, options);
-        };
+        auto integrated_dedrift = integrate_linear_rounded_bins_bland(cc_data.data(), cc_data.mask(), drifts, options);
         cc_data.set_integrated_drift_plane(integrated_dedrift);
     }
 
@@ -85,11 +74,7 @@ coarse_channel bliss::integrate_drifts(coarse_channel cc_data, integrate_drifts_
 }
 
 scan bliss::integrate_drifts(scan scan_data, integrate_drifts_options options) {
-    auto number_coarse_channels = scan_data.get_number_coarse_channels();
-    for (auto cc_index = 0; cc_index < number_coarse_channels; ++cc_index) {
-        auto cc = scan_data.read_coarse_channel(cc_index);
-        *cc = integrate_drifts(*cc, options);
-    }
+    scan_data.add_coarse_channel_transform([options](coarse_channel cc) { return integrate_drifts(cc, options); });
     return scan_data;
 }
 

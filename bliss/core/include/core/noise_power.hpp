@@ -19,12 +19,12 @@ struct noise_stats {
 
     public:
     float noise_power();
-    void set_noise_power(bland::ndarray_deferred noise_power);
+    void set_noise_power(bland::ndarray noise_power);
 
     float noise_amplitude();
 
     float noise_floor();
-    void set_noise_floor(bland::ndarray_deferred noise_floor);
+    void set_noise_floor(bland::ndarray noise_floor);
 
     std::string repr() const;
 
@@ -35,8 +35,8 @@ struct noise_stats {
     // void set_state(state_tuple);
 
     protected:
-    bland::ndarray_deferred _noise_floor;
-    bland::ndarray_deferred _noise_power;
+    bland::ndarray _noise_floor;
+    bland::ndarray _noise_power;
 };
 
 } // namespace bliss
