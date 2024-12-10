@@ -13,19 +13,57 @@ to build a python package. The major build artifacts include:
 
 Pre-built binary packages are available
 
+Pre-built packages
+******************
+
+.. warning::
+    The pre-built packages will eventually be the preferred way to install and generate
+    bliss, but for now they are not available. The conda distribution requires some automated
+    build infrastructure to be set up and the pypi distribution has a runtime issue with bitshuffle.
+
+
 Pre-built packages (Conda)
-------------------
+---------------------------
+
+.. warning::
+    These packages are not yet automatically built, so should not be used yet.
 
 Conda packages are available from anaconda.org that support multiple versions of python and cuda:
 
-.. csv-table:: Support for python and cuda versions
+.. csv-table:: Support for python and cuda versions from conda
    :file: python-cuda-conda-matrix
 
 These packages include the python API as well as executable scripts that can run hit search pipelines, event search
 pipelines, and generate artifacts like polyphase filterbank responses for various telescope configurations.
 
 ```
-conda install -c nwest blissdedrift
+conda install nathanwest::blissdedrift
+```
+
+Since conda provides shared libraries for all dependencies and bliss links against python, cuda, and hdf5 the binaries
+are built and packaged for variants defined by versions of
+
+- python
+- hdf5
+- cuda
+
+
+Pre-built packages (pypi wheel)
+-------------------------------
+
+Prebuilt binary wheels are available from pypi.org that support multiple versions of python and cuda:
+
+.. warning::
+    these are not available yet pending a solution to a runtime issue with bitshuffle.
+
+.. csv-table:: Support for python and cuda versions from pypi wheels
+   :file: python-cuda-pypi-matrix
+
+These packages include the python API as well as executable scripts that can run hit search pipelines, event search
+pipelines, and generate artifacts like polyphase filterbank responses for various telescope configurations.
+
+```
+pip install blissdedrift-cuXX-pyX.XX
 ```
 
 
@@ -163,3 +201,20 @@ MacOS
 
 I haven't tried and don't have the hardware to try, but you'll need to make sure any rosetta issues with dependencies don't exist.
 
+
+
+FAQ and troubleshooting
+=======================
+
+Q: Running with bliss gives "RuntimeError: ERROR: bland was not build with CUDA support, but CUDA device requested."
+
+A: Bliss was not built with cuda support. On a lot of datacenters you'll have to source the cuda environment before running
+   bliss. This is done with a command like ```. /usr/local/cuda-11.7.1/cuda.sh```
+
+
+Q: Using a conda environment with something including ``conda install gxx=11.4`` but get an error about "failed to 
+ompile a simple program"
+
+A: First, check if you are on a system where you really do need to install a compiler (see the psuedo cross-compile
+instructions) then follow the psuedo cross-compiler instructions if so. Otherwise, uninstall gxx and try again (also
+delete your build directory in case it has some stale variables).
