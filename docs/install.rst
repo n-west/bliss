@@ -13,19 +13,57 @@ to build a python package. The major build artifacts include:
 
 Pre-built binary packages are available
 
+Pre-built packages
+******************
+
+.. warning::
+    The pre-built packages will eventually be the preferred way to install and generate
+    bliss, but for now they are not available. The conda distribution requires some automated
+    build infrastructure to be set up and the pypi distribution has a runtime issue with bitshuffle.
+
+
 Pre-built packages (Conda)
-------------------
+---------------------------
+
+.. warning::
+    These packages are not yet automatically built, so should not be used yet.
 
 Conda packages are available from anaconda.org that support multiple versions of python and cuda:
 
-.. csv-table:: Support for python and cuda versions
+.. csv-table:: Support for python and cuda versions from conda
    :file: python-cuda-conda-matrix
 
 These packages include the python API as well as executable scripts that can run hit search pipelines, event search
 pipelines, and generate artifacts like polyphase filterbank responses for various telescope configurations.
 
 ```
-conda install -c nwest blissdedrift
+conda install nathanwest::blissdedrift
+```
+
+Since conda provides shared libraries for all dependencies and bliss links against python, cuda, and hdf5 the binaries
+are built and packaged for variants defined by versions of
+
+- python
+- hdf5
+- cuda
+
+
+Pre-built packages (pypi wheel)
+-------------------------------
+
+Prebuilt binary wheels are available from pypi.org that support multiple versions of python and cuda:
+
+.. warning::
+    these are not available yet pending a solution to a runtime issue with bitshuffle.
+
+.. csv-table:: Support for python and cuda versions from pypi wheels
+   :file: python-cuda-pypi-matrix
+
+These packages include the python API as well as executable scripts that can run hit search pipelines, event search
+pipelines, and generate artifacts like polyphase filterbank responses for various telescope configurations.
+
+```
+pip install blissdedrift-cuXX-pyX.XX
 ```
 
 
@@ -87,3 +125,96 @@ Conda-based psuedo cross-compile
 
 Conda is often used to install packages that are missing or require an upgrade from what is available from the host
 system. This can include fftw, hdf5, or even an entire compiler.
+
+Psuedo-cross compiling (working on a system with an old compiler that doesn't support C++-17)
+#############################################################################################
+
+You can build bliss on older systems that don't support C++-17 (Ubuntu 16.04 as an example) by using conda to install
+a newer compiler. Installing a compiler through conda is a little complicated because it requires what's known as a
+psuedo cross-compile (see https://docs.conda.io/projects/conda-build/en/latest/resources/compiler-tools.html#an-aside-on-cmake-and-sysroots).
+Bliss comes with a cmake `toolchain` file to help with this. First, install the newer compiler:
+
+``conda install gxx=11.4``
+
+The other quirk of treating the build as a cross-compile is that you cannot depend and link against system libraries
+on your host system. Every dependency has to be installed in the conda environment, so you'll also need to use conda
+to install fftw, hdf5, bitshuffle (this isn't a build dependency that's linked in, but installing it in conda makes
+the conda-provided hdf5 able to find it).
+
+```
+conda install hdf5 bitshuffle hdf5-external-filter-plugins fftw
+```
+
+```
+mkdir build
+cd build
+cmake -DCMAKE_TOOLCHAIN_FILE=../toolchains/conda.cmake ..
+make -j $(($(nproc)/2))
+```
+
+
+Data center specific tips and quirks
+------------------------------------
+
+You can check what distribution and version you're running with `lsb_release -a`.
+
+
+Berkeley DC (Ubuntu 24.04)
+~~~~~~~~~~~~~~~~~~~~~~~
+
+The hosts running Ubuntu 24.04 have everything required, so no conda dependencies are needed unless you want to use
+conda dependencies. If you are using the installed cuda 11.7.1, then the host system's gcc (version 13.2.0) is not
+compatible, so you won't be able to build cuda kernels with that GCC. You'll need to set the following variable before
+running cmake:
+
+```
+export NVCC_PREPEND_FLAGS='-ccbin /usr/bin/g++-11'
+```
+
+The specific gcc version you point to may be subject to change, but a table of cuda versions to maximum supported gcc version
+can be found at https://stackoverflow.com/a/46380601
+
+
+Berkeley DC (Ubuntu 16.04)
+~~~~~~~~~~~~~~~~~~~~~~~
+
+Some nodes are running Ubuntu 16.06 (blpc1 at time of this writing) which needs to follow the psuedo cross-compile instructions
+above. The whole process looks like this:
+
+```
+# Source the cuda environment
+. /usr/local/cuda-11.7.1/cuda.sh
+
+# Create and activate conda environment
+conda create -n nwest-build-blpc1 python=3.10 gxx=11.4 cmake fftw hdf5 bitshuffle hdf5-external-filter-plugins fftw # This can take a while to solve the environment
+conda activate nwest-build-blpc1
+
+# Build with the psuedo-cross toolchain for conda
+mkdir build
+cd build
+cmake -DCMAKE_TOOLCHAIN_FILE=../toolchains/conda.cmake ..
+make -j $(($(nproc)/2))
+```
+
+MacOS
+~~~~~
+
+I haven't tried and don't have the hardware to try, but you'll need to make sure any rosetta issues with dependencies don't exist.
+
+
+
+FAQ and troubleshooting
+=======================
+
+Q: Running with bliss gives "RuntimeError: ERROR: bland was not build with CUDA support, but CUDA device requested."
+
+A: Bliss was not built with cuda support. On a lot of datacenters you'll have to source the cuda environment before running
+   bliss. This is done with a command like ```. /usr/local/cuda-11.7.1/cuda.sh```
+
+
+Q: Using a conda environment with something including ``conda install gxx=11.4`` but get an error about "failed to 
+ompile a simple program"
+
+A: First, check if you are on a system where you really do need to install a compiler (see the psuedo cross-compile
+instructions) then follow the psuedo cross-compiler instructions if so. Otherwise, uninstall gxx and try again (also
+delete your build directory in case it has some stale variables).
