@@ -1,5 +1,6 @@
 #pragma once
 
+#include "excise_dc.hpp"
 #include "normalize.hpp"
 #include "passband_static_equalize.hpp"
 
@@ -42,5 +43,11 @@ void bind_pypreprocess(nb::module_ m) {
       m.def("normalize", nb::overload_cast<bliss::scan>(bliss::normalize));
       m.def("normalize", nb::overload_cast<bliss::observation_target>(bliss::normalize));
       m.def("normalize", nb::overload_cast<bliss::cadence>(bliss::normalize));
+
+
+      m.def("excise_dc", nb::overload_cast<bliss::coarse_channel>(bliss::excise_dc));
+      m.def("excise_dc", nb::overload_cast<bliss::scan>(bliss::excise_dc));
+      m.def("excise_dc", nb::overload_cast<bliss::observation_target>(bliss::excise_dc));
+      m.def("excise_dc", nb::overload_cast<bliss::cadence>(bliss::excise_dc));
 
 }

@@ -11,7 +11,7 @@ using namespace bliss;
 bland::ndarray bliss::flag_sigmaclip(const bland::ndarray &data, int max_iter, float low, float high) {
 
     constexpr float eps = 1e-6;
-    auto            rfi = bland::zeros(data.shape(), data.dtype(), data.device());
+    auto            rfi = bland::zeros(data.shape(), bland::ndarray::datatype::uint8, data.device());
 
     auto [mean, stddev] = bland::masked_mean_stddev(data, rfi);
     for (int iter = 0; iter < max_iter; ++iter) {
