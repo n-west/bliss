@@ -11,6 +11,9 @@ def plot_hits(cc, focus_hits=None, all_hits=None, frequency_padding_Hz=500):
     Return a list of plots centered on each `focus_hit` with all_hits visible when within
     the frequency bounds of the given plot. When `focus_hits` is None, one plot of the coarse
     channel is return with all_hits shown.
+
+    plot_hits(cc) will return a single plot of the coarse channel with all hits shown.
+    plot_hits(cc, all_hits=cc.hits) is equivalent to calling plot_hits(cc)
     '''
     spectrum = cc.data
     spectrum = spectrum.to("cpu")
@@ -18,12 +21,10 @@ def plot_hits(cc, focus_hits=None, all_hits=None, frequency_padding_Hz=500):
     
     idp = cc.integrated_drift_plane()
     plane = idp.integrated_drifts
-    # These fields are not set correctly (https://github.com/n-west/bliss/issues/41)
-    # drift_rates = idp.drift_rate_info()
-    # min_drift = drift_rates[0].drift_rate_Hz_per_sec
-    # max_drift = drift_rates[-1].drift_rate_Hz_per_sec
-    min_drift = -1
-    max_drift = 1
+    sorted_drifts = sorted(idp.drift_rate_info(), key=lambda d: d.drift_rate_Hz_per_sec)
+    min_drift = sorted_drifts[0].drift_rate_Hz_per_sec
+    max_drift = sorted_drifts[-1].drift_rate_Hz_per_sec
+
     frequency_padding_MHz = frequency_padding_Hz * 1e-6
     
     plane = plane.to("cpu")
@@ -37,11 +38,15 @@ def plot_hits(cc, focus_hits=None, all_hits=None, frequency_padding_Hz=500):
 
     start_time = cc.tstart * 24 * 60 * 60
     end_time = start_time + tsamp * plot_spectrum.shape[0]
+    end_time -= start_time
+    start_time -= start_time
 
     if focus_hits is None and all_hits is None:
-        all_hits = cc.hits()
+        all_hits = cc.hits
 
-    def base_plots_and_axes(plot_freq, plt_spec, plt_plane):
+
+    if focus_hits is None:
+        # one macro plot of all hits
         gs = gridspec.GridSpec(20, 1)
         fig = plt.figure()
         # Assign different rows to your subplots
@@ -49,21 +54,16 @@ def plot_hits(cc, focus_hits=None, all_hits=None, frequency_padding_Hz=500):
         ax1 = fig.add_subplot(gs[4:12, 0], sharex=ax0)  # Middle plot gets 4 rows (40% of the height)
         ax2 = fig.add_subplot(gs[12:, 0], sharex=ax0)  # Bottom plot gets 5 rows (50% of the height)
 
-        spec_min = np.nanmin(plt_spec)
-        spec_max = np.nanmax(plt_spec)
+        spec_min = np.nanmin(plot_spectrum)
+        spec_max = np.nanmax(plot_spectrum)
 
-        plane_min = np.nanmin(plt_plane)
-        plane_max = np.nanmax(plt_plane)
+        plane_min = np.nanmin(plot_plane)
+        plane_max = np.nanmax(plot_plane)
 
-        ax0.plot(plot_freq, plt_spec.sum(0))
-        ax1.imshow(plt_spec, aspect="auto", interpolation="None", cmap="turbo", vmin=spec_min, vmax=spec_max, extent=[freqs[0], freqs[-1], end_time, start_time])
-        ax2.imshow(plt_plane, aspect="auto", interpolation="None", cmap="turbo", vmin=plane_min, vmax=plane_max, extent=[freqs[0], freqs[-1], max_drift, min_drift])
-        return fig, ax0, ax1, ax2
+        ax0.plot(freqs, plot_spectrum.sum(0))
+        ax1.imshow(plot_spectrum, aspect="auto", interpolation="None", cmap="turbo", vmin=spec_min, vmax=spec_max, extent=[freqs[0], freqs[-1], end_time, start_time])
+        ax2.imshow(plot_plane, aspect="auto", interpolation="None", cmap="turbo", vmin=plane_min, vmax=plane_max, extent=[freqs[0], freqs[-1], max_drift, min_drift])
 
-    if focus_hits is None:
-        # one macro plot of all hits
-
-        f, ax0, ax1, ax2 = base_plots_and_axes(freqs, plot_spectrum, plot_plane)
         for hit in all_hits:
             start_freq = hit.start_freq_MHz
             end_freq = start_freq + (end_time - start_time) * hit.drift_rate_Hz_per_sec*1e-6
@@ -88,8 +88,9 @@ def plot_hits(cc, focus_hits=None, all_hits=None, frequency_padding_Hz=500):
             ax1.add_patch(rect)
             ax1.plot([start_freq, end_freq], [start_time, end_time], color="red", lw=1, path_effects=[pe.Stroke(linewidth=1, foreground='black'), pe.Normal()])
 
-        return [f,]
+        return [fig,]
 
+    # From here on we are generating a plot per hit in focus_hits
     all_figs = []
     for hit in focus_hits:
         start_freq = hit.start_freq_MHz
@@ -131,8 +132,24 @@ def plot_hits(cc, focus_hits=None, all_hits=None, frequency_padding_Hz=500):
         plane_max = np.nanmax(hit_plane)
 
         ax0.plot(hit_freqs, hit_spectrum.sum(0))
-        ax1.imshow(hit_spectrum, aspect="auto", interpolation="None", cmap="turbo", vmin=spec_min, vmax=spec_max, extent=[hit_freqs[0], hit_freqs[-1], end_time, start_time])
-        ax2.imshow(hit_plane, aspect="auto", interpolation="None", cmap="turbo", vmin=plane_min, vmax=plane_max, extent=[hit_freqs[0], hit_freqs[-1], max_drift, min_drift])
+        ax1.imshow(hit_spectrum, aspect="auto", interpolation="None", cmap="cividis", vmin=spec_min, vmax=spec_max, extent=[hit_freqs[0], hit_freqs[-1], end_time, start_time])
+        ax2.imshow(hit_plane, aspect="auto", interpolation="None", cmap="cividis", vmin=plane_min, vmax=plane_max, extent=[hit_freqs[0], hit_freqs[-1], max_drift, min_drift])
+
+        center_freq = (min_freq + max_freq) / 2
+        ticks_freq = np.linspace(min_freq, max_freq, 5)
+        if (abs(max_freq - min_freq)) < .002:
+            tick_labels = [f"{(f - center_freq) * 1e6:.0f}" for f in ticks_freq]
+            units = "Hz"
+        else:
+            tick_labels = [f"{(f - center_freq) * 1e3:.0f}" for f in ticks_freq]
+            units = "kHz"
+        ax0.set_xticks(ticks_freq)
+        ax0.set_xticklabels(tick_labels)
+        ax2.set_xlabel(f"Offset from {center_freq:.6f} MHz ({units})")
+        # ax0.set_xlim(min_freq, max_freq)
+
+        ax1.set_ylabel("Time (s)")
+        ax2.set_ylabel("Drift Rate (Hz/sec)")
 
         color = "red"
         angle = 0
