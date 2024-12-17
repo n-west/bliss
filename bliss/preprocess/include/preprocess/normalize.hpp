@@ -1,7 +1,6 @@
 #pragma once
 
 #include <bland/ndarray.hpp>
-#include <bland/ndarray_deferred.hpp>
 #include <core/cadence.hpp>
 #include <core/coarse_channel.hpp>
 #include <core/scan.hpp>

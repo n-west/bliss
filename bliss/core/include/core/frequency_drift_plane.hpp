@@ -4,6 +4,8 @@
 
 #include <bland/ndarray_deferred.hpp>
 
+#include <fmt/core.h>
+
 #include <cstdint>
 #include <vector>
 
@@ -21,6 +23,10 @@ class frequency_drift_plane {
         double drift_rate_Hz_per_sec = 0.0F;
         int drift_channels_span = 0;
         int desmeared_bins=1; // number of bins per spectra used to desmear
+        std::string repr() const {
+            return fmt::format("index_in_plane: {}  drift_rate_slope: {}  drift_rate_Hz_per_sec: {}  drift_channels_span: {}  desmeared_bins: {}\n",
+                       index_in_plane, drift_rate_slope, drift_rate_Hz_per_sec, drift_channels_span, desmeared_bins);
+        }
     };
 
     frequency_drift_plane(bland::ndarray_deferred drift_plane, integrated_flags drift_rfi);

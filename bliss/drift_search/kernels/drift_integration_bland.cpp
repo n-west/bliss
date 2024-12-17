@@ -82,11 +82,11 @@ bliss::integrate_linear_rounded_bins_bland(bland::ndarray spectrum_grid,
                                              bland::slice_spec{1, spectrum_freq_slice_start, spectrum_freq_slice_end});
 
                         // TODO: think through bitshifting and underflow to see if this can just be a bitshift
-                        auto filter_rolloff_slice =
-                                bland::slice(rfi_in_drift.filter_rolloff,
+                        auto sigma_clip_slice =
+                                bland::slice(rfi_in_drift.sigma_clip,
                                              bland::slice_spec{0, drift_index, drift_index + 1},
                                              bland::slice_spec{1, drift_freq_slice_start, drift_freq_slice_end});
-                        filter_rolloff_slice = filter_rolloff_slice +
+                        sigma_clip_slice = sigma_clip_slice +
                                                (rfi_mask_slice & static_cast<uint8_t>(flag_values::filter_rolloff)) /
                                                        static_cast<uint8_t>(flag_values::filter_rolloff);
 
@@ -162,12 +162,12 @@ bliss::integrate_linear_rounded_bins_bland(bland::ndarray spectrum_grid,
                                              bland::slice_spec{1, spectrum_freq_slice_start, spectrum_freq_slice_end});
 
                         // TODO: think through bitshifting and underflow to see if this can just be a bitshift
-                        auto filter_rolloff_slice =
-                                bland::slice(rfi_in_drift.filter_rolloff,
+                        auto sigma_clip_slice =
+                                bland::slice(rfi_in_drift.sigma_clip,
                                              bland::slice_spec{0, drift_index, drift_index + 1},
                                              bland::slice_spec{1, drift_freq_slice_start, drift_freq_slice_end});
 
-                        filter_rolloff_slice = filter_rolloff_slice +
+                        sigma_clip_slice = sigma_clip_slice +
                                                (rfi_mask_slice & static_cast<uint8_t>(flag_values::filter_rolloff)) /
                                                        static_cast<uint8_t>(flag_values::filter_rolloff);
 

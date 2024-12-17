@@ -1,5 +1,6 @@
 
 add_library(bliss_preprocess
+    excise_dc.cpp
     normalize.cpp
     passband_static_equalize.cpp
 )

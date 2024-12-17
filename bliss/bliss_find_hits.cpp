@@ -2,6 +2,7 @@
 #include <core/scan.hpp>
 #include <core/cadence.hpp>
 #include <estimators/noise_estimate.hpp>
+#include <preprocess/excise_dc.hpp>
 #include <preprocess/normalize.hpp>
 #include <preprocess/passband_static_equalize.hpp>
 #include <drift_search/event_search.hpp>
@@ -40,8 +41,12 @@ int main(int argc, char *argv[]) {
     int coarse_channel=0;
     int number_coarse_channels=1;
     std::string channel_taps_path;
+    bool excise_dc = false;
     bliss::integrate_drifts_options dedrift_options{
-            .desmear = true, .low_rate = -500, .high_rate = 500, .rate_step_size = 1};
+            .desmear = true, .low_rate_Hz_per_sec = -5, .high_rate_Hz_per_sec = 5, .resolution = 1};
+    int low_rate = std::numeric_limits<int>::min();
+    int high_rate = std::numeric_limits<int>::max();
+
     std::string device="cuda:0";
     int nchan_per_coarse=0;
     bliss::hit_search_options hit_search_options{.method = bliss::hit_search_methods::CONNECTED_COMPONENTS, .snr_threshold = 10.0f, .neighbor_l1_dist=7};
@@ -62,12 +67,14 @@ int main(int argc, char *argv[]) {
             clipp::values("files").set(pipeline_files) % "input hdf5 filterbank files",
 
             // Data slicing before any processing
-            (clipp::option("-c", "--coarse-channel") & clipp::value("coarse_channel").set(coarse_channel)) % "Coarse channel to process",
-            (clipp::option("--number-coarse") & clipp::value("number_coarse_channels").set(number_coarse_channels)) % "Number of coarse channels to process (default: 1)",
-            (clipp::option("--nchan-per-coarse") & clipp::value("nchan_per_coarse").set(nchan_per_coarse)) % "number of fine channels per coarse to use (default: 0 auto-detects)",
+            (clipp::option("-c", "--coarse-channel") & clipp::value("coarse_channel").set(coarse_channel)) % fmt::format("Coarse channel to process (default: {}])", coarse_channel),
+            (clipp::option("--number-coarse") & clipp::value("number_coarse_channels").set(number_coarse_channels)) % fmt::format("Number of coarse channels to process (default: {})", number_coarse_channels),
+            (clipp::option("--nchan-per-coarse") & clipp::value("nchan_per_coarse").set(nchan_per_coarse)) % fmt::format("number of fine channels per coarse to use (default: {} auto-detects)", nchan_per_coarse),
 
             // Preprocessing
             (clipp::option("-e", "--equalizer-channel") & clipp::value("channel_taps").set(channel_taps_path)) % "the path to coarse channel response at fine frequency resolution",
+            (clipp::option("--excise-dc") .set(dedrift_options.desmear, true) |
+             clipp::option("--noexcise-dc").set(dedrift_options.desmear, false)) % fmt::format("Excise DC offset from the data (default: {})", excise_dc),
 
             // Compute device / params
             (clipp::option("-d", "--device") & clipp::value("device").set(device)) % "Compute device to use",
@@ -75,9 +82,14 @@ int main(int argc, char *argv[]) {
             // Drift intgration / dedoppler
             (clipp::option("--desmear") .set(dedrift_options.desmear, true) |
              clipp::option("--nodesmear").set(dedrift_options.desmear, false)) % "Desmear the drift plane to compensate for drift rate crossing channels",
-            (clipp::option("-m", "--min-rate") & clipp::value("min-rate").set(dedrift_options.low_rate)) % "Minimum drift rate (fourier bins)",
-            (clipp::option("-rs", "--rate-step") & clipp::value("rate-step").set(dedrift_options.rate_step_size)) % "Fourier bins to step per search",
-            (clipp::option("-M", "--max-rate") & clipp::value("max-rate").set(dedrift_options.high_rate)) % "Maximum drift rate (fourier bins)",
+            (clipp::option("-md", "--min-drift") & clipp::value("min-rate").set(dedrift_options.low_rate_Hz_per_sec)) % fmt::format("Minimum drift rate (default: {})", dedrift_options.low_rate_Hz_per_sec),
+            (clipp::option("-MD", "--max-drift") & clipp::value("max-rate").set(dedrift_options.high_rate_Hz_per_sec)) % fmt::format("Maximum drift rate (default: {})", dedrift_options.high_rate_Hz_per_sec),
+            // Reserve for potential Hz/sec step in the future
+            // (clipp::option("-dr", "--drift-resolution") & clipp::value("rate-step").set(dedrift_options.resolution)) % "Multiple of unit drift resolution to step in search (default: 1)",
+            (clipp::option("-rs", "--rate-step") & clipp::value("rate-step").set(dedrift_options.resolution)) % "Multiple of unit drift resolution to step in search (default: 1)",
+            
+            (clipp::option("-m", "--min-rate") & clipp::value("min-rate").set(low_rate)) % "(DEPRECATED: use -md) Minimum drift rate (fourier bins)",
+            (clipp::option("-M", "--max-rate") & clipp::value("max-rate").set(high_rate)) % "(DEPRECATED: use -MD) Maximum drift rate (fourier bins)",
 
             // Flagging
             (clipp::option("--filter-rolloff") & clipp::value("filter_rolloff").set(flag_options.filter_rolloff)) % "Flagging a percentage of band edges",
@@ -107,15 +119,33 @@ int main(int argc, char *argv[]) {
     if (!parse_result || help) {
         std::cout << clipp::make_man_page(cli, "bliss_find_hits");
         return 0;
-    }
+    }    
 
     auto pipeline_object = bliss::observation_target(pipeline_files, nchan_per_coarse);
 
     pipeline_object = pipeline_object.slice_observation_channels(coarse_channel, number_coarse_channels);
 
+
+    auto foff = std::fabs(1e6 * pipeline_object._scans[0].foff());
+    auto tsamp = pipeline_object._scans[0].tsamp();
+    auto ntsteps = pipeline_object._scans[0].ntsteps();
+    auto drift_resolution = foff/(tsamp*(ntsteps-1));
+    if (low_rate != std::numeric_limits<int>::min()) {
+        auto low_rate_Hz_per_sec = low_rate * drift_resolution;
+        dedrift_options.low_rate_Hz_per_sec = low_rate_Hz_per_sec;
+        fmt::print("WARN: deprecated use of -m (value given is {}) to specify min drift rate in terms of unit drift resolution bins. Use -md {} to specify min drift in units of Hz/sec instead.\n", low_rate, low_rate_Hz_per_sec);
+    }
+    if (high_rate != std::numeric_limits<int>::max()) {
+        auto high_rate_Hz_per_sec = high_rate * drift_resolution;        
+        dedrift_options.high_rate_Hz_per_sec = high_rate_Hz_per_sec;
+        fmt::print("WARN: deprecated use of -M (value given is {}) to specify Max drift rate in terms of unit drift resolution bins. Use -MD {} to specify Max Drift in units of Hz/sec instead.\n", high_rate, high_rate_Hz_per_sec);
+    }
+
+
     pipeline_object.set_device(device);
 
     pipeline_object = bliss::normalize(pipeline_object);
+    pipeline_object = bliss::excise_dc(pipeline_object);
     if (!channel_taps_path.empty()) {
         pipeline_object = bliss::equalize_passband_filter(pipeline_object, channel_taps_path);
     } else {

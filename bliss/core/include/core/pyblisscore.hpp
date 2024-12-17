@@ -34,7 +34,9 @@ void bind_pycore(nb::module_ m) {
         .def_ro("desmeared_bins", &bliss::frequency_drift_plane::drift_rate::desmeared_bins)
         .def_ro("drift_rate_Hz_per_sec", &bliss::frequency_drift_plane::drift_rate::drift_rate_Hz_per_sec)
         .def_ro("drift_rate_slope", &bliss::frequency_drift_plane::drift_rate::drift_rate_slope)
-        .def_ro("index_in_plane", &bliss::frequency_drift_plane::drift_rate::index_in_plane);
+        .def_ro("index_in_plane", &bliss::frequency_drift_plane::drift_rate::index_in_plane)
+        .def("__repr__", &bliss::frequency_drift_plane::drift_rate::repr)
+        .def("__str__", &bliss::frequency_drift_plane::drift_rate::repr);
 
     nb::class_<bliss::coarse_channel>(m, "coarse_channel")
         .def_prop_ro("data", [](bliss::coarse_channel &self){return bland::ndarray(self.data());})
@@ -95,16 +97,19 @@ void bind_pycore(nb::module_ m) {
         .def(nb::init<>())
         // .def(nb::init<bool>(), )
         .def_rw("desmear", &bliss::integrate_drifts_options::desmear)
-        .def_rw("low_rate", &bliss::integrate_drifts_options::low_rate)
-        .def_rw("high_rate", &bliss::integrate_drifts_options::high_rate)
-        .def_rw("rate_step_size", &bliss::integrate_drifts_options::rate_step_size);
+        .def_rw("low_rate_Hz_per_sec", &bliss::integrate_drifts_options::low_rate_Hz_per_sec)
+        .def_rw("high_rate_Hz_per_sec", &bliss::integrate_drifts_options::high_rate_Hz_per_sec)
+        .def_rw("resolution", &bliss::integrate_drifts_options::resolution);
+        // .def_rw("low_rate", &bliss::integrate_drifts_options::low_rate)
+        // .def_rw("high_rate", &bliss::integrate_drifts_options::high_rate)
+        // .def_rw("rate_step_size", &bliss::integrate_drifts_options::rate_step_size);
 
     nb::class_<bliss::integrated_flags>(m, "integrated_flags")
         .def(nb::init<int64_t /*drifts*/, int64_t /*channels*/, bland::ndarray::dev /*device*/>())
-        .def_rw("filter_rolloff", &bliss::integrated_flags::filter_rolloff)
+        // .def_rw("filter_rolloff", &bliss::integrated_flags::filter_rolloff)
         .def_rw("low_spectral_kurtosis", &bliss::integrated_flags::low_spectral_kurtosis)
         .def_rw("high_spectral_kurtosis", &bliss::integrated_flags::high_spectral_kurtosis)
-        .def_rw("magnitude", &bliss::integrated_flags::magnitude)
+        // .def_rw("magnitude", &bliss::integrated_flags::magnitude)
         .def_rw("sigma_clip", &bliss::integrated_flags::sigma_clip);
 
     nb::class_<bliss::observation_target>(m, "observation_target")
