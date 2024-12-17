@@ -36,3 +36,32 @@ Although ``coarse_channel``'s most often represent literal `coarse channels` whi
    hit_search
    event_search
 
+
+Memory requirements
+--------------------
+
+To run flagging and hit search on a GPU requires the dynamic spectra, a mask, and dedrifted spectrum all exist in GPU vRAM. For
+a `coarse_channel` with 2**20 (1048576) fine channels and 16 time steps that is 16777216 data points. Each dynamic spectra is a
+four-byte float and has a corresponding 1 byte mask for a total of ~83MB on the GPU.
+
+The dedrifted spectrum is sized with the same number of channels, but sized for the number of drifts. The dedrift process also tracks
+flags for each channel and drift. The tracked flags are low spectral kurtosis, high spectral kurtosis, and sigma clipping which take
+1 B each for a total of 3B.
+
+The hit search process uses an another array also sized by number of drifts x number of channels to assign unique label ids for each
+local maxima in dedrift spectrum. There is a small amount of 
+
++------------------+---------------+----------------------+---------------+-----------------+
+| Step and name    | shape         | representative shape | datatype size | total size (MB) |
++==================+===============+======================+===============+=================+
+| dynamic spectra  | tstep, Nchan  | 16, 2**20            | 4B            | 67 MB           |
+| mask             | tstep, Nchan  | 16, 2**20            | 1B            | 16 MB           |
++------------------+---------------+----------------------+---------------+-----------------+
+| dedrifted spectra| Ndrift, Nchan | 1000, 2**20          | 4B            | 4194 MB         |
+| dedrifted flags  | Ndrift, Nchan | 1000, 2**20          | 3B            | 3145 MB         |
++------------------+---------------+----------------------+---------------+-----------------+
+| hit search label | Ndrift, Nchan | 1000, 2**20          | 4B            | 4194 MB         |
+| hit metadata     |               |                      |               |                 |
++------------------+---------------+----------------------+---------------+-----------------+
+| Total            |               |                      |               | 11616 MB        |
++------------------+---------------+----------------------+---------------+-----------------+
