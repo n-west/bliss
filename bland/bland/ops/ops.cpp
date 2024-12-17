@@ -16,6 +16,7 @@
 #endif
 
 #include <fmt/core.h>
+#include <fmt/ranges.h>
 
 #include <cstdlib>
 
@@ -188,7 +189,7 @@ ndarray_slice bland::slice(const ndarray &a, int64_t dim, int64_t start, int64_t
     // of the current axis rather than the number of items at new stride
     sliced._tensor._offsets[dim] += start * sliced._tensor.strides[dim];
 
-    sliced._tensor.shape[dim] = (end - start) / stride;
+    sliced._tensor.shape[dim] = (end - start + stride - 1) / stride;
     sliced._tensor.strides[dim] *= stride;
 
     return sliced;

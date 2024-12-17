@@ -148,7 +148,7 @@ struct masked_mean_impl {
         }
 
         if (mask.dtype().code != ndarray::datatype::uint8.code && mask.dtype().bits != 8) {
-            throw std::runtime_error("masked_mean: mask dtype is not uint8_t");
+            throw std::runtime_error("masked_mean_impl::call: mask dtype is not uint8_t");
         }
         auto mask_data    = mask.data_ptr<uint8_t>();
         auto mask_shape   = mask.shape();
@@ -205,7 +205,7 @@ struct masked_mean_impl {
             }
 
             if (elements_in_mean == 0) {
-                throw std::runtime_error("masked_mean: there are no non-masked elements to take the mean of");
+                throw std::runtime_error("masked_mean_impl::call: there are no non-masked elements to take the mean of");
             }
             out_data[out_linear_index] = static_cast<out_datatype>(mean / (elements_in_mean));
             // Increment the multi-dimensional output index
@@ -379,7 +379,7 @@ struct masked_stddev_impl {
         std::vector<int64_t> input_index(a_shape.size(), 0);
 
         if (mask.dtype().code != ndarray::datatype::uint8.code && mask.dtype().bits != 8) {
-            throw std::runtime_error("masked_mean: mask dtype is not uint8_t");
+            throw std::runtime_error("masked_stddev_impl:call: mask dtype is not uint8_t");
         }
         auto mask_data    = mask.data_ptr<uint8_t>();
         auto mask_shape   = mask.shape();
@@ -635,7 +635,7 @@ std::pair<ndarray, ndarray> bland::cpu::masked_mean_stddev(const ndarray &a, con
         std::vector<int64_t> input_index(a_shape.size(), 0);
 
         if (mask.dtype().code != ndarray::datatype::uint8.code && mask.dtype().bits != 8) {
-            throw std::runtime_error("masked_mean: mask dtype is not uint8_t");
+            throw std::runtime_error("masked_mean_stddev: mask dtype is not uint8_t");
         }
         auto mask_data    = mask.data_ptr<uint8_t>();
         auto mask_shape   = mask.shape();
