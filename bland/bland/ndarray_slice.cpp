@@ -1,7 +1,6 @@
 #include "bland/ndarray_slice.hpp"
 
 #include "bland/ops/ops.hpp" // bland::slice
-#include <fmt/core.h>
 
 using namespace bland;
 
@@ -53,7 +52,16 @@ template ndarray_slice bland::ndarray::slice(slice_spec,
 ndarray_slice::ndarray_slice(const ndarray &other) : ndarray(other) {}
 
 ndarray_slice &ndarray_slice::operator=(const ndarray_slice &rhs) {
-    copy(rhs, *this);
+    if (rhs._tensor.data == _tensor.data) {
+        // assigning a slice of a slice to itself has been a source of several bugs
+        _tensor._shape_ownership = rhs._tensor._shape_ownership;
+        _tensor.shape = _tensor._shape_ownership.data();
+        _tensor._strides_ownership = rhs._tensor._strides_ownership;
+        _tensor.strides = _tensor._strides_ownership.data();
+        _tensor._offsets = rhs._tensor._offsets;
+    } else {
+        copy(rhs, *this);
+    }
     return *this;
 };
 
