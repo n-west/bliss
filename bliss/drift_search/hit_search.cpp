@@ -50,7 +50,11 @@ std::list<hit> bliss::hit_search(coarse_channel dedrifted_scan, hit_search_optio
         this_hit.start_freq_MHz = dedrifted_scan.fch1() + freq_offset;
         this_hit.start_time_sec = dedrifted_scan.tstart() * 24 * 60 * 60; // convert MJD to seconds since MJ
         this_hit.duration_sec   = dedrifted_scan.tsamp() * integration_length;
+        this_hit.integrated_channels = drift_rate_info[this_hit.rate_index].desmeared_bins * integration_length;
         this_hit.coarse_channel_number = dedrifted_scan._coarse_channel_number;
+        this_hit.rfi_counts[flag_values::sigma_clip] = c.rfi_counts.at(flag_values::sigma_clip);
+        this_hit.rfi_counts[flag_values::low_spectral_kurtosis] = c.rfi_counts.at(flag_values::low_spectral_kurtosis);
+        this_hit.rfi_counts[flag_values::high_spectral_kurtosis] = c.rfi_counts.at(flag_values::high_spectral_kurtosis);
         hits.push_back(this_hit);
     }
 

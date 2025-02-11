@@ -169,7 +169,6 @@ int main(int argc, char *argv[]) {
         // TODO: add cli args for where to send hits (stdout, file.dat, capn proto serialize,...)
         for (int scan_index=0; scan_index < pipeline_object_with_hits._scans.size(); ++scan_index) {
             auto &sc = pipeline_object_with_hits._scans[scan_index];
-            auto hits = sc.hits();
 
             if (output_path.empty()) {
                 auto path = fs::path(pipeline_files[scan_index]);
@@ -179,6 +178,7 @@ int main(int argc, char *argv[]) {
             }
 
             if (output_path == "-" || output_path == "stdout") {
+                auto hits = sc.hits();
                 fmt::print("scan has {} hits\n", hits.size());
                 for (auto &h : hits) {
                     fmt::print("{}\n", h.repr());

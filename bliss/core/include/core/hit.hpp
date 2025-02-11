@@ -19,6 +19,7 @@ struct hit {
     double  drift_rate_Hz_per_sec;
     double  power;
     int64_t time_span_steps; // this feels poorly named and maybe should belong next to duration_sec
+    int64_t integrated_channels;
     float   snr;
     float   bandwidth;
     int64_t binwidth;

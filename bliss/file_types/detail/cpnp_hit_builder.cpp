@@ -137,7 +137,7 @@ void bliss::detail::bliss_scan_to_capnp_scan(Scan::Builder &scan_builder, scan s
     auto serialized_coarse_channels = scan_builder.initCoarseChannels(number_coarse_channels);
 
     for (int cc_index=0; cc_index < number_coarse_channels; ++cc_index) {
-        auto cc = scan_with_hits.peak_coarse_channel(cc_index);
+        auto cc = scan_with_hits.read_coarse_channel(cc_index);
         if (cc != nullptr) {
             auto cc_builder = serialized_coarse_channels[cc_index];
             bliss_coarse_channel_to_capnp_coarse_channel_message(cc_builder, *cc);
