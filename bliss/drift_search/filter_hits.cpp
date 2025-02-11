@@ -15,22 +15,15 @@ std::list<hit> bliss::filter_hits(std::list<hit> hits, filter_options options) {
     auto current_hit = hits.begin();
     while (current_hit != hits.end()) {
         bool remove_hit = false;
-        // TODO: logic to decide if we should remove a hit
-        if (current_hit->rfi_counts[flag_values::filter_rolloff] > 0) {
-            remove_hit = true;
-        }
-        if (current_hit->rfi_counts[flag_values::low_spectral_kurtosis] > 0) {
-            remove_hit = true;
-        }
         if (options.filter_zero_drift) {
             // With floating-point consider any drift rate < eps
             if (std::fabs(current_hit->drift_rate_Hz_per_sec - 0) < eps) {
                 remove_hit = true;
             }
         }
-        // if (current_hit->rfi_counts[flag_values::high_spectral_kurtosis < 0) {
-        //     remove_hit = true;
-        // }
+        if (current_hit->rfi_counts[flag_values::sigma_clip] < std::fabs(current_hit->integrated_channels) * .1) {
+            remove_hit = true;
+        }
         if (remove_hit) {
             current_hit = hits.erase(current_hit);
         } else {

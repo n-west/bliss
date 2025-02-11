@@ -6,7 +6,7 @@ import matplotlib.gridspec as gridspec
 import matplotlib.patheffects as pe
 from matplotlib.patches import Rectangle
 
-def plot_hits(cc, focus_hits=None, all_hits=None, frequency_padding_Hz=500):
+def plot_hits(cc, focus_hits=None, all_hits=None, frequency_padding_Hz=500, snr=None):
     '''
     Return a list of plots centered on each `focus_hit` with all_hits visible when within
     the frequency bounds of the given plot. When `focus_hits` is None, one plot of the coarse
@@ -133,7 +133,12 @@ def plot_hits(cc, focus_hits=None, all_hits=None, frequency_padding_Hz=500):
 
         ax0.plot(hit_freqs, hit_spectrum.sum(0))
         ax1.imshow(hit_spectrum, aspect="auto", interpolation="None", cmap="cividis", vmin=spec_min, vmax=spec_max, extent=[hit_freqs[0], hit_freqs[-1], end_time, start_time])
-        ax2.imshow(hit_plane, aspect="auto", interpolation="None", cmap="cividis", vmin=plane_min, vmax=plane_max, extent=[hit_freqs[0], hit_freqs[-1], max_drift, min_drift])
+        if snr is not None:
+            # hit_plane is already in log10 scale
+            dedrift_plane = hit_plane > np.log10(snr)
+        else:
+            dedrift_plane = hit_plane
+        ax2.imshow(dedrift_plane, aspect="auto", interpolation="None", cmap="cividis", vmin=plane_min, vmax=plane_max, extent=[hit_freqs[0], hit_freqs[-1], max_drift, min_drift])
 
         center_freq = (min_freq + max_freq) / 2
         ticks_freq = np.linspace(min_freq, max_freq, 5)
