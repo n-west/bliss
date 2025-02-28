@@ -108,9 +108,7 @@ bland::ndarray bliss::gen_coarse_channel_response(int fine_per_coarse, int num_c
 
 coarse_channel bliss::equalize_passband_filter(coarse_channel cc, bland::ndarray h) {
     h = h.to(cc.device());
-    cc.set_data(bland::ndarray_deferred([cc_data=cc.data(), h]() mutable {
-        return bland::divide(cc_data, h);
-    }));
+    cc.set_data(bland::divide(cc.data(), h));
     return cc;
 }
 
@@ -123,8 +121,9 @@ coarse_channel bliss::equalize_passband_filter(coarse_channel cc, std::string_vi
 scan bliss::equalize_passband_filter(scan sc, bland::ndarray h) {
     auto number_coarse_channels = sc.get_number_coarse_channels();
     for (auto cc_index = 0; cc_index < number_coarse_channels; ++cc_index) {
-        auto cc = sc.read_coarse_channel(cc_index);
-        *cc = equalize_passband_filter(*cc, h);
+        sc.add_coarse_channel_transform([h](coarse_channel cc) { return equalize_passband_filter(cc, h); });
+        // auto cc = sc.read_coarse_channel(cc_index);
+        // *cc = equalize_passband_filter(*cc, h);
     }
     return sc;
 }
