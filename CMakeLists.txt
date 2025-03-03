@@ -27,7 +27,7 @@ cmake_dependent_option(WITH_CUDA "Enable CUDA for bliss operations" ON "CMAKE_CU
 add_feature_info(CUDA WITH_CUDA "Enabling bliss-specific CUDA operations")
 
 if(WITH_CUDA)
-  set(CMAKE_CUDA_ARCHITECTURES all)
+  set(CMAKE_CUDA_ARCHITECTURES 70)
   message("**BLISS:: enabling cuda (the language)")
   message("!!**: CMAKE_CUDA_ARCHITECTURES=${CMAKE_CUDA_ARCHITECTURES}")
   enable_language(CUDA)
@@ -111,6 +111,27 @@ set_package_properties(
   PURPOSE "Read/write BL HDF5-wrapped filterbank data"
 )
 
+# FetchContent_Declare(
+#   external_Matx
+#   EXCLUDE_FROM_ALL
+#   GIT_REPOSITORY https://github.com/NVIDIA/MatX
+#   GIT_TAG v0.9.0
+# )
+# FetchContent_MakeAvailable(external_Matx)
+
+# Formatting library
+FetchContent_Declare(
+  fmtlib
+  EXCLUDE_FROM_ALL
+  GIT_REPOSITORY https://github.com/fmtlib/fmt.git
+  GIT_TAG 598e5180857954bf4e8f21f2a8c526691a071af1
+)
+FetchContent_MakeAvailable(fmtlib)
+# Adds fmt::fmt
+
+find_package(holoscan REQUIRED CONFIG
+            PATHS "/opt/nvidia/holoscan/holoscan-linux-x86_64-2.8.0.1-archive" "/opt/nvidia/holoscan")
+
 # Cap'n proto find_package(CapnProto QUIET) (disable until we fix using installed capnp)
 if(NOT CapnProto_FOUND)
   # It's possible that the capnp executable exists without the library which will cause an error when their versions
@@ -145,15 +166,6 @@ set_package_properties(
 cmake_dependent_option(WITH_CAPNP "Enable Cap'n Proto to publish hits and events" ON "CapnProto_FOUND" OFF)
 add_feature_info(WITH_CAPNP CapnProto_FOUND "CAPNP serialization of hits and events")
 
-# Formatting library
-FetchContent_Declare(
-  fmtlib
-  EXCLUDE_FROM_ALL
-  GIT_REPOSITORY https://github.com/fmtlib/fmt.git
-  GIT_TAG 598e5180857954bf4e8f21f2a8c526691a071af1
-)
-FetchContent_MakeAvailable(fmtlib)
-# Adds fmt::fmt
 
 find_package(Python 3.8 REQUIRED COMPONENTS Interpreter Development.Module)
 # nanobind (for python bindings)

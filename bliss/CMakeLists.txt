@@ -9,6 +9,8 @@ add_subdirectory(drift_search)
 add_subdirectory(tests)
 add_subdirectory(python)
 
+# add_executable(test_matx test_matx.cu)
+# target_link_libraries(test_matx PRIVATE matx::matx)
 #
 # bliss_generate_channelizer_response
 #
