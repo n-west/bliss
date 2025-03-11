@@ -21,6 +21,7 @@ check_language(CUDA)
 find_package(CUDAToolkit)
 if(CUDAToolkit_FOUND)
   message("CUDAToolkit_FOUND")
+  message("CudaToolkit found at ${CUDAToolkit_LIBRARY_DIR}")
 endif()
 
 cmake_dependent_option(WITH_CUDA "Enable CUDA for bliss operations" ON "CMAKE_CUDA_COMPILER;CUDAToolkit_FOUND" OFF)
@@ -124,10 +125,18 @@ FetchContent_Declare(
   fmtlib
   EXCLUDE_FROM_ALL
   GIT_REPOSITORY https://github.com/fmtlib/fmt.git
-  GIT_TAG 598e5180857954bf4e8f21f2a8c526691a071af1
+  # GIT_TAG 11.1.4
+  GIT_TAG 10.1.1
 )
 FetchContent_MakeAvailable(fmtlib)
 # Adds fmt::fmt
+
+FetchContent_Declare(
+  nvidia_cccl
+  EXCLUDE_FROM_ALL
+  GIT_REPOSITORY https://github.com/nvidia/cccl
+  GIT_TAG v2.2.0)
+FetchContent_MakeAvailable(nvidia_cccl)
 
 find_package(holoscan REQUIRED CONFIG
             PATHS "/opt/nvidia/holoscan/holoscan-linux-x86_64-2.8.0.1-archive" "/opt/nvidia/holoscan")

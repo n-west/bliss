@@ -351,10 +351,12 @@ std::string bland::ndarray::repr() const {
     case kDLComplex: {
         switch (dtype.bits) {
         case 64: {
-            return pretty_print<std::complex<float>>(*this);
+            // return pretty_print<std::complex<float>>(*this);
+            return "complex<float32> not repr implemented";
         } break;
         case 128: {
-            return pretty_print<std::complex<double>>(*this);
+            return "complex<float64> not repr implemented";
+            // return pretty_print<std::complex<double>>(*this);
         } break;
         default:
             throw std::runtime_error("Unsupported float bitwidth");

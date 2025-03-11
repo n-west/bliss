@@ -27,5 +27,5 @@ target_link_libraries(pybliss_preprocess INTERFACE bliss_preprocess)
 
 
 add_library(holobliss_preprocess
-    holoscan_preprocess.cpp)
-target_link_libraries(holobliss_preprocess PUBLIC holoscan::core PRIVATE bliss_preprocess)
+    hs_preprocess.cpp)
+target_link_libraries(holobliss_preprocess PUBLIC CCCL::CCCL holoscan::core PRIVATE bliss_preprocess)
