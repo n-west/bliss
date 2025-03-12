@@ -16,7 +16,17 @@ namespace bland {
 std::pair<std::map<int, config::cuda_device_attributes>, std::vector<int>> check_cuda_architectures() {
 #if BLAND_CUDA_CODE
     int device_count;
-    cudaGetDeviceCount(&device_count);
+    auto cu_result = cudaGetDeviceCount(&device_count);
+
+    if (cu_result != cudaSuccess) {
+        fmt::print("ERROR: CUDA error {} when trying to get device count\n", static_cast<int>(cu_result));
+        if (cu_result == cudaErrorCompatNotSupportedOnDevice) {
+            fmt::print("ERROR: Got cuda error cudaErrorCompatNotSupportedOnDevice which usually means a driver/library"
+            " version mismatch. If the nvidia driver was recently upgraded try reloading it. sudo rmmod nvidia_drm;"
+            " sudo rmmod nvidia_modeset; sudo rmmod nvidia_uvm; sudo rmmod nvidia\n");
+        }
+        return {{},{}};
+    }
 
     if (device_count == 0) {
         fmt::print("WARN: no CUDA devices found. Will only use CPU\n");
@@ -40,7 +50,7 @@ std::pair<std::map<int, config::cuda_device_attributes>, std::vector<int>> check
             }
             fmt::print("Found a usable device\n");
         } else {
-            fmt::print("WARN: Device {} has compute architecture {}.{} which is incompatible with this build.\n", device_index, deviceProp.major, deviceProp.minor);
+            fmt::print("WARN: Device {}/{} has compute architecture {}.{} which is incompatible with this build.\n", device_index, device_count, deviceProp.major, deviceProp.minor);
             nonuseable_devices.emplace_back(device_index);
         }
     }
