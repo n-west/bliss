@@ -7,6 +7,7 @@
 #include <bland/bland.hpp>
 #include <iostream> // cerr
 #include <vector>
+#include <array>
 
 using namespace bliss;
 

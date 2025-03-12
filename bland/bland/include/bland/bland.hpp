@@ -2,7 +2,6 @@
 
 #include "ndarray.hpp"
 #include "ndarray_slice.hpp"
-#include "ndarray_deferred.hpp"
 
 #include "ops/creators.hpp"
 #include "ops/ops.hpp"

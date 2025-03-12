@@ -102,7 +102,7 @@ noise_stats bliss::estimate_noise_power(bland::ndarray x, noise_power_estimate_o
  *
  * If the mask has no free flags
  */
-bland::ndarray_deferred correct_mask(const bland::ndarray &mask) {
+bland::ndarray correct_mask(const bland::ndarray &mask) {
 
     auto unmasked_samples = bland::count_true(bland::ndarray(mask) == 0);
     if (unmasked_samples == 0) {
