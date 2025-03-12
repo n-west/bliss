@@ -3,7 +3,6 @@ add_library(bland
     bland_tensor_internals.cpp
     ndarray.cpp
     ndarray_slice.cpp
-    ndarray_deferred.cpp
     internal/include/internal/shape_helpers.cpp
 
     ops/ops.cpp

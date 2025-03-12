@@ -57,25 +57,25 @@ struct coarse_channel {
                    std::optional<double>           za_start,
                    int64_t        coarse_channel_number=0);
 
-    coarse_channel(std::function<bland::ndarray()> data,
-                   std::function<bland::ndarray()> mask,
-                   double                          fch1,
-                   double                          foff,
-                   int64_t                         machine_id,
-                   int64_t                         nbits,
-                   int64_t                         nchans,
-                   int64_t                         ntsteps,
-                   int64_t                         nifs,
-                   std::string                     source_name,
-                   double                          src_dej,
-                   double                          src_raj,
-                   int64_t                         telescope_id,
-                   double                          tsamp,
-                   double                          tstart,
-                   int64_t                         data_type,
-                   double                          az_start,
-                   double                          za_start,
-                   int64_t        coarse_channel_number=0);
+    // coarse_channel(std::function<bland::ndarray()> data,
+    //                std::function<bland::ndarray()> mask,
+    //                double                          fch1,
+    //                double                          foff,
+    //                int64_t                         machine_id,
+    //                int64_t                         nbits,
+    //                int64_t                         nchans,
+    //                int64_t                         ntsteps,
+    //                int64_t                         nifs,
+    //                std::string                     source_name,
+    //                double                          src_dej,
+    //                double                          src_raj,
+    //                int64_t                         telescope_id,
+    //                double                          tsamp,
+    //                double                          tstart,
+    //                int64_t                         data_type,
+    //                double                          az_start,
+    //                double                          za_start,
+    //                int64_t        coarse_channel_number=0);
 
     coarse_channel(std::function<bland::ndarray()> data,
                    std::function<bland::ndarray()> mask,
@@ -119,11 +119,9 @@ struct coarse_channel {
 
     bland::ndarray data();
     void                    set_data(bland::ndarray new_mask);
-    void                    set_data(bland::ndarray_deferred new_mask);
 
     bland::ndarray mask();
     void                    set_mask(bland::ndarray new_mask);
-    void                    set_mask(bland::ndarray_deferred new_mask);
 
     frequency_drift_plane integrated_drift_plane();
     void                  set_integrated_drift_plane(frequency_drift_plane integrated_plane);
@@ -206,8 +204,8 @@ struct coarse_channel {
     std::optional<double>  _az_start;
     std::optional<double>  _za_start;
 
-    bland::ndarray_deferred _data;
-    bland::ndarray_deferred _mask;
+    bland::ndarray _data;
+    bland::ndarray _mask;
 
     std::optional<noise_stats> _noise_stats;
 

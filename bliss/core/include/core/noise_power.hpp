@@ -1,6 +1,6 @@
 #pragma once
 
-#include <bland/ndarray_deferred.hpp>
+#include <bland/ndarray.hpp>
 
 #include <tuple>
 #include <string>

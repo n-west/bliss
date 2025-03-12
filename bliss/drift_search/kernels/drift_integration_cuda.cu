@@ -27,7 +27,7 @@ struct kernel_drift_info {
 };
 
 __global__ void integrate_drifts(float* drift_plane_data,
-                            uint8_t* rolloff_data,
+                            uint8_t* sigmaclip_data,
                             uint8_t* low_sk_rfi_data, 
                             uint8_t* high_sk_rfi_data,
                             int32_t* drift_plane_shape, int32_t* drift_plane_strides,
@@ -53,7 +53,7 @@ __global__ void integrate_drifts(float* drift_plane_data,
 
             uint8_t accumulated_low_sk = 0;
             uint8_t accumulated_high_sk = 0;
-            uint8_t accumulated_rolloff = 0;
+            uint8_t accumulated_sigmaclip = 0;
 
             float accumulated_spectrum = 0;
             int accumulated_bins = 0;
@@ -79,7 +79,7 @@ __global__ void integrate_drifts(float* drift_plane_data,
                             accumulated_high_sk += 1;
                         }
                         if (rfi_val & static_cast<uint8_t>(flag_values::sigma_clip)) {
-                            accumulated_rolloff += 1;
+                            accumulated_sigmaclip += 1;
                         }
                     }
                 }
@@ -91,7 +91,7 @@ __global__ void integrate_drifts(float* drift_plane_data,
                 drift_plane_data[drift_plane_index] = accumulated_spectrum / accumulated_bins;
                 low_sk_rfi_data[drift_plane_index] = accumulated_low_sk;
                 high_sk_rfi_data[drift_plane_index] = accumulated_high_sk;
-                rolloff_data[drift_plane_index] = accumulated_rolloff;
+                sigmaclip_data[drift_plane_index] = accumulated_sigmaclip;
             }
         }
     }
@@ -134,11 +134,11 @@ bliss::integrate_linear_rounded_bins_cuda(bland::ndarray    spectrum_grid,
     bland::ndarray drift_plane({number_drifts, number_channels}, spectrum_grid.dtype(), spectrum_grid.device());
 
     auto rfi_in_drift    = integrated_flags(number_drifts, number_channels, rfi_mask.device());
-    auto rolloff_rfi_ptr = rfi_in_drift.sigma_clip.data_ptr<uint8_t>();
+    auto sigmaclip_rfi_ptr = rfi_in_drift.sigma_clip.data_ptr<uint8_t>();
     auto lowsk_rfi_ptr   = rfi_in_drift.low_spectral_kurtosis.data_ptr<uint8_t>();
     auto highsk_rfi_ptr  = rfi_in_drift.high_spectral_kurtosis.data_ptr<uint8_t>();
 
-    auto rolloff_rfi_strides = rfi_in_drift.sigma_clip.strides();
+    auto sigmaclip_rfi_strides = rfi_in_drift.sigma_clip.strides();
     auto lowsk_rfi_strides = rfi_in_drift.low_spectral_kurtosis.strides();
     auto highsk_rfi_strides = rfi_in_drift.high_spectral_kurtosis.strides();
 
@@ -158,7 +158,8 @@ bliss::integrate_linear_rounded_bins_cuda(bland::ndarray    spectrum_grid,
     dim3 grid(4096, 1);
     dim3 block(256, 1);
     integrate_drifts<<<grid, block>>>(
-        drift_plane_ptr, rolloff_rfi_ptr,
+        drift_plane_ptr,
+        sigmaclip_rfi_ptr,
         lowsk_rfi_ptr,
         highsk_rfi_ptr,
         thrust::raw_pointer_cast(dev_drift_plane_shape.data()), thrust::raw_pointer_cast(dev_drift_plane_strides.data()),

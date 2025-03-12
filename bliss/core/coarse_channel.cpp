@@ -80,45 +80,45 @@ coarse_channel::coarse_channel(double              fch1,
         _za_start(za_start),
         _coarse_channel_number(coarse_channel_number) {}
 
-coarse_channel::coarse_channel(std::function<bland::ndarray()> data,
-                               std::function<bland::ndarray()> mask,
-                               double                          fch1,
-                               double                          foff,
-                               int64_t                         machine_id,
-                               int64_t                         nbits,
-                               int64_t                         nchans,
-                               int64_t                         ntsteps,
-                               int64_t                         nifs,
-                               std::string                     source_name,
-                               double                          src_dej,
-                               double                          src_raj,
-                               int64_t                         telescope_id,
-                               double                          tsamp,
-                               double                          tstart,
-                               int64_t                         data_type,
-                               double                          az_start,
-                               double                          za_start,
-                               int64_t                         coarse_channel_number) :
-        coarse_channel(fch1,
-                       foff,
-                       machine_id,
-                       nbits,
-                       nchans,
-                       ntsteps,
-                       nifs,
-                       source_name,
-                       src_dej,
-                       src_raj,
-                       telescope_id,
-                       tsamp,
-                       tstart,
-                       data_type,
-                       az_start,
-                       za_start,
-                       coarse_channel_number) {
-    _data = data;
-    _mask = mask;
-}
+// coarse_channel::coarse_channel(std::function<bland::ndarray()> data,
+//                                std::function<bland::ndarray()> mask,
+//                                double                          fch1,
+//                                double                          foff,
+//                                int64_t                         machine_id,
+//                                int64_t                         nbits,
+//                                int64_t                         nchans,
+//                                int64_t                         ntsteps,
+//                                int64_t                         nifs,
+//                                std::string                     source_name,
+//                                double                          src_dej,
+//                                double                          src_raj,
+//                                int64_t                         telescope_id,
+//                                double                          tsamp,
+//                                double                          tstart,
+//                                int64_t                         data_type,
+//                                double                          az_start,
+//                                double                          za_start,
+//                                int64_t                         coarse_channel_number) :
+//         coarse_channel(fch1,
+//                        foff,
+//                        machine_id,
+//                        nbits,
+//                        nchans,
+//                        ntsteps,
+//                        nifs,
+//                        source_name,
+//                        src_dej,
+//                        src_raj,
+//                        telescope_id,
+//                        tsamp,
+//                        tstart,
+//                        data_type,
+//                        az_start,
+//                        za_start,
+//                        coarse_channel_number) {
+//     _data = data();
+//     _mask = mask();
+// }
 
 coarse_channel::coarse_channel(std::function<bland::ndarray()> data,
                                 std::function<bland::ndarray()> mask,
@@ -156,8 +156,8 @@ coarse_channel::coarse_channel(std::function<bland::ndarray()> data,
                        az_start,
                        za_start,
                        coarse_channel_number) {
-    _data = data;
-    _mask = mask;
+    _data = data();
+    _mask = mask();
 }
 
 coarse_channel::coarse_channel(bland::ndarray data,
@@ -210,10 +210,6 @@ void bliss::coarse_channel::set_data(bland::ndarray new_data) {
     _data = new_data; // TODO: should we send _mask to _device?
 }
 
-void bliss::coarse_channel::set_data(bland::ndarray_deferred deferred_data) {
-    _data = deferred_data; // TODO: should we send _mask to _device?
-}
-
 bland::ndarray bliss::coarse_channel::mask() {
     // TODO: add an option to compute graph to memoize the mask read from disk
     // _mask = _mask.to(_device);
@@ -222,10 +218,6 @@ bland::ndarray bliss::coarse_channel::mask() {
 
 void bliss::coarse_channel::set_mask(bland::ndarray new_mask) {
     _mask = new_mask; // TODO: should we send _mask to _device?
-}
-
-void bliss::coarse_channel::set_mask(bland::ndarray_deferred deferred_mask) {
-    _mask = deferred_mask; // TODO: should we send _mask to _device?
 }
 
 noise_stats bliss::coarse_channel::noise_estimate() const {

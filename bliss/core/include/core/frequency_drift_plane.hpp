@@ -2,8 +2,6 @@
 
 #include "integrate_drifts_options.hpp" // integrated_flags
 
-#include <bland/ndarray_deferred.hpp>
-
 #include <fmt/core.h>
 
 #include <cstdint>
@@ -29,8 +27,8 @@ class frequency_drift_plane {
         }
     };
 
-    frequency_drift_plane(bland::ndarray_deferred drift_plane, integrated_flags drift_rfi);
-    frequency_drift_plane(bland::ndarray_deferred drift_plane, integrated_flags drift_rfi, int64_t integration_steps, std::vector<drift_rate> dri);
+    frequency_drift_plane(bland::ndarray drift_plane, integrated_flags drift_rfi);
+    frequency_drift_plane(bland::ndarray drift_plane, integrated_flags drift_rfi, int64_t integration_steps, std::vector<drift_rate> dri);
 
     int64_t integration_steps();
 
@@ -56,7 +54,7 @@ class frequency_drift_plane {
     std::vector<drift_rate> _drift_rate_info;
 
     // The actual frequency drift plane
-    bland::ndarray_deferred _integrated_drifts;
+    bland::ndarray _integrated_drifts;
 
     integrated_flags _dedrifted_rfi;
 
