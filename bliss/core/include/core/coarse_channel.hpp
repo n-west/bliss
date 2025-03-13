@@ -125,7 +125,6 @@ struct coarse_channel {
 
     frequency_drift_plane integrated_drift_plane();
     void                  set_integrated_drift_plane(frequency_drift_plane integrated_plane);
-    void                  set_integrated_drift_plane(std::function<frequency_drift_plane()> integrated_plane);
 
     noise_stats noise_estimate() const;
     void        set_noise_estimate(noise_stats estimate);
@@ -133,7 +132,7 @@ struct coarse_channel {
     bool           has_hits();
     std::list<hit> hits() const;
     void           set_hits(std::list<hit> new_hits);
-    void           set_hits(std::function<std::list<hit>()> find_hits_func);
+    // void           set_hits(std::function<std::list<hit>()> find_hits_func);
 
     bland::ndarray::dev device();
 
@@ -209,10 +208,9 @@ struct coarse_channel {
 
     std::optional<noise_stats> _noise_stats;
 
-    std::shared_ptr<std::variant<frequency_drift_plane, std::function<frequency_drift_plane()>>>
-            _integrated_drift_plane = nullptr;
+    std::shared_ptr<frequency_drift_plane> _integrated_drift_plane = nullptr;
 
-    std::shared_ptr<std::variant<std::list<hit>, std::function<std::list<hit>()>>> _hits = nullptr;
+    std::shared_ptr<std::list<hit>> _hits = nullptr;
 
     bland::ndarray::dev _device = bland::ndarray::dev::cpu;
 };

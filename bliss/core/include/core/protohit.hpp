@@ -7,8 +7,6 @@
 
 namespace bliss {
 
-using rfi = std::map<flag_values, uint8_t>; // TODO: not so elegant, but OKish?
-
 struct freq_drift_coord {
     int64_t drift_index=0;
     int64_t frequency_channel=0;

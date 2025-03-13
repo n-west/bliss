@@ -317,6 +317,7 @@ std::list<hit> bliss::scan::hits() {
     std::list<hit> all_hits;
     int            number_coarse_channels = get_number_coarse_channels();
     for (int cc_index = 0; cc_index < number_coarse_channels; ++cc_index) {
+        // read_coarse_channel triggers the data pipeline (_coarse_channel_pipeline)
         auto cc = read_coarse_channel(cc_index);
         if (cc != nullptr) {
             try {

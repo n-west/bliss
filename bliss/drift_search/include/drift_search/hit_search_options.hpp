@@ -1,6 +1,6 @@
 #pragma once
 
-#include <bland/stride_helper.hpp>
+#include "core/integrate_drifts_options.hpp"
 
 #include <vector>
 
@@ -18,7 +18,15 @@ struct hit_search_options {
 
     int neighbor_l1_dist = 7;
 
-    bool detach_graph = true;
+    /**
+     * Whether to search in increments of a drift block or generate the whole dedrift plane at once
+     * 
+     * Generating the entire dedrift plane is nicer for plotting and debugging but consumes more memory
+     * which may limit the effective drift rate range that can be searched.
+     */
+    bool iterative = true;
+    integrate_drifts_options integration_options;
+
 };
 
 }

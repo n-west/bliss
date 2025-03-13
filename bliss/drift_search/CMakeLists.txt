@@ -15,6 +15,7 @@ if (WITH_CUDA)
         kernels/drift_integration_cuda.cu
         # hit searches
         kernels/connected_components_cuda.cu
+        kernels/connected_components_driftblock_cuda.cu
         kernels/local_maxima_cuda.cu
         )
 endif()

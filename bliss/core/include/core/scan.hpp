@@ -57,6 +57,11 @@ class scan {
     void add_coarse_channel_transform(std::function<coarse_channel(coarse_channel)> transform);
 
     /**
+     * A function that will be called on data read from coarse channel to generate hits
+     */
+    void add_hit_pipeline_transform(std::function<coarse_channel(coarse_channel)> transform);
+
+    /**
      * return the coarse channel index that the given frequency is in
      * 
      * useful for reinvestigating hits by looking up frequency
@@ -138,7 +143,10 @@ class scan {
     // std::string _original_file_path={};
     std::map<int, std::shared_ptr<coarse_channel>> _coarse_channels;
     std::shared_ptr<h5_filterbank_file>            _h5_file_handle = nullptr;
+    // pipeline for modifying data / masks
     std::vector<std::function<coarse_channel(coarse_channel)>> _coarse_channel_pipeline;
+    // pipeline for data -> hits
+    std::vector<std::function<hit(coarse_channel)>> _hit_pipeline;
 
     // Read from h5 file
     double      _fch1;

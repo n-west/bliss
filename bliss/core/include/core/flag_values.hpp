@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <map>
 
 namespace bliss {
 /**
@@ -17,4 +18,7 @@ enum flag_values {
     RESERVED_1             = 1 << 6,
     RESERVED_2             = 1 << 7,
 };
+
+using rfi = std::map<flag_values, uint8_t>; // TODO: not so elegant, but OKish?
+
 } // namespace bliss

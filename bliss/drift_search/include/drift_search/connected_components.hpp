@@ -5,6 +5,7 @@
 #include <drift_search/protohit_search.hpp>
 
 #include <bland/ndarray.hpp>
+#include <bland/stride_helper.hpp> // bland::nd_coords
 
 #include <limits>
 #include <vector>

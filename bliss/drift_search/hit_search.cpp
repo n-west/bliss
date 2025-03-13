@@ -14,12 +14,31 @@ using namespace bliss;
 
 
 
-std::list<hit> bliss::hit_search(coarse_channel dedrifted_scan, hit_search_options options) {
+std::list<hit> bliss::hit_search(coarse_channel working_cc, hit_search_options options) {
 
-    auto noise_estimate  = dedrifted_scan.noise_estimate();
-    auto dedrifted_plane = dedrifted_scan.integrated_drift_plane();
+    auto noise_estimate  = working_cc.noise_estimate();
+    // We want to be able to iterate on an integrated_drift_plane and protohit search
+    // integrated_drift_plane will throw (std::runtime_error) if there is no drift plane, we can catch this
+    // and do some drift plane by default, which could be an iterative integrate + proto search
+    
 
-    auto protohits = protohit_search(dedrifted_plane, noise_estimate, options);
+    std::vector<protohit> protohits;
+    auto noise_estimate  = working_cc.noise_estimate();
+    auto protohits = driftblock_protohit_search(working_cc, noise_estimate, options);
+    auto dedrifted_plane = working_cc.integrated_drift_plane();
+    protohits = protohit_search(dedrifted_plane, noise_estimate, options);
+    // // We need to figure out some scoping issues, such as integration steps and drift_rate_info
+    // if (options.iterative == true) {
+    //     fmt::print("No drift plane found, generating one\n");
+    //     // auto dedrifted_plane = dedrifted_scan.integrated_drift_plane();
+    // } else {
+    //     try {
+    //     } catch (std::runtime_error &e) {
+    //         fmt::print("ERROR: the dedrift plane does not exist");
+    //     }
+    // }
+
+    // The rest of this is actually just translating protohits to hits
 
     auto integration_length = dedrifted_plane.integration_steps();
     auto drift_rate_info    = dedrifted_plane.drift_rate_info();
@@ -32,8 +51,8 @@ std::list<hit> bliss::hit_search(coarse_channel dedrifted_scan, hit_search_optio
         this_hit.start_freq_index = c.index_max.frequency_channel;
 
         // Start frequency in Hz is bin * Hz/bin
-        auto freq_offset        = dedrifted_scan.foff() * this_hit.start_freq_index;
-        this_hit.start_freq_MHz = dedrifted_scan.fch1() + freq_offset;
+        auto freq_offset        = working_cc.foff() * this_hit.start_freq_index;
+        this_hit.start_freq_MHz = working_cc.fch1() + freq_offset;
 
         this_hit.drift_rate_Hz_per_sec = drift_rate_info[this_hit.rate_index].drift_rate_Hz_per_sec;
 
@@ -44,14 +63,14 @@ std::list<hit> bliss::hit_search(coarse_channel dedrifted_scan, hit_search_optio
         this_hit.snr   = signal_power / c.desmeared_noise;
 
         this_hit.binwidth  = c.binwidth;
-        this_hit.bandwidth = this_hit.binwidth * std::abs(1e6 * dedrifted_scan.foff());
+        this_hit.bandwidth = this_hit.binwidth * std::abs(1e6 * working_cc.foff());
 
-        freq_offset             = dedrifted_scan.foff() * c.index_center.frequency_channel;
-        this_hit.start_freq_MHz = dedrifted_scan.fch1() + freq_offset;
-        this_hit.start_time_sec = dedrifted_scan.tstart() * 24 * 60 * 60; // convert MJD to seconds since MJ
-        this_hit.duration_sec   = dedrifted_scan.tsamp() * integration_length;
+        freq_offset             = working_cc.foff() * c.index_center.frequency_channel;
+        this_hit.start_freq_MHz = working_cc.fch1() + freq_offset;
+        this_hit.start_time_sec = working_cc.tstart() * 24 * 60 * 60; // convert MJD to seconds since MJ
+        this_hit.duration_sec   = working_cc.tsamp() * integration_length;
         this_hit.integrated_channels = drift_rate_info[this_hit.rate_index].desmeared_bins * integration_length;
-        this_hit.coarse_channel_number = dedrifted_scan._coarse_channel_number;
+        this_hit.coarse_channel_number = working_cc._coarse_channel_number;
         this_hit.rfi_counts[flag_values::sigma_clip] = c.rfi_counts.at(flag_values::sigma_clip);
         this_hit.rfi_counts[flag_values::low_spectral_kurtosis] = c.rfi_counts.at(flag_values::low_spectral_kurtosis);
         this_hit.rfi_counts[flag_values::high_spectral_kurtosis] = c.rfi_counts.at(flag_values::high_spectral_kurtosis);

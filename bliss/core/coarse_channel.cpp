@@ -80,45 +80,6 @@ coarse_channel::coarse_channel(double              fch1,
         _za_start(za_start),
         _coarse_channel_number(coarse_channel_number) {}
 
-// coarse_channel::coarse_channel(std::function<bland::ndarray()> data,
-//                                std::function<bland::ndarray()> mask,
-//                                double                          fch1,
-//                                double                          foff,
-//                                int64_t                         machine_id,
-//                                int64_t                         nbits,
-//                                int64_t                         nchans,
-//                                int64_t                         ntsteps,
-//                                int64_t                         nifs,
-//                                std::string                     source_name,
-//                                double                          src_dej,
-//                                double                          src_raj,
-//                                int64_t                         telescope_id,
-//                                double                          tsamp,
-//                                double                          tstart,
-//                                int64_t                         data_type,
-//                                double                          az_start,
-//                                double                          za_start,
-//                                int64_t                         coarse_channel_number) :
-//         coarse_channel(fch1,
-//                        foff,
-//                        machine_id,
-//                        nbits,
-//                        nchans,
-//                        ntsteps,
-//                        nifs,
-//                        source_name,
-//                        src_dej,
-//                        src_raj,
-//                        telescope_id,
-//                        tsamp,
-//                        tstart,
-//                        data_type,
-//                        az_start,
-//                        za_start,
-//                        coarse_channel_number) {
-//     _data = data();
-//     _mask = mask();
-// }
 
 coarse_channel::coarse_channel(std::function<bland::ndarray()> data,
                                 std::function<bland::ndarray()> mask,
@@ -201,23 +162,19 @@ coarse_channel::coarse_channel(bland::ndarray data,
 }
 
 bland::ndarray bliss::coarse_channel::data() {
-    // TODO: add an option to compute graph to memoize the data read from disk
-    // _data = _data.to(_device);
     return _data.to(_device);;
 }
 
 void bliss::coarse_channel::set_data(bland::ndarray new_data) {
-    _data = new_data; // TODO: should we send _mask to _device?
+    _data = new_data; // TODO: should we send _data to _device now?
 }
 
 bland::ndarray bliss::coarse_channel::mask() {
-    // TODO: add an option to compute graph to memoize the mask read from disk
-    // _mask = _mask.to(_device);
     return _mask.to(_device);
 }
 
 void bliss::coarse_channel::set_mask(bland::ndarray new_mask) {
-    _mask = new_mask; // TODO: should we send _mask to _device?
+    _mask = new_mask; // TODO: should we send _mask to _device now?
 }
 
 noise_stats bliss::coarse_channel::noise_estimate() const {
@@ -245,19 +202,11 @@ std::list<hit> bliss::coarse_channel::hits() const {
     if (_hits == nullptr) {
         throw std::logic_error("hits not set");
     }
-    if (std::holds_alternative<std::function<std::list<hit>()>>(*_hits)) {
-        *_hits = std::get<std::function<std::list<hit>()>>(*_hits)();
-    }
-    auto requested_hits = std::get<std::list<hit>>(*_hits);
-    return requested_hits;
+    return *_hits;
 }
 
 void bliss::coarse_channel::set_hits(std::list<hit> new_hits) {
-    _hits = std::make_shared<std::variant<std::list<hit>, std::function<std::list<hit>()>>>(new_hits);
-}
-
-void bliss::coarse_channel::set_hits(std::function<std::list<hit>()> find_hits_func) {
-    _hits = std::make_shared<std::variant<std::list<hit>, std::function<std::list<hit>()>>>(find_hits_func);
+    _hits = std::make_shared<std::list<hit>>(new_hits);
 }
 
 bland::ndarray::dev bliss::coarse_channel::device() {
@@ -284,10 +233,9 @@ void bliss::coarse_channel::set_device(std::string_view device) {
 void bliss::coarse_channel::push_device() {
     _mask = _mask.to(_device);
     _data = _data.to(_device);
-    if (_integrated_drift_plane != nullptr && std::holds_alternative<frequency_drift_plane>(*_integrated_drift_plane)) {
-        auto &idp = std::get<frequency_drift_plane>(*_integrated_drift_plane);
-        idp.set_device(_device);
-        idp.push_device();
+    if (_integrated_drift_plane != nullptr) {
+        _integrated_drift_plane->set_device(_device);
+        _integrated_drift_plane->push_device();
     }
 }
 
@@ -407,30 +355,10 @@ frequency_drift_plane bliss::coarse_channel::integrated_drift_plane() {
     if (_integrated_drift_plane == nullptr) {
         throw std::runtime_error("integrated_drift_plane not set");
     }
-    // TODO: this used to hold on to a memoized copy of the result, but is set up to not do that now
-    // in order to save VRAM at a cost of recomputing as needed. This could be passed in as a compute
-    // graph option
-    if (std::holds_alternative<std::function<frequency_drift_plane()>>(*_integrated_drift_plane)) {
-        auto integrated_drift_plane = std::get<std::function<frequency_drift_plane()>>(*_integrated_drift_plane)();
-
-        integrated_drift_plane.set_device(_device);
-        return integrated_drift_plane;
-    } else {
-        auto &ddp = std::get<frequency_drift_plane>(*_integrated_drift_plane);
-        ddp.set_device(_device);
-        return ddp;
-    }
+    _integrated_drift_plane->set_device(_device);
+    return *_integrated_drift_plane;
 }
 
 void bliss::coarse_channel::set_integrated_drift_plane(frequency_drift_plane integrated_plane) {
-    _integrated_drift_plane =
-            std::make_shared<std::variant<frequency_drift_plane, std::function<frequency_drift_plane()>>>(
-                    integrated_plane);
-}
-
-void bliss::coarse_channel::set_integrated_drift_plane(
-        std::function<frequency_drift_plane()> integrated_plane_generator) {
-    _integrated_drift_plane =
-            std::make_shared<std::variant<frequency_drift_plane, std::function<frequency_drift_plane()>>>(
-                    integrated_plane_generator);
+    _integrated_drift_plane = std::make_shared<frequency_drift_plane>(integrated_plane);
 }

@@ -41,3 +41,9 @@ std::vector<protohit> bliss::protohit_search(bliss::frequency_drift_plane &drift
 
     return components;
 }
+
+std::vector<protohit>
+bliss::driftblock_protohit_search(bliss::frequency_drift_plane &drift_plane, noise_stats noise_estimate, hit_search_options options) {
+
+}
+

@@ -15,8 +15,6 @@
 
 namespace bliss {
 
-using rfi = std::map<flag_values, uint8_t>; // TODO: not so elegant, but OKish?
-
 
 /**
  * High level wrapper around finding drifting signals above a noise floor
