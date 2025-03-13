@@ -156,13 +156,6 @@ bliss::integrate_linear_rounded_bins_cpu(bland::ndarray    spectrum_grid,
     }
 
     // normalize back by integration length
-    frequency_drift_plane freq_drift(drift_plane / time_steps, rfi_in_drift, time_steps, drift_rates);
+    frequency_drift_plane freq_drift(drift_plane / time_steps, rfi_in_drift, drift_rates);
     return freq_drift;
 }
-
-// bland::ndarray bliss::integrate_linear_rounded_bins_cpu(bland::ndarray    spectrum_grid,
-//                                                         integrate_drifts_options options) {
-//     auto dummy_rfi_mask = bland::ndarray({1, 1});
-//     auto drift_plane = integrate_linear_rounded_bins_cpu(spectrum_grid, dummy_rfi_mask, options);
-//     return drift_plane.integrated_drift_plane();
-// }

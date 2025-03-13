@@ -212,7 +212,8 @@ int main(int argc, char *argv[]) {
             bliss::noise_power_estimate_options{.estimator_method = bliss::noise_power_estimator::STDDEV,
                                                 .masked_estimate  = true}); // estimate noise power of unflagged data
 
-    pipeline_object = bliss::integrate_drifts(pipeline_object, dedrift_options);
+    // pipeline_object = bliss::integrate_drifts(pipeline_object, dedrift_options);
+    hit_search_options.integration_options = dedrift_options;
 
     auto pipeline_object_with_hits = bliss::hit_search(pipeline_object, hit_search_options);
 

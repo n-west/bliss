@@ -4,14 +4,10 @@
 using namespace bliss;
 
 
-bliss::frequency_drift_plane::frequency_drift_plane(bland::ndarray drift_plane, integrated_flags drift_rfi) : _integrated_drifts(drift_plane), _dedrifted_rfi(drift_rfi) {}
+bliss::frequency_drift_plane::frequency_drift_plane(bland::ndarray drift_plane, integrated_flags drift_rfi) : _integrated_drifts(drift_plane), _dedrifted_rfi(drift_rfi), _device(drift_plane.device()) {}
 
-bliss::frequency_drift_plane::frequency_drift_plane(bland::ndarray drift_plane, integrated_flags drift_rfi, int64_t integration_steps, std::vector<bliss::frequency_drift_plane::drift_rate> dri) : 
-    _integrated_drifts(drift_plane), _dedrifted_rfi(drift_rfi), _integration_steps(integration_steps), _drift_rate_info(dri) {
-}
-
-int64_t bliss::frequency_drift_plane::integration_steps() {
-    return _integration_steps;
+bliss::frequency_drift_plane::frequency_drift_plane(bland::ndarray drift_plane, integrated_flags drift_rfi, std::vector<bliss::frequency_drift_plane::drift_rate> dri) : 
+    _integrated_drifts(drift_plane), _dedrifted_rfi(drift_rfi), _drift_rate_info(dri), _device(drift_plane.device()) {
 }
 
 std::vector<bliss::frequency_drift_plane::drift_rate> bliss::frequency_drift_plane::drift_rate_info() {

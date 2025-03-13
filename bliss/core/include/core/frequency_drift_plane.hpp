@@ -28,9 +28,7 @@ class frequency_drift_plane {
     };
 
     frequency_drift_plane(bland::ndarray drift_plane, integrated_flags drift_rfi);
-    frequency_drift_plane(bland::ndarray drift_plane, integrated_flags drift_rfi, int64_t integration_steps, std::vector<drift_rate> dri);
-
-    int64_t integration_steps();
+    frequency_drift_plane(bland::ndarray drift_plane, integrated_flags drift_rfi, std::vector<drift_rate> dri);
 
     std::vector<drift_rate> drift_rate_info();
 
@@ -43,12 +41,9 @@ class frequency_drift_plane {
     void set_device(std::string_view dev_str);
 
     void push_device();
+    bland::ndarray::dev device() { return _device; }
 
     private:
-    // slow-time steps passed through for a complete integration, the total number
-    // of bins contributing to this integration is demsear_bins * integration_steps
-    int64_t _integration_steps;
-
     // info for each drift rate searched (consider changing to map with key being integer number of unit drifts)
     // also consider a more rich class that contains a fully parameterized info like search resolution and max rate searched
     std::vector<drift_rate> _drift_rate_info;

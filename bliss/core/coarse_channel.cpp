@@ -26,7 +26,7 @@ coarse_channel::coarse_channel(double      fch1,
                                int64_t     data_type,
                                double      az_start,
                                double      za_start,
-                               int64_t        coarse_channel_number) :
+                               int64_t     coarse_channel_number) :
         _fch1(fch1),
         _foff(foff),
         _machine_id(machine_id),
@@ -233,9 +233,10 @@ void bliss::coarse_channel::set_device(std::string_view device) {
 void bliss::coarse_channel::push_device() {
     _mask = _mask.to(_device);
     _data = _data.to(_device);
-    if (_integrated_drift_plane != nullptr) {
-        _integrated_drift_plane->set_device(_device);
-        _integrated_drift_plane->push_device();
+    if (_integrated_drift_plane.has_value()) {
+        auto &drift_plane = _integrated_drift_plane.value();
+        drift_plane.set_device(_device);
+        drift_plane.push_device();
     }
 }
 
@@ -351,14 +352,10 @@ double bliss::coarse_channel::za_start() const {
 //     _za_start = za_start;
 // }
 
-frequency_drift_plane bliss::coarse_channel::integrated_drift_plane() {
-    if (_integrated_drift_plane == nullptr) {
-        throw std::runtime_error("integrated_drift_plane not set");
-    }
-    _integrated_drift_plane->set_device(_device);
-    return *_integrated_drift_plane;
+std::optional<frequency_drift_plane> bliss::coarse_channel::integrated_drift_plane() {
+    return _integrated_drift_plane;
 }
 
 void bliss::coarse_channel::set_integrated_drift_plane(frequency_drift_plane integrated_plane) {
-    _integrated_drift_plane = std::make_shared<frequency_drift_plane>(integrated_plane);
+    _integrated_drift_plane = integrated_plane;
 }

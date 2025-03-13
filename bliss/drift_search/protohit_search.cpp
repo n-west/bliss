@@ -12,9 +12,11 @@
 
 using namespace bliss;
 
-std::vector<protohit> bliss::protohit_search(bliss::frequency_drift_plane &drift_plane, noise_stats noise_estimate, hit_search_options options) {
-    auto integration_length = drift_plane.integration_steps();
+std::vector<protohit> bliss::protohit_search(bliss::frequency_drift_plane &drift_plane, int64_t integration_length, noise_stats noise_estimate, hit_search_options options) {
 
+    // The integration_length is only needed to adjust the noise per drift
+    // we might be able to get rid of passing that around if we adjust the drift plane
+    // to be a correct integration power
     std::vector<protohit_drift_info> noise_per_drift;
     noise_per_drift.reserve(drift_plane.drift_rate_info().size());
     for (auto &drift_rate : drift_plane.drift_rate_info()) {
@@ -42,8 +44,13 @@ std::vector<protohit> bliss::protohit_search(bliss::frequency_drift_plane &drift
     return components;
 }
 
-std::vector<protohit>
-bliss::driftblock_protohit_search(bliss::frequency_drift_plane &drift_plane, noise_stats noise_estimate, hit_search_options options) {
+std::pair<std::vector<protohit>, std::vector<frequency_drift_plane::drift_rate>>
+bliss::driftblock_protohit_search(coarse_channel &working_cc, noise_stats noise_estimate, hit_search_options options) {
+    std::vector<protohit> protohits;
+    std::vector<frequency_drift_plane::drift_rate> drift_rate_info;
 
+    // TODO: the actual work
+    
+    return std::make_pair(protohits, drift_rate_info);
 }
 

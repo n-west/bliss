@@ -179,7 +179,7 @@ bliss::integrate_linear_rounded_bins_cuda(bland::ndarray    spectrum_grid,
     }
 
     // normalize back by integration length
-    frequency_drift_plane freq_drift(drift_plane, rfi_in_drift, time_steps, drift_rates);
+    frequency_drift_plane freq_drift(drift_plane, rfi_in_drift, drift_rates);
     return freq_drift;
 }
 

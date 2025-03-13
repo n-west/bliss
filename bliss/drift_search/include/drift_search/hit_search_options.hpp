@@ -24,7 +24,7 @@ struct hit_search_options {
      * Generating the entire dedrift plane is nicer for plotting and debugging but consumes more memory
      * which may limit the effective drift rate range that can be searched.
      */
-    bool iterative = true;
+    bool iterative = false;
     integrate_drifts_options integration_options;
 
 };

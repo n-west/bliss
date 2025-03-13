@@ -123,7 +123,7 @@ struct coarse_channel {
     bland::ndarray mask();
     void                    set_mask(bland::ndarray new_mask);
 
-    frequency_drift_plane integrated_drift_plane();
+    std::optional<frequency_drift_plane> integrated_drift_plane();
     void                  set_integrated_drift_plane(frequency_drift_plane integrated_plane);
 
     noise_stats noise_estimate() const;
@@ -208,7 +208,7 @@ struct coarse_channel {
 
     std::optional<noise_stats> _noise_stats;
 
-    std::shared_ptr<frequency_drift_plane> _integrated_drift_plane = nullptr;
+    std::optional<frequency_drift_plane> _integrated_drift_plane;
 
     std::shared_ptr<std::list<hit>> _hits = nullptr;
 
