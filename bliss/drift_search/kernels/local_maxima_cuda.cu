@@ -11,6 +11,9 @@ using namespace bliss;
 
 
 __global__ void local_maxima_kernel(float* doppler_spectrum_data,
+    uint8_t* rfi_low_sk,
+    uint8_t* rfi_high_sk,
+    uint8_t* rfi_sigmaclip,
     protohit_drift_info* noise_per_drift,
     int32_t number_drifts, int32_t number_channels,
     float noise_floor,
@@ -70,6 +73,7 @@ __global__ void local_maxima_kernel(float* doppler_spectrum_data,
                 protohits[protohit_index].snr = candidate_snr;
                 protohits[protohit_index].max_integration = candidate_maxima_val;
                 protohits[protohit_index].desmeared_noise = noise_at_this_drift;
+                
                 // TODO: figure out how to get rfi counts in
 
                 // At the local max drift rate, look up and down in frequency dim adding locations
@@ -124,6 +128,9 @@ __global__ void local_maxima_kernel(float* doppler_spectrum_data,
                 auto binwidth = max_upper_channel - max_lower_channel;
                 protohits[protohit_index].binwidth = binwidth;
                 protohits[protohit_index].index_center = {.drift_index=central_drift_index, .frequency_channel=(max_upper_channel + max_lower_channel)/2};
+                protohits[protohit_index].low_sk_count = rfi_low_sk[central_index];
+                protohits[protohit_index].high_sk_count = rfi_high_sk[central_index];
+                protohits[protohit_index].sigma_clip_count = rfi_sigmaclip[central_index];
             }
         }
     }
@@ -163,6 +170,9 @@ bliss::find_local_maxima_above_threshold_cuda(bland::ndarray                 dop
     int smem = 0;
     local_maxima_kernel<<<block_size, number_blocks, smem>>>(
         doppler_spectrum_data,
+        dedrifted_rfi.low_spectral_kurtosis.data_ptr<uint8_t>(),
+        dedrifted_rfi.high_spectral_kurtosis.data_ptr<uint8_t>(),
+        dedrifted_rfi.sigma_clip.data_ptr<uint8_t>(),
         thrust::raw_pointer_cast(dev_noise_per_drift.data()),
         number_drifts, number_channels,
         noise_floor, snr_threshold,
@@ -188,6 +198,12 @@ bliss::find_local_maxima_above_threshold_cuda(bland::ndarray                 dop
         new_protohit.binwidth = simple_hit.binwidth;
 
         // new_protohit.rfi_counts = simple_hit.desmeared_noise;
+        new_protohit.rfi_counts = {{
+            {flag_values::low_spectral_kurtosis, simple_hit.low_sk_count},
+            {flag_values::high_spectral_kurtosis, simple_hit.high_sk_count},
+            {flag_values::sigma_clip, simple_hit.sigma_clip_count},
+            {flag_values::filter_rolloff, 0}
+        }};
 
         export_protohits.push_back(new_protohit);
     }

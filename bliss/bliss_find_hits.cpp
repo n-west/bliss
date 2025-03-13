@@ -76,26 +76,25 @@ int main(int argc, char *argv[]) {
             (clipp::option("--number-coarse") & clipp::value("number_coarse_channels").set(number_coarse_channels)) % fmt::format("Number of coarse channels to process (default: {})", number_coarse_channels),
             (clipp::option("--nchan-per-coarse") & clipp::value("nchan_per_coarse").set(nchan_per_coarse)) % fmt::format("number of fine channels per coarse to use (default: {} auto-detects)", nchan_per_coarse),
 
+            // Compute device / params
+            (clipp::option("-d", "--device") & clipp::value("device").set(device) % fmt::format("Compute device to use (default: {})", device)),
+
             // Preprocessing
             (clipp::option("-e", "--equalizer-channel") & clipp::value("channel_taps").set(channel_taps_path)) % "the path to coarse channel response at fine frequency resolution",
             (clipp::option("--validate-pfb") & clipp::value("channel_taps").set(validate_pfb_response)) % fmt::format("whether to validate the coarse channel has a similar PFB response to the given response (default: {})", validate_pfb_response),
             (clipp::option("--excise-dc") .set(dedrift_options.desmear, true) |
              clipp::option("--noexcise-dc").set(dedrift_options.desmear, false)) % fmt::format("Excise DC offset from the data (default: {})", excise_dc),
 
-            // Compute device / params
-            (clipp::option("-d", "--device") & clipp::value("device").set(device)) % fmt::format("Compute device to use (default: {})", device),
+            // Flagging
+            (clipp::option("--filter-rolloff") & clipp::value("filter_rolloff").set(flag_options.filter_rolloff)) % "Flagging a percentage of band edges",
 
-            // Drift intgration / dedoppler
-            (clipp::option("--desmear") .set(dedrift_options.desmear, true) |
-             clipp::option("--nodesmear").set(dedrift_options.desmear, false)) % "Desmear the drift plane to compensate for drift rate crossing channels",
-            (clipp::option("-md", "--min-drift") & clipp::value("min-rate").set(dedrift_options.low_rate_Hz_per_sec)) % fmt::format("Minimum drift rate (default: {})", dedrift_options.low_rate_Hz_per_sec),
-            (clipp::option("-MD", "--max-drift") & clipp::value("max-rate").set(dedrift_options.high_rate_Hz_per_sec)) % fmt::format("Maximum drift rate (default: {})", dedrift_options.high_rate_Hz_per_sec),
-            // Reserve for potential Hz/sec step in the future
-            // (clipp::option("-dr", "--drift-resolution") & clipp::value("rate-step").set(dedrift_options.resolution)) % "Multiple of unit drift resolution to step in search (default: 1)",
-            (clipp::option("-rs", "--rate-step") & clipp::value("rate-step").set(dedrift_options.resolution)) % fmt::format("Multiple of unit drift resolution to step in search (default: {})", dedrift_options.resolution),
-            
-            (clipp::option("-m", "--min-rate") & clipp::value("min-rate").set(low_rate)) % "(DEPRECATED: use -md) Minimum drift rate (fourier bins)",
-            (clipp::option("-M", "--max-rate") & clipp::value("max-rate").set(high_rate)) % "(DEPRECATED: use -MD) Maximum drift rate (fourier bins)",
+            (clipp::option("--sigmaclip-iters") & clipp::value("sigma clip iterations").set(flag_options.sigmaclip_iters)) % "Flagging sigmaclipping number of iterations",
+            (clipp::option("--sigmaclip-low") & clipp::value("sigma clip lower").set(flag_options.sigmaclip_low)) % "Flagging sigmaclipping lower threshold factor",
+            (clipp::option("--sigmaclip-high") & clipp::value("sigma clip high").set(flag_options.sigmaclip_high)) % "Flagging sigmaclipping upper threshold factor",
+
+            (clipp::option("--sk-low") & clipp::value("spectral kurtosis lower").set(flag_options.sk_low)) % "Flagging lower threshold for spectral kurtosis",
+            (clipp::option("--sk-high") & clipp::value("spectral kurtsosis high").set(flag_options.sk_high)) % "Flagging high threshold for spectral kurtosis",
+            (clipp::option("--sk-d") & clipp::value("spectral kurtosis d").set(flag_options.sk_d)) % "Flagging shape parameter for spectral kurtosis",
 
             // Flagging
             // This is left in as a reference for refactoring and cleaning up cli in the future. I would like to have these subgroups, etc but
@@ -134,16 +133,24 @@ int main(int argc, char *argv[]) {
             //         (clipp::option("--high").doc("Set the upper threshold for sigma clipping") & clipp::value("threshold").set(flag_options.sigmaclip_high))
             //     )) % fmt::format("Sigma clipping with iterations={}, low={}, high={}", 
             //         flag_options.sigmaclip_iters, flag_options.sigmaclip_low, flag_options.sigmaclip_high),
-                
+
+
+
+            // Drift intgration / dedoppler
+            (clipp::option("--desmear") .set(dedrift_options.desmear, true) |
+             clipp::option("--nodesmear").set(dedrift_options.desmear, false)) % "Desmear the drift plane to compensate for drift rate crossing channels",
+            (clipp::option("-md", "--min-drift") & clipp::value("min-rate").set(dedrift_options.low_rate_Hz_per_sec)) % fmt::format("Minimum drift rate (default: {})", dedrift_options.low_rate_Hz_per_sec),
+            (clipp::option("-MD", "--max-drift") & clipp::value("max-rate").set(dedrift_options.high_rate_Hz_per_sec)) % fmt::format("Maximum drift rate (default: {})", dedrift_options.high_rate_Hz_per_sec),
+            // Reserve for potential Hz/sec step in the future
+            // (clipp::option("-dr", "--drift-resolution") & clipp::value("rate-step").set(dedrift_options.resolution)) % "Multiple of unit drift resolution to step in search (default: 1)",
+            (clipp::option("-rs", "--rate-step") & clipp::value("rate-step").set(dedrift_options.resolution)) % fmt::format("Multiple of unit drift resolution to step in search (default: {})", dedrift_options.resolution),
+            
+            (clipp::option("-m", "--min-rate") & clipp::value("min-rate").set(low_rate)) % "(DEPRECATED: use -md) Minimum drift rate (fourier bins)",
+            (clipp::option("-M", "--max-rate") & clipp::value("max-rate").set(high_rate)) % "(DEPRECATED: use -MD) Maximum drift rate (fourier bins)",
+
             (clipp::option("--sk-low") & clipp::value("spectral kurtosis lower").set(flag_options.sk_low)) % "Flagging lower threshold for spectral kurtosis",
             (clipp::option("--sk-high") & clipp::value("spectral kurtsosis high").set(flag_options.sk_high)) % "Flagging high threshold for spectral kurtosis",
             (clipp::option("--sk-d") & clipp::value("spectral kurtosis d").set(flag_options.sk_d)) % "Flagging shape parameter for spectral kurtosis",
-
-            // Hit search
-            (clipp::option("--local-maxima") .set(hit_search_options.method, bliss::hit_search_methods::LOCAL_MAXIMA) |
-             clipp::option("--connected-components").set(hit_search_options.method, bliss::hit_search_methods::CONNECTED_COMPONENTS)) % "select the hit search method",
-            (clipp::option("-s", "--snr") & clipp::value("snr_threshold").set(hit_search_options.snr_threshold)) % fmt::format("SNR threshold (default: {})", hit_search_options.snr_threshold),
-            (clipp::option("--distance") & clipp::value("l1_distance").set(hit_search_options.neighbor_l1_dist)) % fmt::format("L1 distance to consider hits connected (default: {})", hit_search_options.neighbor_l1_dist),
 
             // Hit filtering
             (clipp::option("--filter-zero-drift") .set(hit_filter_options.filter_zero_drift, true) |
@@ -161,6 +168,13 @@ int main(int argc, char *argv[]) {
              clipp::option("--nofilter-low-sk").set(hit_filter_options.filter_low_sk, false)) % fmt::format("Filter out hits with low spectral kurtosis (default: {})", hit_filter_options.filter_low_sk),
             (clipp::option("--max-low-sk") & clipp::value("max_low_sk").set(hit_filter_options.maximum_percent_low_sk)) % fmt::format("Maximum percent of low spectral kurtosis to keep (default: {})", hit_filter_options.maximum_percent_low_sk),
 
+            // Hit search
+            (clipp::option("--local-maxima").set(hit_search_options.method, bliss::hit_search_methods::LOCAL_MAXIMA) |
+             clipp::option("--connected-components").set(hit_search_options.method, bliss::hit_search_methods::CONNECTED_COMPONENTS)) % "select the hit search method",
+            (clipp::option("-s", "--snr") & clipp::value("snr_threshold").set(hit_search_options.snr_threshold)) % "SNR threshold (10)",
+            (clipp::option("--distance") & clipp::value("l1_distance").set(hit_search_options.neighbor_l1_dist)) % "L1 distance to consider hits connected (7)",
+
+            // Output options
             (clipp::option("-o", "--output") & (clipp::value("output_file").set(output_path), clipp::opt_value("format").set(output_format))) % "Filename to store output"
         )
         |
@@ -212,7 +226,6 @@ int main(int argc, char *argv[]) {
             bliss::noise_power_estimate_options{.estimator_method = bliss::noise_power_estimator::STDDEV,
                                                 .masked_estimate  = true}); // estimate noise power of unflagged data
 
-    // pipeline_object = bliss::integrate_drifts(pipeline_object, dedrift_options);
     hit_search_options.integration_options = dedrift_options;
 
     auto pipeline_object_with_hits = bliss::hit_search(pipeline_object, hit_search_options);
