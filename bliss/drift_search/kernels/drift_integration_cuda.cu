@@ -155,6 +155,7 @@ bliss::integrate_linear_rounded_bins_cuda(bland::ndarray    spectrum_grid,
 
     auto dev_drift_slopes = safe_device_vector<frequency_drift_plane::drift_rate>(drift_rates.begin(), drift_rates.end());
 
+    fmt::print("Launching kernel with {} drifts. The first has a slope of {} and the last has a slope of {}\n", number_drifts, drift_rates.front().drift_rate_slope, drift_rates.back().drift_rate_slope);
     dim3 grid(4096, 1);
     dim3 block(256, 1);
     integrate_drifts<<<grid, block>>>(

@@ -15,6 +15,7 @@ struct integrate_drifts_options {
     float high_rate_Hz_per_sec = 5; // Hz/sec
     // The search increment in numbers of drift resolutions (foff / total scan time)
     int resolution = 1;
+    int round_to_multiple_of_data = true;
 };
 
 

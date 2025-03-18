@@ -40,6 +40,7 @@ set_target_properties(drift_search_kernels PROPERTIES POSITION_INDEPENDENT_CODE 
 
 
 add_library(drift_search
+    compute_drift_rates.cpp
     integrate_drifts.cpp
     protohit_search.cpp
     hit_search.cpp

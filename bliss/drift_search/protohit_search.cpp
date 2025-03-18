@@ -1,6 +1,8 @@
 
 #include <drift_search/protohit_search.hpp>
 
+#include <drift_search/compute_drift_rates.hpp>
+#include <drift_search/integrate_drifts.hpp>
 #include <drift_search/connected_components.hpp>
 #include <drift_search/local_maxima.hpp>
 
@@ -46,7 +48,7 @@ std::vector<protohit> bliss::protohit_search(bliss::frequency_drift_plane &drift
 
 std::pair<std::vector<protohit>, std::vector<frequency_drift_plane::drift_rate>>
 bliss::driftblock_protohit_search(coarse_channel &working_cc, noise_stats noise_estimate, hit_search_options options) {
-    std::vector<protohit> protohits;
+    std::vector<protohit> all_protohits;
     std::vector<frequency_drift_plane::drift_rate> drift_rate_info;
 
     // Outline of the work to do:
@@ -55,7 +57,43 @@ bliss::driftblock_protohit_search(coarse_channel &working_cc, noise_stats noise_
     //   b) Search for protohits in the integrated drift block, passing context from the previous drift block
     //
     // We can probably save some of the final protohit collection for the very end
+    // Let's just pretend we're doing *one* of the hit search options right now (let's pick local maxima) so we need
+    // integrate over each drift
 
-    return std::make_pair(protohits, drift_rate_info);
+    // TODO: does it make sense to extract this to its own function?
+
+    auto compute_device = working_cc.device();
+    auto integration_options = options.integration_options;
+    
+    auto drift_rates = compute_drifts(working_cc.ntsteps(), working_cc.foff(), working_cc.tsamp(), integration_options);
+
+    auto number_drift_blocks = drift_rates.size() / working_cc.ntsteps(); // For now break the work in to multiples of timesteps so it's like a natural tt
+
+    auto drifts_per_block = drift_rates.size() / number_drift_blocks;
+    // TODO: check that after any int arithmetic drifts_per_block * number_drift_blocks will capture all drifts
+
+    auto data = working_cc.data();
+    auto mask = working_cc.mask();
+    for (int drift_block = 0; drift_block < number_drift_blocks; ++drift_block) {
+        auto block_drifts = std::vector<frequency_drift_plane::drift_rate>(drift_rates.begin() + drift_block * drifts_per_block,
+                                                                          drift_rates.begin() + (drift_block + 1) * drifts_per_block);
+
+        fmt::print("Working on drift block {}/{} with drift ranges {} : {} ({} : {})\n",
+                   drift_block,
+                   number_drift_blocks,
+                   drift_block * drifts_per_block,
+                   (drift_block + 1) * drifts_per_block,
+                   block_drifts.front().drift_rate_Hz_per_sec,
+                   block_drifts.back().drift_rate_Hz_per_sec);
+        auto drift_plane = integrate_drifts(data, mask, block_drifts, integration_options);
+        auto protohits = protohit_search(drift_plane, working_cc.ntsteps(), noise_estimate, options);
+
+        fmt::print("Found {} protohits in drift block {}/{}\n", protohits.size(), drift_block, number_drift_blocks);
+        all_protohits.insert(all_protohits.end(), protohits.begin(), protohits.end());
+        
+    }
+    
+
+    return std::make_pair(all_protohits, drift_rates);
 }
 

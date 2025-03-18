@@ -43,6 +43,10 @@ namespace bliss {
 //     HOUSTON,
 // };
 
+[[nodiscard]] frequency_drift_plane
+integrate_drifts(bland::ndarray data, bland::ndarray mask, std::vector<frequency_drift_plane::drift_rate> drifts, integrate_drifts_options options);
+
+
 /**
  * Integrate energy through a track in the spectrum according to the selected method for selecting tracks
  */

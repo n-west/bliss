@@ -4,9 +4,9 @@
 #include <drift_search/integrate_drifts.hpp>
 
 #include <drift_search/connected_components.hpp>
-#include <drift_search/protohit_search.hpp>
 #include <drift_search/hit_search.hpp>
 #include <drift_search/local_maxima.hpp>
+#include <drift_search/protohit_search.hpp>
 
 #include <fmt/core.h>
 #include <fmt/format.h>
@@ -14,25 +14,23 @@
 
 using namespace bliss;
 
-
-
 std::list<hit> bliss::hit_search(coarse_channel working_cc, hit_search_options options) {
 
     // slow-time steps passed through for a complete integration, the total number
     // of bins contributing to this integration is demsear_bins * integration_steps
-    auto time_steps      = working_cc.ntsteps();
+    auto time_steps = working_cc.ntsteps();
 
-    auto noise_estimate  = working_cc.noise_estimate();
+    auto                                           noise_estimate = working_cc.noise_estimate();
     std::vector<frequency_drift_plane::drift_rate> drift_rate_info;
     // We want to be able to iterate on an integrated_drift_plane and protohit search
     // integrated_drift_plane will throw (std::runtime_error) if there is no drift plane, we can catch this
     // and do some drift plane by default, which could be an iterative integrate + proto search
     std::vector<protohit> protohits;
-    auto drift_plane = working_cc.integrated_drift_plane();
+    auto                  drift_plane = working_cc.integrated_drift_plane();
     if (drift_plane.has_value()) {
         fmt::print("In hit search there is an existing drift plane. We'll use that.\n");
-        auto plane = drift_plane.value();
-        protohits = protohit_search(plane, time_steps, noise_estimate, options);
+        auto plane      = drift_plane.value();
+        protohits       = protohit_search(plane, time_steps, noise_estimate, options);
         drift_rate_info = plane.drift_rate_info();
     } else {
         fmt::print("In hit search there is no existing drift plane. We'll generate one.\n");
@@ -41,22 +39,13 @@ std::list<hit> bliss::hit_search(coarse_channel working_cc, hit_search_options o
             std::tie(protohits, drift_rate_info) = driftblock_protohit_search(working_cc, noise_estimate, options);
         } else {
             fmt::print("Requested full integration + hit search\n");
-            working_cc = integrate_drifts(working_cc, options.integration_options);
-            drift_plane = working_cc.integrated_drift_plane();
-            auto plane = drift_plane.value();
-            protohits = protohit_search(plane, time_steps, noise_estimate, options);
+            working_cc      = integrate_drifts(working_cc, options.integration_options);
+            drift_plane     = working_cc.integrated_drift_plane();
+            auto plane      = drift_plane.value();
+            protohits       = protohit_search(plane, time_steps, noise_estimate, options);
             drift_rate_info = plane.drift_rate_info();
         }
     }
-    // We need to figure out some scoping issues, such as integration steps and drift_rate_info
-    // * The integration steps is actually just the timesteps, except once we add a taylor tree version
-    // it would be the power of 2 that is actually used
-    // * The drift_rate_info is calculated at the top level of integrate_drifts, and is the result of compute_drifts(...)
-    // It makes some sense for both of these to be returned by the integration process although it's almost awkward.
-    // The integration steps *should* be equal to the # of timesteps for all but bad behaving taylor trees.
-    // I think I do want to incorporate some taylor trees but for now let's just call them equal and move on.
-
-    // auto integration_length = dedrifted_plane.integration_steps();
 
     // The rest of this is actually just translating protohits to hits
 
@@ -82,14 +71,14 @@ std::list<hit> bliss::hit_search(coarse_channel working_cc, hit_search_options o
         this_hit.binwidth  = c.binwidth;
         this_hit.bandwidth = this_hit.binwidth * std::abs(1e6 * working_cc.foff());
 
-        freq_offset             = working_cc.foff() * c.index_center.frequency_channel;
-        this_hit.start_freq_MHz = working_cc.fch1() + freq_offset;
-        this_hit.start_time_sec = working_cc.tstart() * 24 * 60 * 60; // convert MJD to seconds since MJ
-        this_hit.duration_sec   = working_cc.tsamp() * time_steps;
-        this_hit.integrated_channels = drift_rate_info[this_hit.rate_index].desmeared_bins * time_steps;
+        freq_offset                    = working_cc.foff() * c.index_center.frequency_channel;
+        this_hit.start_freq_MHz        = working_cc.fch1() + freq_offset;
+        this_hit.start_time_sec        = working_cc.tstart() * 24 * 60 * 60; // convert MJD to seconds since MJ
+        this_hit.duration_sec          = working_cc.tsamp() * time_steps;
+        this_hit.integrated_channels   = drift_rate_info[this_hit.rate_index].desmeared_bins * time_steps;
         this_hit.coarse_channel_number = working_cc._coarse_channel_number;
-        this_hit.rfi_counts[flag_values::sigma_clip] = c.rfi_counts.at(flag_values::sigma_clip);
-        this_hit.rfi_counts[flag_values::low_spectral_kurtosis] = c.rfi_counts.at(flag_values::low_spectral_kurtosis);
+        this_hit.rfi_counts[flag_values::sigma_clip]             = c.rfi_counts.at(flag_values::sigma_clip);
+        this_hit.rfi_counts[flag_values::low_spectral_kurtosis]  = c.rfi_counts.at(flag_values::low_spectral_kurtosis);
         this_hit.rfi_counts[flag_values::high_spectral_kurtosis] = c.rfi_counts.at(flag_values::high_spectral_kurtosis);
         hits.push_back(this_hit);
     }

@@ -50,7 +50,7 @@ int main(int argc, char *argv[]) {
 
     std::string device="cuda:0";
     int nchan_per_coarse=0;
-    bliss::hit_search_options hit_search_options{.method = bliss::hit_search_methods::CONNECTED_COMPONENTS, .snr_threshold = 10.0f, .neighbor_l1_dist=7};
+    bliss::hit_search_options hit_search_options{.method = bliss::hit_search_methods::CONNECTED_COMPONENTS, .snr_threshold = 10.0f, .neighbor_l1_dist=7, .iterative=true};
     bliss::filter_options hit_filter_options{.filter_zero_drift = true,
                 .filter_sigmaclip = false, .minimum_percent_sigmaclip = 0.1,
                 .filter_high_sk = false, .minimum_percent_high_sk = 0.1,
@@ -232,7 +232,7 @@ int main(int argc, char *argv[]) {
 
     pipeline_object_with_hits = bliss::filter_hits(pipeline_object_with_hits, hit_filter_options);
 
-    try {
+    // try {
         // TODO: add cli args for where to send hits (stdout, file.dat, capn proto serialize,...)
         for (int scan_index=0; scan_index < pipeline_object_with_hits._scans.size(); ++scan_index) {
             auto &sc = pipeline_object_with_hits._scans[scan_index];
@@ -254,10 +254,10 @@ int main(int argc, char *argv[]) {
                 bliss::write_scan_hits_to_file(sc, output_path, output_format);
             }
         }
-    } catch (std::exception &e) {
-        fmt::print("ERROR: got a fatal exception ({}) while running pipeline. This is likely due to running out of "
-                   "memory. Ending processing.\n",
-                   e.what());
-    }
+    // } catch (std::exception &e) {
+    //     fmt::print("ERROR: got a fatal exception ({}) while running pipeline. This is likely due to running out of "
+    //                "memory. Ending processing.\n",
+    //                e.what());
+    // }
 
 }
