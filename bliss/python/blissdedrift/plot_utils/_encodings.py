@@ -13,7 +13,7 @@ def get_hits_list(pipeline_object, origin_name=None):
             # Try to come up with a good one, but it probably doesn't matter
             origin_name = f"{pipeline_object.source_name}:{pipeline_object.src_dej:1.4f},{pipeline_object.src_raj:1.4f}:{pipeline_object.tstart:1.4f}"
         # This should succeed for `coarse_channel` and `scan` which can directly query `hits()`
-        hits = pipeline_object.hits()
+        hits = pipeline_object.hits
         hits_list = [{
             "start_freq_MHz": hit.start_freq_MHz, "drift_rate_Hz_per_sec": hit.drift_rate_Hz_per_sec,
             "SNR": hit.snr, "power": hit.power, "bandwidth_Hz": hit.bandwidth,
