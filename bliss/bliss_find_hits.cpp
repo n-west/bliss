@@ -41,6 +41,7 @@ int main(int argc, char *argv[]) {
     int coarse_channel=0;
     int number_coarse_channels=1;
     std::string channel_taps_path;
+    bool validate_pfb_response = false;
     bool excise_dc = false;
     bliss::integrate_drifts_options dedrift_options{
             .desmear = true, .low_rate_Hz_per_sec = -5, .high_rate_Hz_per_sec = 5, .resolution = 1};
@@ -50,6 +51,10 @@ int main(int argc, char *argv[]) {
     std::string device="cuda:0";
     int nchan_per_coarse=0;
     bliss::hit_search_options hit_search_options{.method = bliss::hit_search_methods::CONNECTED_COMPONENTS, .snr_threshold = 10.0f, .neighbor_l1_dist=7};
+    bliss::filter_options hit_filter_options{.filter_zero_drift = true,
+                .filter_sigmaclip = false, .minimum_percent_sigmaclip = 0.1,
+                .filter_high_sk = false, .minimum_percent_high_sk = 0.1,
+                .filter_low_sk = false, .maximum_percent_low_sk = 0.1};
     std::string output_path = "";
     std::string output_format = "";
     struct {
@@ -73,11 +78,12 @@ int main(int argc, char *argv[]) {
 
             // Preprocessing
             (clipp::option("-e", "--equalizer-channel") & clipp::value("channel_taps").set(channel_taps_path)) % "the path to coarse channel response at fine frequency resolution",
+            (clipp::option("--validate-pfb") & clipp::value("channel_taps").set(validate_pfb_response)) % fmt::format("whether to validate the coarse channel has a similar PFB response to the given response (default: {})", validate_pfb_response),
             (clipp::option("--excise-dc") .set(dedrift_options.desmear, true) |
              clipp::option("--noexcise-dc").set(dedrift_options.desmear, false)) % fmt::format("Excise DC offset from the data (default: {})", excise_dc),
 
             // Compute device / params
-            (clipp::option("-d", "--device") & clipp::value("device").set(device)) % "Compute device to use",
+            (clipp::option("-d", "--device") & clipp::value("device").set(device)) % fmt::format("Compute device to use (default: {})", device),
 
             // Drift intgration / dedoppler
             (clipp::option("--desmear") .set(dedrift_options.desmear, true) |
@@ -86,18 +92,49 @@ int main(int argc, char *argv[]) {
             (clipp::option("-MD", "--max-drift") & clipp::value("max-rate").set(dedrift_options.high_rate_Hz_per_sec)) % fmt::format("Maximum drift rate (default: {})", dedrift_options.high_rate_Hz_per_sec),
             // Reserve for potential Hz/sec step in the future
             // (clipp::option("-dr", "--drift-resolution") & clipp::value("rate-step").set(dedrift_options.resolution)) % "Multiple of unit drift resolution to step in search (default: 1)",
-            (clipp::option("-rs", "--rate-step") & clipp::value("rate-step").set(dedrift_options.resolution)) % "Multiple of unit drift resolution to step in search (default: 1)",
+            (clipp::option("-rs", "--rate-step") & clipp::value("rate-step").set(dedrift_options.resolution)) % fmt::format("Multiple of unit drift resolution to step in search (default: {})", dedrift_options.resolution),
             
             (clipp::option("-m", "--min-rate") & clipp::value("min-rate").set(low_rate)) % "(DEPRECATED: use -md) Minimum drift rate (fourier bins)",
             (clipp::option("-M", "--max-rate") & clipp::value("max-rate").set(high_rate)) % "(DEPRECATED: use -MD) Maximum drift rate (fourier bins)",
 
             // Flagging
-            (clipp::option("--filter-rolloff") & clipp::value("filter_rolloff").set(flag_options.filter_rolloff)) % "Flagging a percentage of band edges",
+            // This is left in as a reference for refactoring and cleaning up cli in the future. I would like to have these subgroups, etc but
+            // don't want to break things that people are already used to. I'll make a big announcement about the breaking change when I do
+            // (clipp::option("--flag").doc("Flagging options") & (
+            //     // Filter rolloff
+            //     (clipp::option("--filter-rolloff").doc("Enable filter rolloff flagging") & 
+            //         clipp::opt_value("fraction").set(flag_options.filter_rolloff)) % fmt::format("Fraction of band edges to flag (default: {})", flag_options.filter_rolloff),
+                
+            //     // Sigma clipping
+            //     (clipp::option("--sigmaclip").doc(fmt::format("Set the iterations for sigma clipping (default: {})", flag_options.sigmaclip_iters)) & (
+            //         clipp::opt_value("iters").set(flag_options.sigmaclip_iters),
+            //         (clipp::option("--low").doc("Set the lower threshold for sigma clipping") & clipp::value("threshold").set(flag_options.sigmaclip_low)),
+            //         (clipp::option("--high").doc("Set the upper threshold for sigma clipping") & clipp::value("threshold").set(flag_options.sigmaclip_high))
+            //     )) % fmt::format("Sigma clipping with iterations={}, low={}, high={}", 
+            //         flag_options.sigmaclip_iters, flag_options.sigmaclip_low, flag_options.sigmaclip_high),
+                
+            //     // Spectral kurtosis
+            //     (clipp::option("--sk").doc("Enable spectral kurtosis flagging") & (
+            //         (clipp::option("--low").doc("Set the lower threshold for spectral kurtosis") & clipp::value("threshold").set(flag_options.sk_low)),
+            //         (clipp::option("--high").doc("Set the upper threshold for spectral kurtosis") & clipp::value("threshold").set(flag_options.sk_high)),
+            //         (clipp::option("-d", "--d").doc("Set the shape parameter for spectral kurtosis") & clipp::value("shape").set(flag_options.sk_d))
+            //     )) % fmt::format("Spectral kurtosis with low={}, high={}, d={}", 
+            //         flag_options.sk_low, flag_options.sk_high, flag_options.sk_d)
+            // )),
 
-            (clipp::option("--sigmaclip-iters") & clipp::value("sigma clip iterations").set(flag_options.sigmaclip_iters)) % "Flagging sigmaclipping number of iterations",
-            (clipp::option("--sigmaclip-low") & clipp::value("sigma clip lower").set(flag_options.sigmaclip_low)) % "Flagging sigmaclipping lower threshold factor",
-            (clipp::option("--sigmaclip-high") & clipp::value("sigma clip high").set(flag_options.sigmaclip_high)) % "Flagging sigmaclipping upper threshold factor",
-
+            // (clipp::option("--flag").doc("Flagging options") & (
+            //     // Filter rolloff
+            //     (clipp::option("--filter-rolloff").doc("Enable filter rolloff flagging") & 
+            //         clipp::opt_value("fraction").set(flag_options.filter_rolloff)) % fmt::format("Fraction of band edges to flag (default: {})", flag_options.filter_rolloff),
+                
+            //     // Sigma clipping
+            //     (clipp::option("--sigmaclip").doc(fmt::format("Set the iterations for sigma clipping (default: {})", flag_options.sigmaclip_iters)) & (
+            //         clipp::opt_value("iters").set(flag_options.sigmaclip_iters),
+            //         (clipp::option("--low").doc("Set the lower threshold for sigma clipping") & clipp::value("threshold").set(flag_options.sigmaclip_low)),
+            //         (clipp::option("--high").doc("Set the upper threshold for sigma clipping") & clipp::value("threshold").set(flag_options.sigmaclip_high))
+            //     )) % fmt::format("Sigma clipping with iterations={}, low={}, high={}", 
+            //         flag_options.sigmaclip_iters, flag_options.sigmaclip_low, flag_options.sigmaclip_high),
+                
             (clipp::option("--sk-low") & clipp::value("spectral kurtosis lower").set(flag_options.sk_low)) % "Flagging lower threshold for spectral kurtosis",
             (clipp::option("--sk-high") & clipp::value("spectral kurtsosis high").set(flag_options.sk_high)) % "Flagging high threshold for spectral kurtosis",
             (clipp::option("--sk-d") & clipp::value("spectral kurtosis d").set(flag_options.sk_d)) % "Flagging shape parameter for spectral kurtosis",
@@ -105,8 +142,24 @@ int main(int argc, char *argv[]) {
             // Hit search
             (clipp::option("--local-maxima") .set(hit_search_options.method, bliss::hit_search_methods::LOCAL_MAXIMA) |
              clipp::option("--connected-components").set(hit_search_options.method, bliss::hit_search_methods::CONNECTED_COMPONENTS)) % "select the hit search method",
-            (clipp::option("-s", "--snr") & clipp::value("snr_threshold").set(hit_search_options.snr_threshold)) % "SNR threshold (10)",
-            (clipp::option("--distance") & clipp::value("l1_distance").set(hit_search_options.neighbor_l1_dist)) % "L1 distance to consider hits connected (7)",
+            (clipp::option("-s", "--snr") & clipp::value("snr_threshold").set(hit_search_options.snr_threshold)) % fmt::format("SNR threshold (default: {})", hit_search_options.snr_threshold),
+            (clipp::option("--distance") & clipp::value("l1_distance").set(hit_search_options.neighbor_l1_dist)) % fmt::format("L1 distance to consider hits connected (default: {})", hit_search_options.neighbor_l1_dist),
+
+            // Hit filtering
+            (clipp::option("--filter-zero-drift") .set(hit_filter_options.filter_zero_drift, true) |
+             clipp::option("--nofilter-zero-drift").set(hit_filter_options.filter_zero_drift, false)) % fmt::format("Filter out hits with zero drift rate (default: {})", hit_filter_options.filter_zero_drift),
+
+            (clipp::option("--filter-sigmaclip") .set(hit_filter_options.filter_sigmaclip, true) |
+             clipp::option("--nofilter-sigmaclip").set(hit_filter_options.filter_sigmaclip, false)) % fmt::format("Filter out hits with low sigmaclip (default: {})", hit_filter_options.filter_sigmaclip),
+            (clipp::option("--min-sigmaclip") & clipp::value("min_sigmaclip").set(hit_filter_options.minimum_percent_sigmaclip)) % fmt::format("Minimum percent of sigmaclip to keep (default: {})", hit_filter_options.minimum_percent_sigmaclip),
+
+            (clipp::option("--filter-high-sk") .set(hit_filter_options.filter_high_sk, true) |
+             clipp::option("--nofilter-high-sk").set(hit_filter_options.filter_high_sk, false)) % fmt::format("Filter out hits with high spectral kurtosis (default: {})", hit_filter_options.filter_high_sk),
+            (clipp::option("--min-high-sk") & clipp::value("min_high_sk").set(hit_filter_options.minimum_percent_high_sk)) % fmt::format("Minimum percent of high spectral kurtosis to keep (default: {})", hit_filter_options.minimum_percent_high_sk),
+
+            (clipp::option("--filter-low-sk") .set(hit_filter_options.filter_low_sk, true) |
+             clipp::option("--nofilter-low-sk").set(hit_filter_options.filter_low_sk, false)) % fmt::format("Filter out hits with low spectral kurtosis (default: {})", hit_filter_options.filter_low_sk),
+            (clipp::option("--max-low-sk") & clipp::value("max_low_sk").set(hit_filter_options.maximum_percent_low_sk)) % fmt::format("Maximum percent of low spectral kurtosis to keep (default: {})", hit_filter_options.maximum_percent_low_sk),
 
             (clipp::option("-o", "--output") & (clipp::value("output_file").set(output_path), clipp::opt_value("format").set(output_format))) % "Filename to store output"
         )
@@ -147,7 +200,7 @@ int main(int argc, char *argv[]) {
     pipeline_object = bliss::normalize(pipeline_object);
     pipeline_object = bliss::excise_dc(pipeline_object);
     if (!channel_taps_path.empty()) {
-        pipeline_object = bliss::equalize_passband_filter(pipeline_object, channel_taps_path);
+        pipeline_object = bliss::equalize_passband_filter(pipeline_object, channel_taps_path, bland::ndarray::datatype::float32, true);
     } else {
         pipeline_object = bliss::flag_filter_rolloff(pipeline_object, flag_options.filter_rolloff);
     }
@@ -163,7 +216,7 @@ int main(int argc, char *argv[]) {
 
     auto pipeline_object_with_hits = bliss::hit_search(pipeline_object, hit_search_options);
 
-    pipeline_object_with_hits = bliss::filter_hits(pipeline_object_with_hits, bliss::filter_options{.filter_zero_drift = true});
+    pipeline_object_with_hits = bliss::filter_hits(pipeline_object_with_hits, hit_filter_options);
 
     try {
         // TODO: add cli args for where to send hits (stdout, file.dat, capn proto serialize,...)

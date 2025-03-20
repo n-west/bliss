@@ -80,6 +80,8 @@ class scan {
      */
     std::list<hit> hits();
 
+    std::pair<float, float> get_drift_range();
+
     bland::ndarray::dev device();
     void set_device(bland::ndarray::dev &device, bool verbose=true);
     void set_device(std::string_view device, bool verbose=true);
