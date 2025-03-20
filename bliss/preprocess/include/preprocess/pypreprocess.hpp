@@ -27,17 +27,17 @@ void bind_pypreprocess(nb::module_ m) {
             "window"_a     = "hamming",
             "device_str"_a = "cpu");
 
-      m.def("equalize_passband_filter", nb::overload_cast<bliss::coarse_channel, bland::ndarray>(bliss::equalize_passband_filter), "coarse_channel"_a, "response"_a);
-      m.def("equalize_passband_filter", nb::overload_cast<bliss::coarse_channel, std::string_view, bland::ndarray::datatype>(bliss::equalize_passband_filter), "coarse_channel"_a, "response_path"_a, "response_dtype"_a=bland::ndarray::datatype("float"));
+      m.def("equalize_passband_filter", nb::overload_cast<bliss::coarse_channel, bland::ndarray, bool>(bliss::equalize_passband_filter), "coarse_channel"_a, "response"_a, "validate"_a=false);
+      m.def("equalize_passband_filter", nb::overload_cast<bliss::coarse_channel, std::string_view, bland::ndarray::datatype, bool>(bliss::equalize_passband_filter), "coarse_channel"_a, "response_path"_a, "response_dtype"_a=bland::ndarray::datatype("float"), "validate"_a=false);
 
-      m.def("equalize_passband_filter", nb::overload_cast<bliss::scan, bland::ndarray>(bliss::equalize_passband_filter), "scan"_a, "response"_a);
-      m.def("equalize_passband_filter", nb::overload_cast<bliss::scan, std::string_view, bland::ndarray::datatype>(bliss::equalize_passband_filter), "scan"_a, "response_path"_a, "response_dtype"_a=bland::ndarray::datatype("float"));
+      m.def("equalize_passband_filter", nb::overload_cast<bliss::scan, bland::ndarray, bool>(bliss::equalize_passband_filter), "scan"_a, "response"_a, "validate"_a=false);
+      m.def("equalize_passband_filter", nb::overload_cast<bliss::scan, std::string_view, bland::ndarray::datatype, bool>(bliss::equalize_passband_filter), "scan"_a, "response_path"_a, "response_dtype"_a=bland::ndarray::datatype("float"), "validate"_a=false);
 
-      m.def("equalize_passband_filter", nb::overload_cast<bliss::observation_target, bland::ndarray>(bliss::equalize_passband_filter), "observation_target"_a, "response"_a);
-      m.def("equalize_passband_filter", nb::overload_cast<bliss::observation_target, std::string_view, bland::ndarray::datatype>(bliss::equalize_passband_filter), "observation_target"_a, "response_path"_a, "response_dtype"_a=bland::ndarray::datatype("float"));
+      m.def("equalize_passband_filter", nb::overload_cast<bliss::observation_target, bland::ndarray, bool>(bliss::equalize_passband_filter), "observation_target"_a, "response"_a, "validate"_a=false);
+      m.def("equalize_passband_filter", nb::overload_cast<bliss::observation_target, std::string_view, bland::ndarray::datatype, bool>(bliss::equalize_passband_filter), "observation_target"_a, "response_path"_a, "response_dtype"_a=bland::ndarray::datatype("float"), "validate"_a=false);
 
-      m.def("equalize_passband_filter", nb::overload_cast<bliss::cadence, bland::ndarray>(bliss::equalize_passband_filter), "cadence"_a, "response"_a);
-      m.def("equalize_passband_filter", nb::overload_cast<bliss::cadence, std::string_view, bland::ndarray::datatype>(bliss::equalize_passband_filter), "cadence"_a, "response_path"_a, "response_dtype"_a=bland::ndarray::datatype("float"));
+      m.def("equalize_passband_filter", nb::overload_cast<bliss::cadence, bland::ndarray, bool>(bliss::equalize_passband_filter), "cadence"_a, "response"_a, "validate"_a=false);
+      m.def("equalize_passband_filter", nb::overload_cast<bliss::cadence, std::string_view, bland::ndarray::datatype, bool>(bliss::equalize_passband_filter), "cadence"_a, "response_path"_a, "response_dtype"_a=bland::ndarray::datatype("float"), "validate"_a=false);
 
       m.def("normalize", nb::overload_cast<bliss::coarse_channel>(bliss::normalize));
       m.def("normalize", nb::overload_cast<bliss::scan>(bliss::normalize));

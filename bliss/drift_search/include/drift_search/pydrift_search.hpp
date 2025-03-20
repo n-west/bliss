@@ -111,7 +111,13 @@ void bind_pydrift_search(nb::module_ m) {
 
     nb::class_<bliss::filter_options>(m, "filter_options")
     .def(nb::init<>())
-    .def_rw("filter_zero_drift", &bliss::filter_options::filter_zero_drift);
+    .def_rw("filter_zero_drift", &bliss::filter_options::filter_zero_drift)
+    .def_rw("filter_sigmaclip", &bliss::filter_options::filter_sigmaclip)
+    .def_rw("minimum_percent_sigmaclip", &bliss::filter_options::minimum_percent_sigmaclip)
+    .def_rw("filter_high_sk", &bliss::filter_options::filter_high_sk)
+    .def_rw("minimum_percent_high_sk", &bliss::filter_options::minimum_percent_high_sk)
+    .def_rw("filter_low_sk", &bliss::filter_options::filter_low_sk)
+    .def_rw("maximum_percent_low_sk", &bliss::filter_options::maximum_percent_low_sk);
 
     m.def("filter_hits", nb::overload_cast<std::list<bliss::hit>, bliss::filter_options>(&bliss::filter_hits));
     m.def("filter_hits", nb::overload_cast<bliss::coarse_channel, bliss::filter_options>(&bliss::filter_hits));

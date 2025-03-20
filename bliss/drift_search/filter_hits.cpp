@@ -21,8 +21,20 @@ std::list<hit> bliss::filter_hits(std::list<hit> hits, filter_options options) {
                 remove_hit = true;
             }
         }
-        if (current_hit->rfi_counts[flag_values::sigma_clip] < std::fabs(current_hit->integrated_channels) * .1) {
-            remove_hit = true;
+        if (options.filter_sigmaclip) {
+            if (current_hit->rfi_counts[flag_values::sigma_clip] < std::fabs(current_hit->integrated_channels) * options.minimum_percent_sigmaclip) {
+                remove_hit = true;
+            }
+        }
+        if (options.filter_high_sk) {
+            if (current_hit->rfi_counts[flag_values::high_spectral_kurtosis] < std::fabs(current_hit->integrated_channels) * options.minimum_percent_high_sk) {
+                remove_hit = true;
+            }
+        }
+        if (options.filter_low_sk) {
+            if (current_hit->rfi_counts[flag_values::low_spectral_kurtosis] > std::fabs(current_hit->integrated_channels) * options.maximum_percent_low_sk) {
+                remove_hit = true;
+            }
         }
         if (remove_hit) {
             current_hit = hits.erase(current_hit);
