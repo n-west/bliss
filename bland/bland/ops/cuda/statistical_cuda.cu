@@ -769,16 +769,6 @@ __global__ void reduction_impl(out_datatype* out_data, int64_t* out_shape, int64
 }
 
 
-// // template <typename out_datatype, typename in_datatype, reductiontype Op>
-// __global__ void mean_stddev_impl(float* mean_out_data, int64_t* mean_out_shape, int64_t* mean_out_strides, int64_t mean_out_ndim, int64_t mean_out_numel,
-//                         float* stddev_out_data, int64_t* stddev_out_shape, int64_t* stddev_out_strides, int64_t stddev_out_ndim, int64_t stddev_out_numel,
-//                         float* a_data, int64_t* a_shape, int64_t* a_strides, int64_t a_ndim,
-//                         int64_t* reduced_axes, int64_t nreduced_dim, int64_t reduction_factor) {
-//     // A good primer on reduction kernels: https://developer.download.nvidia.com/assets/cuda/files/reduction.pdf
-
-
-
-// template <typename out_datatype, typename in_datatype, reductiontype Op>
 __global__ void mean_stddev_impl(float* mean_out_data, int64_t* mean_out_shape, int64_t* mean_out_strides, int64_t mean_out_ndim, int64_t mean_out_numel,
                         float* stddev_out_data, int64_t* stddev_out_shape, int64_t* stddev_out_strides, int64_t stddev_out_ndim, int64_t stddev_out_numel,
                         float* a_data, int64_t* a_shape, int64_t* a_strides, int64_t a_ndim,
@@ -1174,18 +1164,20 @@ template <reductiontype Reduction>
 struct statistical_launch_wrapper {
     template <typename out_datatype, typename in_datatype>
     static inline ndarray call(ndarray out, const ndarray &a, std::vector<int64_t> reduced_axes) {
-        auto       out_data  = out.data_ptr<out_datatype>();
-        const auto out_offset = out.offsets();
-        const auto out_shape = out.shape();
-        const auto out_strides = out.strides();        
+        const auto out_offset     = out.offsets();
+        const auto out_shape      = out.shape();
+        const auto out_strides    = out.strides();
+        int64_t    out_ptr_offset = std::accumulate(out_offset.begin(), out_offset.end(), 0LL);
+        auto       out_data       = out.data_ptr<out_datatype>() + out_ptr_offset;
 
         thrust::device_vector<int64_t> dev_out_shape(out_shape.begin(), out_shape.end());
         thrust::device_vector<int64_t> dev_out_strides(out_strides.begin(), out_strides.end());
 
-        auto a_shape = a.shape();
-        auto a_data = a.data_ptr<in_datatype>();
-        const auto a_offset  = a.offsets();
-        const auto a_strides = a.strides();
+        const auto a_offset     = a.offsets();
+        const auto a_shape      = a.shape();
+        const auto a_strides    = a.strides();
+        int64_t    a_ptr_offset = std::accumulate(a_offset.begin(), a_offset.end(), 0LL);
+        auto       a_data       = a.data_ptr<in_datatype>() + a_ptr_offset;
 
         thrust::device_vector<int64_t> dev_a_shape(a_shape.begin(), a_shape.end());
         thrust::device_vector<int64_t> dev_a_strides(a_strides.begin(), a_strides.end());
