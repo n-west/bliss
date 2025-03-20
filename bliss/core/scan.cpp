@@ -330,6 +330,37 @@ std::list<hit> bliss::scan::hits() {
     return all_hits;
 }
 
+std::pair<float, float> bliss::scan::get_drift_range() {
+    std::pair<float, float> drift_range = {0, 0};
+    int            number_coarse_channels = get_number_coarse_channels();
+    for (int cc_index = 0; cc_index < number_coarse_channels; ++cc_index) {
+        auto cc = read_coarse_channel(cc_index);
+        if (cc != nullptr) {
+            try {
+                auto drift_rates = cc->integrated_drift_plane().drift_rate_info();
+                auto low = drift_rates.front().drift_rate_Hz_per_sec;
+                auto high = drift_rates.back().drift_rate_Hz_per_sec;
+                for (const auto &drift_rate : drift_rates) {
+                    if (drift_rate.drift_rate_Hz_per_sec < low) {
+                        low = drift_rate.drift_rate_Hz_per_sec;
+                    }
+                    if (drift_rate.drift_rate_Hz_per_sec > high) {
+                        high = drift_rate.drift_rate_Hz_per_sec;
+                    }
+                }
+                if (low < drift_range.first) {
+                    drift_range.first = low;
+                }
+                if (high > drift_range.second) {
+                    drift_range.second = high;
+                }
+            } catch (const std::logic_error &e) {
+                fmt::print("WARN: caught exception ({}) while getting hits from pipeline on coarse channel {}, this might indicate a bad pipeline\n", e.what(), cc_index);
+            }
+        }
+    }
+    return drift_range;
+}
 
 bland::ndarray::dev bliss::scan::device() {
     return _device;
