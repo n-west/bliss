@@ -338,7 +338,7 @@ std::pair<float, float> bliss::scan::get_drift_range() {
         auto cc = read_coarse_channel(cc_index);
         if (cc != nullptr) {
             try {
-                auto drift_rates = cc->integrated_drift_plane().drift_rate_info();
+                auto drift_rates = cc->integrated_drift_plane().value().drift_rate_info();
                 auto low = drift_rates.front().drift_rate_Hz_per_sec;
                 auto high = drift_rates.back().drift_rate_Hz_per_sec;
                 for (const auto &drift_rate : drift_rates) {
