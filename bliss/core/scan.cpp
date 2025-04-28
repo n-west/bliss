@@ -263,7 +263,7 @@ std::shared_ptr<coarse_channel> bliss::scan::read_coarse_channel(int coarse_chan
     }
     auto cc = _coarse_channels.at(global_offset_in_file);
     cc->set_device(_device);
-    auto transformed_cc = *cc;
+    auto& transformed_cc = *cc;
     for (auto &transform : _coarse_channel_pipeline) {
         transformed_cc = transform(transformed_cc);
     }
@@ -281,9 +281,9 @@ std::shared_ptr<coarse_channel> bliss::scan::peak_coarse_channel(int coarse_chan
         auto cc = _coarse_channels.at(global_offset_in_file);
         cc->set_device(_device);
         auto transformed_cc = *cc;
-        for (auto &transform : _coarse_channel_pipeline) {
-            transformed_cc = transform(transformed_cc);
-        }
+        // for (auto &transform : _coarse_channel_pipeline) {
+        //     transformed_cc = transform(transformed_cc);
+        // }
         return std::make_shared<coarse_channel>(transformed_cc);
     } else {
         return nullptr;
@@ -334,7 +334,7 @@ std::pair<float, float> bliss::scan::get_drift_range() {
     std::pair<float, float> drift_range = {0, 0};
     int            number_coarse_channels = get_number_coarse_channels();
     for (int cc_index = 0; cc_index < number_coarse_channels; ++cc_index) {
-        auto cc = read_coarse_channel(cc_index);
+        auto cc = peak_coarse_channel(cc_index);
         if (cc != nullptr) {
             try {
                 auto drift_rates = cc->integrated_drift_plane().drift_rate_info();
