@@ -218,7 +218,7 @@ int main(int argc, char *argv[]) {
 
     pipeline_object_with_hits = bliss::filter_hits(pipeline_object_with_hits, hit_filter_options);
 
-    try {
+    // try {
         // TODO: add cli args for where to send hits (stdout, file.dat, capn proto serialize,...)
         for (int scan_index=0; scan_index < pipeline_object_with_hits._scans.size(); ++scan_index) {
             auto &sc = pipeline_object_with_hits._scans[scan_index];
@@ -240,10 +240,10 @@ int main(int argc, char *argv[]) {
                 bliss::write_scan_hits_to_file(sc, output_path, output_format);
             }
         }
-    } catch (std::exception &e) {
-        fmt::print("ERROR: got a fatal exception ({}) while running pipeline. This is likely due to running out of "
-                   "memory. Ending processing.\n",
-                   e.what());
-    }
+    // } catch (std::exception &e) {
+    //     fmt::print("ERROR: got a fatal exception ({}) while running pipeline. This is likely due to running out of "
+    //                "memory. Ending processing.\n",
+    //                e.what());
+    // }
 
 }

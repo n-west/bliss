@@ -70,7 +70,9 @@ __global__ void local_maxima_kernel(float* doppler_spectrum_data,
                 protohits[protohit_index].snr = candidate_snr;
                 protohits[protohit_index].max_integration = candidate_maxima_val;
                 protohits[protohit_index].desmeared_noise = noise_at_this_drift;
-                // TODO: figure out how to get rfi counts in
+                // protohits[protohit_index].sigma_clip_count;
+                // protohits[protohit_index].low_sk_count;
+                // protohits[protohit_index].high_sk_count;
 
                 // At the local max drift rate, look up and down in frequency dim adding locations
                 // that are above the SNR threshold AND continuing to decrease
@@ -187,7 +189,12 @@ bliss::find_local_maxima_above_threshold_cuda(bland::ndarray                 dop
         new_protohit.desmeared_noise = simple_hit.desmeared_noise;
         new_protohit.binwidth = simple_hit.binwidth;
 
-        // new_protohit.rfi_counts = simple_hit.desmeared_noise;
+        new_protohit.rfi_counts = {{
+            {flag_values::low_spectral_kurtosis, simple_hit.low_sk_count},
+            {flag_values::high_spectral_kurtosis, simple_hit.high_sk_count},
+            {flag_values::sigma_clip, simple_hit.sigma_clip_count},
+            {flag_values::filter_rolloff, 0}
+        }};
 
         export_protohits.push_back(new_protohit);
     }
