@@ -57,7 +57,7 @@ void bland::cpu::write_to_file(ndarray x, std::string_view file_path) {
 ndarray bland::cpu::read_from_file(std::string_view file_path, ndarray::datatype dtype) {
     std::ifstream in_file(file_path.data(), std::ios::binary);
     if (!in_file) {
-        throw std::runtime_error("Could not open file for reading.");
+        throw std::runtime_error(fmt::format("Could not open file ({}) for reading.", file_path));
     }
 
     // Get the number of bytes, create a buffer big enough, and read it all in

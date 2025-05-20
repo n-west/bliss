@@ -265,7 +265,7 @@ std::shared_ptr<coarse_channel> bliss::scan::read_coarse_channel(int coarse_chan
     cc->set_device(_device);
     auto transformed_cc = *cc;
     for (auto &transform : _coarse_channel_pipeline) {
-        transformed_cc = transform(transformed_cc);
+        transformed_cc = transform.transform(transformed_cc);
     }
     return std::make_shared<coarse_channel>(transformed_cc);
 }
@@ -282,7 +282,7 @@ std::shared_ptr<coarse_channel> bliss::scan::peak_coarse_channel(int coarse_chan
         cc->set_device(_device);
         auto transformed_cc = *cc;
         for (auto &transform : _coarse_channel_pipeline) {
-            transformed_cc = transform(transformed_cc);
+            transformed_cc = transform.transform(transformed_cc);
         }
         return std::make_shared<coarse_channel>(transformed_cc);
     } else {
@@ -290,8 +290,8 @@ std::shared_ptr<coarse_channel> bliss::scan::peak_coarse_channel(int coarse_chan
     }
 }
 
-void bliss::scan::add_coarse_channel_transform(std::function<coarse_channel(coarse_channel)> transform) {
-    _coarse_channel_pipeline.push_back(transform);
+void bliss::scan::add_coarse_channel_transform(std::function<coarse_channel(coarse_channel)> transform, std::string description) {
+    _coarse_channel_pipeline.push_back({description, transform});
 }
 
 int bliss::scan::get_coarse_channel_with_frequency(double frequency) const {

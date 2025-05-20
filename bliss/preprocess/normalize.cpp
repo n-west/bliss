@@ -22,7 +22,7 @@ coarse_channel bliss::normalize(coarse_channel cc) {
 }
 
 scan bliss::normalize(scan sc) {
-    sc.add_coarse_channel_transform([](coarse_channel cc) { return normalize(cc); });
+    sc.add_coarse_channel_transform([](coarse_channel cc) { return normalize(cc); }, "normalize");
     return sc;
 }
 

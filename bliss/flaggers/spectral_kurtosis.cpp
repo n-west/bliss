@@ -47,7 +47,7 @@ coarse_channel bliss::flag_spectral_kurtosis(coarse_channel cc_data, float lower
 scan bliss::flag_spectral_kurtosis(scan fil_data, float lower_threshold, float upper_threshold, float d) {
     fil_data.add_coarse_channel_transform([lower_threshold, upper_threshold, d](coarse_channel cc) {
         return flag_spectral_kurtosis(cc, lower_threshold, upper_threshold, d);
-    });
+    }, "flag_sk");
     return fil_data;
 }
 

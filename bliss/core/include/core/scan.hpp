@@ -54,7 +54,7 @@ class scan {
      * A function that will be called on each coarse_channel when read with read_coarse_channel
      * or poke_coarse_channel
      */
-    void add_coarse_channel_transform(std::function<coarse_channel(coarse_channel)> transform);
+    void add_coarse_channel_transform(std::function<coarse_channel(coarse_channel)> transform, std::string description="");
 
     /**
      * return the coarse channel index that the given frequency is in
@@ -129,6 +129,11 @@ class scan {
 
     double tduration_secs() const;
 
+    struct transform_stage {
+      std::string description;
+      std::function<coarse_channel(coarse_channel)> transform;
+    };
+
   protected:
     // TODO (design note): This shared_ptr is shared between all slices which means set_device
     // on higher layers or slices of this scan will effect every slice (or even the global) which
@@ -138,7 +143,7 @@ class scan {
     // std::string _original_file_path={};
     std::map<int, std::shared_ptr<coarse_channel>> _coarse_channels;
     std::shared_ptr<h5_filterbank_file>            _h5_file_handle = nullptr;
-    std::vector<std::function<coarse_channel(coarse_channel)>> _coarse_channel_pipeline;
+    std::vector<transform_stage> _coarse_channel_pipeline;
 
     // Read from h5 file
     double      _fch1;

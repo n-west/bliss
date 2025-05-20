@@ -154,11 +154,7 @@ coarse_channel bliss::equalize_passband_filter(coarse_channel cc, std::string_vi
 
 scan bliss::equalize_passband_filter(scan sc, bland::ndarray h, bool validate) {
     auto number_coarse_channels = sc.get_number_coarse_channels();
-    for (auto cc_index = 0; cc_index < number_coarse_channels; ++cc_index) {
-        sc.add_coarse_channel_transform([h, validate](coarse_channel cc) { return equalize_passband_filter(cc, h, validate); });
-        // auto cc = sc.read_coarse_channel(cc_index);
-        // *cc = equalize_passband_filter(*cc, h);
-    }
+    sc.add_coarse_channel_transform([h, validate](coarse_channel cc) {fmt::print("Actually call equalize_passband_impl \n"); return equalize_passband_filter(cc, h, validate); }, "equalize_passband");
     return sc;
 }
 

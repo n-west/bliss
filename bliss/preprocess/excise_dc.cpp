@@ -22,7 +22,7 @@ coarse_channel bliss::excise_dc(coarse_channel cc) {
 }
 
 scan bliss::excise_dc(scan sc) {
-    sc.add_coarse_channel_transform([](coarse_channel cc) { return excise_dc(cc); });
+    sc.add_coarse_channel_transform([](coarse_channel cc) { return excise_dc(cc); }, "excise dc");
     return sc;
 }
 
