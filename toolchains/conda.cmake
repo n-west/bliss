@@ -16,6 +16,11 @@
 # specify the cross compiler
 set(CMAKE_C_COMPILER $ENV{CC})
 
+# Install to the conda prefix by default
+if(NOT DEFINED {CMAKE_INSTALL_PREFIX})
+    set(CMAKE_INSTALL_PREFIX $ENV{CONDA_PREFIX})
+endif()
+
 # Check if both CUDA_ROOT and CUDA_DIR are defined
 if(DEFINED ENV{CUDA_ROOT} AND DEFINED ENV{CUDA_DIR})
     if(NOT "$ENV{CUDA_ROOT}" STREQUAL "$ENV{CUDA_DIR}")
